@@ -1,0 +1,251 @@
+-- *****************************************************************
+-- TÖVE - Animated vector graphics for LÖVE.
+-- https://github.com/poke1024/tove2d
+--
+-- Copyright (c) 2018, Bernhard Liebl
+--
+-- Distributed under the MIT license. See LICENSE file for details.
+--
+-- All rights reserved.
+-- *****************************************************************
+
+%import "core/cquality.lua" as cquality
+
+local Paths = {}
+Paths.__index = function (self, i)
+	return ffi.gc(lib.GraphicsGetPath(self._ref, i), lib.ReleasePath)
+end
+
+local Graphics = {}
+Graphics.__index = function (graphics, key)
+	if key == "npaths" then
+		return lib.GraphicsGetNumPaths(graphics._ref)
+	else
+		return Graphics[key]
+	end
+end
+
+local function bind(methodName, libFuncName)
+	Graphics[methodName] = function(self, ...)
+		lib[libFuncName](self._ref, ...)
+		return self
+	end
+end
+
+tove.newGraphics = function(svg, size)
+	local ref = ffi.gc(lib.NewGraphics(svg, "px", 72), lib.ReleaseGraphics)
+	local graphics = setmetatable({
+		_ref = ref,
+		_cache = nil,
+		_display = {mode = "bitmap"},
+		_resolution = 1,
+		_usage = {},
+		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
+	if type(size) == "number" then
+		graphics:rescale(size)
+	elseif size == nil then -- auto
+		local x0, y0, x1, y1 = graphics:computeAABB()
+		graphics:rescale(math.min(1024, math.max(x1 - x0, y1 - y0)))
+	end
+	return graphics
+end
+
+bind("clone", "CloneGraphics")
+
+function Graphics:clearCache()
+	self._cache = nil
+end
+
+-- API exception: call a trajectory a path here.
+function Graphics:beginPath()
+	return ffi.gc(lib.GraphicsBeginTrajectory(self._ref), lib.ReleaseTrajectory)
+end
+bind("closePath", "GraphicsCloseTrajectory")
+
+function Graphics:getCurrentPath()
+	return ffi.gc(lib.GraphicsGetCurrentPath(self._ref), lib.ReleasePath)
+end
+
+bind("addPath", "GraphicsAddPath")
+
+function Graphics:fetchChanges(flags)
+	return lib.GraphicsFetchChanges(self._ref, flags)
+end
+
+function Graphics:moveTo(x, y)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryMoveTo(t, x, y))
+end
+
+function Graphics:lineTo(x, y)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryLineTo(t, x, y))
+end
+
+function Graphics:curveTo(...)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryCurveTo(t, ...))
+end
+
+function Graphics:arc(x, y, r, a1, a2, ccw)
+	lib.TrajectoryArc(self:beginPath(), x, y, r, a1, a2, ccw or false)
+end
+
+function Graphics:drawRect(x, y, w, h, rx, ry)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryDrawRect(t, x, y, w, h or w, rx or 0, ry or 0))
+end
+
+function Graphics:drawCircle(x, y, r)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryDrawEllipse(t, x, y, r, r))
+end
+
+function Graphics:drawEllipse(x, y, rx, ry)
+	local t = self:beginPath()
+	return newCommand(t, lib.TrajectoryDrawEllipse(t, x, y, rx, ry or rx))
+end
+
+function Graphics:setFillColor(r, g, b, a)
+	local color = Paint._wrap(r, g, b, a)
+	lib.GraphicsSetFillColor(self._ref, color._ref)
+	return color
+end
+
+function Graphics:setLineDash(...)
+	local dashes = {...}
+	local n = #dashes
+	local data = ffi.new("float[" .. tostring(n) .. "]", dashes)
+	lib.GraphicsSetLineDash(self._ref, data, n)
+	return self
+end
+
+bind("setLineWidth", "GraphicsSetLineWidth")
+bind("setLineDashOffset", "GraphicsSetLineDashOffset")
+
+function Graphics:setLineColor(r, g, b, a)
+	local color = Paint._wrap(r, g, b, a)
+	lib.GraphicsSetLineColor(self._ref, color._ref)
+	return color
+end
+
+bind("fill", "GraphicsFill")
+bind("stroke", "GraphicsStroke")
+
+function Graphics:computeAABB()
+	local bounds = lib.GraphicsGetBounds(self._ref)
+	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
+end
+
+function Graphics:setDisplay(mode, quality)
+	if mode == "flatmesh" then
+		mode = "mesh"
+		self._usage["gradients"] = "fast"
+	end
+	self._cache = nil
+	self._display = {mode = mode, quality = quality, cquality = cquality(quality, self._usage)}
+end
+
+function Graphics:setResolution(resolution)
+	if resolution ~= self._resolution then
+		self._cache = nil
+		self._resolution = resolution
+	end
+end
+
+function Graphics:setUsage(what, usage)
+	if usage ~= self._usage[what] then
+		self._cache = nil
+		self._usage[what] = usage
+		if what == "points" then
+			self._usage["triangles"] = usage
+		end
+		self._display.cquality = cquality(self._display.quality, self._usage)
+	end
+end
+
+function Graphics:cache()
+	self._cache = nil
+	self:_create()
+end
+
+function Graphics:transform(sx, sy, tx, ty)
+	if sy == nil then
+		sy = sx
+	end
+	lib.GraphicsTransform(self._ref, sx or 1, sy or 1, tx or 0, ty or 0)
+	self._cache = nil
+end
+
+function Graphics:rescale(size, center)
+	local x0, y0, x1, y1 = self:computeAABB()
+	local s = size / math.max(x1 - x0, y1 - y0)
+	if center or true then
+		self:transform(s, s, -(x0 + x1) / 2, -(y0 + y1) / 2)
+	else
+		self:transform(s, s)
+	end
+end
+
+function Graphics:getNumTriangles()
+	self:_create()
+	if self._cache ~= nil and self._cache.mesh ~= nil then
+		return #self._cache.mesh:getVertexMap() / 3
+	else
+		return 2
+	end
+end
+
+function Graphics:draw(x, y, r, sx, sy)
+	self:_create()
+	self._cache.draw(x, y, r, sx, sy)
+end
+
+function Graphics:rasterize(width, height, tx, ty, scale, quality)
+	width = math.ceil(width)
+	height = math.ceil(height)
+	local data = lib.GraphicsRasterize(
+		self._ref, width, height, tx or 0, ty or 0, scale or 1, quality)
+	if data == nil then
+		error(string.format("could rasterize image %d x %d", width, height))
+	end
+	local loveImageData = love.image.newImageData(
+		width, height, "rgba8", ffi.string(data.pixels, width * height * 4))
+	lib.DeleteImage(data)
+	return loveImageData
+end
+
+function Graphics:tesselate(scale, quality)
+	local mesh = newColorMesh()
+	lib.GraphicsTesselate(self._ref, mesh.cmesh, scale or 1, quality, -1)
+	return mesh:getMesh()
+end
+
+function Graphics:animate(a, b, t)
+	lib.GraphicsAnimate(self._ref, a._ref, b._ref, t or 0)
+end
+
+local orientations = {
+	cw = lib.ORIENTATION_CW,
+	ccw = lib.ORIENTATION_CCW
+}
+
+function Graphics:setOrientation(orientation)
+	lib.GraphicsSetOrientation(self._ref, orientations[orientation])
+end
+
+function Graphics:clean(eps)
+	lib.GraphicsClean(self._ref, eps or 0.0)
+end
+
+function Graphics:shaders(gen)
+	local npaths = lib.GraphicsGetNumPaths(self._ref)
+	local shaders = {}
+	for i = 1, npaths do
+		shaders[i] = gen(lib.GraphicsGetPath(self._ref, i))
+	end
+	return shaders
+end
+
+%import "core/create.lua" as create
+Graphics._create = create

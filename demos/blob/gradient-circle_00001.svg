@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Moho 12.4 build 22203 -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Frame_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280px" height="720px">
+<linearGradient id="6131A9E2-CA9E-49F0-9B44-3AD4FEE82BAF_0" x1="75.83%" y1="19.38%" x2="12.96%" y2="-46.70%">
+<stop offset="0.00%" style="stop-color:rgb(255,255,255);stop-opacity:1.00" />
+<stop offset="50.00%" style="stop-color:rgb(108,179,118);stop-opacity:1.00" />
+<stop offset="100.00%" style="stop-color:rgb(0,0,0);stop-opacity:1.00" />
+</linearGradient>
+<path fill="url(#6131A9E2-CA9E-49F0-9B44-3AD4FEE82BAF_0)" fill-rule="evenodd" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M 702.000 211.947 C 667.800 93.619 478.779 135.468 387.301 209.291 C 300.271 279.524 204.994 395.709 283.385 475.469 C 362.889 556.362 504.157 487.125 541.982 360.093 C 566.339 278.296 725.443 293.058 702.000 211.947 Z"/>
+</svg>
