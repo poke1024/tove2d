@@ -19,10 +19,10 @@ Do not expect TÖVE to produce print quality vector renderings. It's a simplifie
 ## Getting Started
 I've written up the essential stuff in these four sections:
 
-* Getting Started
-* The Demos
-* Setting Renderers
-* Animating Things
+* [Getting Started](docs/Getting_Started.md)
+* [The Demos](docs/Demos.md)
+* [Choosing Renderers](docs/Renderers.md)
+* [Animating Things](docs/Animation.md)
 
 ## License
 TÖVE is licensed under the MIT license.
