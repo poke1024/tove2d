@@ -39,7 +39,7 @@ end
 
 Now you should see the image below; note that the coordinates you put into the `moveTo` and `lineTo` earlier correspond to the position of the triangle on LÖVE screen.
 
-![](docs/images/tutorial/white-triangle.jpg)
+![](images/tutorial/white-triangle.jpg)
 
 Wow, very impressive, no?
 
@@ -50,7 +50,7 @@ myDrawing:setFillColor(0.8, 0.4, 0.6)
 myDrawing:fill()
 ```
 
-![](docs/images/tutorial/purple-triangle.jpg)
+![](images/tutorial/purple-triangle.jpg)
 
 Note: `setFillColor`  can take RGBA values, but you can also specify HTML colors , e.g. `setFillColor(#80AA20)`.
 
@@ -67,7 +67,7 @@ myDrawing:setFillColor(0.8, 0.4, 0.6)
 myDrawing:fill()
 ```
 
-![](docs/images/tutorial/curved-triangle.jpg)
+![](images/tutorial/curved-triangle.jpg)
 
 `curveTo` takes the positions of two control points (x1, y1, x2, y2) and one target point (x, y).  Together with the previous starting point this makes four points to define the cubic bezier curve.
 
@@ -81,7 +81,7 @@ myDrawing:setLineWidth(10)
 myDrawing:stroke()
 ```
 
-![](docs/images/tutorial/curved-triangle-stroked.jpg)
+![](images/tutorial/curved-triangle-stroked.jpg)
 
 Now, instead of a solid purple fill, let's use a linear gradient to make things more interesting:
 
@@ -93,7 +93,7 @@ myDrawing:setFillColor(gradient)
 myDrawing:fill()
 ```
 
-![](docs/images/tutorial/triangle-gradient.jpg)
+![](images/tutorial/triangle-gradient.jpg)
 
 ## Importing SVGs
 Yes, you can import SVGs, and it's as simple as this:
@@ -110,6 +110,6 @@ end
 
 The call to `newGraphics` takes the actual SVG data that was loaded via `love.filesystem.read`. The optional second parameter, `200`,  tells TÖVE to prescale the graphics to 200 pixels. If this is omitted, the SVG's natural scaling will be used, which assumes you know its exact scaling.
 
-![](docs/images/tutorial/rabbit-svg.jpg)
+![](images/tutorial/rabbit-svg.jpg)
 
 Note that after loading the SVG, TÖVE no longer cares whether it's dealing with an SVG or a manually constructed graphics (meaning you can change the renderer and so on).
