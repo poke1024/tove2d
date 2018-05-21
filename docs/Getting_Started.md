@@ -2,7 +2,7 @@
 Some info to get you started.
 
 ## Installation
-To install TÖVE, put TÖVE's `lib` folder inside your LÖVE project. You should then be able to load TÖVE using `require "lib/tove"`.
+To install TÖVE, put TÖVE's [`lib`](https://github.com/poke1024/tove2d/tree/master/lib) folder inside your LÖVE project. You should then be able to load TÖVE using `require "lib/tove"`.
 
 Note: TÖVE's `lib` folder contains a `tove.lua` lib and a binary library.
 
