@@ -276,10 +276,10 @@ ivec4 bsearch(ivec4 lohi, vec2 position) {
     bvec2 smaller = lessThan(
 		vec2(lut[lutIndex.x], lut[lutIndex.y + 1]), position);
 
-	ivec4 nextLo = ivec4(mid + vec2(1), XY_HI);
+	ivec4 nextLo = ivec4(mid + ivec2(1), XY_HI);
     return ivec4(
-		notDone.x ? (smaller.x ? nextLo.xz : vec2(X_LO, X_MID)) : X_LOHI,
-        notDone.y ? (smaller.y ? nextLo.yw : vec2(Y_LO, Y_MID)) : Y_LOHI);
+		notDone.x ? (smaller.x ? nextLo.xz : ivec2(X_LO, X_MID)) : X_LOHI,
+        notDone.y ? (smaller.y ? nextLo.yw : ivec2(Y_LO, Y_MID)) : Y_LOHI);
 }
 
 ivec2 search(vec2 position) {

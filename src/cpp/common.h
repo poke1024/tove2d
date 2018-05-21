@@ -14,6 +14,25 @@
 
 #include "interface.h"
 #include <memory>
+#include <limits>
+#include <assert.h>
+
+#if __clang__
+inline void store_fp16(uint16_t &p, float x) {
+	*reinterpret_cast<__fp16*>(&p) = x;
+}
+#elif __GNUC__
+#include <x86intrin.h>
+inline void store_fp16(uint16_t &p, float x) {
+	p = _cvtss_sh(x, 0);
+}
+#else
+#include "../thirdparty/half/include/half.hpp"
+inline void store_fp16(uint16_t &p, float x) {
+	half_float::half y(x);
+	p = *(uint16*)&y;
+}
+#endif
 
 #include "../thirdparty/nanosvg.h"
 #include "../thirdparty/nanosvgrast.h"

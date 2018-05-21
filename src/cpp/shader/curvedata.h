@@ -47,7 +47,7 @@ public:
 	Roots roots[2];
 	uint8_t ignore;
 
-	void copy(__fp16 *out);
+	void copy(uint16_t *out);
 	void set(const float *curve, const float *bx, const float *by);
 };
 

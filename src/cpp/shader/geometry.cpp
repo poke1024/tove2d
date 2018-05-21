@@ -14,6 +14,7 @@
 #include "../utils.h"
 #include "../trajectory.h"
 #include "../path.h"
+#include <algorithm>
 
 typedef LookupTable::CurveSet CurveSet;
 

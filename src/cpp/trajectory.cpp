@@ -383,8 +383,8 @@ void Trajectory::computeShaderCurveData(
 
 	commit();
 
-	__fp16 *curveData = reinterpret_cast<__fp16*>(shaderData->curvesTexture) +
-		shaderData->curvesTextureRowBytes * target / sizeof(__fp16);
+	uint16_t *curveData = reinterpret_cast<uint16_t*>(shaderData->curvesTexture) +
+		shaderData->curvesTextureRowBytes * target / sizeof(uint16_t);
 
 	float bx[4];
 	float by[4];
@@ -401,16 +401,16 @@ void Trajectory::computeShaderCurveData(
 
 	// write curve data.
 	for (int i = 0; i < 4; i++) {
-		curveData[i] = bx[i];
-		curveData[i + 4] = by[i];
+		store_fp16(curveData[i], bx[i]);
+		store_fp16(curveData[i + 4], by[i]);
 	}
 
-	__fp16 *data = reinterpret_cast<__fp16*>(&curveData[8]);
+	uint16_t *data = reinterpret_cast<uint16_t*>(&curveData[8]);
 
-	*data++ = extended.bounds[0];
-	*data++ = extended.bounds[1];
-	*data++ = extended.bounds[2];
-	*data++ = extended.bounds[3];
+	for (int i = 0; i < 4; i++) {
+		store_fp16(data[i], extended.bounds[i]);
+	}
+	data += 4;
 
 	// needed for stroke support.
 	extended.copy(data);

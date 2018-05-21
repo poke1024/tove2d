@@ -9,6 +9,7 @@
  * All rights reserved.
  */
 
+#include "../common.h"
 #include "mesh.h"
 #include "../path.h"
 

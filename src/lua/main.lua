@@ -22,8 +22,8 @@ tove = {}
 tove.init = function(path)
 	local libName = {
 		["OS X"] = "libTove.dylib",
-		["Windows"] = "tove.dll",
-		["Linux"] = "tove.so"
+		["Windows"] = "libTove.dll",
+		["Linux"] = "libTove.so"
 	}
 
 	-- https://stackoverflow.com/questions/6380820/get-containing-path-of-lua-file
@@ -32,6 +32,11 @@ tove.init = function(path)
 	local lib = ffi.load(basepath .. libName[love.system.getOS()])
 	tove.lib = lib
 	tove.getVersion = lib.GetVersion
+	
+	local rgba16f = love.graphics.getCanvasFormats()["rgba16f"]
+	if rgba16f ~= true then
+		-- FIXME
+	end
 
 	-- common attributes used by Command and Curve.
 	local _attributes = {

@@ -11,8 +11,9 @@
 
 #include "../common.h"
 #include "curvedata.h"
+#include <algorithm>
 
-void ExtendedCurveData::copy(__fp16 *out) {
+void ExtendedCurveData::copy(uint16_t *out) {
 	float t[4];
 	int count = 0;
 
@@ -28,10 +29,10 @@ void ExtendedCurveData::copy(__fp16 *out) {
 	}
 
 	for (int i = 0; i < count; i++) {
-		out[i] = t[i];
+		store_fp16(out[i], t[i]);
 	}
 	for (int i = count; i < 4; i++) {
-		out[i] = 1.0f;
+		store_fp16(out[i], 1.0f);
 	}
 }
 

@@ -6,15 +6,13 @@ AddOption(
     help='debug build',
     default=False)
 
-CCFLAGS = ' -std=c++11 -fvisibility=hidden '
-LINKFLAGS = ' -dynamiclib '
+CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations '
 
 if GetOption('tovedebug'):
 	CCFLAGS += '-g '
 else:
 	CCFLAGS += '-O2 '
 
-build_filename = 'lib/libTove.dylib'
 sources = [
 	"src/cpp/binding.cpp",
 	"src/cpp/graphics.cpp",
@@ -34,8 +32,12 @@ sources = [
 	"src/thirdparty/clipper.cpp",
 	"src/thirdparty/polypartition.cpp"]
 
-env = Environment(CCFLAGS=CCFLAGS, LINKFLAGS=LINKFLAGS)
-env.Program(target=build_filename, source=sources)
+env = Environment(CCFLAGS=CCFLAGS)
+
+if env["PLATFORM"] == 'posix':
+	env["CCFLAGS"] += ' -mf16c '
+
+env.SharedLibrary(target='lib/libTove', source=sources)
 
 # now glue together the lua library.
 

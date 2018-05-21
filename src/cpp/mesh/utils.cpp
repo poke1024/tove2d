@@ -9,6 +9,7 @@
  * All rights reserved.
  */
 
+#include "../common.h"
 #include "utils.h"
 
 int find_unequal_backward(const float *vertices, int start, int n) {

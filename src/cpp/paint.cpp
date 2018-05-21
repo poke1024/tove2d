@@ -11,7 +11,7 @@
 
 #include "paint.h"
 #include "path.h"
-
+#include <algorithm>
 
 void AbstractPaint::changed() {
 	if (claimer) {
