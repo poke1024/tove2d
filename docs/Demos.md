@@ -1,7 +1,7 @@
 # The Demos
 You might wonder at this point, what you gain with TÖVE over simply rasterizing your vector graphics to textures via an export step from your vector drawing software. It's flexibility.
 
-Let's take a quick look at some of TÖVE's demos, as they explain a lot about the core ideas and capabilities of TÖVE.
+Let's take a quick look at some of [TÖVE's demos](https://github.com/poke1024/tove2d/tree/master/demos), as they explain a lot about the core ideas and capabilities of TÖVE.
 
 ## Zoom Demo
 Scaling bitmaps produces blurriness or pixelation, scaling meshes produces straight crisp lines, while TÖVE's unique shader-based `curves` renderer will render crisp curves at many reasonable scales:
