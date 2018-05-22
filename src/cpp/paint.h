@@ -127,7 +127,7 @@ protected:
 	float xformInverse[6];
 
 	static inline size_t getRecordSize(int nstops) {
-		return sizeof(NSVGgradient) + nstops * sizeof(NSVGgradientStop);
+		return sizeof(NSVGgradient) + (nstops - 1) * sizeof(NSVGgradientStop);
 	}
 
 	void sort() const;
