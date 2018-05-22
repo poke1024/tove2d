@@ -49,6 +49,17 @@ local function sendGradientMatrix(shader, uniform, gradient)
 	shader:send(uniform, totable(gradient.data.matrix, 9))
 end
 
+local function sendLUT(shader, data)
+	local f = data.lookupTableFill
+	local fx = f[0]
+	local fy = f[1]
+
+	local fill = max(fx, fy)
+
+	shader:send("lut", unpack(totable(data.lookupTable, 2 * fill)))
+	shader:send("tablesize", {fx, fy, floor(log2(fill)) + 1})
+end
+
 
 local NullColorFeed = {}
 NullColorFeed.__index = NullColorFeed

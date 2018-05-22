@@ -29,12 +29,12 @@ AllocateGeometryData::AllocateGeometryData(
 	data.lookupTableFill[1] = 0;
 
     data.listsTexture = nullptr;
-    data.listsTextureSize[0] = mod4(numCurves + 2);
+    data.listsTextureSize[0] = div4(numCurves + 2);
     data.listsTextureSize[1] = 2 * (numCurves * 2 + 2);
     data.listsTextureFormat = "rgba8";
 
     data.curvesTexture = nullptr;
-    data.curvesTextureSize[0] = mod4(16);
+    data.curvesTextureSize[0] = div4(16);
     data.curvesTextureSize[1] = numCurves;
     data.curvesTextureFormat = "rgba16f";
 

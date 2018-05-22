@@ -75,7 +75,7 @@ vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
 }
 
 shaders.code = [[
-	%include "tove.glsl"
+--!! include "tove.glsl"
 ]]
 
 local max = math.max
@@ -133,18 +133,7 @@ local function newFillShader(data)
 	return love_graphics.newShader(table.concat(code, "\n"))
 end
 
-local function sendLUT(shader, data)
-	local f = data.lookupTableFill
-	local fx = f[0]
-	local fy = f[1]
-
-	local fill = max(fx, fy)
-
-	shader:send("lut", unpack(totable(data.lookupTable, 2 * fill)))
-	shader:send("tablesize", {fx, fy, floor(log2(fill)) + 1})
-end
-
-%import "feed.lua" as feed
+--!! import "feed.lua" as feed
 
 local MeshShader = {}
 MeshShader.__index = MeshShader

@@ -9,7 +9,7 @@
 -- All rights reserved.
 -- *****************************************************************
 
-%import "core/cquality.lua" as cquality
+--!! import "core/cquality.lua" as cquality
 
 local Paths = {}
 Paths.__index = function (self, i)
@@ -247,5 +247,5 @@ function Graphics:shaders(gen)
 	return shaders
 end
 
-%import "core/create.lua" as create
+--!! import "core/create.lua" as create
 Graphics._create = create

@@ -30,7 +30,7 @@ inline void coeffs(float P0, float P1, float P2, float P3, float *Z) {
     Z[3] = P0;
 }
 
-inline int mod4(int n) {
+inline int div4(int n) {
     return (n / 4) + (n % 4 ? 1 : 0);
 }
 

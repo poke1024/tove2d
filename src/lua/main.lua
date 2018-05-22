@@ -9,12 +9,12 @@
 -- All rights reserved.
 -- *****************************************************************
 
-%include "license.lua"
+--!! include "license.lua"
 
 local ffi = require 'ffi'
 
 ffi.cdef [[
-%include "../cpp/_interface.h"
+--!! include "../cpp/_interface.h"
 ]]
 
 tove = {}
@@ -32,7 +32,7 @@ tove.init = function(path)
 	local lib = ffi.load(basepath .. libName[love.system.getOS()])
 	tove.lib = lib
 	tove.getVersion = lib.GetVersion
-	
+
 	local rgba16f = love.graphics.getCanvasFormats()["rgba16f"]
 	if rgba16f ~= true then
 		-- FIXME
@@ -69,17 +69,17 @@ tove.init = function(path)
 
 	local bit = require("bit")
 
-	%import "paint.lua" as Paint
-	%import "command.lua" as newCommand
-	%import "trajectory.lua" as Trajectory
-	%import "path.lua" as Path
+	--!! import "paint.lua" as Paint
+	--!! import "command.lua" as newCommand
+	--!! import "trajectory.lua" as Trajectory
+	--!! import "path.lua" as Path
 
-	%import "core/mesh.lua" as _mesh
-	%import "core/shader.lua" as _shaders
-	%import "graphics.lua" as Graphics
-	%import "shape.lua" as Shape
+	--!! import "core/mesh.lua" as _mesh
+	--!! import "core/shader.lua" as _shaders
+	--!! import "graphics.lua" as Graphics
+	--!! import "shape.lua" as Shape
 
-	%import "animation.lua" as Animation
+	--!! import "animation.lua" as Animation
 
 	tove.warn = function(obj, text)
 		print("TÖVE: " .. (text or obj))
