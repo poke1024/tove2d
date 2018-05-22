@@ -187,9 +187,7 @@ public:
 		nsvg.next = &trajectory->nsvg;
 	}
 
-	inline void updateNSVG() {
-		updateBounds();
-	}
+	void updateNSVG();
 
 	inline int fetchChanges() {
 		// always emits a change; could be optimized. currently

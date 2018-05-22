@@ -153,10 +153,20 @@ int Trajectory::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x,
 	return addCommand(TOVE_CURVE_TO, index);
 }
 
+inline float wrapAngle(float phi) {
+	return phi - 360 * std::floor(phi / 360.0);
+}
 
 int Trajectory::arc(float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
+	const float deltaAngle = wrapAngle(endAngle - startAngle);
+
+	if (std::abs(deltaAngle - 360.0f) < 0.01) {
+		// the code below will produce nans for full circles, so guard against that here.
+		return drawEllipse(x, y, r, r);
+	}
+
 	// https://stackoverflow.com/questions/5736398/how-to-calculate-the-svg-path-for-an-arc-of-a-circle
-	float largeArc = endAngle - startAngle <= 180.0 ? 0.0 : 1.0;
+	const float largeArc = deltaAngle <= 180.0 ? 0.0 : 1.0;
 	float args[7] = {r, r, 0, largeArc, counterclockwise ? 1.0f : 0.0f, 0, 0};
 	float cpx, cpy; // start
 
@@ -169,10 +179,13 @@ int Trajectory::arc(float x, float y, float r, float startAngle, float endAngle,
 	int n = 0;
 	const float *pts = nsvg::pathArcTo(&cpx, &cpy, args, n);
 
-	float *p = addPoints(n + 1);
+	float *p = addPoints(n + 2);
 	p[0] = x0;
 	p[1] = y0;
 	std::memcpy(&p[2], pts, n * sizeof(float) * 2);
+	p += (1 + n) * 2;
+	p[0] = cpx;
+	p[1] = cpy;
 
 	return -1;
 }
@@ -309,10 +322,12 @@ void Trajectory::updateBounds() {
 		return;
 	}
 	commit();
-	for (int i = 0; i < nsvg.npts - 1; i += 3) {
+	for (int i = 0; i + 4 < nsvg.npts; i += 3) {
 		float *curve = &nsvg.pts[i * 2];
+
 		float bounds[4];
 		nsvg::curveBounds(bounds, curve);
+
 		if (i == 0) {
 			nsvg.bounds[0] = bounds[0];
 			nsvg.bounds[1] = bounds[1];
@@ -335,7 +350,7 @@ void Trajectory::transform(float sx, float sy, float tx, float ty) {
 	nsvg.bounds[1] = (nsvg.bounds[1] + ty) * sy;
 	nsvg.bounds[2] = (nsvg.bounds[2] + tx) * sx;
 	nsvg.bounds[3] = (nsvg.bounds[3] + ty) * sy;
-	for (int i =0; i < nsvg.npts; i++) {
+	for (int i = 0; i < nsvg.npts; i++) {
 		float *pt = &nsvg.pts[i * 2];
 		pt[0] = (pt[0] + tx) * sx;
 		pt[1] = (pt[1] + ty) * sy;
@@ -436,6 +451,19 @@ void Trajectory::animate(const TrajectoryRef &a, const TrajectoryRef &b, float t
 
 	nsvg.closed = a->nsvg.closed;
 	changed(CHANGED_POINTS);
+}
+
+void Trajectory::updateNSVG() {
+	// NanoSVG will crash if we give it incomplete curves. so we duplicate points
+	// to make complete curves here.
+	if (nsvg.npts > 0) {
+		while (nsvg.npts != 3 * ncurves(nsvg.npts) + 1) {
+			addPoint(nsvg.pts[2 * (nsvg.npts - 1) + 0],
+				nsvg.pts[2 * (nsvg.npts - 1) + 1]);			
+		}
+	}
+
+	updateBounds();
 }
 
 void Trajectory::changed(ToveChangeFlags flags) {
