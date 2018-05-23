@@ -2,16 +2,21 @@
 Some info to get you started.
 
 ## Installation
-To install TÖVE, put TÖVE's [`lib`](https://github.com/poke1024/tove2d/tree/master/lib) folder inside your LÖVE project. You should then be able to load TÖVE using `require "lib/tove"`.
+To install TÖVE, grab TÖVE's [`lib`](https://github.com/poke1024/tove2d/releases/download/v0.1/lib.zip) package and unzip it inside your LÖVE project (as a folder called `lib`). You should then be able to load TÖVE using `require "lib/tove"`.
 
-Note: TÖVE's `lib` folder contains a `tove.lua` lib and a binary library.
+TÖVE's `lib` folder contains four files:
 
-The latter needs to be compiled for your platform (TÖVE's core functions are implemented in C). Currently, I only provide macOS prebuilts. If you are on Linux or Windows, you need to run your own `scons` build from the repository folder.
+- `tove.lua`: a Lua library binding to love
+- `libTove.dll`: TÖVE library (for Windows)
+- `libTove.dylib`: TÖVE library (for macOS)
+- `libTove.so`: TÖVE library (for Linux)
+
+Since you're running only on one platform, you'd only need one of the binary files, but they are all included for convenience.
 
 ## Drawing a Triangle
 Let's draw a triangle.
 
-First import TÖVE. Then create a `Graphics` instance, which is the main API for drawing in TÖVE:
+First import TÖVE as described above. Then create a `Graphics` instance, which is the main API for drawing in TÖVE:
 
 ```
 require "lib/tove"
