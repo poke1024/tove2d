@@ -31,7 +31,8 @@ env = Environment()
 if env["PLATFORM"] == 'win32':
 	env["CCFLAGS"] = ' /EHsc '
 	if not GetOption('tovedebug'):
-		env["CCFLAGS"] += ' /Ox '
+		env["CCFLAGS"] += ' /O1 /Oy /Oi /fp:fast '
+		env["LINKFLAGS"] = ' /OPT:REF '
 else:
 	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations '
 
