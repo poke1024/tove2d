@@ -14,6 +14,7 @@ else:
 	CCFLAGS += '-O2 '
 
 sources = [
+	"src/cpp/version.cpp",
 	"src/cpp/binding.cpp",
 	"src/cpp/graphics.cpp",
 	"src/cpp/nsvg.cpp",
@@ -37,12 +38,31 @@ env = Environment(CCFLAGS=CCFLAGS)
 if env["PLATFORM"] == 'posix':
 	env["CCFLAGS"] += ' -mf16c '
 
-env.SharedLibrary(target='lib/libTove', source=sources)
+lib = env.SharedLibrary(target='lib/libTove', source=sources)
 
-# now glue together the lua library.
+# prepare git hash based version string.
 
+import subprocess
+import datetime
 import re
 import os
+
+def get_version_string():
+	os.chdir(Dir('.').abspath)
+	args = ['git', 'rev-parse', '--short', 'HEAD']
+	git_hash = subprocess.check_output(args).strip()
+
+	args = ['git', 'log', '-1', '--format=%ct']
+	ts = subprocess.check_output(args)
+	when = datetime.datetime.fromtimestamp(int(ts)).strftime('%Y%m%d')
+
+	return "v0.1-%s-%s" % (when, git_hash)
+
+with open("src/cpp/version.in.cpp", "r") as v_in:
+	with open("src/cpp/version.cpp", "w") as v_out:
+		v_out.write(v_in.read().replace("TOVE_VERSION", get_version_string()))
+
+# now glue together the lua library.
 
 def minify_lua(target, source, env):
 	include_pattern = re.compile("\s*--!!\s*include\s*\"([^\"]+)\"\s*")

@@ -31,7 +31,9 @@ tove.init = function(path)
 
 	local lib = ffi.load(basepath .. libName[love.system.getOS()])
 	tove.lib = lib
-	tove.getVersion = lib.GetVersion
+	tove.getVersion = function()
+		return ffi.string(lib.GetVersion())
+	end
 
 	local rgba16f = love.graphics.getCanvasFormats()["rgba16f"]
 	if rgba16f ~= true then

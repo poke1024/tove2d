@@ -15,13 +15,14 @@
 #include "graphics.h"
 #include "mesh/mesh.h"
 #include "mesh/meshifier.h"
-
 #include "shader/link.h"
 
 extern "C" {
 
+extern const char tove_version[];
+
 EXPORT const char *GetVersion() {
-	return "0.1-" __DATE__;
+	return tove_version;
 }
 
 
