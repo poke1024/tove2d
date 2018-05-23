@@ -109,7 +109,7 @@ tove.newAnimation = function(tween, ...)
 	do
 		local g = createGraphics(tween._graphics0)
 		graphics:animate(g, g, 0)
-		graphics:cache()
+		graphics:cache("keyframe")
 		table.insert(keyframes, {graphics = g, offset = 0, duration = 0, ease = _linear})
 	end
 
@@ -119,7 +119,7 @@ tove.newAnimation = function(tween, ...)
 		offset = offset + keyframe.duration
 		keyframe.offset = offset
 		graphics:animate(g, g, 0)
-		graphics:cache() -- cache triangulation
+		graphics:cache("keyframe")
 		table.insert(keyframes, keyframe)
 	end
 

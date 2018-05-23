@@ -45,6 +45,10 @@ float *AbstractMesh::vertices(int from, int n) {
     return &meshData.vertices[2 * from];
 }
 
+void AbstractMesh::cache(bool keyframe) {
+	triangles.cache(keyframe);
+}
+
 void AbstractMesh::triangulate(const ClipperPaths &paths) {
 	std::list<TPPLPoly> polys;
 	for (int i = 0; i < paths.size(); i++) {

@@ -88,12 +88,13 @@ struct Triangulation {
 	}
 
 	Triangulation(const std::list<TPPLPoly> &convex) :
-		partition(convex), useCount(0) {
+		partition(convex), useCount(0), keyframe(false) {
 	}
 
 	Partition partition;
 	TriangleStore triangles;
 	uint64_t useCount;
+	bool keyframe;
 };
 
 class TriangleCache {
@@ -107,10 +108,13 @@ private:
 		int minIndex = -1;
 
 		for (int i = 0; i < triangulations.size(); i++) {
-			uint64_t count = triangulations[i]->useCount;
-			if (count < minCount) {
-				minCount = count;
-				minIndex = i;
+			const Triangulation *t = triangulations[i];
+			if (!t->keyframe) {
+				const uint64_t count = t->useCount;
+				if (count < minCount) {
+					minCount = count;
+					minIndex = i;
+				}
 			}
 		}
 
@@ -136,6 +140,11 @@ public:
 		}
 
 		triangulations.insert(triangulations.begin() + current, t);
+	}
+
+	void cache(bool keyframe) {
+		assert(current < triangulations.size());
+		triangulations[current]->keyframe = keyframe;
 	}
 
 	uint16_t *allocate(int n) {

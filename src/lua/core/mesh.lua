@@ -70,6 +70,10 @@ function PositionMesh:getMesh()
 	return mesh
 end
 
+function PositionMesh:cache(mode)
+	lib.MeshCache(self._cmesh, mode == "keyframe")
+end
+
 
 local ColorMesh = {}
 ColorMesh.__index = ColorMesh
@@ -152,4 +156,8 @@ function ColorMesh:getMesh()
 	self:updateTriangles()
 	self:updateVertices()
 	return mesh
+end
+
+function ColorMesh:cache(mode)
+	lib.MeshCache(self._cmesh, mode == "lock")
 end

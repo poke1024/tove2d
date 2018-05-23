@@ -32,6 +32,7 @@ public:
 	~AbstractMesh();
 
 	float *vertices(int from, int n);
+	void cache(bool keyframe);
 
 	void triangulate(const ClipperPaths &paths);
 	void addTriangles(const std::list<TPPLPoly> &triangles);

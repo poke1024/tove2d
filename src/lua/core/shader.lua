@@ -227,11 +227,10 @@ function MeshShader:update()
 	linkdata.lineColorFeed:update(chg1, path)
 	linkdata.fillColorFeed:update(chg1, path)
 
-	local chg2 = lib.ShaderLinkEndUpdate(link, path, false)
+	lib.ShaderLinkEndUpdate(link, path, false)
 end
 
 function MeshShader:draw()
-	self:update()
 	local linkdata = self.linkdata
 	if linkdata.fillShader ~= nil then
 		love_graphics.setShader(linkdata.fillShader)
@@ -313,7 +312,6 @@ function PathShader:update()
 end
 
 function PathShader:draw()
-	self:update()
 	local linkdata = self.linkdata
 	love_graphics.setShader(linkdata.shader)
 	love_graphics.draw(linkdata.geometryFeed.mesh)

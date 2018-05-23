@@ -476,6 +476,10 @@ ToveIndex16Array MeshGetIndices(ToveMeshRef mesh) {
 	return deref(mesh)->getTriangles();
 }
 
+void MeshCache(ToveMeshRef mesh, bool keyframe) {
+	deref(mesh)->cache(keyframe);
+}
+
 void ReleaseMesh(ToveMeshRef mesh) {
 	meshes.release(mesh);
 }

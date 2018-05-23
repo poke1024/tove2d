@@ -52,10 +52,6 @@ end
 
 bind("clone", "CloneGraphics")
 
-function Graphics:clearCache()
-	self._cache = nil
-end
-
 -- API exception: call a trajectory a path here.
 function Graphics:beginPath()
 	return ffi.gc(lib.GraphicsBeginTrajectory(self._ref), lib.ReleaseTrajectory)
@@ -164,9 +160,13 @@ function Graphics:setUsage(what, usage)
 	end
 end
 
-function Graphics:cache()
+function Graphics:clearCache()
 	self._cache = nil
+end
+
+function Graphics:cache(...)
 	self:_create()
+	self._cache.cache(self._cache, ...)
 end
 
 function Graphics:transform(sx, sy, tx, ty)
@@ -197,8 +197,7 @@ function Graphics:getNumTriangles()
 end
 
 function Graphics:draw(x, y, r, sx, sy)
-	self:_create()
-	self._cache.draw(x, y, r, sx, sy)
+	self:_create().draw(x, y, r, sx, sy)
 end
 
 function Graphics:rasterize(width, height, tx, ty, scale, quality)

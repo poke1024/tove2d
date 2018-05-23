@@ -69,17 +69,21 @@ local function _changeFlatMesh(graphics)
 	return false
 end
 
-local function _changeShadedMesh(graphics)
-	return graphics:fetchChanges(lib.CHANGED_GEOMETRY) ~= 0
-	-- rest gets handled in MeshShader:update()
-end
-
-local function _changeCurves(graphics)
-	return graphics:fetchChanges(lib.CHANGED_GEOMETRY) ~= 0
-	-- rest gets handled in PathShader:update()
+local function _changeShaders(graphics)
+	if graphics:fetchChanges(lib.CHANGED_GEOMETRY) ~= 0 then
+		return true
+	end
+	-- update here to support Graphics:cache().
+	for _, s in ipairs(graphics._cache.shaders) do
+		s:update()
+	end
+	return false
 end
 
 local create = {}
+
+local function _noCache()
+end
 
 create.bitmap = function(self)
 	local resolution = self._resolution
@@ -92,8 +96,19 @@ create.bitmap = function(self)
 	return {
 		mesh = mesh,
 		draw = createDrawMesh(mesh, x0, y0, 1 / resolution),
-		change = _changeBitmap
+		change = _changeBitmap,
+		cache = _noCache
 	}
+end
+
+local function _cacheFlatMesh(data, ...)
+	data.mesh:cache(...)
+end
+
+local function _cacheShadedMesh(data, ...)
+	for _, s in ipairs(data.shaders) do
+		s.linkdata.fillMesh:cache(...)
+	end
 end
 
 create.mesh = function(self)
@@ -112,7 +127,8 @@ create.mesh = function(self)
 		return {
 			mesh = mesh,
 			draw = createDrawMesh(mesh:getMesh(), 0, 0, 1 / resolution),
-			change = _changeFlatMesh
+			change = _changeFlatMesh,
+			cache = _cacheFlatMesh
 		}
 	else
 		local tess = function(path, fill, line, flags)
@@ -125,16 +141,21 @@ create.mesh = function(self)
 			return _shaders.newMeshShader(path, tess, usage)
 		end)
 		return {
+			shaders = shaders,
 			draw = createDrawShaders(shaders, 1 / resolution),
-			change = _changeShadedMesh
+			change = _changeShaders,
+			cache = _cacheShadedMesh
 		}
 	end
 end
 
 create.curves = function(self)
+	local shaders = self:shaders(_shaders.newPathShader)
 	return {
-		draw = createDrawShaders(self:shaders(_shaders.newPathShader), 1),
-		change = _changeCurves
+		shaders = shaders,
+		draw = createDrawShaders(shaders, 1),
+		change = _changeShaders,
+		cache = _noCache
 	}
 end
 
@@ -142,7 +163,7 @@ return function(self)
 	local cache = self._cache
 	if cache ~= nil then
 		if not cache.change(self) then
-			return
+			return cache
 		end
 		self._cache = nil
 		cache = nil
@@ -156,4 +177,5 @@ return function(self)
 		error("invalid tove display mode: " .. (mode or "nil"))
 	end
 	self:fetchChanges(lib.CHANGED_ANYTHING) -- clear all changes
+	return self._cache
 end

@@ -271,4 +271,5 @@ EXPORT ToveMeshRef NewColorMesh();
 EXPORT ToveFloatArray MeshGetVertices(ToveMeshRef mesh);
 EXPORT ToveColorArray MeshGetColors(ToveMeshRef mesh);
 EXPORT ToveIndex16Array MeshGetIndices(ToveMeshRef mesh);
+EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
