@@ -49,14 +49,8 @@ import os
 
 def get_version_string():
 	os.chdir(Dir('.').abspath)
-	args = ['git', 'rev-parse', '--short', 'HEAD']
-	git_hash = subprocess.check_output(args).strip()
-
-	args = ['git', 'log', '-1', '--format=%ct']
-	ts = subprocess.check_output(args)
-	when = datetime.datetime.fromtimestamp(int(ts)).strftime('%Y%m%d')
-
-	return "v0.1-%s-%s" % (when, git_hash)
+	args = ['git', 'describe', '--tags', '--long']
+	return subprocess.check_output(args).strip()
 
 with open("src/cpp/version.in.cpp", "r") as v_in:
 	with open("src/cpp/version.cpp", "w") as v_out:
