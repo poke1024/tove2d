@@ -3,3 +3,5 @@
 *.o
 .sconsign.dblite
 /src/cpp/version.cpp
+/lib
+
