@@ -10,6 +10,26 @@
 -- *****************************************************************
 
 local love_graphics = love.graphics
+local _, _, _, device = love_graphics.getRendererInfo()
+
+local sendGradientMatrix
+local _gmat = "mat3"
+
+if string.find(device, "Parallels") then
+	-- work around crashing Parallels drivers with mat3
+	sendGradientMatrix = function(shader, uniform, gradient)
+		local t = totable(gradient.data.matrix, 9)
+		t[10] = 0
+		t[11] = 0
+		t[12] = 0
+		shader:send(uniform, t)
+	end
+	_gmat = "mat3x4"
+else
+	sendGradientMatrix = function(shader, uniform, gradient)
+		shader:send(uniform, totable(gradient.data.matrix, 9))
+	end
+end
 
 local shaders = {
 	line = [[
@@ -17,7 +37,7 @@ local shaders = {
 uniform vec4 linecolor;
 #elif LINE_STYLE >= 2
 uniform sampler2D linecolors;
-uniform mat3 linematrix;
+uniform ]] .. _gmat .. [[ linematrix;
 uniform vec2 linecscale;
 #endif
 
@@ -42,12 +62,12 @@ vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
 	return computeLineColor(tc);
 }
 ]],
-			fill = [[
+	fill = [[
 #if FILL_STYLE == 1
 uniform vec4 fillcolor;
 #elif FILL_STYLE >= 2
 uniform sampler2D fillcolors;
-uniform mat3 fillmatrix;
+uniform ]] .. _gmat .. [[ fillmatrix;
 uniform vec2 fillcscale;
 #endif
 

@@ -45,10 +45,6 @@ local function sendColor(shader, uniform, rgba)
 	shader:send(uniform, {rgba.r, rgba.g, rgba.b, rgba.a})
 end
 
-local function sendGradientMatrix(shader, uniform, gradient)
-	shader:send(uniform, totable(gradient.data.matrix, 9))
-end
-
 local function sendLUT(shader, data)
 	local f = data.lookupTableFill
 	local fx = f[0]
