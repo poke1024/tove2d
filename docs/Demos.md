@@ -3,6 +3,29 @@ You might wonder at this point, what you gain with TÖVE over simply rasterizing
 
 Let's take a quick look at some of [TÖVE's demos](https://github.com/poke1024/tove2d/tree/master/demos), as they explain a lot about the core ideas and capabilities of TÖVE.
 
+## Running the Demos
+
+Check out the whole repo from GitHub. To run the demos, the `lib` and `assets` folders need to be accessible from inside the demos.
+
+On macOS and Linux, the demos contain symbolic links, and all you need to do is to unzip TÖVE's lib into the repo's root like this:
+
+- demos
+- docs
+- lib
+  - libTove.dylib
+  - ...
+- LICENSE
+- ...
+
+Then you can start one demo, e.g. the `zoom` demo, using:
+
+```
+cd demos/zoom
+love .
+```
+
+On Windows, the symbolic links don't work :-( So you need to unzip the `lib` into each demo folder. Also you need to copy the `demos/assets` folder inside the respective demo folder. Basically: replace the symlinks with the real stuff.
+
 ## Zoom Demo
 Scaling bitmaps produces blurriness or pixelation, scaling meshes produces straight crisp lines, while TÖVE's unique shader-based `curves` renderer will render crisp curves at many reasonable scales:
 
