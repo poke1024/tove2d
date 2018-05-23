@@ -19,13 +19,6 @@
 
 extern "C" {
 
-extern const char tove_version[];
-
-EXPORT const char *GetVersion() {
-	return tove_version;
-}
-
-
 TovePaintType PaintGetType(TovePaintRef paint) {
 	return deref(paint)->getType();
 }

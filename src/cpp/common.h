@@ -17,6 +17,10 @@
 #include <limits>
 #include <assert.h>
 
+#if _MSC_VER
+#define M_PI 3.1415926535897932384626433832795
+#endif
+
 #if __clang__
 inline void store_fp16(uint16_t &p, float x) {
 	*reinterpret_cast<__fp16*>(&p) = x;
@@ -30,7 +34,7 @@ inline void store_fp16(uint16_t &p, float x) {
 #include "../thirdparty/half/include/half.hpp"
 inline void store_fp16(uint16_t &p, float x) {
 	half_float::half y(x);
-	p = *(uint16*)&y;
+	p = *(uint16_t*)&y;
 }
 #endif
 

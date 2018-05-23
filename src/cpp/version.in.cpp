@@ -9,4 +9,14 @@
  * All rights reserved.
  */
 
-extern const char tove_version[] = "TOVE_VERSION";
+#include "interface.h"
+
+static const char tove_version[] = "TOVE_VERSION";
+
+extern "C" {
+
+EXPORT const char *GetVersion() {
+	return tove_version;
+}
+
+}

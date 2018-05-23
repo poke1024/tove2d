@@ -14,8 +14,8 @@
 
 #include <cstdint>
 
-#if defined _WIN32 || defined __CYGWIN__
-	#define EXPORT __attribute__ ((dllexport))
+#if _MSC_VER
+	#define EXPORT __declspec(dllexport)
 #else
 	#define EXPORT __attribute__ ((visibility ("default")))
 #endif
