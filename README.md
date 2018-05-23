@@ -16,6 +16,8 @@ TÖVE is experimental and alpha. Things are missing, things might change.
 
 Do not expect TÖVE to produce print quality vector renderings. It's a simplified vector graphics library for games, and it has its limits. For example, support for line dashes and line caps is patchy.
 
+An experimental build is available for macOS, Linux and Windows: https://github.com/poke1024/tove2d/releases.
+
 ## Getting Started
 I've written up the essential stuff in these four sections:
 
