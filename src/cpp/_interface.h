@@ -111,13 +111,21 @@ typedef struct {
 } RGBA;
 
 typedef struct {
-	float x0, y0, x1, y1;
+	union {
+		float bounds[4];
+		struct {
+			float x0;
+			float y0;
+			float x1;
+			float y1;
+		};
+	};
 } ToveBounds;
 
-typedef float ToveMatrix3x3[9];
+typedef float ToveMatrix3x3[3 * 3];
 
 typedef struct {
-	ToveMatrix3x3 matrix;
+	ToveMatrix3x3 *matrix;
 	uint8_t *colorsTexture;
 	int colorsTextureRowBytes;
 } ToveShaderGradientData;
@@ -134,14 +142,19 @@ typedef struct {
 } ToveShaderColorData;
 
 typedef struct {
+	int n[2]; // number of used lookup table elements for x and y
+	int bsearch; // number of needed (compound) bsearch iterations
+} ToveLookupTableMeta;
+
+typedef struct {
 	int numCurves;
-	float bounds[4];
+	ToveBounds *bounds;
 	float strokeWidth;
 	int8_t fillRule;
 
 	float *lookupTable;
 	int lookupTableSize;
-	int lookupTableFill[2];
+	ToveLookupTableMeta *lookupTableMeta;
 
 	uint8_t *listsTexture;
 	int listsTextureRowBytes;

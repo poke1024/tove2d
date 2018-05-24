@@ -21,18 +21,26 @@
 // segmentPointDistanceSquared() is adapted from:
 // https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 
+#pragma language glsl3
+
+varying vec4 raw_vertex_pos;
+
 #define CURVE_DATA_SIZE 4
 #define T_EPS 0.0
 #define SENTINEL_END 1.0
 #define SENTINEL_STROKES (254.0 / 255.0)
 #define MAX_LINE_ITERATIONS 14
 
-#define LUT_LOG_N tablesize.z
-#define C_ID_SCALE (255.0 / NUM_CURVES)
+#define LUT_LOG_N tablemeta.z
 
 #define M_PI 3.1415926535897932384626433832795
 
-uniform ivec3 tablesize;
+uniform ivec3 constants;
+#define NUM_CURVES constants.x
+#define LISTS_W constants.y
+#define LISTS_H constants.z
+
+uniform ivec3 tablemeta;
 uniform float lut[2 * LUT_SIZE];
 
 uniform sampler2D lists;
@@ -283,12 +291,12 @@ ivec4 bsearch(ivec4 lohi, vec2 position) {
 }
 
 ivec2 search(vec2 position) {
-	ivec4 lohi = ivec4(0, tablesize.x, 0, tablesize.y);
+	ivec4 lohi = ivec4(0, tablemeta.x, 0, tablemeta.y);
 	for (int i = 0; i < LUT_LOG_N; i++) {
 		lohi = bsearch(lohi, position);
 
 	}
-	return ivec2(min(lohi.xz, tablesize.xy - ivec2(1)));
+	return ivec2(min(lohi.xz, tablemeta.xy - ivec2(1)));
 }
 
 vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
@@ -316,7 +324,8 @@ vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
 	return rayOnX ? vec2(position.x, npos.y) : vec2(npos.x, position.y);
 }
 
-vec4 effect(vec4 _1, Image _2, vec2 position, vec2 _3) {
+vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
+	vec2 position = raw_vertex_pos.xy;
 	ivec2 at = search(position);
 
 	bool rayOnX;
@@ -333,6 +342,9 @@ vec4 effect(vec4 _1, Image _2, vec2 position, vec2 _3) {
 	vec2 blockpos = rayOnX ?
 		vec2(0, (at.y - 1 + LISTS_H / 2) / float(LISTS_H)) :
 		vec2(0, (at.x - 1) / float(LISTS_H));
+	vec2 blockadv = vec2(1.0 / LISTS_W, 0);
+
+	float C_ID_SCALE = 255.0 / NUM_CURVES;
 	vec4 curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
 	int k = 0;
 
@@ -369,7 +381,7 @@ vec4 effect(vec4 _1, Image _2, vec2 position, vec2 _3) {
 		if (++k < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
-			blockpos += vec2(1.0 / LISTS_W, 0);
+			blockpos += blockadv;
 			if (blockpos.x >= 1.0) {
 				// something went horribly wrong.
 				return vec4(0.33, 1, 1, 1);
@@ -384,7 +396,7 @@ vec4 effect(vec4 _1, Image _2, vec2 position, vec2 _3) {
 		if (++k < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
-			blockpos += vec2(1.0 / LISTS_W, 0);
+			blockpos += blockadv;
 			curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
 			k = 0;
 		}
@@ -396,7 +408,7 @@ vec4 effect(vec4 _1, Image _2, vec2 position, vec2 _3) {
 			if (++k < 4) {
 				curveIds.xyzw = curveIds.yzwx;
 			} else {
-				blockpos += vec2(1.0 / LISTS_W, 0);
+				blockpos += blockadv;
 				if (blockpos.x >= 1.0) {
 					// something went horribly wrong.
 					return vec4(0.33, 1, 1, 1);

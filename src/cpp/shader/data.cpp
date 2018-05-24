@@ -21,12 +21,12 @@ AllocateGeometryData::AllocateGeometryData(
 	std::memset(&data, 0, sizeof(ToveShaderGeometryData));
 
     data.numCurves = numCurves;
+	data.bounds = nullptr;
     data.strokeWidth = 0;
 
     data.lookupTable = nullptr;
+	data.lookupTableMeta = nullptr;
     data.lookupTableSize = numCurves * 4 + 2; // number of (x, y) pairs
-    data.lookupTableFill[0] = 0;
-	data.lookupTableFill[1] = 0;
 
     data.listsTexture = nullptr;
     data.listsTextureSize[0] = div4(numCurves + 2);
@@ -38,24 +38,17 @@ AllocateGeometryData::AllocateGeometryData(
     data.curvesTextureSize[1] = numCurves;
     data.curvesTextureFormat = "rgba16f";
 
-	// texture allocation will usually happen in tove's lua lib; except
-	// for AllocateGeometryNoLinkData.
+	// except for AllocateGeometryNoLinkData, the following fields will
+	// be initialized in tove's lua lib using LÖVE ByteData:
 
-	// now allocate the lookup table.
-	const int n = data.lookupTableSize * 2;
-	float *lut = new float[n];
-	data.lookupTable = lut;
-
-	// we need to initialize this with 0: as (x, y) are sent interleaved
-	// via löve's shader:send later, any nan's here in the unused (less
-	// filled) dimension will cause a "nil not a number" error.
-	for (int i = 0; i < n; i++) {
-		lut[i] = 0.0;
-	}
+	// - bounds
+	// - lookupTable
+	// - lookupTableMeta
+	// - listsTexture
+	// - curvesTexture
 }
 
 AllocateGeometryData::~AllocateGeometryData() {
-	delete[] data.lookupTable;
 }
 
 AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
@@ -64,6 +57,8 @@ AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
 
 	// do not use this variant for data linked to tove's lua lib.
 
+	data.bounds = new ToveBounds;
+
 	data.listsTextureRowBytes = data.listsTextureSize[0] * sizeof(uint8_t) * 4;
     data.listsTexture = new uint8_t[
 		data.listsTextureRowBytes * data.listsTextureSize[1]];
@@ -71,9 +66,17 @@ AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
     data.curvesTextureRowBytes = data.curvesTextureSize[0] * sizeof(uint16_t) * 4;
     data.curvesTexture = new uint16_t[
 		data.curvesTextureRowBytes * data.curvesTextureSize[1] / sizeof(uint16_t)];
+
+	data.lookupTable = new float[data.lookupTableSize * 2];
+	data.lookupTableMeta = new ToveLookupTableMeta;
 }
 
 AllocateGeometryNoLinkData::~AllocateGeometryNoLinkData() {
+	delete data.bounds;
+
     delete[] data.listsTexture;
     delete[] data.curvesTexture;
+
+	delete[] data.lookupTable;
+	delete data.lookupTableMeta;
 }

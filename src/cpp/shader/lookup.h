@@ -154,8 +154,8 @@ public:
 			yptr += rowBytes;
         }
 
-        data.lookupTableFill[dim] = (ylookup - lookupTable) / 2;
-		assert(data.lookupTableFill[dim] <= data.lookupTableSize);
+        data.lookupTableMeta->n[dim] = (ylookup - lookupTable) / 2;
+		assert(data.lookupTableMeta->n[dim] <= data.lookupTableSize);
     }
 
     inline void build(int dim, const std::vector<Event> &events,

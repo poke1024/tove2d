@@ -9,26 +9,22 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local function getMeshBounds(data)
-	local x1 = data.bounds[0]
-	local y1 = data.bounds[1]
-	local x2 = data.bounds[2]
-	local y2 = data.bounds[3]
-	return x1, y1, x2, y2
-end
-
-
 local function newGradientData(gradient)
 	local n = gradient.numColors
 
 	local data = ffi.new("ToveShaderGradientData")
 	gradient.data = data
 
+	local matrixData = love.data.newByteData(ffi.sizeof("ToveMatrix3x3"))
+	data.matrix = matrixData:getPointer()
+
 	local imageData = love.image.newImageData(1, n, "rgba8")
 	data.colorsTexture = imageData:getPointer()
 	data.colorsTextureRowBytes = imageData:getSize() / n
 
-	return {data = data, imageData = imageData, texture = nil}
+	local s = 0.5 / n
+	return {numColors = n, data = data, matrixData = matrixData,
+		imageData = imageData, texture = nil, cscale = {s, 1 - 2 * s}}
 end
 
 local function newGradientTexture(d)
@@ -45,15 +41,9 @@ local function sendColor(shader, uniform, rgba)
 	shader:send(uniform, {rgba.r, rgba.g, rgba.b, rgba.a})
 end
 
-local function sendLUT(shader, data)
-	local f = data.lookupTableFill
-	local fx = f[0]
-	local fy = f[1]
-
-	local fill = max(fx, fy)
-
-	shader:send("lut", unpack(totable(data.lookupTable, 2 * fill)))
-	shader:send("tablesize", {fx, fy, floor(log2(fill)) + 1})
+local function sendLUT(feed, shader)
+	shader:send("lut", feed.lookupTableByteData)
+	shader:send("tablemeta", feed.lookupTableMetaByteData)
 end
 
 
@@ -116,10 +106,8 @@ function ColorFeed:endInit(path)
 		sendColor(shader, uniforms.color, colorData.rgba)
 	elseif colorData.style >= 2 then
 		shader:send(uniforms.colors, gradientData.texture)
-		local gradient = colorData.gradient
-		sendGradientMatrix(shader, uniforms.matrix, gradient)
-		local s = 0.5 / gradient.numColors
-		shader:send(uniforms.cscale, {s, 1 - 2 * s})
+		shader:send(uniforms.matrix, gradientData.matrixData)
+		shader:send(uniforms.cscale, gradientData.cscale)
 	end
 end
 
@@ -131,11 +119,10 @@ function ColorFeed:update(chg1, path)
 		if colorData.style == 1 then
 			sendColor(shader, uniforms.color, colorData.rgba)
 		elseif colorData.style >= 2 then
-			reloadGradientTexture(self.gradientData)
-			local gradient = colorData.gradient
-			sendGradientMatrix(shader, uniforms.matrix, gradient)
-			local s = 0.5 / gradient.numColors
-			shader:send(uniforms.cscale, {s, 1 - 2 * s})
+			local gradientData = self.gradientData
+			reloadGradientTexture(gradientData)
+			shader:send(uniforms.matrix, gradientData.matrixData)
+			shader:send(uniforms.cscale, gradientData.cscale)
 		end
 	end
 end
@@ -145,7 +132,14 @@ local GeometryFeed = {}
 GeometryFeed.__index = GeometryFeed
 
 local function newGeometryFeed(shader, data)
-	return setmetatable({shader = shader, data = data}, GeometryFeed)
+	return setmetatable({
+		shader = shader,
+		data = data,
+		boundsByteData = nil,
+		listsImageData = nil,
+		curvesImageData = nil,
+		lookupTableByteData = nil,
+		lookupTableMetaByteData = nil}, GeometryFeed)
 end
 
 function GeometryFeed:beginInit()
@@ -153,6 +147,9 @@ function GeometryFeed:beginInit()
 
 	-- note: everything we store as pointers into "data" (or some sub structure of
 	-- it), needs to be referenced somewhere else; otherwise the gc will collect it.
+
+	self.boundsByteData = love.data.newByteData(ffi.sizeof("ToveBounds"))
+	data.bounds = self.boundsByteData:getPointer()
 
 	local listsImageData = love.image.newImageData(
 		data.listsTextureSize[0], data.listsTextureSize[1],
@@ -164,13 +161,19 @@ function GeometryFeed:beginInit()
 		ffi.string(data.curvesTextureFormat))
 	data.curvesTextureRowBytes = curvesImageData:getSize() / data.curvesTextureSize[1]
 
-	--print("data.curvesTextureRowBytes", data.curvesTextureRowBytes)
-
 	data.listsTexture = listsImageData:getPointer()
 	data.curvesTexture = curvesImageData:getPointer()
 
 	self.listsImageData = listsImageData
 	self.curvesImageData = curvesImageData
+
+	self.lookupTableByteData = love.data.newByteData(
+		ffi.sizeof("float[?]", data.lookupTableSize * 2))
+	data.lookupTable = self.lookupTableByteData:getPointer()
+
+	self.lookupTableMetaByteData = love.data.newByteData(
+		ffi.sizeof("ToveLookupTableMeta"))
+	data.lookupTableMeta = self.lookupTableMetaByteData:getPointer()
 end
 
 function GeometryFeed:endInit(lineStyle)
@@ -189,13 +192,12 @@ function GeometryFeed:endInit(lineStyle)
 	-- note: since bezier curves stay in the convex hull of their control points, we
 	-- could triangulate the mesh here. with strokes, it gets difficult though.
 
-	local x1, y1, x2, y2 = getMeshBounds(data)
-	local vertices = {{x1, y1, x1, y1}, {x2, y1, x2, y1},
-		{x2, y2, x2, y2}, {x1, y2, x1, y2}}
+	local vertices = {{0, 0}, {1, 0}, {1, 1}, {0, 1}}
 	self.mesh = love.graphics.newMesh(
-		{{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}}, vertices)
+		{{"VertexPosition", "float", 2}}, vertices)
 
-	sendLUT(shader, data)
+	sendLUT(self, shader)
+	shader:send("bounds", self.boundsByteData)
 
 	shader:send("lists", listsTexture)
 	shader:send("curves", curvesTexture)
@@ -208,15 +210,14 @@ end
 function GeometryFeed:update(chg2)
 	local data = self.data
 
-	if bit.band(chg2, lib.CHANGED_POINTS) ~= 0 and data.lookupTableFill[1] > 1 then
+	if bit.band(chg2, lib.CHANGED_POINTS) ~= 0 then
 		local shader = self.shader
-		sendLUT(shader, data)
+
+		sendLUT(self, shader)
+		shader:send("bounds", self.boundsByteData)
 
 		self.listsTexture:replacePixels(self.listsImageData)
 		self.curvesTexture:replacePixels(self.curvesImageData)
-
-		local x1, y1, x2, y2 = getMeshBounds(data)
-		self.mesh:setVertices({{x1, y1, x1, y1}, {x2, y1, x2, y1}, {x2, y2, x2, y2}, {x1, y2, x1, y2}})
 	end
 end
 

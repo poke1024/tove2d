@@ -12,23 +12,11 @@
 local love_graphics = love.graphics
 local _, _, _, device = love_graphics.getRendererInfo()
 
-local sendGradientMatrix
 local _gmat = "mat3"
 
 if string.find(device, "Parallels") then
 	-- work around crashing Parallels drivers with mat3
-	sendGradientMatrix = function(shader, uniform, gradient)
-		local t = totable(gradient.data.matrix, 9)
-		t[10] = 0
-		t[11] = 0
-		t[12] = 0
-		shader:send(uniform, t)
-	end
 	_gmat = "mat3x4"
-else
-	sendGradientMatrix = function(shader, uniform, gradient)
-		shader:send(uniform, totable(gradient.data.matrix, 9))
-	end
 end
 
 local shaders = {
@@ -107,18 +95,30 @@ local function log2(n)
 end
 
 local function next2(n)
-	return math.pow(2, math.ceil(log2(max(8, n))))
+	return math.pow(2, math.ceil(log2(max(16, n))))
 end
+
+
+local _vertexCode = [[
+uniform vec4 bounds;
+varying vec4 raw_vertex_pos;
+
+vec4 position(mat4 transform_projection, vec4 vertex_pos) {
+	raw_vertex_pos = vec4(mix(bounds.xy, bounds.zw, vertex_pos.xy), vertex_pos.zw);
+    return transform_projection * raw_vertex_pos;
+}
+]]
 
 local function newShader(data)
 	local geometry = data.geometry
-	local lutN = geometry.lookupTableSize
+
+	-- encourage shader caching by trying to reduce
+	-- code changing states.
+	local lutN = next2(geometry.lookupTableSize)
+
 	local f = string.format
 	local code = {
 		f("#define LUT_SIZE %d", lutN),
-		f("#define NUM_CURVES %d", geometry.numCurves),
-		f("#define LISTS_W %d", geometry.listsTextureSize[0]),
-		f("#define LISTS_H %d", geometry.listsTextureSize[1]),
 		f("#define LINE_STYLE %d", data.color.line.style),
 		f("#define FILL_STYLE %d", data.color.fill.style),
 		f("#define FILL_RULE %d", geometry.fillRule),
@@ -126,7 +126,13 @@ local function newShader(data)
 		shaders.fill,
 		shaders.code
 	}
-	return love_graphics.newShader(table.concat(code, "\n"))
+
+	local shader = love_graphics.newShader(
+		table.concat(code, "\n"), _vertexCode)
+
+	shader:send("constants", {geometry.numCurves,
+		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
+	return shader
 end
 
 local function newLineShader(data)
@@ -167,8 +173,6 @@ local function newMeshShaderLinkData(path, tess, usage)
 	local link = ffi.gc(lib.NewShaderLink(0), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetColorData(link)
 	lib.ShaderLinkBeginUpdate(link, path, true)
-
-	--print("xx", data.line.style, data.fill.style)
 
 	local lineShader = newLineShader(data.line)
 	local fillShader = newFillShader(data.fill)

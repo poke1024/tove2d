@@ -18,13 +18,21 @@
 
 typedef LookupTable::CurveSet CurveSet;
 
+inline void updateLookupTableMeta(ToveLookupTableMeta *meta) {
+	// compute the number of needed binary search iterations.
+	const int fillX = meta->n[0];
+	const int fillY = meta->n[1];
+	const int fill = std::max(fillX, fillY);
+	meta->bsearch = int(std::floor(std::log2(fill))) + 1;
+}
+
 static void queryLUT(
 	ToveShaderGeometryData *data,
 	int dim, float y0, float y1,
 	std::unordered_set<uint8_t> &result) {
 
 	const float *lut = data->lookupTable + dim;
-	const int n = data->lookupTableFill[dim];
+	const int n = data->lookupTableMeta->n[dim];
 
 	if (n < 1 || y0 >= lut[2 * (n - 1)]) {
 		return;
@@ -237,6 +245,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	}
 
 	assert(geometryData.lookupTable != nullptr);
+	assert(geometryData.lookupTableMeta != nullptr);
 	assert(geometryData.lookupTableSize == maxCurves * 4 + 2);
 
 	assert(geometryData.listsTexture != nullptr);
@@ -281,26 +290,30 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	}
 #endif
 
+	float *bounds = geometryData.bounds->bounds;
+
 	for (int dim = 0; dim < 2; dim++) {
 		int numEvents = buildLUT(dim);
 
 		if (numEvents > 0) {
-			geometryData.bounds[dim + 0] = fillEvents[0].y;
-			geometryData.bounds[dim + 2] = fillEvents[numEvents - 1].y;
+			bounds[dim + 0] = fillEvents[0].y;
+			bounds[dim + 2] = fillEvents[numEvents - 1].y;
 		} else {
 			// all curves are empty. just pick the first curve (must exist).
-			geometryData.bounds[dim + 0] = extended[0].bounds[dim + 0];
-			geometryData.bounds[dim + 2] = extended[0].bounds[dim + 2];
+			bounds[dim + 0] = extended[0].bounds[dim + 0];
+			bounds[dim + 2] = extended[0].bounds[dim + 2];
 		}
 	}
 
 	if (lineColorData.style > 0) {
 		const float lineWidth = geometryData.strokeWidth;
-		geometryData.bounds[0] -= lineWidth;
-		geometryData.bounds[1] -= lineWidth;
-		geometryData.bounds[2] += lineWidth;
-		geometryData.bounds[3] += lineWidth;
+		bounds[0] -= lineWidth;
+		bounds[1] -= lineWidth;
+		bounds[2] += lineWidth;
+		bounds[3] += lineWidth;
 	}
+
+	updateLookupTableMeta(geometryData.lookupTableMeta);
 
 	return changes;
 }

@@ -90,7 +90,8 @@ protected:
 			cached.init(nsvgPaint, opacity);
 		}
 
-		paint->getGradientMatrix(gradient.data->matrix);
+		assert(gradient.data->matrix != nullptr);
+		paint->getGradientMatrix(*gradient.data->matrix);
 	}
 
 public:
