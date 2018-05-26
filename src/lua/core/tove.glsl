@@ -83,8 +83,13 @@ float segmentPointDistanceSquared(vec2 v, vec2 w, vec2 p) {
 }
 
 vec2 curveTangent(vec4 bx, vec4 by, float t) {
-	vec3 d_t = vec3(1, 2 * t, 3 * t * t);
-	return vec2(dot(bx.zyx, d_t), dot(by.zyx, d_t));
+	vec3 c_dt = vec3(3 * t * t, 2 * t, 1);
+	vec2 tangent = vec2(dot(bx.xyz, c_dt), dot(by.xyz, c_dt));
+	if (dot(tangent, tangent) < 1e-2) {
+		// ugly, but necessary case; e.g. see "hearts" shape from demos
+		tangent = eval(bx, by, t + 1e-2) - eval(bx, by, t - 1e-2);
+	}
+	return tangent;
 }
 
 float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolerance) {
@@ -131,8 +136,8 @@ vec3 goodT(vec3 t) {
 
 #if FILL_RULE == 0
 float clockwise(vec4 by, float t, float t2) {
-	vec3 d_t = vec3(1, 2 * t, 3 * t2);
-	return sign(dot(by.zyx, d_t));
+	vec3 c_dt = vec3(3 * t2, 2 * t, 1);
+	return sign(dot(by.xyz, c_dt));
 }
 
 int contribute(vec4 bx, vec4 by, float t, float x) {
