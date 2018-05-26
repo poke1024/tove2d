@@ -169,23 +169,39 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 					float nx = -dy10;
 					float ny = dx10;
 
-					float l = -lineOffset / (mx * nx + my * ny);
+					float l_inner = lineOffset / (mx * nx + my * ny);
+					float l_outer = l_inner;
 
-					if (!closed && j == 0) {
-						l = lineOffset;
-						mx = -dy21;
-						my = dx21;
-					} /*else if (!closed && j == k - 1) {
-						l = lineOffset;
-						mx = nx;
-						my = ny;
-					}*/
+					// this miter limit application is a hack, as it does not produce
+					// a bevel as it should (we'd need additional vertices here, which
+					// we don't have). still - it's much better than having no limit.
+					l_outer = std::min(l_outer, shape->miterLimit);
+					l_inner = std::min(l_inner, lineOffset * 2);
 
-					outer[j * 2 + 0] = x1 + l * mx;
-					outer[j * 2 + 1] = y1 + l * my;
+					float direction = dx21 * nx + dy21 * ny;
+					if (direction < 0.0f) {
+						std::swap(l_inner, l_outer);
+					}
 
-					inner[j * 2 + 0] = x1 - l * mx;
-					inner[j * 2 + 1] = y1 - l * my;
+					if (!closed) {
+						if (j == 0) {
+							l_inner = lineOffset;
+							l_outer = lineOffset;
+							mx = -dy21;
+							my = dx21;
+						} else if (j == k - 1) {
+							l_inner = lineOffset;
+							l_outer = lineOffset;
+							mx = -dy10;
+							my = dx10;
+						}
+					}
+
+					outer[j * 2 + 0] = x1 - l_outer * mx;
+					outer[j * 2 + 1] = y1 - l_outer * my;
+
+					inner[j * 2 + 0] = x1 + l_inner * mx;
+					inner[j * 2 + 1] = y1 + l_inner * my;
 				}
 
 #if 0

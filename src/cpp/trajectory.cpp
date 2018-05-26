@@ -275,7 +275,7 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 		} break;
 		case TOVE_LINE_TO: {
 			if (what >= 4 && what <= 5) {
-				assert(command.index > 0);
+				assert(command.index >= 0);
 				const float px = getCommandPoint(command, what - 4);
 				const float dx = value - px;
 				setCommandPoint(command, what - 2, px + dx / 3.0f);
@@ -459,7 +459,7 @@ void Trajectory::updateNSVG() {
 	if (nsvg.npts > 0) {
 		while (nsvg.npts != 3 * ncurves(nsvg.npts) + 1) {
 			addPoint(nsvg.pts[2 * (nsvg.npts - 1) + 0],
-				nsvg.pts[2 * (nsvg.npts - 1) + 1]);			
+				nsvg.pts[2 * (nsvg.npts - 1) + 1]);
 		}
 	}
 

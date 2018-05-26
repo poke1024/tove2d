@@ -182,6 +182,10 @@ public:
 
 	bool check(const float *vertices, bool &triangleCacheFlag) {
 		const int n = triangulations.size();
+		if (n == 0) {
+			return true;
+		}
+
 		assert(current < n);
 		if (triangulations[current]->partition.check(vertices)) {
 			triangulations[current]->useCount++;
