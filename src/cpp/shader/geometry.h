@@ -16,11 +16,12 @@
 
 class GeometryShaderLinkImpl {
 private:
+	const int maxCurves;
+
 	ToveShaderGeometryData &geometryData;
 	const ToveShaderColorData &lineColorData;
 	ToveShaderGeometryData strokeShaderData;
 
-	const int maxCurves;
     std::vector<Event> fillEvents;
     std::vector<Event> strokeEvents;
     LookupTable fillEventsLUT;
@@ -30,6 +31,7 @@ private:
 
 	AllocateGeometryData allocData;
 	AllocateGeometryNoLinkData allocStrokeData;
+	const bool enableFragmentShaderStrokes;
 
 	int buildLUT(int dim);
 	void dumpCurveData();
@@ -38,7 +40,8 @@ public:
 	GeometryShaderLinkImpl(
 		ToveShaderGeometryData &data,
 		const ToveShaderColorData &lineColorData,
-		int maxCurves);
+		const PathRef &path,
+		bool enableFragmentShaderStrokes);
 
 	ToveChangeFlags beginUpdate(const PathRef &path, bool initial);
     int endUpdate(const PathRef &path, bool initial);

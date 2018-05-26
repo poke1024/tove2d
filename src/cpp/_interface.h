@@ -151,6 +151,7 @@ typedef struct {
 	ToveBounds *bounds;
 	float strokeWidth;
 	int8_t fillRule;
+	bool fragmentShaderStrokes;
 
 	float *lookupTable;
 	int lookupTableSize;
@@ -272,7 +273,8 @@ EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orient
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
-EXPORT ToveShaderLinkRef NewShaderLink(int numCurves);
+EXPORT ToveShaderLinkRef NewColorShaderLink();
+EXPORT ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path);
 EXPORT ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);
 EXPORT ToveChangeFlags ShaderLinkEndUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);
 EXPORT ToveShaderData *ShaderLinkGetData(ToveShaderLinkRef link);

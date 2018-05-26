@@ -58,7 +58,7 @@ public:
     }
 };
 
-class ShaderLink : public AbstractShaderLink {
+class GeometryShaderLink : public AbstractShaderLink {
 private:
 	ToveShaderData data;
 	LineColorShaderLinkImpl lineColor;
@@ -66,10 +66,10 @@ private:
 	GeometryShaderLinkImpl geometry;
 
 public:
-	ShaderLink(int numCurves) :
+	GeometryShaderLink(const PathRef &path) :
 		lineColor(data.color.line),
 		fillColor(data.color.fill),
-		geometry(data.geometry, data.color.line, numCurves) {
+		geometry(data.geometry, data.color.line, path, true) {
 	}
 
 	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {

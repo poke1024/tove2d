@@ -66,7 +66,7 @@ static void queryLUT(
 }
 
 int GeometryShaderLinkImpl::buildLUT(int dim) {
-	const bool hasLine = lineColorData.style > 0;
+	const bool hasLine = geometryData.fragmentShaderStrokes;
 	const float lineWidth = geometryData.strokeWidth;
 
 	auto e = fillEvents.begin();
@@ -204,18 +204,24 @@ void GeometryShaderLinkImpl::dumpCurveData() {
 GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 	ToveShaderGeometryData &data,
 	const ToveShaderColorData &lineColorData,
-	int maxCurves) :
+	const PathRef &path,
+	bool enableFragmentShaderStrokes) :
 
+	maxCurves(path->getNumCurves()),
 	geometryData(data),
 	lineColorData(lineColorData),
-	maxCurves(maxCurves),
 	fillEventsLUT(maxCurves, geometryData, IGNORE_FILL),
 	strokeEventsLUT(maxCurves, strokeShaderData, IGNORE_LINE),
-	allocData(maxCurves, geometryData),
-	allocStrokeData(maxCurves, strokeShaderData) {
+	allocData(maxCurves, enableFragmentShaderStrokes && path->hasStroke(), geometryData),
+	allocStrokeData(maxCurves, true, strokeShaderData),
+	enableFragmentShaderStrokes(enableFragmentShaderStrokes) {
 
-	if (maxCurves > 253 || maxCurves < 1) {
-		throw std::invalid_argument("only up to 253 curves");
+	if (maxCurves < 1) {
+		throw std::invalid_argument("cannot render empty paths");
+	}
+
+	if (maxCurves > 253) {
+		throw std::invalid_argument("path too complex; only up to 253 curves");
 	}
 
 	fillEvents.resize(6 * maxCurves);
@@ -226,6 +232,11 @@ GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 
 ToveChangeFlags GeometryShaderLinkImpl::beginUpdate(const PathRef &path, bool initial) {
 	if (!initial && path->fetchChanges(CHANGED_GEOMETRY)) {
+		return CHANGED_RECREATE;
+	}
+
+	if ((enableFragmentShaderStrokes && path->hasStroke()) !=
+		geometryData.fragmentShaderStrokes) {
 		return CHANGED_RECREATE;
 	}
 
@@ -246,12 +257,12 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 
 	assert(geometryData.lookupTable != nullptr);
 	assert(geometryData.lookupTableMeta != nullptr);
-	assert(geometryData.lookupTableSize == maxCurves * 4 + 2);
+	//assert(geometryData.lookupTableSize == maxCurves * 4 + 2);
 
 	assert(geometryData.listsTexture != nullptr);
 	assert(geometryData.listsTextureRowBytes >=
 		geometryData.listsTextureSize[0] * 4);
-	assert(geometryData.listsTextureSize[1] == 2 * (maxCurves * 2 + 2));
+	//assert(geometryData.listsTextureSize[1] == 2 * (maxCurves * 2 + 2));
 
 	assert(geometryData.curvesTexture != nullptr);
 	assert(geometryData.curvesTextureRowBytes >=

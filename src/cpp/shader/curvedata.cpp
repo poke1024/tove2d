@@ -13,7 +13,7 @@
 #include "curvedata.h"
 #include <algorithm>
 
-void ExtendedCurveData::copy(uint16_t *out) {
+void ExtendedCurveData::copyRoots(uint16_t *out) {
 	float t[4];
 	int count = 0;
 

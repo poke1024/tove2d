@@ -25,7 +25,6 @@
 
 varying vec4 raw_vertex_pos;
 
-#define CURVE_DATA_SIZE 4
 #define T_EPS 0.0
 #define SENTINEL_END 1.0
 #define SENTINEL_STROKES (254.0 / 255.0)

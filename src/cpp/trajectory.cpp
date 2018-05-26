@@ -427,10 +427,12 @@ void Trajectory::computeShaderCurveData(
 	}
 	data += 4;
 
-	// needed for stroke support.
-	extended.copy(data);
-	data += 4;
+	if (shaderData->fragmentShaderStrokes) {
+		extended.copyRoots(data);
+		data += 4;
+	}
 
+	assert(data - curveData <= 4 * shaderData->curvesTextureSize[0]);
 	extended.ignore = 0;
 }
 

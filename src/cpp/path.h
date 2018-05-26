@@ -153,6 +153,10 @@ public:
 	inline int getTrajectorySize(int i, const FixedFlattener &flattener) const {
 		return flattener.size(&trajectories[i]->nsvg);
 	}
+
+	inline bool hasStroke() const {
+		return nsvg.stroke.type > 0 && nsvg.strokeWidth > 0.0f;
+	}
 };
 
 #endif // __TOVE_PATH

@@ -100,7 +100,7 @@ public:
             const float y = i->y;
 
             if (ylookup == lookupTable) {
-                if (padding > 0.0) {
+                if (data.fragmentShaderStrokes && padding > 0.0) {
                     y0 = y - padding;
                     *ylookup = y0;
 					ylookup += 2;
@@ -145,7 +145,7 @@ public:
 			yptr += rowBytes;
         }
 
-        if (ylookup > lookupTable && padding > 0.0) {
+        if (data.fragmentShaderStrokes && ylookup > lookupTable && padding > 0.0) {
             float y0 = ylookup[-2];
             float y1 = y0 + padding;
             *ylookup = y1;

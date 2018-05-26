@@ -122,6 +122,7 @@ local function newShader(data)
 		f("#define LINE_STYLE %d", data.color.line.style),
 		f("#define FILL_STYLE %d", data.color.fill.style),
 		f("#define FILL_RULE %d", geometry.fillRule),
+		f("#define CURVE_DATA_SIZE %d", geometry.curvesTextureSize[0]),
 		shaders.line,
 		shaders.fill,
 		shaders.code
@@ -170,7 +171,7 @@ local function newMeshShaderLinkData(path, tess, usage)
 
 	tess(path, fillMesh._cmesh, lineMesh._cmesh, lib.UPDATE_MESH_EVERYTHING)
 
-	local link = ffi.gc(lib.NewShaderLink(0), lib.ReleaseShaderLink)
+	local link = ffi.gc(lib.NewColorShaderLink(), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetColorData(link)
 	lib.ShaderLinkBeginUpdate(link, path, true)
 
@@ -277,7 +278,7 @@ local PathShader = {}
 PathShader.__index = PathShader
 
 local function newPathShaderLinkData(path)
-	local link = ffi.gc(lib.NewShaderLink(path:getNumCurves()), lib.ReleaseShaderLink)
+	local link = ffi.gc(lib.NewGeometryShaderLink(path), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetData(link)
 
 	lib.ShaderLinkBeginUpdate(link, path, true)

@@ -19,12 +19,18 @@ protected:
 	ToveShaderGeometryData &data;
 
 public:
-	AllocateGeometryData(int numCurves, ToveShaderGeometryData &data);
+	AllocateGeometryData(
+		int numCurves,
+		bool fragmentShaderStrokes,
+		ToveShaderGeometryData &data);
 	~AllocateGeometryData();
 };
 
 struct AllocateGeometryNoLinkData : public AllocateGeometryData {
-	AllocateGeometryNoLinkData(int numCurves, ToveShaderGeometryData &data);
+	AllocateGeometryNoLinkData(
+		int numCurves,
+		bool fragmentShaderStrokes,
+		ToveShaderGeometryData &data);
 	~AllocateGeometryNoLinkData();
 };
 

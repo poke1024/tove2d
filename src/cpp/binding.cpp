@@ -413,12 +413,12 @@ void ReleaseGraphics(ToveGraphicsRef shape) {
 }
 
 
-ToveShaderLinkRef NewShaderLink(int numCurves) {
-	if (numCurves > 0) {
-		return shaderLinks.publish(std::make_shared<ShaderLink>(numCurves));
-	} else {
-		return shaderLinks.publish(std::make_shared<ColorShaderLink>());
-	}
+ToveShaderLinkRef NewColorShaderLink() {
+	return shaderLinks.publish(std::make_shared<ColorShaderLink>());
+}
+
+ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path) {
+	return shaderLinks.publish(std::make_shared<GeometryShaderLink>(deref(path)));
 }
 
 ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial) {
