@@ -171,12 +171,12 @@ int contribute3(vec4 bx, vec4 by, vec3 t, float x) {
 
 #if LINE_STYLE > 0
 bool checkLine(float curveId, vec2 position, vec2 axis1) {
-	vec4 bounds = texture2D(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
+	vec4 bounds = texture(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
 	vec2 off = clamp(position, bounds.xy, bounds.zw) - position;
 	if (abs(dot(off, axis1)) < linewidth) {
-		vec4 bx = texture2D(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
-		vec4 by = texture2D(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
-		vec4 roots = texture2D(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
+		vec4 bx = texture(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
+		vec4 by = texture(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
+		vec4 roots = texture(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
 		return onCurveLine(position, bx, by, roots, linewidth * linewidth);
 	} else {
 		return false;
@@ -287,9 +287,18 @@ ivec4 bsearch(ivec4 lohi, vec2 position) {
 		vec2(lut[lutIndex.x], lut[lutIndex.y + 1]), position);
 
 	ivec4 nextLo = ivec4(mid + ivec2(1), XY_HI);
-    return ivec4(
+
+#if 0
+	// glsl2 version of the glsl3 code below.
+	return ivec4(
 		notDone.x ? (smaller.x ? nextLo.xz : ivec2(X_LO, X_MID)) : X_LOHI,
         notDone.y ? (smaller.y ? nextLo.yw : ivec2(Y_LO, Y_MID)) : Y_LOHI);
+#endif
+
+	return ivec4(mix(
+		lohi.xyzw,
+		mix(ivec4(X_LO, X_MID, Y_LO, Y_MID), nextLo.xzyw, smaller.xxyy),
+		notDone.xxyy));
 }
 
 ivec2 search(vec2 position) {
@@ -312,9 +321,8 @@ vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
 	vec2 d0 = position - vec2(x0, y0);
 	vec2 d1 = vec2(x1, y1) - position;
 
-	float dx = min(d0.x, d1.x);
-	float dy = min(d0.y, d1.y);
-	rayOnX = dx < dy;
+	vec2 dxy = min(d0, d1);
+	rayOnX = dxy.x < dxy.y;
 
 	// reduce remaining numerical inaccuracies.
 	vec2 p0 = vec2(x0, y0);
@@ -347,20 +355,20 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 	vec2 blockadv = vec2(1.0 / LISTS_W, 0);
 
 	float C_ID_SCALE = 255.0 / NUM_CURVES;
-	vec4 curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
+	vec4 curveIds = texture(lists, blockpos) * C_ID_SCALE;
 	int k = 0;
 
 	while (curveIds.x < SENTINEL_STROKES * C_ID_SCALE) {
 		float curveId = curveIds.x;
-		vec4 bx = texture2D(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
-		vec4 by = texture2D(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
-		vec4 bounds = texture2D(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
+		vec4 bx = texture(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
+		vec4 by = texture(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
+		vec4 bounds = texture(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
 
 #if LINE_STYLE > 0
 		vec2 off = clamp(position, bounds.xy, bounds.zw) - position;
 
 		if (abs(dot(off, axis1)) < linewidth) {
-			vec4 roots = texture2D(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
+			vec4 roots = texture(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
 			if (onCurveLine(position, bx, by, roots, linewidth * linewidth)) {
 				return computeLineColor(position);
 			}
@@ -388,7 +396,7 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 				// something went horribly wrong.
 				return vec4(0.33, 1, 1, 1);
 			}
-			curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
+			curveIds = texture(lists, blockpos) * C_ID_SCALE;
 			k = 0;
 		}
 	}
@@ -399,7 +407,7 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
 			blockpos += blockadv;
-			curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
+			curveIds = texture(lists, blockpos) * C_ID_SCALE;
 			k = 0;
 		}
 		while (curveIds.x < SENTINEL_END * C_ID_SCALE) {
@@ -415,7 +423,7 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 					// something went horribly wrong.
 					return vec4(0.33, 1, 1, 1);
 				}
-				curveIds = texture2D(lists, blockpos) * C_ID_SCALE;
+				curveIds = texture(lists, blockpos) * C_ID_SCALE;
 				k = 0;
 			}
 		}

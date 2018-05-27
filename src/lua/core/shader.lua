@@ -36,11 +36,11 @@ vec4 computeLineColor(vec2 pos) {
 #elif LINE_STYLE == 2
 	float y = (linematrix * vec3(pos, 1)).y;
 	y = linecscale.x + linecscale.y * y;
-	return texture2D(linecolors, vec2(0.5, y));
+	return texture(linecolors, vec2(0.5, y));
 #elif LINE_STYLE == 3
 	float y = length((linematrix * vec3(pos, 1)).xy);
 	y = linecscale.x + linecscale.y * y;
-	return texture2D(linecolors, vec2(0.5, y));
+	return texture(linecolors, vec2(0.5, y));
 #endif
 }
 #endif
@@ -66,11 +66,11 @@ vec4 computeFillColor(vec2 pos) {
 #elif FILL_STYLE == 2
 	float y = (fillmatrix * vec3(pos, 1)).y;
 	y = fillcscale.x + fillcscale.y * y;
-	return texture2D(fillcolors, vec2(0.5, y));
+	return texture(fillcolors, vec2(0.5, y));
 #elif FILL_STYLE == 3
 	float y = length((fillmatrix * vec3(pos, 1)).xy);
 	y = fillcscale.x + fillcscale.y * y;
-	return texture2D(fillcolors, vec2(0.5, y));
+	return texture(fillcolors, vec2(0.5, y));
 #endif
 }
 #endif
@@ -100,6 +100,8 @@ end
 
 
 local _vertexCode = [[
+#pragma language glsl3
+
 uniform vec4 bounds;
 varying vec4 raw_vertex_pos;
 
@@ -123,6 +125,7 @@ local function newGeometryFillShader(data, fragLine)
 	end
 
 	local code = {
+		"#pragma language glsl3",
 		f("#define LUT_SIZE %d", lutN),
 		f("#define LINE_STYLE %d", lineStyle),
 		f("#define FILL_STYLE %d", data.color.fill.style),
@@ -181,6 +184,7 @@ local function newLineShader(data)
 		return nil
 	end
 	local code = {
+		"#pragma language glsl3",
 		string.format("#define LINE_STYLE %d", data.style),
 		shaders.line,
 		shaders.lineGlue
@@ -193,6 +197,7 @@ local function newFillShader(data)
 		return nil
 	end
 	local code = {
+		"#pragma language glsl3",
 		string.format("#define FILL_STYLE %d", data.style),
 		shaders.fill,
 		shaders.fillGlue
