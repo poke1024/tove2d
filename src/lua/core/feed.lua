@@ -46,6 +46,10 @@ local function sendLUT(feed, shader)
 	shader:send("tablemeta", feed.lookupTableMetaByteData)
 end
 
+local function sendLineArgs(shader, data)
+	shader:send("lineargs", {data.strokeWidth / 2, data.miterLimit})
+end
+
 
 local NullColorFeed = {}
 NullColorFeed.__index = NullColorFeed
@@ -214,21 +218,20 @@ function GeometryFeed:endInit(lineStyle)
 	end
 
 	if lineStyle >= 1 and lineShader ~= nil then
-		lineShader:send("linewidth", data.strokeWidth / 2)
+		sendLineArgs(lineShader, data)
 	end
 end
 
-function GeometryFeed:update(chg2)
-	local data = self.data
-
-	if bit.band(chg2, lib.CHANGED_POINTS) ~= 0 then
+function GeometryFeed:update(flags)
+	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local fillShader = self.fillShader
 		local lineShader = self.lineShader
 
 		sendLUT(self, fillShader)
 		fillShader:send("bounds", self.boundsByteData)
-		if data.strokeWidth > 0.0 and lineShader ~= nil then
-			lineShader:send("linewidth", data.strokeWidth / 2)
+
+		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 and lineShader ~= nil then
+			sendLineArgs(lineShader, self.data)
 		end
 
 		self.listsTexture:replacePixels(self.listsImageData)

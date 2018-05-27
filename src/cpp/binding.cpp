@@ -114,6 +114,10 @@ void PathSetLineWidth(TovePathRef path, float width) {
 	deref(path)->setLineWidth(width);
 }
 
+void PathSetMiterLimit(TovePathRef path, float limit) {
+	deref(path)->setMiterLimit(limit);
+}
+
 int PathGetNumTrajectories(TovePathRef path) {
 	return deref(path)->getNumTrajectories();
 }
@@ -329,6 +333,10 @@ void GraphicsSetFillColor(ToveGraphicsRef shape, TovePaintRef color) {
 
 void GraphicsSetLineWidth(ToveGraphicsRef shape, float width) {
 	deref(shape)->setLineWidth(width);
+}
+
+void GraphicsSetMiterLimit(ToveGraphicsRef shape, float limit) {
+	deref(shape)->setMiterLimit(limit);
 }
 
 void GraphicsSetLineDash(ToveGraphicsRef shape, const float *dashes, int count) {

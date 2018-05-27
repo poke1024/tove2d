@@ -44,7 +44,8 @@ uniform sampler2D lists;
 uniform sampler2D curves;
 
 #if LINE_STYLE > 0
-uniform float linewidth; // half the linewidth
+#define LINE_OFFSET lineargs.x
+uniform vec2 lineargs;
 #endif
 
 #if LINE_STYLE > 0
@@ -107,7 +108,7 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 			vec4(state.xyw, s1 * 0.5);
 	}
 
-	vec2 w = normalize(curveTangent(bx, by, state.x)) * linewidth;
+	vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET;
 	return segmentPointDistanceSquared(curvePoint - w, curvePoint + w, pos);
 }
 
@@ -173,11 +174,11 @@ int contribute3(vec4 bx, vec4 by, vec3 t, float x) {
 bool checkLine(float curveId, vec2 position, vec2 axis1) {
 	vec4 bounds = texture(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
 	vec2 off = clamp(position, bounds.xy, bounds.zw) - position;
-	if (abs(dot(off, axis1)) < linewidth) {
+	if (abs(dot(off, axis1)) < LINE_OFFSET) {
 		vec4 bx = texture(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
 		vec4 by = texture(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
 		vec4 roots = texture(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
-		return onCurveLine(position, bx, by, roots, linewidth * linewidth);
+		return onCurveLine(position, bx, by, roots, LINE_OFFSET * LINE_OFFSET);
 	} else {
 		return false;
 	}
@@ -367,9 +368,9 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 #if LINE_STYLE > 0
 		vec2 off = clamp(position, bounds.xy, bounds.zw) - position;
 
-		if (abs(dot(off, axis1)) < linewidth) {
+		if (abs(dot(off, axis1)) < LINE_OFFSET) {
 			vec4 roots = texture(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
-			if (onCurveLine(position, bx, by, roots, linewidth * linewidth)) {
+			if (onCurveLine(position, bx, by, roots, LINE_OFFSET * LINE_OFFSET)) {
 				return computeLineColor(position);
 			}
 		}

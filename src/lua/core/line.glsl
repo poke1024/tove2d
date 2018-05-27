@@ -14,8 +14,9 @@ uniform int max_curves;
 uniform int num_curves;
 uniform int segments_per_curve;
 
-uniform float linewidth;
-uniform float miter_limit;
+uniform vec2 lineargs;
+#define LINE_OFFSET lineargs.x
+#define MITER_LIMIT lineargs.y
 
 vec2 at(vec4 bx, vec4 by, float t) {
     float t2 = t * t;
@@ -64,10 +65,10 @@ vec4 position(mat4 transform_projection, vec4 mesh_position) {
     vec2 m = vec2(-t.y, t.x);
     vec2 n = vec2(-d10.y, d10.x);
 
-    float l = linewidth / dot(m, n);
+    float l = LINE_OFFSET / dot(m, n);
 
     // non-bevel (hacky) miter limit.
-    l = min(l, miter_limit);
+    l = min(l, MITER_LIMIT);
 
     vec2 q = vec2(p1 + l * m * mesh_position.y);
 

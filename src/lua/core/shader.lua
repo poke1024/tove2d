@@ -173,8 +173,6 @@ local function newGeometryLineShader(data)
 		table.concat(vertcode, "\n"))
 
 	shader:send("max_curves", data.geometry.maxCurves)
-	shader:send("linewidth", 1)
-	shader:send("miter_limit", 5)
 
 	return shader
 end

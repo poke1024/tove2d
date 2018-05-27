@@ -76,6 +76,10 @@ public:
  		this->strokeWidth = strokeWidth;
 	}
 
+	inline void setMiterLimit(float limit) {
+		this->miterLimit = limit;
+	}
+
 	inline void setLineColor(const PaintRef &color) {
 		strokeColor = color;
 	}

@@ -49,6 +49,12 @@ typedef enum {
 } ToveFillRule;
 
 typedef enum {
+	LINEJOIN_MITER,
+	LINEJOIN_ROUND,
+	LINEJOIN_BEVEL
+} ToveLineJoin;
+
+typedef enum {
 	ORIENTATION_CW = 0,
 	ORIENTATION_CCW = 1
 } ToveOrientation;
@@ -58,6 +64,7 @@ enum {
 	CHANGED_LINE_STYLE = 2,
 	CHANGED_POINTS = 4,
 	CHANGED_GEOMETRY = 8,
+	CHANGED_LINE_ARGS = 16,
 	CHANGED_RECREATE = 128,
 	CHANGED_ANYTHING = 255
 };
@@ -152,6 +159,7 @@ typedef struct {
 
 	ToveBounds *bounds;
 	float strokeWidth;
+	float miterLimit;
 	int8_t fillRule;
 	bool fragmentShaderStrokes;
 
@@ -232,6 +240,7 @@ EXPORT void PathSetLineColor(TovePathRef path, TovePaintRef color);
 EXPORT TovePaintRef PathGetFillColor(TovePathRef path);
 EXPORT TovePaintRef PathGetLineColor(TovePathRef path);
 EXPORT void PathSetLineWidth(TovePathRef path, float width);
+EXPORT void PathSetMiterLimit(TovePathRef path, float limit);
 EXPORT void PathSetLineDash(TovePathRef path, const float *dashes, int count);
 EXPORT void PathSetLineDashOffset(TovePathRef path, float offset);
 EXPORT float PathGetLineWidth(TovePathRef path);
@@ -262,6 +271,7 @@ EXPORT ToveChangeFlags GraphicsFetchChanges(ToveGraphicsRef shape, ToveChangeFla
 EXPORT void GraphicsSetFillColor(ToveGraphicsRef shape, TovePaintRef color);
 EXPORT void GraphicsSetLineColor(ToveGraphicsRef shape, TovePaintRef color);
 EXPORT void GraphicsSetLineWidth(ToveGraphicsRef shape, float width);
+EXPORT void GraphicsSetMiterLimit(ToveGraphicsRef shape, float limit);
 EXPORT void GraphicsSetLineDash(ToveGraphicsRef shape, const float *dashes, int count);
 EXPORT void GraphicsSetLineDashOffset(ToveGraphicsRef shape, float offset);
 EXPORT void GraphicsFill(ToveGraphicsRef shape);

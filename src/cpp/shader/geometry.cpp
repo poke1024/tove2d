@@ -243,6 +243,7 @@ ToveChangeFlags GeometryShaderLinkImpl::beginUpdate(const PathRef &path, bool in
 	const float lineWidth = lineColorData.style > 0 ?
 		std::max(path->getLineWidth(), 1.0f) : 0.0f;
 	geometryData.strokeWidth = lineWidth;
+	geometryData.miterLimit = path->getMiterLimit();
 
 	geometryData.fillRule = path->getFillRule();
 
@@ -330,5 +331,9 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 
 	updateLookupTableMeta(geometryData.lookupTableMeta);
 
-	return changes;
+	if ((changes & CHANGED_LINE_ARGS) && !path->hasStroke()) {
+		return changes & ~CHANGED_LINE_ARGS;
+	} else {
+		return changes;
+	}
 }

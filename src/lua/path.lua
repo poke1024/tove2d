@@ -29,6 +29,7 @@ Path.clone = lib.ClonePath
 Path.setLineDashOffset = lib.PathSetLineDashOffset
 Path.getLineWidth = lib.PathGetLineWidth
 Path.setLineWidth = lib.PathSetLineWidth
+Path.setMiterLimit = lib.PathSetMiterLimit
 Path.getNumCurves = lib.PathGetNumCurves
 Path.getOpacity = lib.PathGetOpacity
 Path.setOpacity = lib.PathSetOpacity

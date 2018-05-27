@@ -117,6 +117,7 @@ function Graphics:setLineDash(...)
 end
 
 bind("setLineWidth", "GraphicsSetLineWidth")
+bind("setMiterLimit", "GraphicsSetMiterLimit")
 bind("setLineDashOffset", "GraphicsSetLineDashOffset")
 
 function Graphics:setLineColor(r, g, b, a)

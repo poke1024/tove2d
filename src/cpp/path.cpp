@@ -13,6 +13,18 @@
 #include "path.h"
 #include "graphics.h"
 
+inline NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
+	switch (join) {
+		case LINEJOIN_MITER:
+			return NSVG_JOIN_MITER;
+		case LINEJOIN_ROUND:
+			return NSVG_JOIN_ROUND;
+		case LINEJOIN_BEVEL:
+			return NSVG_JOIN_BEVEL;
+	}
+	return NSVG_JOIN_MITER;
+}
+
 void Path::_append(const TrajectoryRef &trajectory) {
 	if (trajectories.empty()) {
 		nsvg.paths = &trajectory->nsvg;
@@ -130,7 +142,14 @@ Path::Path(Graphics *graphics) : changes(0) {
 	nsvg.stroke.type = NSVG_PAINT_NONE;
 	nsvg.fill.type = NSVG_PAINT_NONE;
 	nsvg.opacity = 1.0;
-
+	nsvg.strokeWidth = 1.0;
+	nsvg.strokeDashOffset = 0.0;
+	nsvg.strokeDashCount = 0;
+	nsvg.strokeLineJoin = NSVG_JOIN_MITER;
+	nsvg.strokeLineCap = NSVG_CAP_BUTT;
+	nsvg.miterLimit = 4;
+	nsvg.fillRule = NSVG_FILLRULE_NONZERO;
+	nsvg.flags = NSVG_FLAGS_VISIBLE;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0;
 	}
@@ -326,10 +345,25 @@ void Path::setLineWidth(float width) {
 	if (width != oldWidth) {
 		nsvg.strokeWidth = width;
 		if ((oldWidth > 0.0) == (width > 0.0)) {
-			changed(CHANGED_POINTS);
+			changed(CHANGED_POINTS | CHANGED_LINE_ARGS);
 		} else {
 			geometryChanged();
 		}
+	}
+}
+
+void Path::setLineJoin(ToveLineJoin join) {
+	NSVGlineJoin nsvgJoin = nsvgLineJoin(join);
+	if (nsvgJoin != nsvg.strokeLineJoin) {
+		nsvg.strokeLineJoin = nsvgJoin;
+		geometryChanged();
+	}
+}
+
+void Path::setMiterLimit(float limit) {
+	if (limit != nsvg.miterLimit) {
+		nsvg.miterLimit = limit;
+		changed(CHANGED_POINTS | CHANGED_LINE_ARGS);
 	}
 }
 
