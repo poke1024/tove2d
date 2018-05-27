@@ -90,7 +90,7 @@ create.bitmap = function(self)
 	local x0, y0, x1, y1 = self:computeAABB()
 
 	x0 = math.floor(x0)
-	y0 = math.floor(x0)
+	y0 = math.floor(y0)
 	x1 = math.ceil(x1)
 	y1 = math.ceil(y1)
 
