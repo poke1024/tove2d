@@ -62,8 +62,12 @@ function PositionMesh:getMesh()
 
 	local attributes = {{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}}
 	cvertices = lib.MeshGetVertices(self._cmesh)
+	if cvertices.n < 1 then
+		return nil
+	end
 
-	local mesh = love.graphics.newMesh(attributes, cvertices.n, "triangles", usage)
+	local mesh = love.graphics.newMesh(
+		attributes, cvertices.n, "triangles", usage)
 	self._mesh = mesh
 	self:updateTriangles()
 	self:updateVertices()
@@ -150,6 +154,10 @@ function ColorMesh:getMesh()
 	end
 
 	cvertices = lib.MeshGetVertices(self._cmesh)
+	if cvertices.n < 1 then
+		return nil
+	end
+
 	local mesh = love.graphics.newMesh(
 		attributes, cvertices.n, "triangles", usage)
 	self._mesh = mesh

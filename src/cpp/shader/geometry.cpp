@@ -285,13 +285,13 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 					curveIndex++;
 				}
 			}
-			if (n > 0) {
+			/*if (n > 0) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCloseCurveData(
 					&geometryData, curveIndex, extended[curveIndex])) {
 					curveIndex++;
 				}
-			}
+			}*/
 		} else {
 			assert(false); // not implemented yet
 			//curveIndex += t->getNumCurves();

@@ -61,6 +61,8 @@ private:
 
 	void updateCommands() const;
 
+    bool isLoop() const;
+
 public:
 	NSVGpath nsvg;
 
@@ -96,30 +98,29 @@ public:
 		}
 	}
 
-	inline void setPoint(int index, float x, float y) {
-		if (index >= 0 && index < nsvg.npts) {
-			commit();
-			float *p = &nsvg.pts[index * 2 + 0];
-			p[0] = x;
-			p[1] = y;
-			changed(CHANGED_POINTS);
-		}
-	}
+    /* for the point interface to love, we hide the last
+       duplicated point on closed curves. */
 
-	void setPoints(const float *pts, int npts);
+    inline int getLoveNumPoints() const {
+        const int n = getNumPoints();
+        return isClosed() && n > 0 ? n - 1 : n;
+    }
+
+    float getLovePointValue(int index, int dim);
+    void setLovePointValue(int index, int dim, float value);
+
+	void setLovePoints(const float *pts, int npts);
 
 	inline float getCommandPoint(const Command &command, int what) {
 		const float *p = nsvg.pts + 2 * command.index;
 		return p[command.direction * (what / 2) * 2 + (what & 1)];
 	}
 
-	inline void setCommandPoint(const Command &command, int what, float value) {
-		float *p = nsvg.pts + 2 * command.index;
-		p[command.direction * (what / 2) * 2 + (what & 1)] = value;
-	}
+	void setCommandPoint(const Command &command, int what, float value);
 
 	float getCommandValue(int commandIndex, int what);
 	void setCommandValue(int commandIndex, int what, float value);
+    void refreshCommand(int commandIndex);
 
 	void updateBounds();
 
@@ -138,15 +139,7 @@ public:
 		return nsvg.closed;
 	}
 
-	inline void setIsClosed(bool closed) {
-		nsvg.closed = closed;
-	}
-
-	/*bool startEqualsEnd() const {
-		commit();
-		const int n = nsvg.npts;
-		return n > 0 && nsvg.pts[0] == nsvg.pts[n * 2 - 2] && nsvg.pts[1] == nsvg.pts[n * 2 - 1];
-	}*/
+	void setIsClosed(bool closed);
 
 	inline int getNumCurves(bool countClose = true) const {
 		const int npts = nsvg.npts;

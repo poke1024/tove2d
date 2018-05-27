@@ -22,16 +22,24 @@ Curves.__index = function (self, index)
 	return setmetatable({traj = self.traj, i = 2 + (index - 1) * 6}, Curve)
 end
 
+local _pt = {
+	x = 0,
+	y = 1
+}
+
+local Point = {}
+Point.__index = function (self, key)
+	return lib.TrajectoryGetPtValue(self.traj, self.i, _pt[key] or -1)
+end
+Point.__newindex = function (self, key, value)
+	lib.TrajectorySetPtValue(self.traj, self.i, _pt[key] or -1, value)
+end
+
 local Points = {}
 Points.__index = function (self, i)
-	local n = lib.TrajectoryGetNumPoints(self.traj)
-	if i < 1 or i > n then
-		return nil
-	end
-	i = i - 1
-	local p = lib.TrajectoryGetPoints(self.traj)
-	return {x = p[2 * i + 0], y = p[2 * i + 1]}
+	return setmetatable({traj = self.traj, i = i - 1}, Point)
 end
+
 
 local Trajectory = {}
 Trajectory.__index = function (self, key)
@@ -39,10 +47,12 @@ Trajectory.__index = function (self, key)
 		return setmetatable({traj = self}, Curves)
 	elseif key == "ncurves" then
 		return lib.TrajectoryGetNumCurves(self)
-	elseif key == "points" then
+	elseif key == "pts" then
 		return setmetatable({traj = self}, Points)
-	elseif key == "npoints" then
+	elseif key == "npts" then
 		return lib.TrajectoryGetNumPoints(self)
+	elseif key == "closed" then
+		return lib.TrajectoryIsClosed(self)
 	else
 		return Trajectory[key]
 	end

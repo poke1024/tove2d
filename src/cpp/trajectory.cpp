@@ -14,6 +14,10 @@
 #include "path.h"
 
 float *Trajectory::addPoints(int n) {
+	if (isClosed()) {
+		throw std::runtime_error(
+			"cannot edit closed trajectory");
+	}
 	const int cpts = nextpow2(nsvg.npts + n);
 	nsvg.pts = static_cast<float*>(
 		realloc(nsvg.pts, cpts * 2 * sizeof(float)));
@@ -27,6 +31,10 @@ float *Trajectory::addPoints(int n) {
 }
 
 void Trajectory::setNumPoints(int npts) {
+	if (isClosed()) {
+		throw std::runtime_error(
+			"cannot edit closed trajectory");
+	}
 	if (npts > nsvg.npts) {
 		addPoints(npts - nsvg.npts);
 	} else if (npts < nsvg.npts) {
@@ -212,9 +220,15 @@ int Trajectory::drawEllipse(float cx, float cy, float rx, float ry) {
 	return commandIndex;
 }
 
-void Trajectory::setPoints(const float *pts, int npts) {
-	setNumPoints(npts);
+void Trajectory::setLovePoints(const float *pts, int npts) {
+	bool loop = isClosed() && npts > 0;
+	const int n1 = npts + (loop ? 1 : 0);
+	setNumPoints(n1);
 	std::memcpy(nsvg.pts, pts, npts * sizeof(float) * 2);
+	if (loop) {
+		nsvg.pts[n1 * 2 - 2] = nsvg.pts[0];
+		nsvg.pts[n1 * 2 - 1] = nsvg.pts[1];
+	}
 	commands.clear();
 }
 
@@ -282,6 +296,7 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 				setCommandPoint(command, what, value - dx / 3.0f);
 				setCommandPoint(command, what + 2, value);
 				changed(CHANGED_POINTS);
+				refreshCommand(commandIndex + 1);
 			}
 		} break;
 		case TOVE_CURVE_TO: {
@@ -312,6 +327,30 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 			}
 			command.dirty = true;
 			commandsDirty = true;
+			changed(CHANGED_POINTS);
+		} break;
+	}
+}
+
+void Trajectory::refreshCommand(int commandIndex) {
+	const int n = commands.size();
+	if (isClosed()) {
+		commandIndex = (commandIndex % n + n) % n;
+	}
+	if (commandIndex < 0 ||commandIndex >= n) {
+		return;
+	}
+	Command &command = commands[commandIndex];
+	switch (command.type) {
+		case TOVE_LINE_TO: {
+			assert(command.index >= 0);
+			for (int d = 0; d < 2; d++) {
+				float value = getCommandPoint(command, 6 + d);
+				const float px = getCommandPoint(command, 0 + d);
+				const float dx = value - px;
+				setCommandPoint(command, 2 + d, px + dx / 3.0f);
+				setCommandPoint(command, 4 + d, value - dx / 3.0f);
+			}
 			changed(CHANGED_POINTS);
 		} break;
 	}
@@ -355,6 +394,31 @@ void Trajectory::transform(float sx, float sy, float tx, float ty) {
 		pt[0] = (pt[0] + tx) * sx;
 		pt[1] = (pt[1] + ty) * sy;
 	}
+}
+
+bool Trajectory::isLoop() const {
+	const int n = nsvg.npts;
+	return n > 0 &&
+		nsvg.pts[0] == nsvg.pts[n * 2 - 2] &&
+		nsvg.pts[1] == nsvg.pts[n * 2 - 1];
+}
+
+void Trajectory::setIsClosed(bool closed) {
+	if (nsvg.closed == closed) {
+		return;
+	}
+
+	commit();
+
+	if (nsvg.npts > 0) {
+		if (closed && !isLoop()) {
+			lineTo(nsvg.pts[0], nsvg.pts[1]);
+		} else if (!closed && isLoop()) {
+			nsvg.npts -= 1;
+		}
+	}
+
+	nsvg.closed = closed;
 }
 
 bool Trajectory::computeShaderCloseCurveData(
@@ -478,6 +542,10 @@ void Trajectory::updateNSVG() {
 		}
 	}
 
+	/*for (int i = 0; i < nsvg.npts; i++) {
+		printf("%d %f %f\n", i, nsvg.pts[2 * i + 0], nsvg.pts[2 * i + 1]);
+	}*/
+
 	updateBounds();
 }
 
@@ -557,5 +625,50 @@ ToveOrientation Trajectory::getOrientation() const {
 void Trajectory::setOrientation(ToveOrientation orientation) {
 	if (getOrientation() != orientation) {
 		invert();
+	}
+}
+
+float Trajectory::getLovePointValue(int index, int dim) {
+	int n = nsvg.npts;
+	if (isClosed()) {
+		n -= 1;
+		index = (index % n + n) % n;
+	}
+	if (index >= 0 && index < n && (dim & 1) == dim) {
+		commit();
+		return nsvg.pts[2 * index + dim];
+	} else {
+		return 0.0f;
+	}
+}
+
+void Trajectory::setLovePointValue(int index, int dim, float value) {
+	int n = nsvg.npts;
+	if (isClosed()) {
+		n -= 1;
+		index = (index % n + n) % n;
+	}
+	if (index >= 0 && index < n && (dim & 1) == dim) {
+		commit();
+		nsvg.pts[2 * index + dim] = value;
+		if (isClosed()) {
+			if (index == 0) {
+				nsvg.pts[2 * n + dim] = value;
+			}
+		}
+		changed(CHANGED_POINTS);
+	}
+}
+
+void Trajectory::setCommandPoint(const Command &command, int what, float value) {
+	float *p = nsvg.pts;
+	int index = command.index + command.direction * (what / 2);
+	p[2 * index + (what & 1)] = value;
+	if (isClosed() && nsvg.npts > 0) {
+		if (index == 0) {
+			p[(nsvg.npts - 1) * 2 + (what & 1)] = value;
+		} else if (index == nsvg.npts - 1) {
+			p[0 + (what & 1)] = value;
+		}
 	}
 }

@@ -92,7 +92,7 @@ tove.init = function(path)
 			if err == lib.ERR_TRIANGULATION_FAILED then
 				tove.warn("triangulation failed.")
 			else
-				tove.warn("error #" .. tostring(err))
+				tove.warn("internal error: " .. tostring(err))
 			end
 		end
 	end

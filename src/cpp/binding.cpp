@@ -210,19 +210,23 @@ int TrajectoryGetNumCurves(ToveTrajectoryRef trajectory) {
 }
 
 int TrajectoryGetNumPoints(ToveTrajectoryRef trajectory) {
-	return deref(trajectory)->getNumPoints();
+	return deref(trajectory)->getLoveNumPoints();
+}
+
+bool TrajectoryIsClosed(ToveTrajectoryRef trajectory) {
+	return deref(trajectory)->isClosed();
 }
 
 const float *TrajectoryGetPoints(ToveTrajectoryRef trajectory) {
 	return deref(trajectory)->getPoints();
 }
 
-void TrajectorySetPoint(ToveTrajectoryRef trajectory, int index, float x, float y) {
+/*void TrajectorySetPoint(ToveTrajectoryRef trajectory, int index, float x, float y) {
 	deref(trajectory)->setPoint(index, x, y);
-}
+}*/
 
 void TrajectorySetPoints(ToveTrajectoryRef trajectory, const float *pts, int npts) {
-	deref(trajectory)->setPoints(pts, npts);
+	deref(trajectory)->setLovePoints(pts, npts);
 }
 
 float TrajectoryGetValue(ToveTrajectoryRef trajectory, int index) {
@@ -231,6 +235,14 @@ float TrajectoryGetValue(ToveTrajectoryRef trajectory, int index) {
 
 void TrajectorySetValue(ToveTrajectoryRef trajectory, int index, float value) {
 	deref(trajectory)->setValue(index, value);
+}
+
+float TrajectoryGetPtValue(ToveTrajectoryRef trajectory, int index, int dim) {
+	return deref(trajectory)->getLovePointValue(index, dim);
+}
+
+void TrajectorySetPtValue(ToveTrajectoryRef trajectory, int index, int dim, float value) {
+	deref(trajectory)->setLovePointValue(index, dim, value);
 }
 
 void TrajectoryInvert(ToveTrajectoryRef trajectory) {
