@@ -37,7 +37,7 @@ Path.clearChanges = lib.PathClearChanges
 Path.fetchChanges = lib.PathFetchChanges
 
 function Path:beginTrajectory()
-	return fii.gc(lib.PathBeginTrajectory(self), lib.ReleaseTrajectory)
+	return ffi.gc(lib.PathBeginTrajectory(self), lib.ReleaseTrajectory)
 end
 
 function Path:addTrajectory(t)
