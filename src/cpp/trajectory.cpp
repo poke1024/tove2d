@@ -361,7 +361,7 @@ void Trajectory::updateBounds() {
 		return;
 	}
 	commit();
-	for (int i = 0; i + 4 < nsvg.npts; i += 3) {
+	for (int i = 0; i + 4 <= nsvg.npts; i += 3) {
 		float *curve = &nsvg.pts[i * 2];
 
 		float bounds[4];
