@@ -88,6 +88,12 @@ end
 create.bitmap = function(self)
 	local resolution = self._resolution
 	local x0, y0, x1, y1 = self:computeAABB()
+
+	x0 = math.floor(x0)
+	y0 = math.floor(x0)
+	x1 = math.ceil(x1)
+	y1 = math.ceil(y1)
+
 	local imageData = self:rasterize(
 		resolution * (x1 - x0),
 		resolution * (y1 - y0), -x0, -y0,
