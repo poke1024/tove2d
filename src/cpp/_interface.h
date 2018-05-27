@@ -147,7 +147,9 @@ typedef struct {
 } ToveLookupTableMeta;
 
 typedef struct {
+	int maxCurves;
 	int numCurves;
+
 	ToveBounds *bounds;
 	float strokeWidth;
 	int8_t fillRule;

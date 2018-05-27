@@ -65,19 +65,19 @@ static void queryLUT(
 	}
 }
 
-int GeometryShaderLinkImpl::buildLUT(int dim) {
-	const bool hasLine = geometryData.fragmentShaderStrokes;
+int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
+	const bool hasFragLine = geometryData.fragmentShaderStrokes;
 	const float lineWidth = geometryData.strokeWidth;
 
 	auto e = fillEvents.begin();
 	auto se = strokeEvents.begin();
 
 	{
-		const int n = maxCurves;
+		const int n = ncurves;
 		const int dimtwo = 1 - dim;
 
-		assert(fillEvents.size() == n * 6);
-		assert(strokeEvents.size() == n * 2);
+		assert(fillEvents.size() >= n * 6);
+		assert(strokeEvents.size() >= n * 2);
 
 		for (int i = 0; i < n; i++) {
 			const ExtendedCurveData &ext = extended[i];
@@ -115,7 +115,7 @@ int GeometryShaderLinkImpl::buildLUT(int dim) {
 			e->curve = i;
 			e++;
 
-			if (hasLine) {
+			if (hasFragLine) {
 				se->y = y0 - lineWidth;
 				se->t = EVENT_ENTER;
 				se->curve = i;
@@ -143,7 +143,7 @@ int GeometryShaderLinkImpl::buildLUT(int dim) {
 	const int numFillEvents = e - fillEvents.begin();
 	const int numLineEvents = se - strokeEvents.begin();
 
-	if (hasLine) {
+	if (hasFragLine) {
 		std::sort(strokeEvents.begin(), strokeEvents.begin() + numLineEvents,
 			[] (const Event &a, const Event &b) {
 				return a.y < b.y;
@@ -157,7 +157,7 @@ int GeometryShaderLinkImpl::buildLUT(int dim) {
 			return a.y < b.y;
 		});
 
-	if (hasLine) {
+	if (hasFragLine) {
 		fillEventsLUT.build(dim, fillEvents, numFillEvents, extended, lineWidth,
 			[this, dim] (float y0, float y1, const CurveSet &active, uint8_t *list) {
 				strokeCurves.clear();
@@ -279,21 +279,25 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 			const int n = t->getNumCurves(false);
 			for (int j = 0; j < n; j++) {
 				assert(curveIndex < maxCurves);
-				t->computeShaderCurveData(
-					&geometryData, j, curveIndex, extended[curveIndex]);
-				curveIndex++;
+				if (t->computeShaderCurveData(
+					&geometryData, j, curveIndex, extended[curveIndex])) {
+					curveIndex++;
+				}
 			}
 			if (n > 0) {
 				assert(curveIndex < maxCurves);
-				t->computeShaderCloseCurveData(
-					&geometryData, curveIndex, extended[curveIndex]);
-				curveIndex++;
+				if (t->computeShaderCloseCurveData(
+					&geometryData, curveIndex, extended[curveIndex])) {
+					curveIndex++;
+				}
 			}
 		} else {
-			curveIndex += t->getNumCurves();
+			assert(false); // not implemented yet
+			//curveIndex += t->getNumCurves();
 		}
 	}
-	assert(curveIndex == maxCurves);
+	assert(curveIndex <= maxCurves);
+	geometryData.numCurves = curveIndex;
 
 #if 0
 	if (initial) {
@@ -304,7 +308,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	float *bounds = geometryData.bounds->bounds;
 
 	for (int dim = 0; dim < 2; dim++) {
-		int numEvents = buildLUT(dim);
+		int numEvents = buildLUT(dim, curveIndex);
 
 		if (numEvents > 0) {
 			bounds[dim + 0] = fillEvents[0].y;
@@ -316,7 +320,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 		}
 	}
 
-	if (lineColorData.style > 0) {
+	if (geometryData.fragmentShaderStrokes && lineColorData.style > 0) {
 		const float lineWidth = geometryData.strokeWidth;
 		bounds[0] -= lineWidth;
 		bounds[1] -= lineWidth;

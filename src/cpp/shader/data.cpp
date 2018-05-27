@@ -16,13 +16,14 @@
 #include <memory.h>
 
 AllocateGeometryData::AllocateGeometryData(
-	int numCurves,
+	int maxCurves,
 	bool fragmentShaderStrokes,
 	ToveShaderGeometryData &data) : data(data) {
 
 	std::memset(&data, 0, sizeof(ToveShaderGeometryData));
 
-    data.numCurves = numCurves;
+    data.maxCurves = maxCurves;
+	data.numCurves = 0;
 	data.bounds = nullptr;
     data.strokeWidth = 0;
 	data.fragmentShaderStrokes = fragmentShaderStrokes;
@@ -31,7 +32,7 @@ AllocateGeometryData::AllocateGeometryData(
 	// bounds (e.g. top, bottom) and 2 additional roots per
 	// axis, i.e. 4 values per curve.
 
-	int baseLookupTableSize = numCurves * 4; // number of (x, y) pairs
+	int baseLookupTableSize = maxCurves * 4; // number of (x, y) pairs
 
     data.lookupTable = nullptr;
 	data.lookupTableMeta = nullptr;
@@ -46,11 +47,11 @@ AllocateGeometryData::AllocateGeometryData(
 
     data.listsTexture = nullptr;
 	if (fragmentShaderStrokes) {
-	    data.listsTextureSize[0] = div4(numCurves + 2); // two markers
-	    data.listsTextureSize[1] = 2 * (numCurves * 2 + 2);
+	    data.listsTextureSize[0] = div4(maxCurves + 2); // two markers
+	    data.listsTextureSize[1] = 2 * (maxCurves * 2 + 2);
 	} else {
-		data.listsTextureSize[0] = div4(numCurves + 1); // one marker
-	    data.listsTextureSize[1] = 2 * (numCurves * 2);
+		data.listsTextureSize[0] = div4(maxCurves + 1); // one marker
+	    data.listsTextureSize[1] = 2 * (maxCurves * 2);
 	}
     data.listsTextureFormat = "rgba8";
 
@@ -60,7 +61,7 @@ AllocateGeometryData::AllocateGeometryData(
 	} else {
 		data.curvesTextureSize[0] = div4(12);
 	}
-    data.curvesTextureSize[1] = numCurves;
+    data.curvesTextureSize[1] = maxCurves;
     data.curvesTextureFormat = "rgba16f";
 
 	// except for AllocateGeometryNoLinkData, the following fields will
@@ -77,8 +78,8 @@ AllocateGeometryData::~AllocateGeometryData() {
 }
 
 AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
-	int numCurves, bool fragmentShaderStrokes, ToveShaderGeometryData &data) :
-	AllocateGeometryData(numCurves, fragmentShaderStrokes, data) {
+	int maxCurves, bool fragmentShaderStrokes, ToveShaderGeometryData &data) :
+	AllocateGeometryData(maxCurves, fragmentShaderStrokes, data) {
 
 	// do not use this variant for data linked to tove's lua lib.
 

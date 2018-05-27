@@ -28,7 +28,7 @@ local function newGradientData(gradient)
 end
 
 local function newGradientTexture(d)
-	d.texture = love_graphics.newImage(d.imageData)
+	d.texture = lg.newImage(d.imageData)
 	d.texture:setFilter("nearest", "linear")
 	d.texture:setWrap("clamp", "clamp")
 end
@@ -131,9 +131,10 @@ end
 local GeometryFeed = {}
 GeometryFeed.__index = GeometryFeed
 
-local function newGeometryFeed(shader, data)
+local function newGeometryFeed(fillShader, lineShader, data)
 	return setmetatable({
-		shader = shader,
+		fillShader = fillShader,
+		lineShader = lineShader,
 		data = data,
 		boundsByteData = nil,
 		listsImageData = nil,
@@ -186,24 +187,34 @@ function GeometryFeed:endInit(lineStyle)
 
 	-- create mesh
 
-	local shader = self.shader
+	local fillShader = self.fillShader
+	local lineShader = self.lineShader
 	local data = self.data
 
 	-- note: since bezier curves stay in the convex hull of their control points, we
 	-- could triangulate the mesh here. with strokes, it gets difficult though.
 
-	local vertices = {{0, 0}, {1, 0}, {1, 1}, {0, 1}}
+	local vertices = {{0, 0}, {0, 1}, {1, 0}, {1, 1}}
 	self.mesh = love.graphics.newMesh(
-		{{"VertexPosition", "float", 2}}, vertices)
+		{{"VertexPosition", "float", 2}}, vertices, "strip")
 
-	sendLUT(self, shader)
-	shader:send("bounds", self.boundsByteData)
+	if fillShader ~= lineShader and lineShader ~= nil then
+		self.lineMesh = love.graphics.newMesh(
+			{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
+	end
 
-	shader:send("lists", listsTexture)
-	shader:send("curves", curvesTexture)
+	sendLUT(self, fillShader)
+	fillShader:send("bounds", self.boundsByteData)
 
-	if lineStyle >= 1 then
-		shader:send("linewidth", data.strokeWidth / 2)
+	fillShader:send("lists", listsTexture)
+	fillShader:send("curves", curvesTexture)
+
+	if lineShader ~= fillShader and lineShader ~= nil then
+		lineShader:send("curves", curvesTexture)
+	end
+
+	if lineStyle >= 1 and lineShader ~= nil then
+		lineShader:send("linewidth", data.strokeWidth / 2)
 	end
 end
 
@@ -211,10 +222,14 @@ function GeometryFeed:update(chg2)
 	local data = self.data
 
 	if bit.band(chg2, lib.CHANGED_POINTS) ~= 0 then
-		local shader = self.shader
+		local fillShader = self.fillShader
+		local lineShader = self.lineShader
 
-		sendLUT(self, shader)
-		shader:send("bounds", self.boundsByteData)
+		sendLUT(self, fillShader)
+		fillShader:send("bounds", self.boundsByteData)
+		if data.strokeWidth > 0.0 and lineShader ~= nil then
+			lineShader:send("linewidth", data.strokeWidth / 2)
+		end
 
 		self.listsTexture:replacePixels(self.listsImageData)
 		self.curvesTexture:replacePixels(self.curvesImageData)

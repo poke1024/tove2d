@@ -33,7 +33,7 @@ private:
 	AllocateGeometryNoLinkData allocStrokeData;
 	const bool enableFragmentShaderStrokes;
 
-	int buildLUT(int dim);
+	int buildLUT(int dim, const int ncurves);
 	void dumpCurveData();
 
 public:

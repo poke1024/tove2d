@@ -357,7 +357,7 @@ void Trajectory::transform(float sx, float sy, float tx, float ty) {
 	}
 }
 
-void Trajectory::computeShaderCloseCurveData(
+bool Trajectory::computeShaderCloseCurveData(
 	ToveShaderGeometryData *shaderData,
 	int target,
 	ExtendedCurveData &extended) {
@@ -388,9 +388,11 @@ void Trajectory::computeShaderCloseCurveData(
 	if (!isClosed()) {
 		extended.ignore |= IGNORE_LINE;
 	}
+
+	return extended.ignore != (IGNORE_FILL | IGNORE_LINE);
 }
 
-void Trajectory::computeShaderCurveData(
+bool Trajectory::computeShaderCurveData(
 	ToveShaderGeometryData *shaderData,
 	const float *pts,
 	int target,
@@ -407,10 +409,19 @@ void Trajectory::computeShaderCurveData(
 	coeffs(pts[0], pts[2], pts[4], pts[6], bx);
 	coeffs(pts[1], pts[3], pts[5], pts[7], by);
 
-	if (fabs(by[0]) < 1e-2 && fabs(by[1]) < 1e-2 && fabs(by[2]) < 1e-2) {
+	if (fabs(bx[0]) < 1e-2 && fabs(bx[1]) < 1e-2 && fabs(bx[2]) < 1e-2 &&
+		fabs(by[0]) < 1e-2 && fabs(by[1]) < 1e-2 && fabs(by[2]) < 1e-2) {
 		extended.ignore = IGNORE_FILL | IGNORE_LINE;
-		return;
+		return false;
 	}
+
+#if 0
+	printf("%d (%f, %f) (%f, %f) (%f, %f) (%f, %f)\n", target,
+		pts[0], pts[1],
+		pts[2], pts[3],
+		pts[4], pts[5],
+		pts[6], pts[7]);
+#endif
 
 	extended.set(pts, bx, by);
 
@@ -434,6 +445,8 @@ void Trajectory::computeShaderCurveData(
 
 	assert(data - curveData <= 4 * shaderData->curvesTextureSize[0]);
 	extended.ignore = 0;
+
+	return true;
 }
 
 void Trajectory::animate(const TrajectoryRef &a, const TrajectoryRef &b, float t) {

@@ -9,8 +9,8 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local love_graphics = love.graphics
-local _, _, _, device = love_graphics.getRendererInfo()
+local lg = love.graphics
+local _, _, _, device = lg.getRendererInfo()
 
 local _gmat = "mat3"
 
@@ -109,17 +109,22 @@ vec4 position(mat4 transform_projection, vec4 vertex_pos) {
 }
 ]]
 
-local function newShader(data)
+local function newGeometryFillShader(data, fragLine)
 	local geometry = data.geometry
+	local f = string.format
 
 	-- encourage shader caching by trying to reduce
 	-- code changing states.
 	local lutN = next2(geometry.lookupTableSize)
 
-	local f = string.format
+	local lineStyle = data.color.line.style
+	if not fragLine then
+		lineStyle = 0
+	end
+
 	local code = {
 		f("#define LUT_SIZE %d", lutN),
-		f("#define LINE_STYLE %d", data.color.line.style),
+		f("#define LINE_STYLE %d", lineStyle),
 		f("#define FILL_STYLE %d", data.color.fill.style),
 		f("#define FILL_RULE %d", geometry.fillRule),
 		f("#define CURVE_DATA_SIZE %d", geometry.curvesTextureSize[0]),
@@ -128,11 +133,46 @@ local function newShader(data)
 		shaders.code
 	}
 
-	local shader = love_graphics.newShader(
+	local shader = lg.newShader(
 		table.concat(code, "\n"), _vertexCode)
 
-	shader:send("constants", {geometry.numCurves,
+	shader:send("constants", {geometry.maxCurves,
 		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
+	return shader
+end
+
+local function newGeometryLineShader(data)
+	local style = data.color.line.style
+	if style < 1 then
+		return nil
+	end
+
+	local geometry = data.geometry
+	local f = string.format
+
+	local fragcode = {
+		"#pragma language glsl3",
+		f("#define LINE_STYLE %d", style),
+		shaders.line,
+		shaders.lineGlue
+	}
+
+	local vertcode = {
+		"#pragma language glsl3",
+		f("#define CURVE_DATA_SIZE %d", geometry.curvesTextureSize[0]),
+		[[
+		--!! include "line.glsl"
+		]]
+	}
+
+	local shader = lg.newShader(
+		table.concat(fragcode, "\n"),
+		table.concat(vertcode, "\n"))
+
+	shader:send("max_curves", data.geometry.maxCurves)
+	shader:send("linewidth", 1)
+	shader:send("miter_limit", 5)
+
 	return shader
 end
 
@@ -145,7 +185,7 @@ local function newLineShader(data)
 		shaders.line,
 		shaders.lineGlue
 	}
-	return love_graphics.newShader(table.concat(code, "\n"))
+	return lg.newShader(table.concat(code, "\n"))
 end
 
 local function newFillShader(data)
@@ -157,7 +197,7 @@ local function newFillShader(data)
 		shaders.fill,
 		shaders.fillGlue
 	}
-	return love_graphics.newShader(table.concat(code, "\n"))
+	return lg.newShader(table.concat(code, "\n"))
 end
 
 --!! import "feed.lua" as feed
@@ -258,17 +298,17 @@ end
 function MeshShader:draw()
 	local linkdata = self.linkdata
 	if linkdata.fillShader ~= nil then
-		love_graphics.setShader(linkdata.fillShader)
+		lg.setShader(linkdata.fillShader)
 		local mesh = linkdata.fillMesh:getMesh()
 		if mesh ~= nil then
-			love_graphics.draw(mesh)
+			lg.draw(mesh)
 		end
 	end
 	if linkdata.lineShader ~= nil then
-		love_graphics.setShader(linkdata.lineShader)
+		lg.setShader(linkdata.lineShader)
 		local mesh = linkdata.lineMesh:getMesh()
 		if mesh ~= nil then
-			love_graphics.draw(mesh)
+			lg.draw(mesh)
 		end
 	end
 end
@@ -278,18 +318,26 @@ local PathShader = {}
 PathShader.__index = PathShader
 
 local function newPathShaderLinkData(path)
+	local fragLine = true
+
 	local link = ffi.gc(lib.NewGeometryShaderLink(path), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetData(link)
 
 	lib.ShaderLinkBeginUpdate(link, path, true)
-	local shader = newShader(data)
+	local fillShader = newGeometryFillShader(data, fragLine)
+	local lineShader
+	if fragLine then
+		lineShader = fillShader
+	else
+		lineShader = newGeometryLineShader(data)
+	end
 
-	local lineColorFeed = feed.newColorFeed(shader, "line", data.color.line)
+	local lineColorFeed = feed.newColorFeed(lineShader, "line", data.color.line)
 	lineColorFeed:beginInit()
-	local fillColorFeed = feed.newColorFeed(shader, "fill", data.color.fill)
+	local fillColorFeed = feed.newColorFeed(fillShader, "fill", data.color.fill)
 	fillColorFeed:beginInit()
 
-	local geometryFeed = feed.newGeometryFeed(shader, data.geometry)
+	local geometryFeed = feed.newGeometryFeed(fillShader, lineShader, data.geometry)
 	geometryFeed:beginInit()
 
 	lib.ShaderLinkEndUpdate(link, path, true)
@@ -302,7 +350,9 @@ local function newPathShaderLinkData(path)
 
 	return {
 		link = link,
-		shader = shader,
+		data = data,
+		fillShader = fillShader,
+		lineShader = lineShader,
 		geometryFeed = geometryFeed,
 		lineColorFeed = lineColorFeed,
 		fillColorFeed = fillColorFeed
@@ -338,8 +388,20 @@ end
 
 function PathShader:draw()
 	local linkdata = self.linkdata
-	love_graphics.setShader(linkdata.shader)
-	love_graphics.draw(linkdata.geometryFeed.mesh)
+	local fillShader = linkdata.fillShader
+	local lineShader = linkdata.lineShader
+
+	lg.setShader(fillShader)
+	lg.draw(linkdata.geometryFeed.mesh)
+
+	if fillShader ~= lineShader and lineShader ~= nil then
+		lg.setShader(lineShader)
+		local segments = 25
+		lineShader:send("segments_per_curve", segments)
+		local ncurves = linkdata.data.geometry.numCurves
+		lineShader:send("num_curves", ncurves)
+		lg.drawInstanced(linkdata.geometryFeed.lineMesh, segments * ncurves)
+	end
 end
 
 return {

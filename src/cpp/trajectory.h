@@ -160,22 +160,22 @@ public:
 		return n;
 	}
 
-	void computeShaderCloseCurveData(
+	bool computeShaderCloseCurveData(
 		ToveShaderGeometryData *shaderData,
 		int target,
 		ExtendedCurveData &extended);
 
-	inline void computeShaderCurveData(
+	inline bool computeShaderCurveData(
 		ToveShaderGeometryData *shaderData,
 		int curveIndex,
 		int target,
 		ExtendedCurveData &extended) {
 
-		computeShaderCurveData(
+		return computeShaderCurveData(
 			shaderData, &nsvg.pts[curveIndex * 3 * 2], target, extended);
 	}
 
-	void computeShaderCurveData(
+	bool computeShaderCurveData(
 		ToveShaderGeometryData *shaderData,
 		const float *pts,
 		int target,

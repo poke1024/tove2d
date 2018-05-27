@@ -41,21 +41,21 @@ public:
 private:
 	ToveShaderGeometryData &_data;
     CurveSet active;
-    const int _numCurves;
+    const int _maxCurves;
 	const int _ignore;
 
 public:
-    LookupTable(int numCurves, ToveShaderGeometryData &data, int ignore) :
-		_numCurves(numCurves), _data(data), _ignore(ignore) {
+    LookupTable(int maxCurves, ToveShaderGeometryData &data, int ignore) :
+		_maxCurves(maxCurves), _data(data), _ignore(ignore) {
 
-        active.reserve(numCurves);
+        active.reserve(maxCurves);
     }
 
 	void dump(ToveShaderGeometryData *data) {
 #if 0
 		printf("-- dump lut --\n");
-		printf("numCurves: %d\n", _numCurves);
-		for (int i = 0; i < 2 * (_numCurves + 2); i++) {
+		printf("maxCurves: %d\n", _maxCurves);
+		for (int i = 0; i < 2 * (_maxCurves + 2); i++) {
 			printf("lut %03d: %f (%s)\n", i, data->lookupTable[i], (i & 1) == 0 ? "x" : "y");
 		}
 
@@ -130,7 +130,7 @@ public:
 			ylookup += 2;
 
             int k = 0;
-            assert(active.size() <= _numCurves);
+            assert(active.size() <= _maxCurves);
             for (auto a = active.cbegin(); a != active.cend(); a++) {
 				const int curve = *a;
 				if ((extended[curve].ignore & ignore) == 0) {

@@ -21,8 +21,6 @@
 // segmentPointDistanceSquared() is adapted from:
 // https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 
-#pragma language glsl3
-
 varying vec4 raw_vertex_pos;
 
 #define T_EPS 0.0
