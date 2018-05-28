@@ -107,12 +107,12 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 			e->curve = i;
 			e++;
 
-			e->y = bounds->endpoints.p1[dim];
+			e->y = ext.endpoints.p1[dim];
 			e->t = EVENT_MARK;
 			e->curve = i;
 			e++;
 
-			e->y = bounds->endpoints.p2[dim];
+			e->y = ext.endpoints.p2[dim];
 			e->t = EVENT_MARK;
 			e->curve = i;
 			e++;

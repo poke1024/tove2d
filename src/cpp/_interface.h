@@ -238,6 +238,7 @@ EXPORT float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command
 EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value);
 EXPORT ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t);
 EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
+EXPORT float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
 EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);

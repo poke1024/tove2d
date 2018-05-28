@@ -467,9 +467,14 @@ bool Trajectory::computeShaderCurveData(
 		return false;
 	}
 
-#if 0
 	const float *pts = &nsvg.pts[curveIndex * 3 * 2];
 
+	extended.endpoints.p1[0] = pts[0];
+	extended.endpoints.p1[1] = pts[1];
+	extended.endpoints.p2[0] = pts[6];
+	extended.endpoints.p2[1] = pts[7];
+
+#if 0
 	printf("%d (%f, %f) (%f, %f) (%f, %f) (%f, %f)\n", target,
 		pts[0], pts[1],
 		pts[2], pts[3],
@@ -741,4 +746,97 @@ ToveVec2 Trajectory::getNormal(float globalt) const {
 	} else {
 		return ToveVec2{0.0f, 0.0f};
 	}
+}
+
+inline float distance(const coeff *bx, const coeff *by, float t, float x, float y) {
+	float t2 = t * t;
+	float t3 = t2 * t;
+	float dx = dot4(bx, t3, t2, t, 1) - x;
+	float dy = dot4(by, t3, t2, t, 1) - y;
+	return dx * dx + dy * dy;
+}
+
+struct Nearest {
+	float t;
+	float distanceSquared;
+};
+
+void bisect(
+	const coeff *bx, const coeff *by,
+	float t0, float t1,
+	float x, float y,
+	float curveIndex,
+	Nearest &nearest,
+	float eps2) {
+
+	float s = (t1 - t0) * 0.5f;
+	float t = t0 + s;
+
+	float bestT = curveIndex + t;
+	float bestDistance = distance(bx, by, t, x, y);
+
+	for (int i = 0; i < 10 && bestDistance > eps2; i++) {
+		s *= 0.5f;
+
+		float d0 = distance(bx, by, t - s, x, y);
+		float d1 = distance(bx, by, t + s, x, y);
+
+		if (d0 < d1) {
+			if (d0 < bestDistance) {
+				t -= s;
+				bestDistance = d0;
+				bestT = curveIndex + t;
+			}
+		} else {
+			if (d1 < bestDistance) {
+				t += s;
+				bestDistance = d1;
+				bestT = curveIndex + t;
+			}
+		}
+	}
+
+	if (bestDistance < nearest.distanceSquared) {
+		nearest.t = bestT;
+		nearest.distanceSquared = bestDistance;
+	}
+}
+
+float Trajectory::closest(float x, float y, float dmin, float dmax) const {
+	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
+	const int nc = ncurves(nsvg.npts);
+	const float eps2 = dmin * dmin;
+
+	Nearest nearest;
+	nearest.distanceSquared = 1e50;
+	nearest.t = -1;
+
+	for (int curve = 0; curve < nc; curve++) {
+		const CurveData &c = curves[curve];
+
+		if (x < c.bounds.bounds[0] - dmax ||
+			x > c.bounds.bounds[2] + dmax ||
+			y < c.bounds.bounds[1] - dmax ||
+			y > c.bounds.bounds[3] + dmax) {
+			continue;
+		}
+
+		const float *roots = c.bounds.sroots;
+		float t0 = 0.0f;
+		for (int j = 0; j < 5; j++) {
+			float t1 = j < 4 ? roots[j] : 1.0f;
+			bisect(c.bx, c.by, t0, t1, x, y, curve, nearest, eps2);
+			if (nearest.distanceSquared < eps2) {
+				return nearest.t;
+			}
+			t0 = t1;
+			if (t0 >= 1.0f) {
+				break;
+			}
+		}
+
+		dmax = std::min(dmax, std::sqrt(nearest.distanceSquared));
+	}
+
+	return nearest.t;
 }

@@ -211,6 +211,8 @@ public:
 
     ToveVec2 getPosition(float globalt) const;
     ToveVec2 getNormal(float globalt) const;
+
+    float closest(float x, float y, float dmin, float dmax) const;
 };
 
 #endif // __TOVE_TRAJECTORY

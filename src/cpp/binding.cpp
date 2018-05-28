@@ -301,6 +301,10 @@ ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t) {
 	return deref(trajectory)->getNormal(t);
 }
 
+float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax) {
+	return deref(trajectory)->closest(x, y, dmin, dmax);
+}
+
 
 ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
 	GraphicsRef shape;

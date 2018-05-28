@@ -15,15 +15,6 @@
 #include <cmath>
 
 struct CurveBounds {
-	/*struct Root {
-		float t;
-		int d; // dimension
-	};*/
-
-	struct EndPoints {
-		float p1[2], p2[2];
-	};
-
 	struct Roots {
 		int count;
 		float t[2];
@@ -36,8 +27,8 @@ struct CurveBounds {
 	// values in the LUT (see class LookupTable).
 
 	float bounds[4];
-	EndPoints endpoints;
 	Roots roots[2];
+	float sroots[4];
 
 	void update(const float *curve, float *bx, float *by);
 };
@@ -73,8 +64,13 @@ enum {
 	IGNORE_LINE = 2
 };
 
+struct EndPoints {
+	float p1[2], p2[2];
+};
+
 struct ExCurveData {
 	const CurveBounds *bounds;
+	EndPoints endpoints;
 	uint8_t ignore;
 };
 

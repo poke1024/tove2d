@@ -68,6 +68,10 @@ function Trajectory:normal(t)
 	return v.x, v.y
 end
 
+function Trajectory:closest(x, y, dmax)
+	return lib.TrajectoryClosest(self, x, y, 1e-4, dmax or 1e50)
+end
+
 function Trajectory:setPoints(t, n)
 	lib.TrajectorySetPoints(self, t, n)
 end
