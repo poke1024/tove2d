@@ -410,12 +410,8 @@ void Trajectory::setIsClosed(bool closed) {
 
 	commit();
 
-	if (nsvg.npts > 0) {
-		if (closed && !isLoop()) {
-			lineTo(nsvg.pts[0], nsvg.pts[1]);
-		} else if (!closed && isLoop()) {
-			nsvg.npts -= 1;
-		}
+	if (nsvg.npts > 0 && closed && !isLoop()) {
+		lineTo(nsvg.pts[0], nsvg.pts[1]);
 	}
 
 	nsvg.closed = closed;
