@@ -12,6 +12,7 @@
 #include "trajectory.h"
 #include "utils.h"
 #include "path.h"
+#include "intersect.h"
 
 float *Trajectory::addPoints(int n) {
 	if (isClosed()) {
@@ -58,22 +59,25 @@ void Trajectory::updateCommands() const {
 		if (!command.dirty) {
 			continue;
 		}
+		float *p = getMutablePoints(command.index);
 		switch (command.type) {
+			case TOVE_LINE_TO: {
+				assert(nsvg.npts - command.index >= command.line.size());
+				command.line.write(p);
+			} break;
 			case TOVE_DRAW_RECT: {
-				float *p = getMutablePoints(command.index);
 				command.rect.normalize();
 				assert(nsvg.npts - command.index >= command.rect.size());
 				command.rect.write(p);
 			} break;
 			case TOVE_DRAW_ELLIPSE: {
-				float *p = getMutablePoints(command.index);
 				assert(nsvg.npts - command.index >= command.ellipse.size());
 				command.ellipse.write(p);
 			} break;
 		}
 		command.dirty = false;
 	}
-	commandsDirty = false;
+	dirty &= ~DIRTY_COMMANDS;
 }
 
 Trajectory::Trajectory() {
@@ -83,9 +87,7 @@ Trajectory::Trajectory() {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0;
 	}
-	boundsDirty = true;
-
-	commandsDirty = false;
+	dirty = DIRTY_BOUNDS;
 }
 
 Trajectory::Trajectory(const NSVGpath *path) {
@@ -101,8 +103,7 @@ Trajectory::Trajectory(const NSVGpath *path) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = path->bounds[i];
 	}
-	boundsDirty = false;
-	commandsDirty = false;
+	dirty = DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 }
 
 Trajectory::Trajectory(const TrajectoryRef &t) {
@@ -118,8 +119,7 @@ Trajectory::Trajectory(const TrajectoryRef &t) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = t->nsvg.bounds[i];
 	}
-	boundsDirty = t->boundsDirty;
-	commandsDirty = false;
+	dirty = t->dirty;
 }
 
 int Trajectory::moveTo(float x, float y) {
@@ -135,21 +135,18 @@ int Trajectory::moveTo(float x, float y) {
 }
 
 int Trajectory::lineTo(float x, float y) {
-	NSVGpath *p = &nsvg;
-	const int n = p->npts;
-	if (n > 0) {
-		float px = p->pts[(n - 1) * 2 + 0];
-		float py = p->pts[(n - 1) * 2 + 1];
-		float dx = x - px;
-		float dy = y - py;
-		float *q = addPoints(3);
-		q[0] = px + dx/3.0f; q[1] = py + dy/3.0f;
-		q[2] = x - dx/3.0f; q[3] = y - dy/3.0f;
-		q[4] = x; q[5] = y;
-		return addCommand(TOVE_LINE_TO, n - 1);
-	} else {
+	const int index = nsvg.npts;
+	if (index < 1) {
 		return -1;
 	}
+
+	LinePrimitive line(x, y);
+	float *p = addPoints(line.size());
+	line.write(p);
+
+	const int commandIndex = addCommand(TOVE_LINE_TO, index);
+	commands[commandIndex].line = line;
+	return commandIndex;
 }
 
 int Trajectory::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
@@ -159,10 +156,6 @@ int Trajectory::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x,
 	q[2] = cpx2; q[3] = cpy2;
 	q[4] = x; q[5] = y;
 	return addCommand(TOVE_CURVE_TO, index);
-}
-
-inline float wrapAngle(float phi) {
-	return phi - 360 * std::floor(phi / 360.0);
 }
 
 int Trajectory::arc(float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
@@ -236,6 +229,9 @@ float Trajectory::getCommandValue(int commandIndex, int what) {
 	if (commandIndex < 0 ||commandIndex >= commands.size()) {
 		return 0.0;
 	}
+
+	commit();
+
 	const Command &command = commands[commandIndex];
 	switch (command.type) {
 		case TOVE_MOVE_TO: {
@@ -244,8 +240,9 @@ float Trajectory::getCommandValue(int commandIndex, int what) {
 			}
 		} break;
 		case TOVE_LINE_TO: {
-			if (what >= 4 && what <= 5) {
-				return getCommandPoint(command, what + 2);
+			switch (what) {
+				case 4: return command.line.x;
+				case 5: return command.line.y;
 			}
 		} break;
 		case TOVE_CURVE_TO: {
@@ -279,6 +276,7 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 	if (commandIndex < 0 ||commandIndex >= commands.size()) {
 		return;
 	}
+
 	Command &command = commands[commandIndex];
 	switch (command.type) {
 		case TOVE_MOVE_TO: {
@@ -288,16 +286,13 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 			}
 		} break;
 		case TOVE_LINE_TO: {
-			if (what >= 4 && what <= 5) {
-				assert(command.index >= 0);
-				const float px = getCommandPoint(command, what - 4);
-				const float dx = value - px;
-				setCommandPoint(command, what - 2, px + dx / 3.0f);
-				setCommandPoint(command, what, value - dx / 3.0f);
-				setCommandPoint(command, what + 2, value);
-				changed(CHANGED_POINTS);
-				refreshCommand(commandIndex + 1);
+			switch (what) {
+				case 4: command.line.x = value; break;
+				case 5: command.line.y = value; break;
 			}
+			command.dirty = true;
+			dirty |= DIRTY_COMMANDS;
+			changed(CHANGED_POINTS);
 		} break;
 		case TOVE_CURVE_TO: {
 			if (what >= 0 && what <= 5) {
@@ -315,7 +310,7 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 				case 103: command.rect.ry = value; break;
 			}
 			command.dirty = true;
-			commandsDirty = true;
+			dirty |= DIRTY_COMMANDS;
 			changed(CHANGED_POINTS);
 		} break;
 		case TOVE_DRAW_ELLIPSE: {
@@ -326,13 +321,17 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 				case 103: command.ellipse.ry = value; break;
 			}
 			command.dirty = true;
-			commandsDirty = true;
+			dirty |= DIRTY_COMMANDS;
 			changed(CHANGED_POINTS);
 		} break;
 	}
+
+	// need to refresh some follow-up commands here as well
+	// (e.g. lines that connect to the previous point).
+	setCommandDirty(commandIndex + 1);
 }
 
-void Trajectory::refreshCommand(int commandIndex) {
+void Trajectory::setCommandDirty(int commandIndex) {
 	const int n = commands.size();
 	if (isClosed()) {
 		commandIndex = (commandIndex % n + n) % n;
@@ -340,24 +339,12 @@ void Trajectory::refreshCommand(int commandIndex) {
 	if (commandIndex < 0 ||commandIndex >= n) {
 		return;
 	}
-	Command &command = commands[commandIndex];
-	switch (command.type) {
-		case TOVE_LINE_TO: {
-			assert(command.index >= 0);
-			for (int d = 0; d < 2; d++) {
-				float value = getCommandPoint(command, 6 + d);
-				const float px = getCommandPoint(command, 0 + d);
-				const float dx = value - px;
-				setCommandPoint(command, 2 + d, px + dx / 3.0f);
-				setCommandPoint(command, 4 + d, value - dx / 3.0f);
-			}
-			changed(CHANGED_POINTS);
-		} break;
-	}
+	commands[commandIndex].dirty = true;
+	dirty |= DIRTY_COMMANDS;
 }
 
 void Trajectory::updateBounds() {
-	if (!boundsDirty) {
+	if ((dirty & DIRTY_BOUNDS) == 0) {
 		return;
 	}
 	commit();
@@ -379,7 +366,7 @@ void Trajectory::updateBounds() {
 			nsvg.bounds[3] = std::max(nsvg.bounds[3], bounds[3]);
 		}
 	}
-	boundsDirty = false;
+	dirty &= ~DIRTY_BOUNDS;
 }
 
 void Trajectory::transform(float sx, float sy, float tx, float ty) {
@@ -417,6 +404,7 @@ void Trajectory::setIsClosed(bool closed) {
 	nsvg.closed = closed;
 }
 
+#if 0
 bool Trajectory::computeShaderCloseCurveData(
 	ToveShaderGeometryData *shaderData,
 	int target,
@@ -451,31 +439,37 @@ bool Trajectory::computeShaderCloseCurveData(
 
 	return extended.ignore != (IGNORE_FILL | IGNORE_LINE);
 }
+#endif
 
 bool Trajectory::computeShaderCurveData(
 	ToveShaderGeometryData *shaderData,
-	const float *pts,
+	int curveIndex,
 	int target,
-	ExtendedCurveData &extended) {
+	ExCurveData &extended) {
 
 	commit();
 
-	uint16_t *curveData = reinterpret_cast<uint16_t*>(shaderData->curvesTexture) +
-		shaderData->curvesTextureRowBytes * target / sizeof(uint16_t);
+	uint16_t *curveTexturesDataBegin =
+		reinterpret_cast<uint16_t*>(shaderData->curvesTexture) +
+			shaderData->curvesTextureRowBytes * target / sizeof(uint16_t);
 
-	float bx[4];
-	float by[4];
+	uint16_t *curveTexturesData = curveTexturesDataBegin;
 
-	coeffs(pts[0], pts[2], pts[4], pts[6], bx);
-	coeffs(pts[1], pts[3], pts[5], pts[7], by);
+	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
+	const CurveData &curveData = curves[curveIndex];
+	extended.bounds = &curveData.bounds;
+
+	const coeff *bx = curveData.bx;
+	const coeff *by = curveData.by;
 
 	if (fabs(bx[0]) < 1e-2 && fabs(bx[1]) < 1e-2 && fabs(bx[2]) < 1e-2 &&
 		fabs(by[0]) < 1e-2 && fabs(by[1]) < 1e-2 && fabs(by[2]) < 1e-2) {
-		extended.ignore = IGNORE_FILL | IGNORE_LINE;
 		return false;
 	}
 
 #if 0
+	const float *pts = &nsvg.pts[curveIndex * 3 * 2];
+
 	printf("%d (%f, %f) (%f, %f) (%f, %f) (%f, %f)\n", target,
 		pts[0], pts[1],
 		pts[2], pts[3],
@@ -483,28 +477,25 @@ bool Trajectory::computeShaderCurveData(
 		pts[6], pts[7]);
 #endif
 
-	extended.set(pts, bx, by);
-
 	// write curve data.
 	for (int i = 0; i < 4; i++) {
-		store_fp16(curveData[i], bx[i]);
-		store_fp16(curveData[i + 4], by[i]);
+		store_fp16(curveTexturesData[i], bx[i]);
+		store_fp16(curveTexturesData[i + 4], by[i]);
 	}
-
-	uint16_t *data = reinterpret_cast<uint16_t*>(&curveData[8]);
+	curveTexturesData += 8;
 
 	for (int i = 0; i < 4; i++) {
-		store_fp16(data[i], extended.bounds[i]);
+		store_fp16(curveTexturesData[i], curveData.bounds.bounds[i]);
 	}
-	data += 4;
+	curveTexturesData += 4;
 
 	if (shaderData->fragmentShaderStrokes) {
-		extended.copyRoots(data);
-		data += 4;
+		curveData.storeRoots(curveTexturesData);
+		curveTexturesData += 4;
 	}
 
-	assert(data - curveData <= 4 * shaderData->curvesTextureSize[0]);
-	extended.ignore = 0;
+	assert(curveTexturesData - curveTexturesDataBegin <=
+		4 * shaderData->curvesTextureSize[0]);
 
 	return true;
 }
@@ -546,7 +537,7 @@ void Trajectory::updateNSVG() {
 }
 
 void Trajectory::changed(ToveChangeFlags flags) {
-	boundsDirty = true;
+	dirty |= DIRTY_BOUNDS | DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 	if (claimer) {
 		claimer->changed(flags);
 	}
@@ -666,5 +657,88 @@ void Trajectory::setCommandPoint(const Command &command, int what, float value) 
 		} else if (index == nsvg.npts - 1) {
 			p[0 + (what & 1)] = value;
 		}
+	}
+}
+
+void Trajectory::updateCurveData(uint8_t flags) const {
+	commit();
+
+	flags &= dirty;
+
+	const int npts = nsvg.npts;
+	const float *pts = nsvg.pts;
+	const int nc = ncurves(npts);
+	curves.resize(nc);
+
+	for (int curve = 0; curve < nc; curve++) {
+		const float *p = &pts[curve * 2 * 3];
+		CurveData &c = curves[curve];
+
+		if (flags & DIRTY_COEFFICIENTS) {
+			c.updatePCs(p);
+		}
+		if (flags & DIRTY_CURVE_BOUNDS) {
+			c.updateBounds(p);
+		}
+	}
+
+	dirty &= ~flags;
+}
+
+void Trajectory::testInside(float x, float y, AbstractInsideTest &test) const {
+	ensureCurveData(DIRTY_COEFFICIENTS);
+	const int nc = ncurves(nsvg.npts);
+	for (int i = 0; i < nc; i++) {
+		test.add(curves[i].bx, curves[i].by, x, y);
+	}
+}
+
+void Trajectory::intersect(const AbstractRay &ray, Intersecter &intersecter) const {
+	ensureCurveData(DIRTY_COEFFICIENTS);
+	const int nc = ncurves(nsvg.npts);
+	for (int i = 0; i < nc; i++) {
+		intersecter.intersect(curves[i].bx, curves[i].by, ray);
+	}
+}
+
+ToveVec2 Trajectory::getPosition(float globalt) const {
+	ensureCurveData(DIRTY_COEFFICIENTS);
+	const int nc = ncurves(nsvg.npts);
+
+	float curveflt;
+	float t = modf(globalt, &curveflt);
+	int curve = int(curveflt);
+	if (curve < nc) {
+		float t2 = t * t;
+		float t3 = t2 * t;
+
+		return ToveVec2{
+			float(dot4(curves[curve].bx, t3, t2, t, 1)),
+			float(dot4(curves[curve].by, t3, t2, t, 1))};
+	} else {
+		return ToveVec2{0.0f, 0.0f};
+	}
+}
+
+ToveVec2 Trajectory::getNormal(float globalt) const {
+	ensureCurveData(DIRTY_COEFFICIENTS);
+	const int nc = ncurves(nsvg.npts);
+
+	float curveflt;
+	float t = modf(globalt, &curveflt);
+	int curve = int(curveflt);
+
+	if (curve < nc) {
+		float t2 = t * t;
+
+		double nx = dot3(curves[curve].by, 3 * t2, 2 * t, 1);
+		double ny = -dot3(curves[curve].bx, 3 * t2, 2 * t, 1);
+
+		double len = sqrt(nx * nx + ny * ny);
+		return ToveVec2{
+			float(nx / len),
+			float(ny / len)};
+	} else {
+		return ToveVec2{0.0f, 0.0f};
 	}
 }

@@ -58,6 +58,16 @@ Trajectory.__index = function (self, key)
 	end
 end
 
+function Trajectory:position(t)
+	local v = lib.TrajectoryGetPosition(self, t)
+	return v.x, v.y
+end
+
+function Trajectory:normal(t)
+	local v = lib.TrajectoryGetNormal(self, t)
+	return v.x, v.y
+end
+
 function Trajectory:setPoints(t, n)
 	lib.TrajectorySetPoints(self, t, n)
 end

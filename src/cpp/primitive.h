@@ -31,19 +31,39 @@ enum ToveCommandType {
 	TOVE_DRAW_ELLIPSE
 };
 
-class RectPrimitive {
-private:
-	static float *lineTo(float *p, float x, float y) {
-		float px = p[-2 + 0];
-		float py = p[-2 + 1];
-		float dx = x - px;
-		float dy = y - py;
-		p[0] = px + dx / 3.0f; p[1] = py + dy / 3.0f;
-		p[2] = x - dx / 3.0f; p[3] = y - dy / 3.0f;
-		p[4] = x; p[5] = y;
-		return p + 3 * 2;
+static float *lineTo(float *p, float x, float y) {
+	float px = p[-2 + 0];
+	float py = p[-2 + 1];
+	float dx = x - px;
+	float dy = y - py;
+	p[0] = px + dx / 3.0f; p[1] = py + dy / 3.0f;
+	p[2] = x - dx / 3.0f; p[3] = y - dy / 3.0f;
+	p[4] = x; p[5] = y;
+	return p + 3 * 2;
+}
+
+class LinePrimitive {
+public:
+	float x, y;
+
+	inline LinePrimitive() {
 	}
 
+	inline LinePrimitive(float x, float y) :
+		x(x), y(y) {
+	}
+
+	inline int size() const {
+		return 3;
+	}
+
+	inline void write(float *p) {
+		lineTo(p, x, y);
+	}
+};
+
+class RectPrimitive {
+private:
 	enum RectType {
 		RECT_EMPTY,
 		RECT_SHARP,
@@ -55,7 +75,7 @@ private:
 public:
 	float x, y, w, h, rx, ry;
 
-	RectPrimitive() : type(RECT_EMPTY) {
+	inline RectPrimitive() : type(RECT_EMPTY) {
 	}
 
 	RectPrimitive(float x, float y, float w, float h, float rx, float ry) :
@@ -124,7 +144,7 @@ class EllipsePrimitive {
 public:
 	float cx, cy, rx, ry;
 
-	EllipsePrimitive() {
+	inline EllipsePrimitive() {
 	}
 
 	EllipsePrimitive(float cx, float cy, float rx, float ry) : cx(cx), cy(cy), rx(rx), ry(ry) {

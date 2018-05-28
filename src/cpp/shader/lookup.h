@@ -76,7 +76,7 @@ public:
 
     template<typename F>
     void build(int dim, const std::vector<Event> &events,
-		int numEvents, const std::vector<ExtendedCurveData> &extended,
+		int numEvents, const std::vector<ExCurveData> &extended,
 		float padding, const F &finish) {
 
 		ToveShaderGeometryData &data = _data;
@@ -159,7 +159,7 @@ public:
     }
 
     inline void build(int dim, const std::vector<Event> &events,
-		int numEvents, const std::vector<ExtendedCurveData> &extended) {
+		int numEvents, const std::vector<ExCurveData> &extended) {
         build(dim, events, numEvents, extended, 0.0,
 			[] (float y0, float y1, const CurveSet &active, uint8_t *list) {
             	*list = SENTINEL_END;

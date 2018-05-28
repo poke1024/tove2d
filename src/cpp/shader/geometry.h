@@ -27,7 +27,7 @@ private:
     LookupTable fillEventsLUT;
     LookupTable strokeEventsLUT;
     LookupTable::CurveSet strokeCurves;
-	std::vector<ExtendedCurveData> extended;
+	std::vector<ExCurveData> extended;
 
 	AllocateGeometryData allocData;
 	AllocateGeometryNoLinkData allocStrokeData;

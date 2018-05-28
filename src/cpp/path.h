@@ -58,7 +58,8 @@ public:
 	TrajectoryRef beginTrajectory();
 	void closeTrajectory(bool closeIndeed = false);
 
-	void updateBounds(int from = 0);
+	void updateBoundsPartial(int from);
+	void updateBounds();
 
 	void addTrajectory(const TrajectoryRef &t);
 
@@ -121,6 +122,9 @@ public:
 	void clean(float eps = 0.0);
 
 	void setOrientation(ToveOrientation orientation);
+
+	bool isInside(float x, float y);
+	void intersect(float x1, float y1, float x2, float y2) const;
 
 public:
 	inline void setNext(const PathRef &path) {

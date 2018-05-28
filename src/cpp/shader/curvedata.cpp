@@ -13,12 +13,12 @@
 #include "curvedata.h"
 #include <algorithm>
 
-void ExtendedCurveData::copyRoots(uint16_t *out) {
+void CurveData::storeRoots(uint16_t *out) const {
 	float t[4];
 	int count = 0;
 
 	for (int i = 0; i < 2; i++) {
-		const Roots &r = roots[i];
+		const CurveBounds::Roots &r =  bounds.roots[i];
 		for (int j = 0; j < r.count; j++) {
 			t[count++] = r.t[j];
 		}
@@ -36,7 +36,7 @@ void ExtendedCurveData::copyRoots(uint16_t *out) {
 	}
 }
 
-void ExtendedCurveData::set(const float *curve, const float *bx, const float *by) {
+void CurveBounds::update(const float *curve, float *bx, float *by) {
 	// adapted from nsvg__curveBounds.
 
 	endpoints.p1[0] = curve[0];

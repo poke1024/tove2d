@@ -18,6 +18,7 @@
 #include "shader/curvedata.h"
 #include "nsvg.h"
 #include "utils.h"
+#include "intersect.h"
 
 class Trajectory : public Claimable<Path>, public std::enable_shared_from_this<Trajectory> {
 private:
@@ -28,14 +29,22 @@ private:
 		int8_t direction; // cw vs. ccw
 
 		union {
+            LinePrimitive line;
 			RectPrimitive rect;
 			EllipsePrimitive ellipse;
 		};
 	};
 
+    enum {
+        DIRTY_BOUNDS = 1,
+        DIRTY_COMMANDS = 2,
+        DIRTY_COEFFICIENTS = 4,
+        DIRTY_CURVE_BOUNDS = 8
+    };
+
 	mutable std::vector<Command> commands;
-	mutable bool commandsDirty;
-	bool boundsDirty;
+    mutable std::vector<CurveData> curves;
+	mutable uint8_t dirty;
 
 	float *addPoints(int n);
 
@@ -54,7 +63,7 @@ private:
 	}
 
 	inline void commit() const {
-		if (commandsDirty) {
+		if (dirty & DIRTY_COMMANDS) {
 			updateCommands();
 		}
 	}
@@ -62,6 +71,14 @@ private:
 	void updateCommands() const;
 
     bool isLoop() const;
+
+    inline void ensureCurveData(uint8_t flags) const {
+        if (dirty & flags) {
+            updateCurveData(flags);
+        }
+    }
+
+    void updateCurveData(uint8_t flags) const;
 
 public:
 	NSVGpath nsvg;
@@ -120,7 +137,7 @@ public:
 
 	float getCommandValue(int commandIndex, int what);
 	void setCommandValue(int commandIndex, int what, float value);
-    void refreshCommand(int commandIndex);
+    void setCommandDirty(int commandIndex);
 
 	void updateBounds();
 
@@ -153,26 +170,16 @@ public:
 		return n;
 	}
 
-	bool computeShaderCloseCurveData(
+	/*bool computeShaderCloseCurveData(
 		ToveShaderGeometryData *shaderData,
 		int target,
-		ExtendedCurveData &extended);
-
-	inline bool computeShaderCurveData(
-		ToveShaderGeometryData *shaderData,
-		int curveIndex,
-		int target,
-		ExtendedCurveData &extended) {
-
-		return computeShaderCurveData(
-			shaderData, &nsvg.pts[curveIndex * 3 * 2], target, extended);
-	}
+		ExtendedCurveData &extended);*/
 
 	bool computeShaderCurveData(
 		ToveShaderGeometryData *shaderData,
-		const float *pts,
+        int curveIndex,
 		int target,
-		ExtendedCurveData &extended);
+		ExCurveData &extended);
 
 	void animate(const TrajectoryRef &a, const TrajectoryRef &b, float t);
 
@@ -195,8 +202,15 @@ public:
 
 	void invert();
 	void clean(float eps = 0.0);
+
 	ToveOrientation getOrientation() const;
 	void setOrientation(ToveOrientation orientation);
+
+    void testInside(float x, float y, AbstractInsideTest &test) const;
+    void intersect(const AbstractRay &ray, Intersecter &intersecter) const;
+
+    ToveVec2 getPosition(float globalt) const;
+    ToveVec2 getNormal(float globalt) const;
 };
 
 #endif // __TOVE_TRAJECTORY

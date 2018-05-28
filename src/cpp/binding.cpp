@@ -188,6 +188,10 @@ void PathClean(TovePathRef path, float eps) {
 	deref(path)->clean(eps);
 }
 
+bool PathIsInside(TovePathRef path, float x, float y) {
+	return deref(path)->isInside(x, y);
+}
+
 void ReleasePath(TovePathRef path) {
 	paths.release(path);
 }
@@ -287,6 +291,14 @@ float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int p
 
 void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value) {
 	deref(trajectory)->setCommandValue(command, property, value);
+}
+
+ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t) {
+	return deref(trajectory)->getPosition(t);
+}
+
+ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t) {
+	return deref(trajectory)->getNormal(t);
 }
 
 

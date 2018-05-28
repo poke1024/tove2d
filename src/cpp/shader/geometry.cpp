@@ -80,16 +80,18 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 		assert(strokeEvents.size() >= n * 2);
 
 		for (int i = 0; i < n; i++) {
-			const ExtendedCurveData &ext = extended[i];
+			const ExCurveData &ext = extended[i];
 
 			if (ext.ignore & IGNORE_FILL) {
 				continue;
 			}
 
-			const float x0 = ext.bounds[dimtwo + 0];
-			const float y0 = ext.bounds[dim + 0];
-			const float x1 = ext.bounds[dimtwo + 2];
-			const float y1 = ext.bounds[dim + 2];
+			const CurveBounds *bounds = ext.bounds;
+
+			const float x0 = bounds->bounds[dimtwo + 0];
+			const float y0 = bounds->bounds[dim + 0];
+			const float x1 = bounds->bounds[dimtwo + 2];
+			const float y1 = bounds->bounds[dim + 2];
 
 			if (y0 == y1 && x0 == x1) {
 				continue;
@@ -105,12 +107,12 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 			e->curve = i;
 			e++;
 
-			e->y = ext.endpoints.p1[dim];
+			e->y = bounds->endpoints.p1[dim];
 			e->t = EVENT_MARK;
 			e->curve = i;
 			e++;
 
-			e->y = ext.endpoints.p2[dim];
+			e->y = bounds->endpoints.p2[dim];
 			e->t = EVENT_MARK;
 			e->curve = i;
 			e++;
@@ -127,7 +129,7 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 				se++;
 			}
 
-			const ExtendedCurveData::Roots &r = ext.roots[dim];
+			const CurveBounds::Roots &r = bounds->roots[dim];
 			for (int j = 0; j < r.count; j++) {
 				e->y = r.positions[2 * j + dim];
 				e->t = EVENT_MARK;
@@ -282,7 +284,11 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCurveData(
 					&geometryData, j, curveIndex, extended[curveIndex])) {
+
+					extended[curveIndex].ignore = 0;
 					curveIndex++;
+				} else {
+					extended[curveIndex].ignore = IGNORE_FILL | IGNORE_LINE;
 				}
 			}
 			/*if (n > 0) {
@@ -315,9 +321,9 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 			bounds[dim + 0] = fillEvents[0].y;
 			bounds[dim + 2] = fillEvents[numEvents - 1].y;
 		} else {
-			// all curves are empty. just pick the first curve (must exist).
-			bounds[dim + 0] = extended[0].bounds[dim + 0];
-			bounds[dim + 2] = extended[0].bounds[dim + 2];
+			// all curves are points.
+			bounds[dim + 0] = 0.0f;
+			bounds[dim + 2] = 0.0f;
 		}
 	}
 

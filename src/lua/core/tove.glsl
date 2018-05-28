@@ -231,23 +231,22 @@ int advancedMagic(vec4 bx, vec4 by, vec4 P, float position, float upperBound) {
 		float Q3 = Q * Q * Q;
 		float D = Q3 + R * R;
 
-		if (D > 0.0) { // we have complex or duplicate roots
+		if (D > 0.0) { // complex or duplicate roots
 			float sqrtD = sqrt(D);
 			vec2 r = vec2(R + sqrtD, R - sqrtD);
 			vec2 ST = sign(r) * pow(r, vec2(1.0 / 3.0));
 			float st = ST.x + ST.y;
 
+			// real root:
+			int z = contribute(bx, by, -A_third + st, position);
+
 			if (abs(ST.x - ST.y) < 1e-2) { // complex roots?
-				// real root:
-				int z = contribute(bx, by, -A_third + st, position);
 				// real part of complex root:
 				z += contribute(bx, by, -A_third - st / 2, position) * 2;
-				return z;
-			} else {
-				// real root:
-				return contribute(bx, by, -A_third + st, position);
 			}
-		} else {
+
+			return z;
+		} else { // distinct real roots
 			vec2 tmp = sqrt(vec2(-Q3, -Q));
 			vec3 phi = vec3(acos(R / tmp.x)) + vec3(0, 2 * M_PI, 4 * M_PI);
 			vec3 t = 2 * tmp.y * cos(phi / 3.0) - A_third;

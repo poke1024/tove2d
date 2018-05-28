@@ -12,6 +12,7 @@
 #include "common.h"
 #include "path.h"
 #include "graphics.h"
+#include "intersect.h"
 
 inline NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 	switch (join) {
@@ -57,8 +58,8 @@ void Path::_setFillColor(const PaintRef &color) {
 		nsvg.fill.type = NSVG_PAINT_NONE;
 	}
 
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->setIsClosed((bool)fillColor);
+	for (const auto &t : trajectories) {
+		t->setIsClosed((bool)fillColor);
 	}
 
 	changed(CHANGED_FILL_STYLE);
@@ -207,8 +208,8 @@ Path::Path(const Path *path) : changes(0) {
 
 void Path::clear() {
 	if (trajectories.size() > 0) {
-		for (int i = 0; i < trajectories.size(); i++) {
-			trajectories[i]->unclaim(this);
+		for (const auto &t : trajectories) {
+			t->unclaim(this);
 		}
 		trajectories.clear();
 		nsvg.paths = nullptr;
@@ -239,7 +240,9 @@ void Path::closeTrajectory(bool closeIndeed) {
 	if (!trajectories.empty()) {
 		const TrajectoryRef &t = current();
 		t->updateBounds();
-		updateBounds(trajectories.size() - 1);
+		if (!boundsDirty) {
+			updateBoundsPartial(trajectories.size() - 1);
+		}
 		if (closeIndeed) {
 			t->setIsClosed(true);
 		}
@@ -247,10 +250,7 @@ void Path::closeTrajectory(bool closeIndeed) {
 	newTrajectory = true;
 }
 
-void Path::updateBounds(int from) {
-	if (!boundsDirty) {
-		return;
-	}
+void Path::updateBoundsPartial(int from) {
 	float w = nsvg.strokeWidth * 0.5;
 	for (int i = from; i < trajectories.size(); i++) {
 		const TrajectoryRef &t = trajectories[i];
@@ -268,6 +268,13 @@ void Path::updateBounds(int from) {
 		}
 	}
 	boundsDirty = false;
+}
+
+void Path::updateBounds() {
+	if (!boundsDirty) {
+		return;
+	}
+	updateBoundsPartial(0);
 }
 
 void Path::addTrajectory(const TrajectoryRef &t) {
@@ -313,8 +320,8 @@ void Path::transform(float sx, float sy, float tx, float ty) {
 	nsvg.bounds[2] = (nsvg.bounds[2] + tx) * sx;
 	nsvg.bounds[3] = (nsvg.bounds[3] + ty) * sy;
 
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->transform(sx, sy, tx, ty);
+	for (const auto &t : trajectories) {
+		t->transform(sx, sy, tx, ty);
 	}
 
 	if (fillColor) {
@@ -334,8 +341,8 @@ void Path::transform(float sx, float sy, float tx, float ty) {
 
 int Path::getNumCurves() const {
 	int numCurves = 0;
-	for (int i = 0; i < trajectories.size(); i++) {
-		numCurves += trajectories[i]->getNumCurves();
+	for (const auto &t : trajectories) {
+		numCurves += t->getNumCurves();
 	}
 	return numCurves;
 }
@@ -431,22 +438,61 @@ PathRef Path::clone() const {
 }
 
 void Path::clean(float eps) {
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->clean(eps);
+	for (const auto &t : trajectories) {
+		t->clean(eps);
 	}
 }
 
 void Path::setOrientation(ToveOrientation orientation) {
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->setOrientation(orientation);
+	for (const auto &t : trajectories) {
+		t->setOrientation(orientation);
 	}
+}
+
+bool Path::isInside(float x, float y) {
+	updateBounds();
+	if (x < nsvg.bounds[0] || x > nsvg.bounds[2]) {
+		return false;
+	}
+	if (y < nsvg.bounds[1] || y > nsvg.bounds[3]) {
+		return false;
+	}
+
+	switch (getFillRule()) {
+		case FILLRULE_NON_ZERO: {
+			NonZeroInsideTest test;
+			for (const auto &t : trajectories) {
+				t->testInside(x, y, test);
+			}
+			return test.get();
+		} break;
+		case FILLRULE_EVEN_ODD: {
+			EvenOddInsideTest test;
+			for (const auto &t : trajectories) {
+				t->testInside(x, y, test);
+			}
+			return test.get();
+		}
+		default: {
+			return false;
+		} break;
+	}
+}
+
+void Path::intersect(float x1, float y1, float x2, float y2) const {
+	RuntimeRay ray(x1, y1, x2, y2);
+	Intersecter intersecter;
+	for (const auto &t : trajectories) {
+		t->intersect(ray, intersecter);
+	}
+	// return intersecter.get()
 }
 
 void Path::updateNSVG() {
 	updateBounds();
 
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->updateNSVG();
+	for (const auto &t : trajectories) {
+		t->updateNSVG();
 	}
 }
 
@@ -466,8 +512,8 @@ void Path::colorChanged(AbstractPaint *paint) {
 
 void Path::clearChanges(ToveChangeFlags flags) {
 	changes &= ~flags;
-	for (int i = 0; i < trajectories.size(); i++) {
-		trajectories[i]->clearChanges(flags);
+	for (const auto &t : trajectories) {
+		t->clearChanges(flags);
 	}
 }
 

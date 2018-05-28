@@ -84,4 +84,6 @@ inline int nextpow2(uint32_t v) {
 class triangulation_failed {
 };
 
+typedef float coeff;
+
 #endif

@@ -23,24 +23,32 @@ inline float lerp(float a, float b, float t) {
 	return a + (b - a) * t;
 }
 
-inline void coeffs(float P0, float P1, float P2, float P3, float *Z) {
-	Z[0] = -P0 + 3 * P1  + -3 * P2 + P3;
-    Z[1] = 3 * P0 - 6 * P1 + 3 * P2;
-    Z[2] = -3 * P0 + 3 * P1;
-    Z[3] = P0;
-}
-
 inline int div4(int n) {
     return (n / 4) + (n % 4 ? 1 : 0);
 }
 
 inline int ncurves(int npts) {
 	int n = npts / 3;
-	if (n > 0 && (n - 1) * 3 + 4 > npts) {
-		return n - 1;
-	} else {
-		return n;
-	}
+	n -= int(n > 0 && (n - 1) * 3 + 4 > npts);
+	return n;
+}
+
+template<typename T>
+inline double dot4(const T *v, double x, double y, double z, double w) {
+	return v[0] * x + v[1] * y + v[2] * z + v[3] * w;
+}
+
+template<typename T>
+inline double dot3(const T *v, double x, double y, double z) {
+	return v[0] * x + v[1] * y + v[2] * z;
+}
+
+template<typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+inline float wrapAngle(float phi) {
+	return phi - 360 * std::floor(phi / 360.0);
 }
 
 #endif // __TOVE_UTILS

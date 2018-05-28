@@ -14,19 +14,12 @@
 
 #include <cmath>
 
-enum {
-	IGNORE_FILL = 1,
-	IGNORE_LINE = 2
-};
-
-class ExtendedCurveData {
-private:
-	struct Root {
+struct CurveBounds {
+	/*struct Root {
 		float t;
 		int d; // dimension
-	};
+	};*/
 
-public:
 	struct EndPoints {
 		float p1[2], p2[2];
 	};
@@ -45,10 +38,44 @@ public:
 	float bounds[4];
 	EndPoints endpoints;
 	Roots roots[2];
-	uint8_t ignore;
 
-	void copyRoots(uint16_t *out);
-	void set(const float *curve, const float *bx, const float *by);
+	void update(const float *curve, float *bx, float *by);
+};
+
+template<typename T>
+inline void bezierpc(T P0, T P1, T P2, T P3, T *Z) {
+	Z[0] = -P0 + 3 * P1  + -3 * P2 + P3;
+    Z[1] = 3 * P0 - 6 * P1 + 3 * P2;
+    Z[2] = -3 * P0 + 3 * P1;
+    Z[3] = P0;
+}
+
+class CurveData {
+public:
+	coeff bx[4];
+	coeff by[4];
+	CurveBounds bounds;
+
+	inline void updatePCs(const float *pts) {
+		bezierpc(pts[0], pts[2], pts[4], pts[6], bx);
+		bezierpc(pts[1], pts[3], pts[5], pts[7], by);
+	}
+
+	inline void updateBounds(const float *pts) {
+		bounds.update(pts, bx, by);
+	}
+
+	void storeRoots(uint16_t *out) const;
+};
+
+enum {
+	IGNORE_FILL = 1,
+	IGNORE_LINE = 2
+};
+
+struct ExCurveData {
+	const CurveBounds *bounds;
+	uint8_t ignore;
 };
 
 #endif // __TOVE_CURVEDATA

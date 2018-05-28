@@ -129,6 +129,10 @@ typedef struct {
 	};
 } ToveBounds;
 
+typedef struct {
+	float x, y;
+} ToveVec2;
+
 typedef float ToveMatrix3x3[3 * 3];
 
 typedef struct {
@@ -232,6 +236,8 @@ EXPORT int TrajectoryDrawRect(ToveTrajectoryRef trajectory, float x, float y, fl
 EXPORT int TrajectoryDrawEllipse(ToveTrajectoryRef trajectory, float x, float y, float rx, float ry);
 EXPORT float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int property);
 EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value);
+EXPORT ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t);
+EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
 EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);
@@ -260,6 +266,7 @@ EXPORT ToveMeshResult PathTesselate(TovePathRef path, ToveMeshRef fillMesh, Tove
 EXPORT ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags);
 EXPORT void PathSetOrientation(TovePathRef path, ToveOrientation orientation);
 EXPORT void PathClean(TovePathRef path, float eps);
+EXPORT bool PathIsInside(TovePathRef path, float x, float y);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
