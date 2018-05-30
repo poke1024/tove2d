@@ -711,7 +711,7 @@ ToveVec2 Trajectory::getPosition(float globalt) const {
 	const int nc = ncurves(nsvg.npts);
 
 	float curveflt;
-	float t = modf(globalt, &curveflt);
+	float t = modff(globalt, &curveflt);
 	int curve = int(curveflt);
 	if (curve < nc) {
 		float t2 = t * t;
@@ -730,7 +730,7 @@ ToveVec2 Trajectory::getNormal(float globalt) const {
 	const int nc = ncurves(nsvg.npts);
 
 	float curveflt;
-	float t = modf(globalt, &curveflt);
+	float t = modff(globalt, &curveflt);
 	int curve = int(curveflt);
 
 	if (curve < nc) {
