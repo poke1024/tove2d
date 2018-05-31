@@ -87,13 +87,16 @@ tove.init = function(path)
 		print("TÖVE: " .. (text or obj))
 	end
 
+	local errors = {
+		"triangulation failed.",
+		"out of memory.",
+		"cannot edit closed trajectory.",
+		"internal error."
+	}
+
 	tove.error = function(err)
 		if err ~= 0 then
-			if err == lib.ERR_TRIANGULATION_FAILED then
-				tove.warn("triangulation failed.")
-			else
-				tove.warn("internal error: " .. tostring(err))
-			end
+			tove.warn(errors[tonumber(err)] or err)
 		end
 	end
 end
