@@ -10,14 +10,18 @@
 -- *****************************************************************
 
 local function createDrawMesh(mesh, x0, y0, s)
-	local g = love.graphics
-	return function (x, y, r, sx, sy)
-		if mesh == nil then
-			return
+	if mesh == nil then
+		return function (x, y, r, sx, sy)
 		end
-		g.draw(mesh,
-			(x or 0) + x0, (y or 0) + y0,
-			r or 0, s * (sx or 1), s * (sy or 1))
+	else
+		local draw = love.graphics.draw
+		return function (x, y, r, sx, sy)
+			sx = sx or 1
+			sy = sy or 1
+			x = (x or 0) + x0 * sx
+			y = (y or 0) + y0 * sy
+			draw(mesh, x, y, r or 0, s * sx, s * sy)
+		end
 	end
 end
 
@@ -130,9 +134,11 @@ create.mesh = function(self)
 			tove.error(res.err)
 			return res.update
 		end)
+		local x0, y0, x1, y1 = self:computeAABB()
 		return {
 			mesh = mesh,
-			draw = createDrawMesh(mesh:getMesh(), 0, 0, 1 / resolution),
+			draw = createDrawMesh(
+				mesh:getMesh(), 0, 0, 1 / resolution),
 			change = _changeFlatMesh,
 			cache = _cacheFlatMesh
 		}
