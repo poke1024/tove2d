@@ -14,10 +14,9 @@
 #include "path.h"
 #include "intersect.h"
 
-float *Trajectory::addPoints(int n) {
-	if (isClosed()) {
-		throw std::runtime_error(
-			"cannot edit closed trajectory");
+float *Trajectory::addPoints(int n, bool allowClosedEdit) {
+	if (!allowClosedEdit && isClosed()) {
+		throw cannot_edit_closed_trajectory();
 	}
 	const int cpts = nextpow2(nsvg.npts + n);
 	nsvg.pts = static_cast<float*>(
@@ -31,10 +30,12 @@ float *Trajectory::addPoints(int n) {
 	return p;
 }
 
-void Trajectory::setNumPoints(int npts) {
-	if (isClosed()) {
-		throw std::runtime_error(
-			"cannot edit closed trajectory");
+void Trajectory::setNumPoints(int npts, bool allowClosedEdit) {
+	if (npts == nsvg.npts) {
+		return;
+	}
+	if (!allowClosedEdit && isClosed()) {
+		throw cannot_edit_closed_trajectory();
 	}
 	if (npts > nsvg.npts) {
 		addPoints(npts - nsvg.npts);
@@ -211,6 +212,148 @@ int Trajectory::drawEllipse(float cx, float cy, float rx, float ry) {
 	const int commandIndex = addCommand(TOVE_DRAW_ELLIPSE, index);
 	commands[commandIndex].ellipse = ellipse;
 	return commandIndex;
+}
+
+int Trajectory::insertCurveAt(float globalt) {
+	const int npts0 = nsvg.npts;
+
+	if (npts0 < 4) {
+		return 0;
+	}
+
+	int curve;
+	float t;
+	if (globalt >= ncurves(npts0)) {
+		curve = ncurves(npts0) - 1;
+		t = 1.0f;
+	} else {
+		globalt = std::max(globalt, 0.0f);
+		float curveflt;
+		t = modff(globalt, &curveflt);
+		curve = int(curveflt);
+	}
+
+	const int i = std::min(std::max(curve * 3, 0), npts0 - 4);
+
+	addPoints(3, true);
+	float *pts = nsvg.pts;
+
+	std::memmove(
+		&pts[2 * (i + 7)],
+		&pts[2 * (i + 4)],
+		(nsvg.npts - (i + 7)) * sizeof(float) * 2);
+
+	const float s = 1 - t;
+
+	for (int j = 0; j < 2; j++) {
+		const float p0 = pts[2 * (i + 0) + j];
+		const float p1 = pts[2 * (i + 1) + j];
+		const float p2 = pts[2 * (i + 2) + j];
+		const float p3 = pts[2 * (i + 3) + j];
+
+		const float p0_1 = s * p0 + t * p1;
+		const float p1_2 = s * p1 + t * p2;
+		const float p2_3 = s * p2 + t * p3;
+
+		const float p01_12 = s * p0_1 + t * p1_2;
+		const float p12_23 = s * p1_2 + t * p2_3;
+
+		const float p0112_1223 = s * p01_12 + t * p12_23;
+
+		pts[2 * (i + 0) + j] = p0;
+		pts[2 * (i + 1) + j] = p0_1;
+		pts[2 * (i + 2) + j] = p01_12;
+
+		pts[2 * (i + 3) + j] = p0112_1223;
+
+		pts[2 * (i + 4) + j] = p12_23;
+		pts[2 * (i + 5) + j] = p2_3;
+		pts[2 * (i + 6) + j] = p3;
+	}
+
+	fixLoop();
+
+	return i + 4;
+}
+
+void Trajectory::removeCurve(int curve) {
+	const int npts = nsvg.npts - (isClosed() ? 1 : 0);
+
+	if (npts < 7) {
+		return;
+	}
+
+	const int nc = ncurves(nsvg.npts);
+	curve -= 1;
+	curve = (curve % nc + nc) % nc;
+
+	const int i = std::max(curve * 3, 0);
+
+	float t = 0.0f;
+	float *pts = nsvg.pts;
+
+	for (int j = 0; j < 2; j++) {
+		const float p01_12 = pts[2 * ((i + 2) % npts) + j];
+		const float p0112_1223 = pts[2 * ((i + 3) % npts) + j];
+		const float p12_23 = pts[2 * ((i + 4) % npts) + j];
+
+		if (std::abs(p01_12 - p12_23) < 1e-4) {
+			t += 0.5f;
+		} else {
+			t += (p01_12 - p0112_1223) / (p01_12 - p12_23);
+		}
+	}
+
+	t /= 2.0f;
+	float s = 1.0f - t;
+
+	for (int j = 0; j < 2; j++) {
+		const float p0 = pts[2 * ((i + 0) % npts) + j];
+		const float p0_1 = pts[2 * ((i + 1) % npts) + j];
+		const float p2_3 = pts[2 * ((i + 5) % npts) + j];
+		const float p3 = pts[2 * ((i + 6) % npts) + j];
+
+		pts[2 * ((i + 1) % npts) + j] = (p0_1 - s * p0) / t; // p1
+		pts[2 * ((i + 2) % npts) + j] = (p2_3 - t * p3) / s; // p2
+		pts[2 * ((i + 3) % npts) + j] = p3;
+	}
+
+	remove((i + 4) % npts, 3);
+}
+
+void Trajectory::remove(int from, int n) {
+	assert(from < nsvg.npts);
+	assert(n < nsvg.npts);
+
+	if (!isClosed()) {
+		n = std::min(n, nsvg.npts - from);
+	}
+
+	int clipAtStart, clipAtEnd;
+
+	if (from + n <= nsvg.npts) {
+		clipAtEnd = n;
+		clipAtStart = 0;
+	} else {
+		clipAtEnd = nsvg.npts - from;
+		clipAtStart = n - clipAtEnd;
+	}
+
+	float *pts = nsvg.pts;
+
+	std::memmove(
+		&pts[2 * from],
+		&pts[2 * (from + clipAtEnd)],
+		(nsvg.npts - (from + clipAtEnd)) * sizeof(float) * 2);
+
+	std::memmove(
+		pts,
+		&pts[2 * clipAtStart],
+		(nsvg.npts - n) * sizeof(float) * 2);
+
+	setNumPoints(nsvg.npts - n, true);
+
+	fixLoop();
 }
 
 void Trajectory::setLovePoints(const float *pts, int npts) {
@@ -390,6 +533,14 @@ bool Trajectory::isLoop() const {
 		nsvg.pts[1] == nsvg.pts[n * 2 - 1];
 }
 
+void Trajectory::fixLoop() {
+	const int npts = nsvg.npts;
+	if (npts > 0 && isClosed()) {
+		nsvg.pts[npts * 2 - 2] = nsvg.pts[0];
+		nsvg.pts[npts * 2 - 1] = nsvg.pts[1];
+	}
+}
+
 void Trajectory::setIsClosed(bool closed) {
 	if (nsvg.closed == closed) {
 		return;
@@ -529,8 +680,10 @@ void Trajectory::updateNSVG() {
 	// to make complete curves here.
 	if (nsvg.npts > 0) {
 		while (nsvg.npts != 3 * ncurves(nsvg.npts) + 1) {
-			addPoint(nsvg.pts[2 * (nsvg.npts - 1) + 0],
-				nsvg.pts[2 * (nsvg.npts - 1) + 1]);
+			addPoint(
+				nsvg.pts[2 * (nsvg.npts - 1) + 0],
+				nsvg.pts[2 * (nsvg.npts - 1) + 1],
+				true);
 		}
 	}
 
@@ -806,6 +959,7 @@ float Trajectory::closest(float x, float y, float dmin, float dmax) const {
 	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
 	const int nc = ncurves(nsvg.npts);
 	const float eps2 = dmin * dmin;
+	const float maxDistance = dmax;
 
 	Nearest nearest;
 	nearest.distanceSquared = 1e50;
@@ -838,5 +992,9 @@ float Trajectory::closest(float x, float y, float dmin, float dmax) const {
 		dmax = std::min(dmax, std::sqrt(nearest.distanceSquared));
 	}
 
-	return nearest.t;
+	if (std::sqrt(nearest.distanceSquared) > maxDistance) {
+		return -1.0f;
+	} else {
+		return nearest.t;
+	}
 }

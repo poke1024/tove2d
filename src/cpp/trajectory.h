@@ -46,15 +46,15 @@ private:
     mutable std::vector<CurveData> curves;
 	mutable uint8_t dirty;
 
-	float *addPoints(int n);
+	float *addPoints(int n, bool allowClosedEdit = false);
 
-	inline void addPoint(float x, float y) {
-		float *p = addPoints(1);
+	inline void addPoint(float x, float y, bool allowClosedEdit = false) {
+		float *p = addPoints(1, allowClosedEdit);
 		p[0] = x;
 		p[1] = y;
 	}
 
-	void setNumPoints(int npts);
+	void setNumPoints(int npts, bool allowClosedEdit = false);
 
 	int addCommand(ToveCommandType type, int index);
 
@@ -71,6 +71,8 @@ private:
 	void updateCommands() const;
 
     bool isLoop() const;
+
+    void fixLoop();
 
     inline void ensureCurveData(uint8_t flags) const {
         if (dirty & flags) {
@@ -97,6 +99,10 @@ public:
 	int arc(float x, float y, float r, float startAngle, float endAngle, bool counterclockwise);
 	int drawRect(float x, float y, float w, float h, float rx, float ry);
 	int drawEllipse(float cx, float cy, float rx, float ry);
+
+    int insertCurveAt(float t);
+    void removeCurve(int curve);
+    void remove(int from, int n);
 
 	inline float getValue(int index) const {
 		if (index >= 0 && index < nsvg.npts * 2) {

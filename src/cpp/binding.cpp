@@ -17,6 +17,24 @@
 #include "mesh/meshifier.h"
 #include "shader/link.h"
 
+template<typename F>
+ToveMeshResult exception_safe(const F &f) {
+	try {
+		return ToveMeshResult{ERR_NONE, f()};
+	} catch (const triangulation_failed &e) {
+		return ToveMeshResult{ERR_TRIANGULATION_FAILED, 0};
+	} catch (const cannot_edit_closed_trajectory &e) {
+		return ToveMeshResult{ERR_CLOSED_TRAJECTORY, 0};
+	} catch (const std::bad_alloc &e) {
+		return ToveMeshResult{ERR_OUT_OF_MEMORY, 0};
+	} catch (const std::exception &e) {
+		fprintf(stderr, "an error occured in tove2d: %s\n", e.what());
+		return ToveMeshResult{ERR_UNKNOWN, 0};
+	} catch (...) {
+		return ToveMeshResult{ERR_UNKNOWN, 0};
+	}
+}
+
 extern "C" {
 
 TovePaintType PaintGetType(TovePaintRef paint) {
@@ -155,7 +173,7 @@ void PathClearChanges(TovePathRef path) {
 }
 
 ToveMeshResult PathTesselate(TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef lineMesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags) {
-	try {
+	return exception_safe([path, fillMesh, lineMesh, scale, quality, flags] () {
 		ToveMeshUpdateFlags updated;
 		if (quality && !quality->adaptive.valid) {
 			FixedMeshifier meshifier(scale, quality, flags);
@@ -164,17 +182,11 @@ ToveMeshResult PathTesselate(TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef
 			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		}
-		return ToveMeshResult{ERR_NONE, updated};
-	} catch (const triangulation_failed &e) {
-		return ToveMeshResult{ERR_TRIANGULATION_FAILED, 0};
-	} catch (const std::bad_alloc &e) {
-		return ToveMeshResult{ERR_OUT_OF_MEMORY, 0};
-	} catch (...) {
-		return ToveMeshResult{ERR_UNKNOWN, 0};
-	}
+		return updated;
+	});
 }
 
-EXPORT ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags) {
+ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags) {
 	const ToveChangeFlags changes = deref(path)->fetchChanges(flags);
 	deref(path)->clearChanges(flags);
 	return changes;
@@ -305,6 +317,14 @@ float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dm
 	return deref(trajectory)->closest(x, y, dmin, dmax);
 }
 
+int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t) {
+	return deref(trajectory)->insertCurveAt(t);
+}
+
+void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve) {
+	deref(trajectory)->removeCurve(curve);
+}
+
 
 ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
 	GraphicsRef shape;
@@ -402,9 +422,10 @@ void GraphicsTransform(ToveGraphicsRef shape, float sx, float sy, float tx, floa
 }
 
 ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags) {
-	const GraphicsRef graphics = deref(shape);
-	const int n = graphics->getNumPaths();
-	try {
+	return exception_safe([shape, mesh, scale, quality, flags] () {
+		const GraphicsRef graphics = deref(shape);
+		const int n = graphics->getNumPaths();
+
 		ToveMeshUpdateFlags updated;
 		if (quality && !quality->adaptive.valid) {
 			FixedMeshifier meshifier(scale, quality, flags);
@@ -413,14 +434,8 @@ ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float 
 			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		}
-		return ToveMeshResult{ERR_NONE, updated};
-	} catch (const triangulation_failed &e) {
-		return ToveMeshResult{ERR_TRIANGULATION_FAILED, 0};
-	} catch (const std::bad_alloc &e) {
-		return ToveMeshResult{ERR_OUT_OF_MEMORY, 0};
-	} catch (...) {
-		return ToveMeshResult{ERR_UNKNOWN, 0};
-	}
+		return updated;
+	});
 }
 
 ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height, float tx, float ty, float scale, const ToveTesselationQuality *quality) {

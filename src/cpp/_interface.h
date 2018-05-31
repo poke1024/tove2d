@@ -6,6 +6,7 @@ typedef enum {
 	ERR_NONE = 0,
 	ERR_TRIANGULATION_FAILED,
 	ERR_OUT_OF_MEMORY,
+	ERR_CLOSED_TRAJECTORY,
 	ERR_UNKNOWN
 } ToveError;
 
@@ -239,6 +240,8 @@ EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command,
 EXPORT ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t);
 EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
 EXPORT float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
+EXPORT int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t);
+EXPORT void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve);
 EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);
