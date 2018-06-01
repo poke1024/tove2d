@@ -25,6 +25,11 @@ public:
 		return ToveType{newRef};
 	}
 
+	inline ToveType publishEmpty() {
+		Ref *newRef = new Ref();
+		return ToveType{newRef};
+	}
+
 	inline ToveType publishOrNil(const Ref &ref) {
 		if (ref.get() == nullptr) {
 			return ToveType{nullptr};

@@ -205,6 +205,7 @@ EXPORT const char *GetVersion();
 
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);
+EXPORT TovePaintRef NewEmptyPaint();
 EXPORT TovePaintRef NewColor(float r, float g, float b, float a);
 EXPORT void ColorSet(TovePaintRef color, float r, float g, float b, float a);
 EXPORT RGBA ColorGet(TovePaintRef color, float opacity);

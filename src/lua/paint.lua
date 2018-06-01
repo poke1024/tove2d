@@ -39,8 +39,14 @@ end
 
 Paint._fromRef = fromRef
 
+local noColor = fromRef(lib.NewEmptyPaint())
+
 local newColor = function(r, g, b, a)
-	return fromRef(lib.NewColor(r or 0, g or 0, b or 0, a or 1))
+	if r == nil then
+		return noColor
+	else
+		return fromRef(lib.NewColor(r, g or 0, b or 0, a or 1))
+	end
 end
 
 tove.newColor = newColor
@@ -83,6 +89,8 @@ Paint._wrap = function(r, g, b, a)
 			tonumber("0x" .. r:sub(1, 2)) / 255,
 			tonumber("0x" .. r:sub(3, 4)) / 255,
 			tonumber("0x" .. r:sub(5, 6)) / 255)
+	elseif t == "nil" then
+		return noColor
 	else
 		error("tove: cannot parse color: " .. tostring(r))
 	end

@@ -45,6 +45,10 @@ TovePaintRef ClonePaint(TovePaintRef paint) {
 	return paints.publish(deref(paint)->clone());
 }
 
+TovePaintRef NewEmptyPaint() {
+	return paints.publishEmpty();
+}
+
 TovePaintRef NewColor(float r, float g, float b, float a) {
 	return paints.publish(std::make_shared<Color>(r, g, b, a));
 }
