@@ -100,12 +100,13 @@ create.bitmap = function(self)
 
 	local imageData = self:rasterize(
 		resolution * (x1 - x0),
-		resolution * (y1 - y0), -x0, -y0,
+		resolution * (y1 - y0), -x0 * resolution, -y0 * resolution,
 		resolution)
-	local mesh = love.graphics.newImage(imageData)
+	local image = love.graphics.newImage(imageData)
+	image:setFilter("linear", "linear")
 	return {
-		mesh = mesh,
-		draw = createDrawMesh(mesh, x0, y0, 1 / resolution),
+		mesh = image,
+		draw = createDrawMesh(image, x0, y0, 1 / resolution),
 		change = _changeBitmap,
 		cache = _noCache
 	}
