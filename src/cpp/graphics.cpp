@@ -107,13 +107,27 @@ Graphics::Graphics(const NSVGimage *image) : changes(0) {
 }
 
 Graphics::Graphics(const GraphicsRef &graphics) {
-	throw std::runtime_error("not yet implemented");
+	initialize(graphics->nsvg.width, graphics->nsvg.height);
+
+	strokeColor = graphics->strokeColor;
+	fillColor = graphics->fillColor;
+
+	strokeWidth = graphics->strokeWidth;
+	strokeDashOffset = graphics->strokeDashOffset;
+	strokeLineJoin = graphics->strokeLineJoin;
+	strokeLineCap = graphics->strokeLineCap;
+	miterLimit = graphics->miterLimit;
+	fillRule = graphics->fillRule;
+
+	for (const auto &path : graphics->paths) {
+		addPath(path->clone());
+	}
 }
 
 void Graphics::clear() {
 	if (paths.size() > 0) {
-		for (int i = 0; i < paths.size(); i++) {
-			paths[i]->unclaim(this);
+		for (const auto &p : paths) {
+			p->unclaim(this);
 		}
 		paths.clear();
 		nsvg.shapes = nullptr;

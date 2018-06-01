@@ -50,7 +50,26 @@ tove.newGraphics = function(svg, size)
 	return graphics
 end
 
-bind("clone", "CloneGraphics")
+local function makeDisplay(mode, quality, usage)
+	return {mode = mode, quality = quality,
+		cquality = cquality(quality, usage)}
+end
+
+function Graphics:clone()
+	local ref = lib.CloneGraphics(self._ref)
+	local d = self._display
+	local g = setmetatable({
+		_ref = ref,
+		_cache = nil,
+		_display = makeDisplay(d.mode, d.quality, self._usage),
+		_resolution = self._resolution,
+		_usage = {},
+		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
+	for k, v in pairs(self._usage) do
+		g._usage[k] = v
+	end
+	return g
+end
 
 -- API exception: call a trajectory a path here.
 function Graphics:beginPath()
@@ -140,7 +159,7 @@ function Graphics:setDisplay(mode, quality)
 		self._usage["gradients"] = "fast"
 	end
 	self._cache = nil
-	self._display = {mode = mode, quality = quality, cquality = cquality(quality, self._usage)}
+	self._display = makeDisplay(mode, quality, self._usage)
 end
 
 function Graphics:setResolution(resolution)
