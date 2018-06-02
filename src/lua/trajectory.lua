@@ -11,15 +11,15 @@
 
 local Curve = {}
 Curve.__index = function (self, key)
-	return lib.TrajectoryGetValue(self.traj, self.i + _attributes[key])
+	return lib.TrajectoryGetCurveValue(self.traj, self.curve, _attributes[key])
 end
 Curve.__newindex = function (self, key, value)
-	return lib.TrajectorySetValue(self.traj, self.i + _attributes[key], value)
+	return lib.TrajectorySetCurveValue(self.traj, self.curve, _attributes[key], value)
 end
 
 local Curves = {}
-Curves.__index = function (self, index)
-	return setmetatable({traj = self.traj, i = 2 + (index - 1) * 6}, Curve)
+Curves.__index = function (self, curve)
+	return setmetatable({traj = self.traj, curve = curve - 1}, Curve)
 end
 
 local _pt = {
@@ -74,6 +74,7 @@ end
 
 Trajectory.insertCurveAt = lib.TrajectoryInsertCurveAt
 Trajectory.removeCurve = lib.TrajectoryRemoveCurve
+Trajectory.mould = lib.TrajectoryMould
 Trajectory.setPoints = lib.TrajectorySetPoints
 
 ffi.metatype("ToveTrajectoryRef", Trajectory)

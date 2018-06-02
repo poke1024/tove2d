@@ -249,12 +249,12 @@ void TrajectorySetPoints(ToveTrajectoryRef trajectory, const float *pts, int npt
 	deref(trajectory)->setLovePoints(pts, npts);
 }
 
-float TrajectoryGetValue(ToveTrajectoryRef trajectory, int index) {
-	return deref(trajectory)->getValue(index);
+float TrajectoryGetCurveValue(ToveTrajectoryRef trajectory, int curve, int index) {
+	return deref(trajectory)->getCurveValue(curve, index);
 }
 
-void TrajectorySetValue(ToveTrajectoryRef trajectory, int index, float value) {
-	deref(trajectory)->setValue(index, value);
+void TrajectorySetCurveValue(ToveTrajectoryRef trajectory, int curve, int index, float value) {
+	deref(trajectory)->setCurveValue(curve, index, value);
 }
 
 float TrajectoryGetPtValue(ToveTrajectoryRef trajectory, int index, int dim) {
@@ -327,6 +327,10 @@ int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t) {
 
 void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve) {
 	deref(trajectory)->removeCurve(curve);
+}
+
+int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y) {
+	return deref(trajectory)->mould(t, x, y);
 }
 
 

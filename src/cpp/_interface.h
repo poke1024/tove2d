@@ -223,8 +223,8 @@ EXPORT bool TrajectoryIsClosed(ToveTrajectoryRef trajectory);
 EXPORT const float *TrajectoryGetPoints(ToveTrajectoryRef trajectory);
 EXPORT void TrajectorySetPoint(ToveTrajectoryRef trajectory, int index, float x, float y);
 EXPORT void TrajectorySetPoints(ToveTrajectoryRef trajectory, const float *pts, int npts);
-EXPORT float TrajectoryGetValue(ToveTrajectoryRef trajectory, int index);
-EXPORT void TrajectorySetValue(ToveTrajectoryRef trajectory, int index, float value);
+EXPORT float TrajectoryGetCurveValue(ToveTrajectoryRef trajectory, int curve, int index);
+EXPORT void TrajectorySetCurveValue(ToveTrajectoryRef trajectory, int curve, int index, float value);
 EXPORT float TrajectoryGetPtValue(ToveTrajectoryRef trajectory, int index, int dim);
 EXPORT void TrajectorySetPtValue(ToveTrajectoryRef trajectory, int index, int dim, float value);
 EXPORT void TrajectoryInvert(ToveTrajectoryRef trajectory);
@@ -243,6 +243,7 @@ EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
 EXPORT float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
 EXPORT int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t);
 EXPORT void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve);
+EXPORT int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y);
 EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);

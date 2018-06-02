@@ -103,20 +103,43 @@ public:
     int insertCurveAt(float t);
     void removeCurve(int curve);
     void remove(int from, int n);
+    int mould(float t, float x, float y);
 
-	inline float getValue(int index) const {
-		if (index >= 0 && index < nsvg.npts * 2) {
-			commit();
-			return nsvg.pts[index];
+	inline float getCurveValue(int curve, int index) const {
+        commit();
+        const int npts = nsvg.npts;
+        const int nc = ncurves(npts);
+        if (nc < 1) {
+            return 0.0f;
+        }
+        if (isClosed()) {
+            curve = (curve % nc + nc) % nc;
+        } else if (curve < 0 || curve >= nc) {
+            return 0.0f;
+        }
+        const int i = curve * 3 * 2 + index + 2;
+		if (i >= 0 && i < npts * 2) {
+			return nsvg.pts[i];
 		} else {
-			return 0.0;
+			return 0.0f;
 		}
 	}
 
-	inline void setValue(int index, float value) {
-		if (index >= 0 && index < nsvg.npts * 2) {
-			commit();
-			nsvg.pts[index] = value;
+	inline void setCurveValue(int curve, int index, float value) {
+        commit();
+        const int npts = nsvg.npts;
+        const int nc = ncurves(npts);
+        if (nc < 1) {
+            return;
+        }
+        if (isClosed()) {
+            curve = (curve % nc + nc) % nc;
+        } else if (curve < 0 || curve >= nc) {
+            return;
+        }
+        const int i = curve * 3 * 2 + index + 2;
+        if (i >= 0 && i < npts * 2) {
+			nsvg.pts[i] = value;
 			changed(CHANGED_POINTS);
 		}
 	}

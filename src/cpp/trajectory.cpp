@@ -14,6 +14,10 @@
 #include "path.h"
 #include "intersect.h"
 
+inline float length(float x, float y) {
+	return std::sqrt(x * x + y * y);
+}
+
 float *Trajectory::addPoints(int n, bool allowClosedEdit) {
 	if (!allowClosedEdit && isClosed()) {
 		throw cannot_edit_closed_trajectory();
@@ -354,6 +358,80 @@ void Trajectory::remove(int from, int n) {
 	setNumPoints(nsvg.npts - n, true);
 
 	fixLoop();
+}
+
+int Trajectory::mould(float globalt, float x, float y) {
+	// adapted from https://pomax.github.io/bezierinfo/#moulding
+
+	const int nc = ncurves(nsvg.npts);
+
+	float curveflt;
+	float t = modff(globalt, &curveflt);
+	int curve = int(curveflt);
+	if (curve < 0 || curve >= nc) {
+		return -1;
+	}
+
+	const float t2 = t * t;
+	const float t3 = t2 * t;
+
+	const float B[2] = {x, y};
+
+	const float s = 1.0f - t;
+	const float s3 = s * s * s;
+
+	const float u = s3 / (t3 + s3);
+	const float v = 1.0f - u;
+	const float ratio = std::abs((t3 + s3 - 1.0f) / (t3 + s3));
+
+	float * const pts = nsvg.pts;
+
+	const int i = curve * 3;
+	float * const S = &pts[i * 2 + 0];
+	float * const E = &pts[i * 2 + 6];
+
+	float * const CP1 = &pts[i * 2 + 2];
+	float * const CP2 = &pts[i * 2 + 4];
+
+	const float C[2] = {
+		u * S[0] + v * E[0],
+		u * S[1] + v * E[1]
+	};
+
+	float e1[2], e2[2];
+	for (int j = 0; j < 2; j++) {
+		// de Casteljau, stage 1
+		float q1 = S[j] * s + CP1[j] * t;
+		float q2 = CP1[j] * s + CP2[j] * t;
+		float q3 = CP2[j] * s + E[j] * t;
+
+		// de Casteljau, stage 2
+		float r1 = q1 * s + q2 * t;
+		float r2 = q2 * s + q3 * t;
+
+		// de Casteljau, stage 3
+		float B_old = r1 * s + r2 * t;
+
+		e1[j] = B[j] + (r1 - B_old);
+		e2[j] = B[j] + (r2 - B_old);
+	}
+
+	for (int j = 0; j < 2; j++) {
+		float A = B[j] + (B[j] - C[j]) / ratio;
+
+		float v1 = A + (e1[j] - A) / s;
+		float v2 = A + (e2[j] - A) / t;
+
+		float cp1 = S[j] + (v1 - S[j]) / t;
+		float cp2 = E[j] + (v2 - E[j]) / s;
+
+		CP1[j] = cp1;
+		CP2[j] = cp2;
+	}
+
+	changed(CHANGED_POINTS);
+
+	return curve;
 }
 
 void Trajectory::setLovePoints(const float *pts, int npts) {
@@ -866,7 +944,7 @@ ToveVec2 Trajectory::getPosition(float globalt) const {
 	float curveflt;
 	float t = modff(globalt, &curveflt);
 	int curve = int(curveflt);
-	if (curve < nc) {
+	if (curve >= 0 && curve < nc) {
 		float t2 = t * t;
 		float t3 = t2 * t;
 
@@ -886,7 +964,7 @@ ToveVec2 Trajectory::getNormal(float globalt) const {
 	float t = modff(globalt, &curveflt);
 	int curve = int(curveflt);
 
-	if (curve < nc) {
+	if (curve >= 0 && curve < nc) {
 		float t2 = t * t;
 
 		double nx = dot3(curves[curve].by, 3 * t2, 2 * t, 1);
