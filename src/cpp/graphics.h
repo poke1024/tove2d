@@ -20,7 +20,6 @@ private:
 	bool newPath;
 
 	float bounds[4];
-	bool boundsDirty;
 
 	PaintRef fillColor;
 	PaintRef strokeColor;
@@ -117,7 +116,7 @@ public:
 
 	inline void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
-			boundsDirty = true;
+			flags |= CHANGED_BOUNDS;
 		}
 		changes |= flags;
 	}

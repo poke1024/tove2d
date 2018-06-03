@@ -26,7 +26,6 @@ private:
 	PaintRef lineColor;
 
 	uint8_t changes;
-	bool boundsDirty;
 
 	inline const TrajectoryRef &current() const {
 		return trajectories[trajectories.size() - 1];

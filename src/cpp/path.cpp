@@ -116,16 +116,16 @@ void Path::set(const NSVGshape *shape) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = shape->bounds[i];
 	}
-	boundsDirty = true;
 
 	NSVGpath *path = shape->paths;
 	while (path) {
 		_append(std::make_shared<Trajectory>(path));
 		path = path->next;
 	}
+	changed(CHANGED_GEOMETRY);
 }
 
-Path::Path() : changes(0) {
+Path::Path() : changes(CHANGED_BOUNDS) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	nsvg.stroke.type = NSVG_PAINT_NONE;
@@ -142,12 +142,11 @@ Path::Path() : changes(0) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0;
 	}
-	boundsDirty = true;
 
 	newTrajectory = true;
 }
 
-Path::Path(Graphics *graphics) : changes(0) {
+Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS) {
 	memset(&nsvg, 0, sizeof(nsvg));
 	nsvg.stroke.type = NSVG_PAINT_NONE;
 	nsvg.fill.type = NSVG_PAINT_NONE;
@@ -163,7 +162,6 @@ Path::Path(Graphics *graphics) : changes(0) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0;
 	}
-	boundsDirty = true;
 
 	newTrajectory = true;
 	claim(graphics);
@@ -183,7 +181,7 @@ Path::Path(const char *d) : changes(0) {
 	newTrajectory = true;
 }
 
-Path::Path(const Path *path) : changes(0) {
+Path::Path(const Path *path) : changes(path->changes) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	strcpy(nsvg.id, path->nsvg.id);
@@ -205,7 +203,6 @@ Path::Path(const Path *path) : changes(0) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = path->nsvg.bounds[i];
 	}
-	boundsDirty = path->boundsDirty;
 
 	trajectories.reserve(path->trajectories.size());
 	for (int i = 0; i < path->trajectories.size(); i++) {
@@ -255,7 +252,7 @@ void Path::closeTrajectory(bool closeCurves) {
 	if (!trajectories.empty()) {
 		const TrajectoryRef &t = current();
 		t->updateBounds();
-		if (!boundsDirty) {
+		if ((changes & CHANGED_BOUNDS) == 0) {
 			updateBoundsPartial(trajectories.size() - 1);
 		}
 		if (closeCurves) {
@@ -282,11 +279,11 @@ void Path::updateBoundsPartial(int from) {
 			nsvg.bounds[3] = std::max(nsvg.bounds[3], t->nsvg.bounds[3] + w);
 		}
 	}
-	boundsDirty = false;
+	changes &= ~CHANGED_BOUNDS;
 }
 
 void Path::updateBounds() {
-	if (!boundsDirty) {
+	if ((changes & CHANGED_BOUNDS) == 0) {
 		return;
 	}
 	updateBoundsPartial(0);
@@ -578,13 +575,13 @@ void Path::clearChanges(ToveChangeFlags flags) {
 }
 
 void Path::changed(ToveChangeFlags flags) {
+	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
+		flags |= CHANGED_BOUNDS;
+	}
 	if ((changes & flags) == flags) {
 		return;
 	}
 	changes |= flags;
-	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
-		boundsDirty = true;
-	}
 	if (claimer) {
 		claimer->changed(flags);
 	}

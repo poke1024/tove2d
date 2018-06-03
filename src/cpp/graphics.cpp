@@ -88,18 +88,17 @@ void Graphics::initialize(float width, float height) {
 	fillRule = NSVG_FILLRULE_NONZERO;
 
 	newPath = true;
-	boundsDirty = true;
 
 	for (int i = 0; i < 4; i++) {
 		bounds[i] = 0.0;
 	}
 }
 
-Graphics::Graphics() : changes(0) {
+Graphics::Graphics() : changes(CHANGED_BOUNDS) {
 	initialize(1.0, 1.0);
 }
 
-Graphics::Graphics(const NSVGimage *image) : changes(0) {
+Graphics::Graphics(const NSVGimage *image) : changes(CHANGED_BOUNDS) {
 	initialize(image->width, image->height);
 
 	NSVGshape *shape = image->shapes;
@@ -116,7 +115,7 @@ Graphics::Graphics(const NSVGimage *image) : changes(0) {
 	}
 }
 
-Graphics::Graphics(const GraphicsRef &graphics) {
+Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
 	initialize(graphics->nsvg.width, graphics->nsvg.height);
 
 	strokeColor = graphics->strokeColor;
@@ -219,7 +218,7 @@ NSVGimage *Graphics::getImage() {
 const float *Graphics::getBounds() {
 	closePath();
 
-	if (boundsDirty) {
+	if (changes & CHANGED_BOUNDS) {
 		for (int i = 0; i < paths.size(); i++) {
 			const PathRef &path = paths[i];
 			path->updateBounds();
@@ -234,7 +233,7 @@ const float *Graphics::getBounds() {
 				bounds[3] = std::max(bounds[3], path->nsvg.bounds[3]);
 			}
 		}
-		boundsDirty = false;
+		changes &= ~CHANGED_BOUNDS;
 	}
 
 	return bounds;
