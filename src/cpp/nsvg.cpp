@@ -142,7 +142,7 @@ uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 }
 
 Transform::Transform() {
-	identity = false;
+	identity = true;
 	scaleLineWidth = false;
 
 	nsvg__xformIdentity(matrix);
@@ -172,8 +172,6 @@ Transform::Transform(
 	matrix[3] = kx * s * sx + c * sy; // = d
 	matrix[4] = tx - ox * matrix[0] - oy * matrix[2];
 	matrix[5] = ty - ox * matrix[1] - oy * matrix[3];
-
-	nsvg__xformInverse(inverse, matrix);
 }
 
 void Transform::multiply(const Transform &t) {

@@ -327,9 +327,12 @@ void Path::setOpacity(float opacity) {
 void Path::set(const PathRef &path, const nsvg::Transform &transform) {
 	const int n = path->trajectories.size();
 
-	if (path.get() != this) {
-		bool hasGeometryChanged = false;
+	const float lineScale = transform.wantsScaleLineWidth() ?
+		transform.getScale() : 1.0f;
 
+	bool hasGeometryChanged = false;
+
+	if (path.get() != this) {
 		setOpacity(path->nsvg.opacity);
 		if (nsvg.strokeDashCount != path->nsvg.strokeDashCount) {
 			nsvg.strokeDashCount = path->nsvg.strokeDashCount;
@@ -352,7 +355,9 @@ void Path::set(const PathRef &path, const nsvg::Transform &transform) {
 			nsvg.flags = path->nsvg.flags;
 			hasGeometryChanged = true;
 		}
+	}
 
+	if (path.get() != this || !transform.isIdentity()) {
 		{
 			PaintRef newFillColor;
 			if (path->fillColor) {
@@ -370,31 +375,30 @@ void Path::set(const PathRef &path, const nsvg::Transform &transform) {
 			}
 			_setLineColor(newLineColor);
 		}
+	}
 
-		const float scale = transform.wantsScaleLineWidth() ?
-			transform.getScale() : 1.0f;
+	if (path.get() != this || lineScale != 1.0f) {
+		setLineWidth(path->nsvg.strokeWidth * lineScale);
 
-		setLineWidth(path->nsvg.strokeWidth * scale);
-
-		const float newDashOffset = path->nsvg.strokeDashOffset * scale;
+		const float newDashOffset = path->nsvg.strokeDashOffset * lineScale;
 		if (nsvg.strokeDashOffset != newDashOffset) {
 			nsvg.strokeDashOffset = newDashOffset;
 			hasGeometryChanged = true;
 		}
 		for (int i = 0; i < path->nsvg.strokeDashCount; i++) {
-			const float len = path->nsvg.strokeDashArray[i] * scale;
+			const float len = path->nsvg.strokeDashArray[i] * lineScale;
 			if (nsvg.strokeDashArray[i] != len) {
 				nsvg.strokeDashArray[i] = len;
 				hasGeometryChanged = true;
 			}
 		}
-
-		if (hasGeometryChanged) {
-			geometryChanged();
-		}
-
-		setTrajectoryCount(n);
 	}
+
+	if (hasGeometryChanged) {
+		geometryChanged();
+	}
+
+	setTrajectoryCount(n);
 
 	for (int i = 0; i < n; i++) {
 		trajectories[i]->set(path->trajectories[i], transform);

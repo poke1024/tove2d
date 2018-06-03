@@ -53,7 +53,6 @@ uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 class Transform {
 private:
 	float matrix[6];
-	float inverse[6];
 	bool identity;
 	bool scaleLineWidth;
 
@@ -72,6 +71,10 @@ public:
 	void transformPoints(float *pts, const float *srcpts, int npts) const;
 
 	float getScale() const;
+
+	inline bool isIdentity() const {
+		return identity;
+	}
 
 	inline float wantsScaleLineWidth() const {
 		return scaleLineWidth;
