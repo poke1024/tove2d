@@ -11,6 +11,18 @@
 
 #include "graphics.h"
 
+void Graphics::setNumPaths(int n) {
+ 	// close all
+ 	newPath = true;
+
+	if (paths.size() != n) {
+		clear();
+		for (int i = 0; i < n; i++) {
+			_appendPath(std::make_shared<Path>());
+		}
+	}
+}
+
 void Graphics::_appendPath(const PathRef &path) {
 	if (paths.empty()) {
 		nsvg.shapes = &path->nsvg;
@@ -32,10 +44,9 @@ void Graphics::beginPath() {
 
 	path->beginTrajectory();
 	newPath = false;
-	newTrajectory = false;
 }
 
-void Graphics::closePath(bool closeIndeed) {
+void Graphics::closePath(bool closeCurves) {
 	if (!paths.empty() && !newPath) {
 		const PathRef &path = current();
 
@@ -52,11 +63,11 @@ void Graphics::closePath(bool closeIndeed) {
 		path->nsvg.fillRule = fillRule;
 		path->nsvg.flags = NSVG_FLAGS_VISIBLE;
 
-		path->closeTrajectory(closeIndeed);
+		path->closeTrajectory(closeCurves);
 		changed(CHANGED_GEOMETRY);
 
 		newPath = true;
-	} else if (closeIndeed) {
+	} else if (closeCurves) {
 		current()->closeTrajectory(true);
 	}
 }
@@ -77,7 +88,6 @@ void Graphics::initialize(float width, float height) {
 	fillRule = NSVG_FILLRULE_NONZERO;
 
 	newPath = true;
-	newTrajectory = true;
 	boundsDirty = true;
 
 	for (int i = 0; i < 4; i++) {
@@ -137,20 +147,14 @@ void Graphics::clear() {
 
 PathRef Graphics::beginTrajectory() {
 	beginPath();
-	if (!newTrajectory) {
-		return current();
-	}
-	closeTrajectory();
 	PathRef p = current();
 	p->beginTrajectory();
-	newTrajectory = false;
 	return p;
 }
 
 void Graphics::closeTrajectory() {
-	if (!paths.empty() && !newTrajectory) {
+	if (!paths.empty()) {
 		current()->closeTrajectory();
-		newTrajectory = true;
 	}
 }
 
@@ -248,21 +252,19 @@ void Graphics::setOrientation(ToveOrientation orientation) {
 	}
 }
 
-void Graphics::transform(float sx, float sy, float tx, float ty) {
-	closeTrajectory();
-	closePath();
+void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) {
+	const int n = source->paths.size();
+	setNumPaths(n);
 
-	for (int i = 0; i < paths.size(); i++) {
-		paths[i]->transform(sx, sy, tx, ty);
+	for (int i = 0; i < n; i++) {
+		paths[i]->set(source->paths[i], transform);
 	}
-
-	changed(CHANGED_GEOMETRY);
 }
 
 ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags, bool clearAll) {
 	const ToveChangeFlags c = changes & flags;
 	changes &= ~flags;
-	if (clearAll) {
+	if (clearAll && c != 0) {
 		for (int i = 0; i < paths.size(); i++) {
 			paths[i]->clearChanges(flags);
 		}

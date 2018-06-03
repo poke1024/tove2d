@@ -26,6 +26,15 @@ inline NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 	return NSVG_JOIN_MITER;
 }
 
+void Path::setTrajectoryCount(int n) {
+	if (trajectories.size() != n) {
+		clear();
+		while (trajectories.size() < n) {
+			addTrajectory(std::make_shared<Trajectory>());
+		}
+	}
+}
+
 void Path::_append(const TrajectoryRef &trajectory) {
 	if (trajectories.empty()) {
 		nsvg.paths = &trajectory->nsvg;
@@ -236,14 +245,20 @@ TrajectoryRef Path::beginTrajectory() {
 	return trajectory;
 }
 
-void Path::closeTrajectory(bool closeIndeed) {
+void Path::closeTrajectory(bool closeCurves) {
+	if (newTrajectory) {
+		if (closeCurves && !trajectories.empty()) {
+			current()->setIsClosed(true);
+		}
+		return;
+	}
 	if (!trajectories.empty()) {
 		const TrajectoryRef &t = current();
 		t->updateBounds();
 		if (!boundsDirty) {
 			updateBoundsPartial(trajectories.size() - 1);
 		}
-		if (closeIndeed) {
+		if (closeCurves) {
 			t->setIsClosed(true);
 		}
 	}
@@ -312,30 +327,80 @@ void Path::setOpacity(float opacity) {
 	}
 }
 
-void Path::transform(float sx, float sy, float tx, float ty) {
-	closeTrajectory();
+void Path::set(const PathRef &path, const nsvg::Transform &transform) {
+	const int n = path->trajectories.size();
 
-	nsvg.bounds[0] = (nsvg.bounds[0] + tx) * sx;
-	nsvg.bounds[1] = (nsvg.bounds[1] + ty) * sy;
-	nsvg.bounds[2] = (nsvg.bounds[2] + tx) * sx;
-	nsvg.bounds[3] = (nsvg.bounds[3] + ty) * sy;
+	if (path.get() != this) {
+		bool hasGeometryChanged = false;
 
-	for (const auto &t : trajectories) {
-		t->transform(sx, sy, tx, ty);
+		setOpacity(path->nsvg.opacity);
+		if (nsvg.strokeDashCount != path->nsvg.strokeDashCount) {
+			nsvg.strokeDashCount = path->nsvg.strokeDashCount;
+			hasGeometryChanged = true;
+		}
+		if (nsvg.strokeLineJoin != path->nsvg.strokeLineJoin) {
+			nsvg.strokeLineJoin = path->nsvg.strokeLineJoin;
+			hasGeometryChanged = true;
+		}
+		if (nsvg.strokeLineCap != path->nsvg.strokeLineCap) {
+			nsvg.strokeLineCap = path->nsvg.strokeLineCap;
+			hasGeometryChanged = true;
+		}
+		setMiterLimit(path->nsvg.miterLimit);
+		if (nsvg.fillRule != path->nsvg.fillRule) {
+			nsvg.fillRule = path->nsvg.fillRule;
+			hasGeometryChanged = true;
+		}
+		if (nsvg.flags != path->nsvg.flags) {
+			nsvg.flags = path->nsvg.flags;
+			hasGeometryChanged = true;
+		}
+
+		{
+			PaintRef newFillColor;
+			if (path->fillColor) {
+				newFillColor = fillColor;
+				path->fillColor->cloneTo(newFillColor, transform);
+			}
+			_setFillColor(newFillColor);
+		}
+
+		{
+			PaintRef newLineColor;
+			if (path->lineColor) {
+				newLineColor = lineColor;
+				path->lineColor->cloneTo(newLineColor, transform);
+			}
+			_setLineColor(newLineColor);
+		}
+
+		const float scale = transform.wantsScaleLineWidth() ?
+			transform.getScale() : 1.0f;
+
+		setLineWidth(path->nsvg.strokeWidth * scale);
+
+		const float newDashOffset = path->nsvg.strokeDashOffset * scale;
+		if (nsvg.strokeDashOffset != newDashOffset) {
+			nsvg.strokeDashOffset = newDashOffset;
+			hasGeometryChanged = true;
+		}
+		for (int i = 0; i < path->nsvg.strokeDashCount; i++) {
+			const float len = path->nsvg.strokeDashArray[i] * scale;
+			if (nsvg.strokeDashArray[i] != len) {
+				nsvg.strokeDashArray[i] = len;
+				hasGeometryChanged = true;
+			}
+		}
+
+		if (hasGeometryChanged) {
+			geometryChanged();
+		}
+
+		setTrajectoryCount(n);
 	}
 
-	if (fillColor) {
-		fillColor->transform(sx, sy, tx, ty);
-	}
-	if (lineColor) {
-		lineColor->transform(sx, sy, tx, ty);
-	}
-
-	const float avgs = (sx + sy) / 2.0f;
-	nsvg.strokeWidth *= avgs;
-	nsvg.strokeDashOffset *= avgs;
-	for (int i = 0; i < nsvg.strokeDashCount; i++) {
-		nsvg.strokeDashArray[i] *= avgs;
+	for (int i = 0; i < n; i++) {
+		trajectories[i]->set(path->trajectories[i], transform);
 	}
 }
 
@@ -405,12 +470,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	if (n != b->trajectories.size()) {
 		return;
 	}
-	if (trajectories.size() != n) {
-		clear();
-		while (trajectories.size() < n) {
-			addTrajectory(std::make_shared<Trajectory>());
-		}
-	}
+	setTrajectoryCount(n);
 	for (int i = 0; i < n; i++) {
 		trajectories[i]->animate(a->trajectories[i], b->trajectories[i], t);
 	}
@@ -518,6 +578,9 @@ void Path::clearChanges(ToveChangeFlags flags) {
 }
 
 void Path::changed(ToveChangeFlags flags) {
+	if ((changes & flags) == flags) {
+		return;
+	}
 	changes |= flags;
 	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
 		boundsDirty = true;

@@ -19,19 +19,39 @@ void AbstractPaint::changed() {
 	}
 }
 
-void AbstractGradient::sort() const {
-	if (!sorted) {
-		std::sort(nsvg->stops, nsvg->stops + nsvg->nstops,
-			[] (const NSVGgradientStop &a, const NSVGgradientStop &b) {
-				return a.offset < b.offset;
-			});
-		sorted = true;
+
+void Color::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
+	if (target && target->getType() == PAINT_SOLID) {
+		Color *t = static_cast<Color*>(target.get());
+		if (t->color != color) {
+			t->color = color;
+			t->changed();
+		}
+	} else {
+		target = clone();
 	}
+}
+
+void Color::store(NSVGpaint &paint) {
+	paint.type = NSVG_PAINT_COLOR;
+	paint.color = color;
+}
+
+
+void AbstractGradient::sort() const {
+	std::sort(nsvg->stops, nsvg->stops + nsvg->nstops,
+		[] (const NSVGgradientStop &a, const NSVGgradientStop &b) {
+			return a.offset < b.offset;
+		});
+	sorted = true;
 }
 
 NSVGgradient *AbstractGradient::getInverseNSVGgradient() {
 	const size_t size = getRecordSize(nsvg->nstops);
 	nsvgInverse = static_cast<NSVGgradient*>(realloc(nsvgInverse, size));
+	if (!nsvgInverse) {
+		throw std::bad_alloc();
+	}
 	std::memcpy(nsvgInverse, nsvg, size);
 	std::memcpy(nsvgInverse->xform, xformInverse, 6 * sizeof(float));
 	return nsvgInverse;
@@ -84,8 +104,43 @@ AbstractGradient::AbstractGradient(const AbstractGradient &gradient) :
 	sorted = gradient.sorted;
 }
 
-void AbstractGradient::transform(float sx, float sy, float tx, float ty) {
-	nsvg::scaleGradient(nsvg, tx, ty, sx, sy);
+void AbstractGradient::set(const AbstractGradient *source) {
+	const size_t size = getRecordSize(source->nsvg->nstops);
+
+	if (nsvg->nstops == source->nsvg->nstops) {
+		ensureSort();
+		source->ensureSort();
+		if (std::memcmp(nsvg, source->nsvg, size) == 0) {
+			return;
+		}
+	}
+
+	nsvg = static_cast<NSVGgradient*>(realloc(nsvg, nextpow2(size)));
+	if (!nsvg) {
+		throw std::bad_alloc();
+	}
+	std::memcpy(nsvg, source->nsvg, size);
+	sorted = source->sorted;
+
+	if (source->nsvgInverse) {
+		nsvgInverse = static_cast<NSVGgradient*>(realloc(nsvg, size));
+		if (!nsvgInverse) {
+			throw std::bad_alloc();
+		}
+		std::memcpy(nsvgInverse, source->nsvgInverse, size);
+	} else {
+		if (nsvgInverse) {
+			free(nsvgInverse);
+			nsvgInverse = nullptr;
+		}
+	}
+	std::memcpy(xformInverse, source->xformInverse, 6 * sizeof(float));
+
+	changed();
+}
+
+void AbstractGradient::transform(const nsvg::Transform &transform) {
+	transform.transformGradient(nsvg);
 	nsvg::xformInverse(xformInverse, nsvg->xform);
 	changed();
 }
@@ -104,6 +159,16 @@ LinearGradient::LinearGradient(float x1, float y1, float x2, float y2) :
 	nsvg::xformInverse(xformInverse, xform);
 }
 
+void LinearGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
+	if (target && target->getType() == PAINT_LINEAR_GRADIENT) {
+		static_cast<LinearGradient*>(target.get())->set(this);
+	} else {
+		target = clone();
+	}
+	target->transform(transform);
+}
+
+
 RadialGradient::RadialGradient(float cx, float cy, float fx, float fy, float r) :
 	AbstractGradient(0) {
 
@@ -116,6 +181,16 @@ RadialGradient::RadialGradient(float cx, float cy, float fx, float fy, float r) 
 	nsvg->fy = fy / r;
 	nsvg::xformInverse(xformInverse, xform);
 }
+
+void RadialGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
+	if (target && target->getType() == PAINT_RADIAL_GRADIENT) {
+		static_cast<RadialGradient*>(target.get())->set(this);
+	} else {
+		target = clone();
+	}
+	target->transform(transform);
+}
+
 
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 	switch (paint.type) {

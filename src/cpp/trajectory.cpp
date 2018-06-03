@@ -34,15 +34,12 @@ float *Trajectory::addPoints(int n, bool allowClosedEdit) {
 	return p;
 }
 
-void Trajectory::setNumPoints(int npts, bool allowClosedEdit) {
+void Trajectory::setNumPoints(int npts) {
 	if (npts == nsvg.npts) {
 		return;
 	}
-	if (!allowClosedEdit && isClosed()) {
-		throw cannot_edit_closed_trajectory();
-	}
 	if (npts > nsvg.npts) {
-		addPoints(npts - nsvg.npts);
+		addPoints(npts - nsvg.npts, true);
 	} else if (npts < nsvg.npts) {
 		changed(CHANGED_GEOMETRY);
 	} else {
@@ -355,7 +352,7 @@ void Trajectory::remove(int from, int n) {
 		&pts[2 * clipAtStart],
 		(nsvg.npts - n) * sizeof(float) * 2);
 
-	setNumPoints(nsvg.npts - n, true);
+	setNumPoints(nsvg.npts - n);
 
 	fixLoop();
 }
@@ -590,18 +587,14 @@ void Trajectory::updateBounds() {
 	dirty &= ~DIRTY_BOUNDS;
 }
 
-void Trajectory::transform(float sx, float sy, float tx, float ty) {
+void Trajectory::set(const TrajectoryRef &t, const nsvg::Transform &transform) {
 	commit();
-	updateBounds();
-	nsvg.bounds[0] = (nsvg.bounds[0] + tx) * sx;
-	nsvg.bounds[1] = (nsvg.bounds[1] + ty) * sy;
-	nsvg.bounds[2] = (nsvg.bounds[2] + tx) * sx;
-	nsvg.bounds[3] = (nsvg.bounds[3] + ty) * sy;
-	for (int i = 0; i < nsvg.npts; i++) {
-		float *pt = &nsvg.pts[i * 2];
-		pt[0] = (pt[0] + tx) * sx;
-		pt[1] = (pt[1] + ty) * sy;
-	}
+	t->commit();
+	const int npts = t->nsvg.npts;
+	setNumPoints(npts);
+	transform.transformPoints(nsvg.pts, t->nsvg.pts, npts);
+	nsvg.closed = t->nsvg.closed;
+	changed(CHANGED_POINTS);
 }
 
 bool Trajectory::isLoop() const {

@@ -54,7 +54,7 @@ private:
 		p[1] = y;
 	}
 
-	void setNumPoints(int npts, bool allowClosedEdit = false);
+	void setNumPoints(int npts);
 
 	int addCommand(ToveCommandType type, int index);
 
@@ -170,7 +170,7 @@ public:
 
 	void updateBounds();
 
-	void transform(float sx, float sy, float tx, float ty);
+	void set(const TrajectoryRef &t, const nsvg::Transform &transform);
 
 	inline int getNumPoints() const {
 		return nsvg.npts;

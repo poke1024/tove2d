@@ -189,21 +189,43 @@ function Graphics:cache(...)
 	self._cache.cache(self._cache, ...)
 end
 
-function Graphics:transform(sx, sy, tx, ty)
-	if sy == nil then
-		sy = sx
+
+tove.transformed = function(graphics, ...)
+	return {g = graphics, args = {...}}
+end
+
+
+function Graphics:set(arg, swl)
+	local mt = getmetatable(arg)
+	if mt == Graphics then
+		lib.GraphicsSet(
+			self._ref,
+			arg._ref,
+			false, 0, 0, 0, 1, 1, 0, 0, 0, 0)
+	else
+		local tx, ty, r, sx, sy, ox, oy, kx, ky = unpack(arg.args)
+		sx = sx or 1
+		sy = sy or sx
+
+		lib.GraphicsSet(
+			self._ref,
+			arg.g._ref,
+			swl or false,
+			tx or 0, ty or 0,
+			r or 0,
+			sx, sy,
+			ox or 0, oy or 0,
+			kx or 0, ky or 0)
 	end
-	lib.GraphicsTransform(self._ref, sx or 1, sy or 1, tx or 0, ty or 0)
-	self._cache = nil
 end
 
 function Graphics:rescale(size, center)
 	local x0, y0, x1, y1 = self:computeAABB()
 	local s = size / math.max(x1 - x0, y1 - y0)
 	if center or true then
-		self:transform(s, s, -(x0 + x1) / 2, -(y0 + y1) / 2)
+		self:set(tove.transformed(self, 0, 0, 0, s, s, (x0 + x1) / 2, (y0 + y1) / 2), true)
 	else
-		self:transform(s, s)
+		self:set(tove.transformed(self, 0, 0, 0, s, s), true)
 	end
 end
 

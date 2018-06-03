@@ -88,10 +88,6 @@ float *pathArcTo(float *cpx, float *cpy, float *args, int &npts) {
 	return parser->pts;
 }
 
-void scaleGradient(NSVGgradient* grad, float tx, float ty, float sx, float sy) {
-	nsvg__scaleGradient(grad, tx, ty, sx, sy);
-}
-
 void CachedPaint::init(const NSVGpaint &paint, float opacity) {
 	NSVGcachedPaint cache;
 	nsvg__initPaint(&cache, const_cast<NSVGpaint*>(&paint), opacity);
@@ -143,6 +139,75 @@ uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 	}
 
 	return pixels;
+}
+
+Transform::Transform() {
+	identity = false;
+	scaleLineWidth = false;
+
+	nsvg__xformIdentity(matrix);
+}
+
+Transform::Transform(
+	float tx, float ty,
+	float r,
+	float sx, float sy,
+	float ox, float oy,
+	float kx, float ky) {
+
+	identity = false;
+	scaleLineWidth = false;
+
+	// adapted from love2d:
+	const float c = cosf(r);
+	const float s = sinf(r);
+	// matrix multiplication carried out on paper:
+	// |1    x| |c -s  | |sx     | | 1 ky  | |1   -ox|
+	// |  1  y| |s  c  | |   sy  | |kx  1  | |  1 -oy|
+	// |     1| |     1| |      1| |      1| |     1 |
+	//   move    rotate    scale     skew      origin
+	matrix[0] = c * sx - ky * s * sy; // = a
+	matrix[1] = s * sx + ky * c * sy; // = b
+	matrix[2] = kx * c * sx - s * sy; // = c
+	matrix[3] = kx * s * sx + c * sy; // = d
+	matrix[4] = tx - ox * matrix[0] - oy * matrix[2];
+	matrix[5] = ty - ox * matrix[1] - oy * matrix[3];
+
+	nsvg__xformInverse(inverse, matrix);
+}
+
+void Transform::multiply(const Transform &t) {
+	nsvg__xformMultiply(matrix, const_cast<float*>(&t.matrix[0]));
+}
+
+void Transform::transformGradient(NSVGgradient* grad) const {
+	nsvg__xformMultiply(grad->xform, const_cast<float*>(&matrix[0]));
+}
+
+void Transform::transformPoints(float *pts, const float *srcpts, int npts) const {
+	if (identity) {
+		memcpy(pts, srcpts, 2 * sizeof(float) * npts);
+	} else {
+		const float t0 = matrix[0];
+		const float t1 = matrix[1];
+		const float t2 = matrix[2];
+		const float t3 = matrix[3];
+		const float t4 = matrix[4];
+		const float t5 = matrix[5];
+
+		for (int i = 0; i < npts; i++) {
+			const float x = srcpts[2 * i + 0];
+			const float y = srcpts[2 * i + 1];
+			pts[2 * i + 0] = x * t0 + y * t2 + t4;
+			pts[2 * i + 1] = x * t1 + y * t3 + t5;
+		}
+	}
+}
+
+float Transform::getScale() const {
+	float x = matrix[0] + matrix[2];
+	float y = matrix[1] + matrix[3];
+	return std::sqrt(x * x + y * y);
 }
 
 } // namespace nsvg

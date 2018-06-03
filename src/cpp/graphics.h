@@ -18,7 +18,6 @@ class Graphics {
 private:
 	std::vector<PathRef> paths;
 	bool newPath;
-	bool newTrajectory;
 
 	float bounds[4];
 	bool boundsDirty;
@@ -40,10 +39,11 @@ private:
 		return paths[paths.size() - 1];
 	}
 
+	void setNumPaths(int n);
 	void _appendPath(const PathRef &path);
 
 	void beginPath();
-	void closePath(bool closeIndeed = false);
+	void closePath(bool closeCurves = false);
 
 	void initialize(float width, float height);
 
@@ -113,7 +113,7 @@ public:
 
 	void setOrientation(ToveOrientation orientation);
 
-	void transform(float sx, float sy, float tx, float ty);
+	void set(const GraphicsRef &source, const nsvg::Transform &transform);
 
 	inline void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {

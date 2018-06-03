@@ -47,10 +47,40 @@ struct CachedPaint {
 	void init(const NSVGpaint &paint, float opacity);
 };
 
-void scaleGradient(NSVGgradient* grad, float tx, float ty, float sx, float sy);
-
 uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 	int width, int height, const ToveTesselationQuality *quality);
+
+class Transform {
+private:
+	float matrix[6];
+	float inverse[6];
+	bool identity;
+	bool scaleLineWidth;
+
+public:
+	Transform();
+	Transform(
+		float tx, float ty,
+		float r,
+		float sx, float sy,
+		float ox, float oy,
+		float kx, float ky);
+
+	void multiply(const Transform &t);
+
+	void transformGradient(NSVGgradient* grad) const;
+	void transformPoints(float *pts, const float *srcpts, int npts) const;
+
+	float getScale() const;
+
+	inline float wantsScaleLineWidth() const {
+		return scaleLineWidth;
+	}
+	inline void setWantsScaleLineWidth(bool scale) {
+		scaleLineWidth = scale;
+	}
+};
+
 
 }
 

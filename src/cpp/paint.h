@@ -25,12 +25,12 @@ public:
 	}
 
 	virtual PaintRef clone() const = 0;
+	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform) = 0;
 	virtual TovePaintType getType() const = 0;
+	virtual void transform(const nsvg::Transform &transform) { }
 
 	virtual bool isGradient() const = 0;
 	virtual void store(NSVGpaint &paint) = 0;
-
-	virtual void transform(float sx, float sy, float tx, float ty) = 0;
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) = 0;
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) = 0;
@@ -67,15 +67,14 @@ public:
 		return std::make_shared<Color>(rgba.r, rgba.g, rgba.b, rgba.a);
 	}
 
+	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);
+
 	virtual TovePaintType getType() const {
 		return PAINT_SOLID;
 	}
 
 	virtual bool isGradient() const {
 		return false;
-	}
-
-	virtual void transform(float sx, float sy, float tx, float ty) {
 	}
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) {
@@ -100,10 +99,7 @@ public:
 		changed();
 	}
 
-	virtual void store(NSVGpaint &paint) {
-		paint.type = NSVG_PAINT_COLOR;
-		paint.color = color;
-	}
+	virtual void store(NSVGpaint &paint);
 
 	virtual void getRGBA(RGBA *rgba, float opacity) const {
 		uint32_t c;
@@ -122,8 +118,8 @@ public:
 class AbstractGradient : public AbstractPaint {
 protected:
 	NSVGgradient *nsvg;
-	NSVGgradient *nsvgInverse;
 	mutable bool sorted;
+	NSVGgradient *nsvgInverse;
 	float xformInverse[6];
 
 	static inline size_t getRecordSize(int nstops) {
@@ -132,7 +128,15 @@ protected:
 
 	void sort() const;
 
+	inline void ensureSort() const {
+		if (!sorted) {
+			sort();
+		}
+	}
+
 	NSVGgradient *getInverseNSVGgradient();
+
+	void set(const AbstractGradient *source);
 
 public:
 	AbstractGradient(int nstops);
@@ -141,14 +145,16 @@ public:
 
 	virtual ~AbstractGradient() {
 		free(nsvg);
-		free(nsvgInverse);
+		if (nsvgInverse) {
+			free(nsvgInverse);
+		}
 	}
+
+	virtual void transform(const nsvg::Transform &transform);
 
 	virtual bool isGradient() const {
 		return true;
 	}
-
-	virtual void transform(float sx, float sy, float tx, float ty);
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) {
 		const size_t size = getRecordSize(nsvg->nstops + 1);
@@ -175,7 +181,7 @@ public:
 	}
 
 	virtual NSVGgradient *getNSVGgradient() const {
-		sort();
+		ensureSort();
 		return nsvg;
 	}
 
@@ -213,12 +219,14 @@ public:
 		return std::make_shared<LinearGradient>(*this);
 	}
 
+	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);
+
 	virtual TovePaintType getType() const {
 		return PAINT_LINEAR_GRADIENT;
 	}
 
 	virtual void store(NSVGpaint &paint) {
-		sort();
+		ensureSort();
 		paint.type = NSVG_PAINT_LINEAR_GRADIENT;
 		paint.gradient = getInverseNSVGgradient();
 	}
@@ -241,12 +249,14 @@ public:
 		return std::make_shared<RadialGradient>(*this);
 	}
 
+	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);
+
 	virtual TovePaintType getType() const {
 		return PAINT_RADIAL_GRADIENT;
 	}
 
 	virtual void store(NSVGpaint &paint) {
-		sort();
+		ensureSort();
 		paint.type = NSVG_PAINT_RADIAL_GRADIENT;
 		paint.gradient = getInverseNSVGgradient();
 	}

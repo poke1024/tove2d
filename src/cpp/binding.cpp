@@ -425,8 +425,10 @@ ToveBounds GraphicsGetBounds(ToveGraphicsRef shape) {
 	return bounds;
 }
 
-void GraphicsTransform(ToveGraphicsRef shape, float sx, float sy, float tx, float ty) {
-	deref(shape)->transform(sx, sy, tx, ty);
+void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source, bool scaleLineWidth, float tx, float ty, float r, float sx, float sy, float ox, float oy, float kx, float ky) {
+	nsvg::Transform transform(tx, ty, r, sx, sy, ox, oy, kx, ky);
+	transform.setWantsScaleLineWidth(scaleLineWidth);
+	deref(graphics)->set(deref(source), transform);
 }
 
 ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags) {

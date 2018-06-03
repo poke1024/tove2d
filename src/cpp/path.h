@@ -32,10 +32,10 @@ private:
 		return trajectories[trajectories.size() - 1];
 	}
 
+	void setTrajectoryCount(int n);
 	void _append(const TrajectoryRef &trajectory);
 
 	void _setFillColor(const PaintRef &color);
-
 	void _setLineColor(const PaintRef &color);
 
 	void set(const NSVGshape *shape);
@@ -56,7 +56,7 @@ public:
 	void clear();
 
 	TrajectoryRef beginTrajectory();
-	void closeTrajectory(bool closeIndeed = false);
+	void closeTrajectory(bool closeCurves = false);
 
 	void updateBoundsPartial(int from);
 	void updateBounds();
@@ -88,7 +88,7 @@ public:
 
 	void setOpacity(float opacity);
 
-	void transform(float sx, float sy, float tx, float ty);
+	void set(const PathRef &path, const nsvg::Transform &transform);
 
 	inline int getNumTrajectories() const {
 		return trajectories.size();

@@ -293,7 +293,7 @@ EXPORT void GraphicsSetLineDashOffset(ToveGraphicsRef shape, float offset);
 EXPORT void GraphicsFill(ToveGraphicsRef shape);
 EXPORT void GraphicsStroke(ToveGraphicsRef shape);
 EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape);
-EXPORT void GraphicsTransform(ToveGraphicsRef shape, float sx, float sy, float tx, float ty);
+EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source, bool scaleLineWidth, float tx, float ty, float r, float sx, float sy, float ox, float oy, float kx, float ky);
 EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags);
 EXPORT ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height, float tx, float ty, float scale, const ToveTesselationQuality *quality);
 EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t);

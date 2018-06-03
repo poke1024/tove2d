@@ -40,11 +40,11 @@ local function createDrawShaders(shaders, s)
 	end
 end
 
-local function _changeBitmap(graphics)
+local function _updateBitmap(graphics)
 	return graphics:fetchChanges(lib.CHANGED_ANYTHING) ~= 0
 end
 
-local function _changeFlatMesh(graphics)
+local function _updateFlatMesh(graphics)
 	local flags = graphics:fetchChanges(lib.CHANGED_ANYTHING)
 	if flags >= lib.CHANGED_GEOMETRY then
 		return true
@@ -73,7 +73,7 @@ local function _changeFlatMesh(graphics)
 	return false
 end
 
-local function _changeShaders(graphics)
+local function _updateShaders(graphics)
 	if graphics:fetchChanges(lib.CHANGED_GEOMETRY) ~= 0 then
 		return true
 	end
@@ -107,7 +107,7 @@ create.bitmap = function(self)
 	return {
 		mesh = image,
 		draw = createDrawMesh(image, x0, y0, 1 / resolution),
-		change = _changeBitmap,
+		update = _updateBitmap,
 		cache = _noCache
 	}
 end
@@ -140,7 +140,7 @@ create.mesh = function(self)
 			mesh = mesh,
 			draw = createDrawMesh(
 				mesh:getMesh(), 0, 0, 1 / resolution),
-			change = _changeFlatMesh,
+			update = _updateFlatMesh,
 			cache = _cacheFlatMesh
 		}
 	else
@@ -156,7 +156,7 @@ create.mesh = function(self)
 		return {
 			shaders = shaders,
 			draw = createDrawShaders(shaders, 1 / resolution),
-			change = _changeShaders,
+			update = _updateShaders,
 			cache = _cacheShadedMesh
 		}
 	end
@@ -167,7 +167,7 @@ create.curves = function(self)
 	return {
 		shaders = shaders,
 		draw = createDrawShaders(shaders, 1),
-		change = _changeShaders,
+		update = _updateShaders,
 		cache = _noCache
 	}
 end
@@ -175,7 +175,7 @@ end
 return function(self)
 	local cache = self._cache
 	if cache ~= nil then
-		if not cache.change(self) then
+		if not cache.update(self) then
 			return cache
 		end
 		self._cache = nil
