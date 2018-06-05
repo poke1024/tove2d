@@ -98,6 +98,14 @@ create.bitmap = function(self)
 	x1 = math.ceil(x1)
 	y1 = math.ceil(y1)
 
+	if x1 - x0 < 1 or y1 - y0 < 1 then
+		return {
+			draw = function() end,
+			update = _updateBitmap,
+			cache = _noCache
+		}
+	end
+
 	local imageData = self:rasterize(
 		resolution * (x1 - x0),
 		resolution * (y1 - y0), -x0 * resolution, -y0 * resolution,

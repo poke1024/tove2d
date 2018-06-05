@@ -572,6 +572,7 @@ void Path::colorChanged(AbstractPaint *paint) {
 }
 
 void Path::clearChanges(ToveChangeFlags flags) {
+	flags &= ~CHANGED_BOUNDS;
 	changes &= ~flags;
 	for (const auto &t : trajectories) {
 		t->clearChanges(flags);

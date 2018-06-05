@@ -92,6 +92,7 @@ void Graphics::initialize(float width, float height) {
 	for (int i = 0; i < 4; i++) {
 		bounds[i] = 0.0;
 	}
+    changes |= CHANGED_BOUNDS;
 }
 
 Graphics::Graphics() : changes(CHANGED_BOUNDS) {
@@ -261,6 +262,7 @@ void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) 
 }
 
 ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags, bool clearAll) {
+    flags &= ~CHANGED_BOUNDS;
 	const ToveChangeFlags c = changes & flags;
 	changes &= ~flags;
 	if (clearAll && c != 0) {
