@@ -10,14 +10,6 @@
 -- *****************************************************************
 
 local lg = love.graphics
-local _, _, _, device = lg.getRendererInfo()
-
-local _gmat = "mat3"
-
-if string.find(device, "Parallels") then
-	-- work around crashing Parallels drivers with mat3
-	_gmat = "mat3x4"
-end
 
 local shaders = {
 	line = [[
@@ -25,7 +17,7 @@ local shaders = {
 uniform vec4 linecolor;
 #elif LINE_STYLE >= 2
 uniform sampler2D linecolors;
-uniform ]] .. _gmat .. [[ linematrix;
+uniform ]] .. env.mat3.glsl .. [[ linematrix;
 uniform vec2 linecscale;
 #endif
 
@@ -36,11 +28,11 @@ vec4 computeLineColor(vec2 pos) {
 #elif LINE_STYLE == 2
 	float y = (linematrix * vec3(pos, 1)).y;
 	y = linecscale.x + linecscale.y * y;
-	return texture(linecolors, vec2(0.5, y));
+	return Texel(linecolors, vec2(0.5, y));
 #elif LINE_STYLE == 3
 	float y = length((linematrix * vec3(pos, 1)).xy);
 	y = linecscale.x + linecscale.y * y;
-	return texture(linecolors, vec2(0.5, y));
+	return Texel(linecolors, vec2(0.5, y));
 #endif
 }
 #endif
@@ -55,7 +47,7 @@ vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
 uniform vec4 fillcolor;
 #elif FILL_STYLE >= 2
 uniform sampler2D fillcolors;
-uniform ]] .. _gmat .. [[ fillmatrix;
+uniform ]] .. env.mat3.glsl .. [[ fillmatrix;
 uniform vec2 fillcscale;
 #endif
 
@@ -66,11 +58,11 @@ vec4 computeFillColor(vec2 pos) {
 #elif FILL_STYLE == 2
 	float y = (fillmatrix * vec3(pos, 1)).y;
 	y = fillcscale.x + fillcscale.y * y;
-	return texture(fillcolors, vec2(0.5, y));
+	return Texel(fillcolors, vec2(0.5, y));
 #elif FILL_STYLE == 3
 	float y = length((fillmatrix * vec3(pos, 1)).xy);
 	y = fillcscale.x + fillcscale.y * y;
-	return texture(fillcolors, vec2(0.5, y));
+	return Texel(fillcolors, vec2(0.5, y));
 #endif
 }
 #endif
@@ -81,6 +73,12 @@ vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
 }
 ]]
 }
+
+if env.graphics.glsl3 then
+	shaders.prolog = "#pragma language glsl3\n#define GLSL3"
+else
+	shaders.prolog = ""
+end
 
 shaders.code = [[
 --!! include "tove.glsl"
@@ -99,9 +97,7 @@ local function next2(n)
 end
 
 
-local _vertexCode = [[
-#pragma language glsl3
-
+local _vertexCode = shaders.prolog .. [[
 uniform vec4 bounds;
 varying vec4 raw_vertex_pos;
 
@@ -125,7 +121,7 @@ local function newGeometryFillShader(data, fragLine)
 	end
 
 	local code = {
-		"#pragma language glsl3",
+		shaders.prolog,
 		f("#define LUT_SIZE %d", lutN),
 		f("#define LINE_STYLE %d", lineStyle),
 		f("#define FILL_STYLE %d", data.color.fill.style),
@@ -154,14 +150,14 @@ local function newGeometryLineShader(data)
 	local f = string.format
 
 	local fragcode = {
-		"#pragma language glsl3",
+		shaders.prolog,
 		f("#define LINE_STYLE %d", style),
 		shaders.line,
 		shaders.lineGlue
 	}
 
 	local vertcode = {
-		"#pragma language glsl3",
+		shaders.prolog,
 		f("#define CURVE_DATA_SIZE %d", geometry.curvesTextureSize[0]),
 		[[
 		--!! include "line.glsl"
@@ -182,7 +178,7 @@ local function newLineShader(data)
 		return nil
 	end
 	local code = {
-		"#pragma language glsl3",
+		shaders.prolog,
 		string.format("#define LINE_STYLE %d", data.style),
 		shaders.line,
 		shaders.lineGlue
@@ -195,7 +191,7 @@ local function newFillShader(data)
 		return nil
 	end
 	local code = {
-		"#pragma language glsl3",
+		shaders.prolog,
 		string.format("#define FILL_STYLE %d", data.style),
 		shaders.fill,
 		shaders.fillGlue

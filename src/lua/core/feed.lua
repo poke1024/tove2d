@@ -15,7 +15,7 @@ local function newGradientData(gradient)
 	local data = ffi.new("ToveShaderGradientData")
 	gradient.data = data
 
-	local matrixData = love.data.newByteData(ffi.sizeof("ToveMatrix3x3"))
+	local matrixData = love.data.newByteData(env.mat3.size)
 	data.matrix = matrixData:getPointer()
 
 	local imageData = love.image.newImageData(1, n, "rgba8")

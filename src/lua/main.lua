@@ -34,10 +34,23 @@ tove.init = function(path)
 	tove.getVersion = function()
 		return ffi.string(lib.GetVersion())
 	end
-
-	local rgba16f = love.graphics.getCanvasFormats()["rgba16f"]
-	if rgba16f ~= true then
-		-- FIXME
+	
+	local env = {
+		graphics = love.graphics.getSupported(),
+		rgba16f = love.graphics.getCanvasFormats()["rgba16f"],
+		mat3 = {
+			glsl = "mat3",
+			size = ffi.sizeof("ToveMatrix3x3")
+		}
+	}
+	
+	-- work around crashing Parallels drivers with mat3
+	do
+		local _, _, _, device = love.graphics.getRendererInfo()
+		if string.find(device, "Parallels") ~= nil then
+			env.mat3.glsl = "mat3x4"
+			env.mat3.size = ffi.sizeof("float[?]", 12)
+		end
 	end
 
 	-- common attributes used by Command and Curve.
