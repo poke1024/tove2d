@@ -8,6 +8,7 @@ local ui = require "ui"
 
 -- msaa = 4
 love.window.setMode(800, 600, {highdpi = true})
+love.window.setTitle("TÖVE miniedit")
 
 local editor = require "editor"
 

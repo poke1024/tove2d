@@ -76,6 +76,7 @@ function Graphics:beginPath()
 	return ffi.gc(lib.GraphicsBeginTrajectory(self._ref), lib.ReleaseTrajectory)
 end
 bind("closePath", "GraphicsCloseTrajectory")
+bind("invertPath", "GraphicsInvertTrajectory")
 
 function Graphics:getCurrentPath()
 	return ffi.gc(lib.GraphicsGetCurrentPath(self._ref), lib.ReleasePath)
@@ -277,6 +278,15 @@ end
 
 function Graphics:clean(eps)
 	lib.GraphicsClean(self._ref, eps or 0.0)
+end
+
+function Graphics:hit(x, y)
+	local path = lib.GraphicsHit(self._ref, x, y)
+	if path.ptr ~= nil then
+		return ffi.gc(path, lib.ReleasePath)
+	else
+		return nil
+	end
 end
 
 function Graphics:shaders(gen)

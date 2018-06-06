@@ -9,13 +9,17 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local _attr = {r = 1, g = 2, b = 3, a = 4}
+local _attr = {r = 1, g = 2, b = 3, a = 4, rgba = 0}
 
 local Paint = {}
 Paint.__index = function (self, key)
 	if _attr[key] ~= nil then
-		local rgba = lib.ColorGet(self._ref, 1)
-		return rgba[key]
+		local rgba = lib.ColorGet(self._ref, 1.0)
+		if key == "rgba" then
+			return {rgba.r, rgba.g, rgba.b, rgba.a}
+		else
+			return rgba[key]
+		end
 	else
 		return Paint[key]
 	end

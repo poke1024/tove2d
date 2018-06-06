@@ -56,6 +56,7 @@ public:
 
 	TrajectoryRef beginTrajectory();
 	void closeTrajectory(bool closeCurves = false);
+	void invertTrajectory();
 
 	void updateBoundsPartial(int from);
 	void updateBounds();

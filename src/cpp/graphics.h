@@ -60,6 +60,7 @@ public:
 	void clear();
 	PathRef beginTrajectory();
 	void closeTrajectory();
+	void invertTrajectory();
 
 	inline void setFillColor(const PaintRef &color) {
 		fillColor = color;
@@ -109,6 +110,7 @@ public:
 	const float *getBounds();
 
 	void clean(float eps = 0.0);
+	PathRef hit(float x, float y) const;
 
 	void setOrientation(ToveOrientation orientation);
 

@@ -16,7 +16,32 @@ local function barycentric(px, py, x1, y1, x2, y2, x3, y3)
 	return u, v, w
 end
 
-local function hsv(h, s, v)
+local function rgb2hsv(r, g, b)
+	-- taken from:
+	-- https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h, s, v
+	v = max
+
+	local d = max - min
+	if max == 0 then s = 0 else s = d / max end
+
+	if max == min then
+		h = 0 -- achromatic
+	else
+		if max == r then
+			h = (g - b) / d
+			if g < b then h = h + 6 end
+		elseif max == g then h = (b - r) / d + 2
+		elseif max == b then h = (r - g) / d + 4
+		end
+		h = h / 6
+	end
+
+	return h, s, v
+end
+
+local function hsv2rgb(h, s, v)
 	-- https://love2d.org/wiki/HSV_color
     if s <= 0 then return v,v,v end
     if h < 0 then
@@ -43,10 +68,24 @@ function ColorWheel:computeTriangleVertices()
 	local radius = self.radius
 
 	return {
-		{ radius * math.cos(phi), radius * math.sin(phi), hsv(phi / pi2, 1, 1) },
+		{ radius * math.cos(phi), radius * math.sin(phi), hsv2rgb(phi / pi2, 1, 1) },
 		{ radius * math.cos(phi1), radius * math.sin(phi1), 1, 1, 1 },
 		{ radius * math.cos(phi2), radius * math.sin(phi2), 0, 0, 0 }
 	}
+end
+
+function ColorWheel:setRGBColor(r, g, b)
+	h, s, v = rgb2hsv(r, g, b)
+	self.currentHue = h * pi2
+	self:computeTriangleVertices()
+	local triangleSpot = self.triangleSpot
+
+	local c = v * s
+    local m = v - c
+
+	triangleSpot[1] = c
+	triangleSpot[2] = m
+	triangleSpot[3] = 1 - c - m
 end
 
 function ColorWheel:colorChanged()
@@ -98,10 +137,6 @@ function ColorWheel:updateHue(mx, my)
 end
 
 function ColorWheel:draw()
-	if not self.visible then
-		return
-	end
-
 	local x, y = self.x, self.y
 	local halfsize = self.halfsize
 	local scale = self.scale
@@ -127,10 +162,6 @@ function ColorWheel:draw()
 end
 
 function ColorWheel:click(mx, my)
-	if not self.visible then
-		return
-	end
-
 	local dx = mx - self.x
 	local dy = my - self.y
 	local d = math.sqrt(dx * dx + dy * dy)
@@ -150,7 +181,7 @@ function ColorWheel:click(mx, my)
 	end
 end
 
-return function(callback)
+return function(x, y, callback)
 	local oversample = 1
 
 	local code = [[
@@ -212,17 +243,22 @@ return function(callback)
 	canvas:setFilter("linear", "linear")
 
 	local circle = tove.newGraphics()
+	circle:drawCircle(0, 0, thickness / 3 - 0.75)
+	circle:setLineColor(1, 1, 1)
+	circle:setLineWidth(1.5)
+	circle:stroke()
 	circle:drawCircle(0, 0, thickness / 3)
 	circle:setLineColor(0, 0, 0)
 	circle:setLineWidth(0.9)
 	circle:stroke()
 
-	local x, y = love.graphics.getWidth() - halfsize, halfsize
+	--local x, y = love.graphics.getWidth() - halfsize, halfsize
+	x = x + halfsize
+	y = y + halfsize
 
 	local cw = setmetatable({
 		x = x,
 		y = y,
-		visible = false,
 
 		radius = radius,
 		thickness = thickness,

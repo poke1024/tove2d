@@ -158,6 +158,12 @@ void Graphics::closeTrajectory() {
 	}
 }
 
+void Graphics::invertTrajectory() {
+    if (!paths.empty()) {
+		current()->invertTrajectory();
+	}
+}
+
 void Graphics::setLineDash(const float *dashes, int count) {
 	float sum = 0;
 	for (int i = 0; i < count; i++) {
@@ -241,9 +247,18 @@ const float *Graphics::getBounds() {
 }
 
 void Graphics::clean(float eps) {
-	for (int i = 0; i < paths.size(); i++) {
-		paths[i]->clean(eps);
+	for (const auto &p : paths) {
+		p->clean(eps);
 	}
+}
+
+PathRef Graphics::hit(float x, float y) const {
+    for (const auto &p : paths) {
+		if (p->isInside(x, y)) {
+            return p;
+        }
+	}
+    return PathRef();
 }
 
 void Graphics::setOrientation(ToveOrientation orientation) {

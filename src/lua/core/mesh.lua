@@ -22,7 +22,7 @@ function PositionMesh:getUsage(what)
 end
 
 function PositionMesh:updateVertices()
-	cvertices = lib.MeshGetVertices(self._cmesh)
+	local cvertices = lib.MeshGetVertices(self._cmesh)
 
 	local vertices = {}
 	local positions = cvertices.array
@@ -61,7 +61,7 @@ function PositionMesh:getMesh()
 	end
 
 	local attributes = {{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}}
-	cvertices = lib.MeshGetVertices(self._cmesh)
+	local cvertices = lib.MeshGetVertices(self._cmesh)
 	if cvertices.n < 1 then
 		return nil
 	end
@@ -106,7 +106,16 @@ function ColorMesh:retesselate(flags)
 end
 
 function ColorMesh:updateVertices()
-	cvertices = lib.MeshGetVertices(self._cmesh)
+	local mesh = self._mesh
+	local cvertices = lib.MeshGetVertices(self._cmesh)
+
+	if cvertices.n ~= mesh:getVertexCount() then
+		self._mesh = nil
+		self:getMesh() -- need a new mesh here.
+		tove.warn("a mesh was recreated.")
+		return
+	end
+
 	ccolors = lib.MeshGetColors(self._cmesh)
 
 	local positions = cvertices.array
@@ -124,7 +133,6 @@ function ColorMesh:updateVertices()
 		ci = ci + 4
 	end
 
-	local mesh = self._mesh
 	if mesh ~= nil then
 		mesh:setVertices(vertices)
 	end
@@ -133,7 +141,7 @@ end
 function ColorMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
-		ctriangles = lib.MeshGetIndices(self._cmesh)
+		local ctriangles = lib.MeshGetIndices(self._cmesh)
 		local indices = totable(ctriangles.array, ctriangles.n * 3)
 		mesh:setVertexMap(indices)
 	else
@@ -153,7 +161,7 @@ function ColorMesh:getMesh()
 		usage = "dynamic"
 	end
 
-	cvertices = lib.MeshGetVertices(self._cmesh)
+	local cvertices = lib.MeshGetVertices(self._cmesh)
 	if cvertices.n < 1 then
 		return nil
 	end

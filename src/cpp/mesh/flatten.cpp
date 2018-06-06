@@ -57,6 +57,7 @@ void AdaptiveFlattener::recursive(
 	// https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp
 
 	if (level > recursionLimit) {
+		points.push_back(ClipperPoint(x4, y4));
 		return;
 	}
 

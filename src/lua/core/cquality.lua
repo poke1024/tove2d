@@ -19,6 +19,17 @@ tove.adaptive = function(quality)
 	return setmetatable(quality, adaptive)
 end
 
+tove.quasifixed = function(depth)
+	return tove.adaptive {
+		recursionLimit = depth,
+		distanceTolerance = 1e-8,
+		colinearityEpsilon = 0,
+		angleTolerance = 0,
+		angleEpsilon = 0,
+		cuspLimit = 0
+	}
+end
+
 local function setAdaptiveQuality(record, quality)
 	record.recursionLimit = 8
 	local adaptive = record.adaptive

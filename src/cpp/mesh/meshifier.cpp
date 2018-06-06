@@ -40,6 +40,9 @@ void AdaptiveMeshifier::renderStrokes(NSVGshape *shape, const ClipperLib::PolyNo
 }
 
 ToveMeshUpdateFlags AdaptiveMeshifier::operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line) {
+	fill->clearTriangles();
+	line->clearTriangles();
+
 	NSVGshape *shape = path->getNSVG();
 
 	if ((shape->flags & NSVG_FLAGS_VISIBLE) == 0) {

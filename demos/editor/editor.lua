@@ -3,8 +3,7 @@
 
 local newTransformWidget = require "widgets/transform"
 local newCurvesWidget = require "widgets/curves"
-
-local createColorWheel = require "colorwheel"
+local ColorPanel = require "ColorPanel"
 
 local Editor = {}
 Editor.__index = Editor
@@ -23,16 +22,24 @@ end
 function Editor:load()
 	local editor = self
 
-	self.colorwheel = createColorWheel(function(r, g, b)
-		local widget = editor.widget
-		if widget ~= nil then
-            local object = widget.object
-			for i = 1, object.graphics.npaths do
-				object.graphics.paths[i]:setFillColor(r, g, b)
+	self.colorpanel = ColorPanel.new(
+		love.graphics.getWidth() - 75,
+		8,
+		function(what, r, g, b)
+			local widget = editor.widget
+			if widget ~= nil then
+	            local object = widget.object
+				for i = 1, object.graphics.npaths do
+					local path = object.graphics.paths[i]
+					if what == "fill" then
+						path:setFillColor(r, g, b)
+					else
+						path:setLineColor(r, g, b)
+					end
+				end
+				object:refresh()
 			end
-			object:refresh()
-		end
-	end)
+		end)
 end
 
 function Editor:draw()
@@ -44,7 +51,7 @@ function Editor:draw()
 		self.widget:draw()
 	end
 
-	self.colorwheel:draw()
+	self.colorpanel:draw()
 end
 
 function Editor:startdrag(x, y, func)
@@ -63,14 +70,14 @@ end
 
 function Editor:mousedown(x, y, button, clickCount)
 	if button == 1 then
-		if self:startdrag(x, y, self.colorwheel:click(x, y)) then
+		if self:startdrag(x, y, self.colorpanel:click(x, y)) then
 			return
 		end
 
 		if self.widget ~= nil then
 			if not self:startdrag(x, y, self.widget:mousedown(x, y, button)) then
 				self.widget = nil
-                self.colorwheel.visible = false
+				self.colorpanel.visible = false
 			end
 		end
 		if self.widget == nil then
@@ -85,9 +92,15 @@ function Editor:mousedown(x, y, button, clickCount)
 						elseif clickCount == 1 then
 							self.widget = newTransformWidget(self.handles, object)
 						end
-                        self.colorwheel.visible = true
-                        --print(unpack(object.graphics:getFillColor()))
-                        self:startdrag(x, y, makeDragObjectFunc(object, x, y))
+						--local r, g, b =
+						--self.colorwheel:setRGBColor(r, g, b)
+
+						local path = object.graphics.paths[1]
+						self.colorpanel.visible = true
+						self.colorpanel:setLineColor(unpack(path:getLineColor().rgba))
+						self.colorpanel:setFillColor(unpack(path:getFillColor().rgba))
+
+						self:startdrag(x, y, makeDragObjectFunc(object, x, y))
 						return
 					end
 				end

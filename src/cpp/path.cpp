@@ -262,6 +262,12 @@ void Path::closeTrajectory(bool closeCurves) {
 	newTrajectory = true;
 }
 
+void Path::invertTrajectory() {
+	if (!trajectories.empty()) {
+		current()->invert();
+	}
+}
+
 void Path::updateBoundsPartial(int from) {
 	float w = nsvg.strokeWidth * 0.5;
 	for (int i = from; i < trajectories.size(); i++) {

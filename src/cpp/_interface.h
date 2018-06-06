@@ -280,6 +280,7 @@ EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi
 EXPORT ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics);
 EXPORT ToveTrajectoryRef GraphicsBeginTrajectory(ToveGraphicsRef graphics);
 EXPORT void GraphicsCloseTrajectory(ToveGraphicsRef graphics);
+EXPORT void GraphicsInvertTrajectory(ToveGraphicsRef graphics);
 EXPORT TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape);
 EXPORT void GraphicsAddPath(ToveGraphicsRef shape, TovePathRef path);
 EXPORT int GraphicsGetNumPaths(ToveGraphicsRef shape);
@@ -300,6 +301,7 @@ EXPORT ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int h
 EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t);
 EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation);
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);
+EXPORT TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
 EXPORT ToveShaderLinkRef NewColorShaderLink();

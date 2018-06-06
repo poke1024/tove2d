@@ -363,6 +363,10 @@ void GraphicsCloseTrajectory(ToveGraphicsRef graphics) {
 	deref(graphics)->closeTrajectory();
 }
 
+void GraphicsInvertTrajectory(ToveGraphicsRef graphics) {
+	deref(graphics)->invertTrajectory();
+}
+
 TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape) {
 	return paths.publish(deref(shape)->getCurrentPath());
 }
@@ -467,6 +471,10 @@ void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation) 
 
 void GraphicsClean(ToveGraphicsRef shape, float eps) {
 	deref(shape)->clean(eps);
+}
+
+TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y) {
+	return paths.publishOrNil(deref(graphics)->hit(x, y));
 }
 
 void ReleaseGraphics(ToveGraphicsRef shape) {
