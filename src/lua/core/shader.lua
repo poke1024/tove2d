@@ -75,7 +75,7 @@ vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
 }
 
 if env.graphics.glsl3 then
-	shaders.prolog = "#pragma language glsl3\n#define GLSL3"
+	shaders.prolog = "#pragma language glsl3\n#define GLSL3 1\n"
 else
 	shaders.prolog = ""
 end
