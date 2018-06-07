@@ -60,6 +60,12 @@ typedef enum {
 	ORIENTATION_CCW = 1
 } ToveOrientation;
 
+typedef enum {
+	HOLES_NONE,
+	HOLES_CW,
+	HOLES_CCW
+} ToveHoles;
+
 enum {
 	CHANGED_FILL_STYLE = 1,
 	CHANGED_LINE_STYLE = 2,
@@ -233,9 +239,12 @@ EXPORT void TrajectorySetOrientation(ToveTrajectoryRef trajectory, ToveOrientati
 EXPORT void TrajectoryClean(ToveTrajectoryRef trajectory, float eps);
 EXPORT int TrajectoryMoveTo(ToveTrajectoryRef trajectory, float x, float y);
 EXPORT int TrajectoryLineTo(ToveTrajectoryRef trajectory, float x, float y);
-EXPORT int TrajectoryCurveTo(ToveTrajectoryRef trajectory, float cpx1, float cpy1, float cpx2, float cpy2, float x, float y);
-EXPORT int TrajectoryArc(ToveTrajectoryRef trajectory, float x, float y, float r, float startAngle, float endAngle, bool counterclockwise);
-EXPORT int TrajectoryDrawRect(ToveTrajectoryRef trajectory, float x, float y, float w, float h, float rx, float ry);
+EXPORT int TrajectoryCurveTo(ToveTrajectoryRef trajectory, float cpx1, float cpy1,
+	float cpx2, float cpy2, float x, float y);
+EXPORT int TrajectoryArc(ToveTrajectoryRef trajectory, float x, float y, float r,
+	float startAngle, float endAngle, bool counterclockwise);
+EXPORT int TrajectoryDrawRect(ToveTrajectoryRef trajectory, float x, float y,
+	float w, float h, float rx, float ry);
 EXPORT int TrajectoryDrawEllipse(ToveTrajectoryRef trajectory, float x, float y, float rx, float ry);
 EXPORT float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int property);
 EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value);
@@ -269,7 +278,9 @@ EXPORT void PathSetFillRule(TovePathRef path, ToveFillRule rule);
 EXPORT float PathGetOpacity(TovePathRef path);
 EXPORT void PathSetOpacity(TovePathRef path, float opacity);
 EXPORT void PathClearChanges(TovePathRef path);
-EXPORT ToveMeshResult PathTesselate(TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef lineMesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags);
+EXPORT ToveMeshResult PathTesselate(
+	TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef lineMesh, float scale,
+	const ToveTesselationQuality *quality, ToveHoles holes, ToveMeshUpdateFlags flags);
 EXPORT ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags);
 EXPORT void PathSetOrientation(TovePathRef path, ToveOrientation orientation);
 EXPORT void PathClean(TovePathRef path, float eps);
@@ -295,9 +306,14 @@ EXPORT void GraphicsSetLineDashOffset(ToveGraphicsRef shape, float offset);
 EXPORT void GraphicsFill(ToveGraphicsRef shape);
 EXPORT void GraphicsStroke(ToveGraphicsRef shape);
 EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape);
-EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source, bool scaleLineWidth, float tx, float ty, float r, float sx, float sy, float ox, float oy, float kx, float ky);
-EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags);
-EXPORT ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height, float tx, float ty, float scale, const ToveTesselationQuality *quality);
+EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
+	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
+	float ox, float oy, float kx, float ky);
+EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh,
+	float scale, const ToveTesselationQuality *quality, ToveHoles holes,
+	ToveMeshUpdateFlags flags);
+EXPORT ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width,
+	int height, float tx, float ty, float scale, const ToveTesselationQuality *quality);
 EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t);
 EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation);
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);

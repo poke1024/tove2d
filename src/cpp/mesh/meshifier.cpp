@@ -13,10 +13,18 @@
 #include "meshifier.h"
 #include "mesh.h"
 
-AdaptiveMeshifier::AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality) : tess(scale, quality) {
+AdaptiveMeshifier::AdaptiveMeshifier(
+	float scale, const ToveTesselationQuality *quality, ToveHoles holes) :
+	tess(scale, quality), holes(holes) {
 }
 
-void AdaptiveMeshifier::renderStrokes(NSVGshape *shape, const ClipperLib::PolyNode *node, ClipperPaths &holes, const MeshPaint &paint, const MeshRef &mesh) {
+void AdaptiveMeshifier::renderStrokes(
+	NSVGshape *shape,
+	const ClipperLib::PolyNode *node,
+	ClipperPaths &holes,
+	const MeshPaint &paint,
+	const MeshRef &mesh) {
+
 	for (int i = 0; i < node->ChildCount(); i++) {
 		renderStrokes(shape, node->Childs[i], holes, paint, mesh);
 	}
@@ -32,14 +40,16 @@ void AdaptiveMeshifier::renderStrokes(NSVGshape *shape, const ClipperLib::PolyNo
 			paths.insert(paths.end(), holes.begin(), holes.end());
 
 			if (shape->stroke.type == NSVG_PAINT_COLOR) {
-				mesh->add(paths, paint);
+				mesh->add(paths, paint, HOLES_NONE);
 			}
 		}
 		holes.clear();
 	}
 }
 
-ToveMeshUpdateFlags AdaptiveMeshifier::operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line) {
+ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
+	const PathRef &path, const MeshRef &fill, const MeshRef &line) {
+
 	fill->clearTriangles();
 	line->clearTriangles();
 
@@ -61,7 +71,7 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(const PathRef &path, const Mes
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		MeshPaint paint;
 		fill->initializePaint(paint, shape->fill, shape->opacity, scale);
-		fill->add(t.fill, paint);
+		fill->add(t.fill, paint, holes);
 	}
 
 	if (t.stroke.ChildCount() > 0 && shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
@@ -74,8 +84,16 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(const PathRef &path, const Mes
 	return 0;
 }
 
-FixedMeshifier::FixedMeshifier(float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags update) :
-	_nvertices(0), scale(scale), depth(std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit)), _update(update) {
+FixedMeshifier::FixedMeshifier(
+	float scale,
+	const ToveTesselationQuality *quality,
+	ToveHoles holes,
+	ToveMeshUpdateFlags update) :
+	_nvertices(0),
+	scale(scale),
+	depth(std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit)),
+	holes(holes),
+	_update(update) {
 }
 
 ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line) {
@@ -240,7 +258,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 
 	if (shape->fill.type != NSVG_PAINT_NONE) {
 		if (update & UPDATE_MESH_TRIANGLES) {
-			fill->triangulateFill(_nvertices, path, flattener);
+			fill->triangulateFill(_nvertices, path, flattener, holes);
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;

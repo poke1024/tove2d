@@ -12,7 +12,7 @@ local tween = tove.newTween(svg1):to(svg2, 1)
 local animations = {}
 
 table.insert(animations, tove.newFlipbook(8, tween, "bitmap"))
-table.insert(animations, tove.newAnimation(tween, "mesh", tove.fixed(2)))
+table.insert(animations, tove.newAnimation(tween, "mesh", tove.fixed(2), "none"))
 table.insert(animations, tove.newAnimation(tween, "curves"))
 
 local flow = tovedemo.newCoverFlow(0.5)

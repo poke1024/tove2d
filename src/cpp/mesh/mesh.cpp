@@ -13,6 +13,27 @@
 #include "mesh.h"
 #include "../path.h"
 
+static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
+	switch (mode) {
+		case HOLES_NONE:
+			if (poly.GetOrientation() == TPPL_CW) {
+				poly.Invert();
+			}
+			break;
+		case HOLES_CW:
+			if (poly.GetOrientation() == TPPL_CW) {
+				poly.SetHole(true);
+			}
+			break;
+		case HOLES_CCW:
+			poly.Invert();
+			if (poly.GetOrientation() == TPPL_CW) {
+				poly.SetHole(true);
+			}
+			break;
+	}
+}
+
 AbstractMesh::AbstractMesh() {
 	meshData.vertices = NULL;
 	meshData.colors = NULL;
@@ -49,7 +70,7 @@ void AbstractMesh::cache(bool keyframe) {
 	triangles.cache(keyframe);
 }
 
-void AbstractMesh::triangulate(const ClipperPaths &paths) {
+void AbstractMesh::triangulate(const ClipperPaths &paths, ToveHoles holes) {
 	std::list<TPPLPoly> polys;
 	for (int i = 0; i < paths.size(); i++) {
 		const int n = paths[i].size();
@@ -67,10 +88,7 @@ void AbstractMesh::triangulate(const ClipperPaths &paths) {
 			poly[j].id = index++;
 		}
 
-		if (poly.GetOrientation() == TPPL_CW) {
-			poly.SetHole(true);
-		}
-
+		applyHoles(holes, poly);
 		polys.push_back(poly);
 	}
 
@@ -133,13 +151,13 @@ void AbstractMesh::triangulateLine(
 void AbstractMesh::triangulateFill(
 	const int vertexIndex0,
 	const PathRef &path,
-	const FixedFlattener &flattener) {
+	const FixedFlattener &flattener,
+	const ToveHoles holes) {
 
 	std::list<TPPLPoly> polys;
 	//polys.reserve(paths.size());
 
    	int vertexIndex = vertexIndex0;
-   	bool allowHoles = false;
 
 	const int numTrajectories = path->getNumTrajectories();
 
@@ -183,16 +201,7 @@ void AbstractMesh::triangulateFill(
 			poly = poly2;
 		}
 
-		if (!allowHoles) {
-			if (poly.GetOrientation() == TPPL_CW) {
-				poly.Invert();
-			}
-		} else {
-			if (poly.GetOrientation() == TPPL_CW) {
-				poly.SetHole(true);
-			}
-		}
-
+		applyHoles(holes, poly);
 		polys.push_back(poly);
 	}
 
@@ -231,9 +240,9 @@ void AbstractMesh::triangulateFill(
 	triangles.add(triangulation);
 }
 
-void AbstractMesh::add(const ClipperPaths &paths, const MeshPaint &paint) {
+void AbstractMesh::add(const ClipperPaths &paths, const MeshPaint &paint, const ToveHoles holes) {
 	const int vertexIndex = meshData.nvertices;
-	triangulate(paths);
+	triangulate(paths, holes);
 	const int vertexCount = meshData.nvertices - vertexIndex;
 	addColor(vertexIndex, vertexCount, paint);
 }

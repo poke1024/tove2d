@@ -176,14 +176,22 @@ void PathClearChanges(TovePathRef path) {
 	deref(path)->clearChanges(-1);
 }
 
-ToveMeshResult PathTesselate(TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef lineMesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags) {
-	return exception_safe([path, fillMesh, lineMesh, scale, quality, flags] () {
+ToveMeshResult PathTesselate(
+	TovePathRef path,
+	ToveMeshRef fillMesh,
+	ToveMeshRef lineMesh,
+	float scale,
+	const ToveTesselationQuality *quality,
+	ToveHoles holes,
+	ToveMeshUpdateFlags flags) {
+
+	return exception_safe([path, fillMesh, lineMesh, scale, quality, holes, flags] () {
 		ToveMeshUpdateFlags updated;
 		if (quality && !quality->adaptive.valid) {
-			FixedMeshifier meshifier(scale, quality, flags);
+			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality);
+			AdaptiveMeshifier meshifier(scale, quality, holes);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		}
 		return updated;
@@ -429,30 +437,41 @@ ToveBounds GraphicsGetBounds(ToveGraphicsRef shape) {
 	return bounds;
 }
 
-void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source, bool scaleLineWidth, float tx, float ty, float r, float sx, float sy, float ox, float oy, float kx, float ky) {
+void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
+	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
+	float ox, float oy, float kx, float ky) {
+
 	nsvg::Transform transform(tx, ty, r, sx, sy, ox, oy, kx, ky);
 	transform.setWantsScaleLineWidth(scaleLineWidth);
 	deref(graphics)->set(deref(source), transform);
 }
 
-ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh, float scale, const ToveTesselationQuality *quality, ToveMeshUpdateFlags flags) {
-	return exception_safe([shape, mesh, scale, quality, flags] () {
+ToveMeshResult GraphicsTesselate(
+	ToveGraphicsRef shape,
+	ToveMeshRef mesh,
+	float scale,
+	const ToveTesselationQuality *quality,
+	ToveHoles holes,
+	ToveMeshUpdateFlags flags) {
+
+	return exception_safe([shape, mesh, scale, quality, holes, flags] () {
 		const GraphicsRef graphics = deref(shape);
 		const int n = graphics->getNumPaths();
 
 		ToveMeshUpdateFlags updated;
 		if (quality && !quality->adaptive.valid) {
-			FixedMeshifier meshifier(scale, quality, flags);
+			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality);
+			AdaptiveMeshifier meshifier(scale, quality, holes);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		}
 		return updated;
 	});
 }
 
-ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height, float tx, float ty, float scale, const ToveTesselationQuality *quality) {
+ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height,
+	float tx, float ty, float scale, const ToveTesselationQuality *quality) {
 	ToveImageRecord image;
 
 	NSVGimage *nsvg = deref(shape)->getImage();

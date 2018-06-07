@@ -34,15 +34,15 @@ public:
 	float *vertices(int from, int n);
 	void cache(bool keyframe);
 
-	void triangulate(const ClipperPaths &paths);
+	void triangulate(const ClipperPaths &paths, ToveHoles holes);
 	void addTriangles(const std::list<TPPLPoly> &triangles);
 	void clearTriangles();
-	void triangulateFill(const int vertexIndex0, const PathRef &path, const FixedFlattener &flattener);
+	void triangulateFill(const int vertexIndex0, const PathRef &path, const FixedFlattener &flattener, ToveHoles holes);
 	void triangulateLine(int v0, const PathRef &path, const FixedFlattener &flattener);
 
 	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale) = 0;
 	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint) = 0;
-	void add(const ClipperPaths &paths, const MeshPaint &paint);
+	void add(const ClipperPaths &paths, const MeshPaint &paint, const ToveHoles holes);
 
 	const ToveMeshRecord &getData() const;
 	ToveIndex16Array getTriangles() const;

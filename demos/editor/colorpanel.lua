@@ -28,8 +28,6 @@ function ColorPanel:setActive(active)
     self.active = active
     local inactive = other[active]
     local dabs = self.dabs
-    dabs[active].paths[1]:setLineWidth(2.5)
-    dabs[inactive].paths[1]:setLineWidth(1.5)
 
     self.colorwheel:setRGBColor(unpack(
         dabs[active].paths[1]:getFillColor().rgba))
@@ -39,10 +37,15 @@ function ColorPanel:draw()
     if not self.visible then
         return
     end
+
     local dabs = self.dabs
     local dabRadius = self.dabRadius
-    dabs.line:draw(self.x, self.y + dabRadius)
-    dabs.fill:draw(self.x, self.y + dabRadius)
+    local y = self.y + dabRadius
+
+    dabs.line:draw(self.x, y)
+    dabs.fill:draw(self.x, y)
+
+    dabs.highlight[self.active]:draw(self.x, y)
 
     self.colorwheel:draw()
 end
@@ -87,6 +90,20 @@ ColorPanel.new = function(x, y, callback)
     dabs.fill:setFillColor(1, 0, 0)
     dabs.fill:stroke()
     dabs.fill:fill()
+
+    local function highlight(x)
+        local high = tove.newGraphics()
+        high:drawCircle(x, 0, dabRadius + 4)
+        high:setLineWidth(2)
+        high:setFillColor(0, 0, 0)
+        high:stroke()
+        return high
+    end
+
+    dabs.highlight = {
+        line = highlight(-dabRadius * 1.5),
+        fill = highlight(dabRadius * 1.5)
+    }
 
     --dabs.line:setDisplay("flatmesh", tove.quasifixed(4))
     --dabs.line:setUsage("colors", "dynamic")
