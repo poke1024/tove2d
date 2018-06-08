@@ -28,8 +28,7 @@ function PositionMesh:updateVertices()
 	local positions = cvertices.array
 	local pi = 0
 	for i = 1, cvertices.n do
-		vertices[i] = {positions[pi + 0], positions[pi + 1],
-			positions[pi + 0], positions[pi + 1]}
+		vertices[i] = {positions[pi + 0], positions[pi + 1]}
 		pi = pi + 2
 	end
 
@@ -60,7 +59,7 @@ function PositionMesh:getMesh()
 		usage = "dynamic"
 	end
 
-	local attributes = {{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}}
+	local attributes = {{"VertexPosition", "float", 2}}
 	local cvertices = lib.MeshGetVertices(self._cmesh)
 	if cvertices.n < 1 then
 		return nil

@@ -12,6 +12,9 @@
 local lg = love.graphics
 
 local shaders = {
+	prolog = env.graphics.glsl3
+		and "#pragma language glsl3\n#define GLSL3 1\n"
+		or "",
 	line = [[
 #if LINE_STYLE == 1
 uniform vec4 linecolor;
@@ -38,8 +41,9 @@ vec4 computeLineColor(vec2 pos) {
 #endif
 ]],
 	lineGlue = [[
-vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
-	return computeLineColor(tc);
+varying vec2 raw_vertex_pos;
+vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
+	return computeLineColor(raw_vertex_pos);
 }
 ]],
 	fill = [[
@@ -68,21 +72,32 @@ vec4 computeFillColor(vec2 pos) {
 #endif
 ]],
 	fillGlue = [[
-vec4 effect(vec4 c, Image t, vec2 tc, vec2 sc) {
-	return computeFillColor(tc);
+varying vec2 raw_vertex_pos;
+vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
+	return computeFillColor(raw_vertex_pos);
 }
-]]
+]],
+	vertexGlue = [[
+varying vec2 raw_vertex_pos;
+
+vec4 position(mat4 transform_projection, vec4 vertex_pos) {
+	raw_vertex_pos = vertex_pos.xy;
+	return transform_projection * vertex_pos;
 }
+]],
+	vertex = [[
+	uniform vec4 bounds;
+	varying vec4 raw_vertex_pos;
 
-if env.graphics.glsl3 then
-	shaders.prolog = "#pragma language glsl3\n#define GLSL3 1\n"
-else
-	shaders.prolog = ""
-end
-
-shaders.code = [[
+	vec4 position(mat4 transform_projection, vec4 vertex_pos) {
+		raw_vertex_pos = vec4(mix(bounds.xy, bounds.zw, vertex_pos.xy), vertex_pos.zw);
+	    return transform_projection * raw_vertex_pos;
+	}
+]],
+	fragment = [[
 --!! include "tove.glsl"
 ]]
+}
 
 local max = math.max
 local floor = math.floor
@@ -96,16 +111,6 @@ local function next2(n)
 	return math.pow(2, math.ceil(log2(max(16, n))))
 end
 
-
-local _vertexCode = shaders.prolog .. [[
-uniform vec4 bounds;
-varying vec4 raw_vertex_pos;
-
-vec4 position(mat4 transform_projection, vec4 vertex_pos) {
-	raw_vertex_pos = vec4(mix(bounds.xy, bounds.zw, vertex_pos.xy), vertex_pos.zw);
-    return transform_projection * raw_vertex_pos;
-}
-]]
 
 local function newGeometryFillShader(data, fragLine)
 	local geometry = data.geometry
@@ -129,11 +134,11 @@ local function newGeometryFillShader(data, fragLine)
 		f("#define CURVE_DATA_SIZE %d", geometry.curvesTextureSize[0]),
 		shaders.line,
 		shaders.fill,
-		shaders.code
+		shaders.fragment
 	}
 
 	local shader = lg.newShader(
-		table.concat(code, "\n"), _vertexCode)
+		table.concat(code, "\n"), shaders.prolog .. shaders.vertex)
 
 	shader:send("constants", {geometry.maxCurves,
 		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
@@ -183,7 +188,8 @@ local function newLineShader(data)
 		shaders.line,
 		shaders.lineGlue
 	}
-	return lg.newShader(table.concat(code, "\n"))
+	return lg.newShader(table.concat(code, "\n"),
+		shaders.prolog .. shaders.vertexGlue)
 end
 
 local function newFillShader(data)
@@ -196,7 +202,8 @@ local function newFillShader(data)
 		shaders.fill,
 		shaders.fillGlue
 	}
-	return lg.newShader(table.concat(code, "\n"))
+	return lg.newShader(table.concat(code, "\n"),
+		shaders.prolog .. shaders.vertexGlue)
 end
 
 --!! import "feed.lua" as feed
