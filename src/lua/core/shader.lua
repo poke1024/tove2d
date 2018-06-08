@@ -260,8 +260,9 @@ function MeshShader:update()
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		if self.usage["points"] ~= "dynamic" then
-			tove.warn(path, "static mesh points changed in " .. self._name)
-			self.linkdata = newMeshShaderLinkData(self.path, self.tess, self.usage)
+			tove.warn("static mesh points changed in " .. self._name)
+			self.linkdata = newMeshShaderLinkData(
+				self.name, self.path, self.tess, self.usage)
 			return
 		end
 
@@ -291,7 +292,8 @@ function MeshShader:update()
 
 	if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
 		tove.warn("mesh recreation triggered in " .. self._name)
-		self.linkdata = newMeshShaderLinkData(self.path, self.tess, self.usage)
+		self.linkdata = newMeshShaderLinkData(
+			self.name, self.path, self.tess, self.usage)
 		return
 	end
 
