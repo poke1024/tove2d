@@ -9,6 +9,22 @@
  * All rights reserved.
  */
 
+ // an important note about naming of things:
+
+ // what NSVG calls a "shape" is called a "path" in SVG; what NSVG calls a "path" is really
+ // a "sub path" or a "trajectory". see this explanation by Mark Kilgard:
+ // (https://www.opengl.org/discussion_boards/showthread.php/175260-GPU-accelerated-path-rendering?p=1225200&viewfull=1#post1225200)
+
+ // which leads us to this renaming:
+ // 		NSVG path -> Trajectory
+ // 		NSVG shape -> Path
+ // 		NSVG image -> Graphics
+
+ // at the same time, we keep the names of beginPath() and closePath() functions in Graphics,
+ // even though they should really be called begin beginTrajectory() and endTrajectory().
+ // Yet HTML5, Flash and Apple's CoreGraphics all use beginPath() and closePath(), so hey,
+ // who are we to change convention.
+
 #include "graphics.h"
 
 void Graphics::setNumPaths(int n) {

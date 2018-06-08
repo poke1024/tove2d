@@ -96,7 +96,8 @@ void AbstractMesh::triangulate(const ClipperPaths &paths, ToveHoles holes) {
 	std::list<TPPLPoly> triangles;
 	if (partition.Triangulate_MONO(&polys, &triangles) == 0) {
 		if (partition.Triangulate_EC(&polys, &triangles) == 0) {
-			throw triangulation_failed();
+			TOVE_WARN("Triangulation failed.");
+			return;
 		}
 	}
 	addTriangles(triangles);
@@ -209,7 +210,8 @@ void AbstractMesh::triangulateFill(
 
 	std::list<TPPLPoly> convex;
 	if (partition.ConvexPartition_HM(&polys, &convex) == 0) {
-		throw triangulation_failed();
+		TOVE_WARN("Convex partition failed.");
+		return;
 	}
 
 	Triangulation *triangulation = new Triangulation(convex);
@@ -230,7 +232,8 @@ void AbstractMesh::triangulateFill(
 				}
 #endif
 
-				throw triangulation_failed();
+				TOVE_WARN("Triangulation failed.");
+				return;
 			}
 		}
 

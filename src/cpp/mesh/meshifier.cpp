@@ -14,8 +14,8 @@
 #include "mesh.h"
 
 AdaptiveMeshifier::AdaptiveMeshifier(
-	float scale, const ToveTesselationQuality *quality, ToveHoles holes) :
-	tess(scale, quality), holes(holes) {
+	float scale, const ToveTesselationQuality *quality) :
+	tess(scale, quality) {
 }
 
 void AdaptiveMeshifier::renderStrokes(
@@ -71,7 +71,8 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		MeshPaint paint;
 		fill->initializePaint(paint, shape->fill, shape->opacity, scale);
-		fill->add(t.fill, paint, holes);
+ 		// ClipperLib always gives us HOLES_CW.
+ 		fill->add(t.fill, paint, HOLES_CW);
 	}
 
 	if (t.stroke.ChildCount() > 0 && shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {

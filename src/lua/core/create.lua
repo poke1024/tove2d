@@ -130,25 +130,17 @@ local function _cacheShadedMesh(data, ...)
 	end
 end
 
-local holes = {
-	none = lib.HOLES_NONE,
-	cw = lib.HOLES_CW,
-	ccw = lib.HOLES_CCW
-}
-
 create.mesh = function(self)
 	local resolution = self._resolution
 	local display = self._display
-	local cquality = display.cquality
+	local cquality, holes = unpack(display.cquality)
 	local usage = self._usage
-	local holes = holes[display["holes"]] or lib.HOLES_CW
 
 	if usage["gradients"] == "fast" then
 		local gref = self._ref
 		local mesh = tove.newColorMesh(usage, function (cmesh, flags)
 			local res = lib.GraphicsTesselate(
 				gref, cmesh, resolution, cquality, holes, flags)
-			tove.error(res.err)
 			return res.update
 		end)
 		local x0, y0, x1, y1 = self:computeAABB()
@@ -163,7 +155,6 @@ create.mesh = function(self)
 		local tess = function(path, fill, line, flags)
 			local res = lib.PathTesselate(
 				path, fill, line, resolution or 1, cquality, holes, flags)
-			tove.error(res.err)
 			return res.update
 		end
 		local shaders = self:shaders(function (path)

@@ -219,11 +219,11 @@ GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 	enableFragmentShaderStrokes(enableFragmentShaderStrokes) {
 
 	if (maxCurves < 1) {
-		throw std::invalid_argument("cannot render empty paths");
+		TOVE_WARN("Cannot render empty paths.");
 	}
 
 	if (maxCurves > 253) {
-		throw std::invalid_argument("path too complex; only up to 253 curves");
+		TOVE_WARN("Path too complex; only up to 253 curves.");
 	}
 
 	fillEvents.resize(6 * maxCurves);

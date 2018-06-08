@@ -13,7 +13,6 @@ sources = [
 	"src/cpp/nsvg.cpp",
 	"src/cpp/paint.cpp",
 	"src/cpp/path.cpp",
-	"src/cpp/tove2d.cpp",
 	"src/cpp/trajectory.cpp",
 	"src/cpp/utils.cpp",
 	"src/cpp/mesh/flatten.cpp",
@@ -24,7 +23,8 @@ sources = [
 	"src/cpp/shader/data.cpp",
 	"src/cpp/shader/geometry.cpp",
 	"src/thirdparty/clipper.cpp",
-	"src/thirdparty/polypartition.cpp"]
+	"src/thirdparty/polypartition.cpp",
+    "src/cpp/warn.cpp"]
 
 env = Environment()
 

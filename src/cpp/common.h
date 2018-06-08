@@ -13,6 +13,8 @@
 #define __TOVE_COMMON 1
 
 #include "interface.h"
+#include "warn.h"
+
 #include <memory>
 #include <limits>
 #include <assert.h>
@@ -80,12 +82,6 @@ inline int nextpow2(uint32_t v) {
 	v++;
 	return v;
 }
-
-class triangulation_failed {
-};
-
-class cannot_edit_closed_trajectory {	
-};
 
 typedef float coeff;
 

@@ -50,8 +50,8 @@ tove.newGraphics = function(svg, size)
 	return graphics
 end
 
-local function makeDisplay(mode, quality, holes, usage)
-	return {mode = mode, quality = quality, holes = holes or "cw",
+local function makeDisplay(mode, quality, usage)
+	return {mode = mode, quality = quality,
 		cquality = cquality(quality, usage)}
 end
 
@@ -61,7 +61,7 @@ function Graphics:clone()
 	local g = setmetatable({
 		_ref = ref,
 		_cache = nil,
-		_display = makeDisplay(d.mode, d.quality, d.holes, self._usage),
+		_display = makeDisplay(d.mode, d.quality, self._usage),
 		_resolution = self._resolution,
 		_usage = {},
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
@@ -154,13 +154,13 @@ function Graphics:computeAABB()
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 
-function Graphics:setDisplay(mode, quality, holes)
+function Graphics:setDisplay(mode, quality)
 	if mode == "flatmesh" then
 		mode = "mesh"
 		self._usage["gradients"] = "fast"
 	end
 	self._cache = nil
-	self._display = makeDisplay(mode, quality, holes, self._usage)
+	self._display = makeDisplay(mode, quality, self._usage)
 end
 
 function Graphics:setResolution(resolution)
@@ -177,7 +177,8 @@ function Graphics:setUsage(what, usage)
 		if what == "points" then
 			self._usage["triangles"] = usage
 		end
-		self._display.cquality = cquality(self._display.quality, self._usage)
+		self._display.cquality = cquality(
+			self._display.quality, self._usage)
 	end
 end
 

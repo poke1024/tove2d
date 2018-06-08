@@ -35,13 +35,12 @@ private:
 	void renderStrokes(NSVGshape *shape, const ClipperLib::PolyNode *node, ClipperPaths &holes, const MeshPaint &paint, const MeshRef &mesh);
 
 	AdaptiveFlattener tess;
-	const ToveHoles holes;
 
 protected:
 	void mesh(const std::list<TPPLPoly> &triangles, const MeshPaint &paint);
 
 public:
-	AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality, ToveHoles holes);
+	AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality);
 
 	virtual ToveMeshUpdateFlags operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line);
 };

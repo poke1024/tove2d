@@ -9,9 +9,16 @@
 -- All rights reserved.
 -- *****************************************************************
 
+local _holes = {
+	none = lib.HOLES_NONE,
+	cw = lib.HOLES_CW,
+	ccw = lib.HOLES_CCW
+}
+
 local fixed = {}
-tove.fixed = function(depth)
-	return setmetatable({depth = depth}, fixed)
+tove.fixed = function(depth, holes)
+	return setmetatable({depth = depth,
+		holes = _holes[holes] or lib.HOLES_CW}, fixed)
 end
 
 local adaptive = {}
@@ -53,6 +60,7 @@ end
 
 return function (quality, usage)
 	local t = type(quality)
+	local holes = lib.HOLES_CW  -- default for adaptive.
 	if t == "number" then
 		local record = ffi.new("ToveTesselationQuality")
 		if usage["points"] == "dynamic" then
@@ -72,6 +80,7 @@ return function (quality, usage)
 		end
 		quality = record
 	elseif t == "table" and getmetatable(quality) == fixed then
+		holes = quality.holes
 		local record = ffi.new("ToveTesselationQuality")
 		record.adaptive.valid = false
 		record.recursionLimit = quality.depth
@@ -88,5 +97,5 @@ return function (quality, usage)
 		adaptive.cuspLimit = quality.cuspLimit or 0.0
 		quality = record
 	end
-	return quality
+	return {quality, holes}
 end

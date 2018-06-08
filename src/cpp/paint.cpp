@@ -211,5 +211,6 @@ PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 			return std::make_shared<RadialGradient>(paint.gradient);
 		} break;
 	}
-	throw std::invalid_argument("invalid nsvg paint");
+	TOVE_WARN("Invalid nsvg paint type.");
+	return PaintRef();
 }

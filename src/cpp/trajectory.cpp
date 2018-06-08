@@ -20,7 +20,7 @@ inline float length(float x, float y) {
 
 float *Trajectory::addPoints(int n, bool allowClosedEdit) {
 	if (!allowClosedEdit && isClosed()) {
-		throw cannot_edit_closed_trajectory();
+		TOVE_WARN("editing closed trajectory.");
 	}
 	const int cpts = nextpow2(nsvg.npts + n);
 	nsvg.pts = static_cast<float*>(

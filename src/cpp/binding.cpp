@@ -20,22 +20,24 @@
 template<typename F>
 ToveMeshResult exception_safe(const F &f) {
 	try {
-		return ToveMeshResult{ERR_NONE, f()};
-	} catch (const triangulation_failed &e) {
-		return ToveMeshResult{ERR_TRIANGULATION_FAILED, 0};
-	} catch (const cannot_edit_closed_trajectory &e) {
-		return ToveMeshResult{ERR_CLOSED_TRAJECTORY, 0};
+		return ToveMeshResult{f()};
 	} catch (const std::bad_alloc &e) {
-		return ToveMeshResult{ERR_OUT_OF_MEMORY, 0};
+		TOVE_WARN("Out of memory.");
+		return ToveMeshResult{0};
 	} catch (const std::exception &e) {
-		fprintf(stderr, "an error occured in tove2d: %s\n", e.what());
-		return ToveMeshResult{ERR_UNKNOWN, 0};
+		TOVE_WARN(e.what());
+		return ToveMeshResult{0};
 	} catch (...) {
-		return ToveMeshResult{ERR_UNKNOWN, 0};
+		return ToveMeshResult{0};
 	}
 }
 
 extern "C" {
+
+void SetWarningFunction(ToveWarningFunction f) {
+	tove_warn_func = f;
+}
+
 
 TovePaintType PaintGetType(TovePaintRef paint) {
 	return deref(paint)->getType();
@@ -191,7 +193,7 @@ ToveMeshResult PathTesselate(
 			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality, holes);
+			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		}
 		return updated;
@@ -463,7 +465,7 @@ ToveMeshResult GraphicsTesselate(
 			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality, holes);
+			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		}
 		return updated;

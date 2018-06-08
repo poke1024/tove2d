@@ -1,17 +1,10 @@
+typedef void (*ToveWarningFunction)(const char *s);
+
 typedef uint32_t ToveChangeFlags;
 
 typedef uint32_t ToveMeshUpdateFlags;
 
-typedef enum {
-	ERR_NONE = 0,
-	ERR_TRIANGULATION_FAILED,
-	ERR_OUT_OF_MEMORY,
-	ERR_CLOSED_TRAJECTORY,
-	ERR_UNKNOWN
-} ToveError;
-
 typedef struct {
-	ToveError err;
 	ToveMeshUpdateFlags update;
 } ToveMeshResult;
 
@@ -209,6 +202,7 @@ typedef struct {
 } ToveMeshRef;
 
 EXPORT const char *GetVersion();
+EXPORT void SetWarningFunction(ToveWarningFunction f);
 
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);

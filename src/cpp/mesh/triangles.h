@@ -143,6 +143,9 @@ public:
 	}
 
 	void cache(bool keyframe) {
+		if (triangulations.size() == 0) {
+			return;
+		}
 		assert(current < triangulations.size());
 		triangulations[current]->keyframe = keyframe;
 	}

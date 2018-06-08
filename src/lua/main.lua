@@ -34,7 +34,12 @@ tove.init = function(path)
 	tove.getVersion = function()
 		return ffi.string(lib.GetVersion())
 	end
-	
+
+	lib.SetWarningFunction(ffi.cast("ToveWarningFunction", function(s)
+		print("TÖVE warning: " .. ffi.string(s))
+		print(debug.traceback())
+  	end))
+
 	local env = {
 		graphics = love.graphics.getSupported(),
 		rgba16f = love.graphics.getCanvasFormats()["rgba16f"],
@@ -43,7 +48,7 @@ tove.init = function(path)
 			size = ffi.sizeof("ToveMatrix3x3")
 		}
 	}
-	
+
 	-- work around crashing Parallels drivers with mat3
 	do
 		local _, _, _, device = love.graphics.getRendererInfo()
@@ -95,23 +100,6 @@ tove.init = function(path)
 	--!! import "shape.lua" as Shape
 
 	--!! import "animation.lua" as Animation
-
-	tove.warn = function(obj, text)
-		print("TÖVE: " .. (text or obj))
-	end
-
-	local errors = {
-		"triangulation failed.",
-		"out of memory.",
-		"cannot edit closed trajectory.",
-		"internal error."
-	}
-
-	tove.error = function(err)
-		if err ~= 0 then
-			tove.warn(errors[tonumber(err)] or err)
-		end
-	end
 end
 
 tove.init()
