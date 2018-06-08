@@ -12,7 +12,7 @@
 local PositionMesh = {}
 PositionMesh.__index = PositionMesh
 
-tove.newPositionMesh = function(usage)
+tove.newPositionMesh = function(name, usage)
 	return setmetatable({_cmesh = ffi.gc(lib.NewMesh(), lib.ReleaseMesh),
 		_mesh = nil, _usage = usage or {}}, PositionMesh)
 end
@@ -82,10 +82,10 @@ end
 local ColorMesh = {}
 ColorMesh.__index = ColorMesh
 
-tove.newColorMesh = function(usage, tess)
+tove.newColorMesh = function(name, usage, tess)
 	local cmesh = ffi.gc(lib.NewColorMesh(), lib.ReleaseMesh)
 	tess(cmesh, -1)
-	return setmetatable({_cmesh = cmesh, _mesh = nil,
+	return setmetatable({_name = name, _cmesh = cmesh, _mesh = nil,
 		_tess = tess, _usage = usage or {}}, ColorMesh)
 end
 
@@ -112,7 +112,7 @@ function ColorMesh:updateVertices()
 	if cvertices.n ~= mesh:getVertexCount() then
 		self._mesh = nil
 		self:getMesh() -- need a new mesh here.
-		tove.warn("a mesh was recreated.")
+		tove.warn("a mesh was recreated in " .. self._name)
 		return
 	end
 

@@ -204,9 +204,9 @@ end
 local MeshShader = {}
 MeshShader.__index = MeshShader
 
-local function newMeshShaderLinkData(path, tess, usage)
-	local fillMesh = tove.newPositionMesh(usage)
-	local lineMesh = tove.newPositionMesh(usage)
+local function newMeshShaderLinkData(name, path, tess, usage)
+	local fillMesh = tove.newPositionMesh(name, usage)
+	local lineMesh = tove.newPositionMesh(name, usage)
 
 	tess(path, fillMesh._cmesh, lineMesh._cmesh, lib.UPDATE_MESH_EVERYTHING)
 
@@ -240,9 +240,9 @@ local function newMeshShaderLinkData(path, tess, usage)
 	}
 end
 
-local newMeshShader = function(path, tess, usage)
-	return setmetatable({path = path, tess = tess, usage = usage,
-		linkdata = newMeshShaderLinkData(path, tess, usage)}, MeshShader)
+local newMeshShader = function(name, path, tess, usage)
+	return setmetatable({path = path, tess = tess, usage = usage, _name = name,
+		linkdata = newMeshShaderLinkData(name, path, tess, usage)}, MeshShader)
 end
 
 function MeshShader:update()
@@ -253,7 +253,7 @@ function MeshShader:update()
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		if self.usage["points"] ~= "dynamic" then
-			tove.warn(path, "static mesh points changed.")
+			tove.warn(path, "static mesh points changed in " .. self._name)
 			self.linkdata = newMeshShaderLinkData(self.path, self.tess, self.usage)
 			return
 		end
@@ -283,7 +283,7 @@ function MeshShader:update()
 	local chg1 = lib.ShaderLinkBeginUpdate(link, path, false)
 
 	if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
-		tove.warn(path, "mesh recreation triggered.")
+		tove.warn("mesh recreation triggered in " .. self._name)
 		self.linkdata = newMeshShaderLinkData(self.path, self.tess, self.usage)
 		return
 	end

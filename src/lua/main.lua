@@ -35,6 +35,8 @@ tove.init = function(path)
 		return ffi.string(lib.GetVersion())
 	end
 
+	tove.debug = false
+
 	tove.warnverbose = 1
 	tove.warn = function(s)
 		if tove.warnverbose == 0 then

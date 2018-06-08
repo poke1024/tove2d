@@ -33,6 +33,10 @@ local function bind(methodName, libFuncName)
 end
 
 tove.newGraphics = function(svg, size)
+	local name = "unnamed"
+	if tove.debug then
+		name = "Graphics originally created at " .. debug.traceback()
+	end
 	local ref = ffi.gc(lib.NewGraphics(svg, "px", 72), lib.ReleaseGraphics)
 	local graphics = setmetatable({
 		_ref = ref,
@@ -40,6 +44,7 @@ tove.newGraphics = function(svg, size)
 		_display = {mode = "bitmap"},
 		_resolution = 1,
 		_usage = {},
+		_name = name,
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	if type(size) == "number" then
 		graphics:rescale(size)
@@ -53,6 +58,10 @@ end
 local function makeDisplay(mode, quality, usage)
 	return {mode = mode, quality = quality,
 		cquality = cquality(quality, usage)}
+end
+
+function Graphics:setName(name)
+	self._name = name
 end
 
 function Graphics:clone()
@@ -256,12 +265,6 @@ function Graphics:rasterize(width, height, tx, ty, scale, quality)
 		width, height, "rgba8", ffi.string(data.pixels, width * height * 4))
 	lib.DeleteImage(data)
 	return loveImageData
-end
-
-function Graphics:tesselate(scale, quality)
-	local mesh = newColorMesh()
-	lib.GraphicsTesselate(self._ref, mesh.cmesh, scale or 1, quality, -1)
-	return mesh:getMesh()
 end
 
 function Graphics:animate(a, b, t)

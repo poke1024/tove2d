@@ -60,7 +60,7 @@ local function _updateFlatMesh(graphics)
 		if mesh:getUsage("points") == "dynamic" then
 			update = bit.bor(update, lib.UPDATE_MESH_VERTICES)
 		else
-			tove.warn(graphics, "static mesh points changed.")
+			tove.warn("static mesh points changed in " .. graphics._name)
 			return true
 		end
 	end
@@ -135,10 +135,11 @@ create.mesh = function(self)
 	local display = self._display
 	local cquality, holes = unpack(display.cquality)
 	local usage = self._usage
+	local name = self._name
 
 	if usage["gradients"] == "fast" then
 		local gref = self._ref
-		local mesh = tove.newColorMesh(usage, function (cmesh, flags)
+		local mesh = tove.newColorMesh(name, usage, function (cmesh, flags)
 			local res = lib.GraphicsTesselate(
 				gref, cmesh, resolution, cquality, holes, flags)
 			return res.update
@@ -158,7 +159,7 @@ create.mesh = function(self)
 			return res.update
 		end
 		local shaders = self:shaders(function (path)
-			return _shaders.newMeshShader(path, tess, usage)
+			return _shaders.newMeshShader(name, path, tess, usage)
 		end)
 		return {
 			shaders = shaders,
