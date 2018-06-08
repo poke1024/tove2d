@@ -35,9 +35,19 @@ tove.init = function(path)
 		return ffi.string(lib.GetVersion())
 	end
 
+	tove.warnverbose = 1
+	tove.warn = function(s)
+		if tove.warnverbose == 0 then
+			return
+		end
+		print("TÖVE warning: " .. s)
+		if tove.warnverbose >= 2 then
+			print(debug.traceback())
+		end
+	end
+
 	lib.SetWarningFunction(ffi.cast("ToveWarningFunction", function(s)
-		print("TÖVE warning: " .. ffi.string(s))
-		print(debug.traceback())
+		tove.warn(ffi.string(s))
   	end))
 
 	local env = {
