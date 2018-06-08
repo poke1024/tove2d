@@ -49,8 +49,17 @@ public:
 		}
 	}
 
+	inline bool empty() const {
+		return parts.empty();
+	}
+
 	bool check(const float *vertices) {
 		const int nparts = parts.size();
+
+		if (nparts == 0) {
+			return false;
+		}
+
 		for (int j = 0; j < nparts; j++) {
 			Part &part = parts[j];
 

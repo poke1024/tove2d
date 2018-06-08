@@ -136,6 +136,10 @@ public:
 	}
 
 	void add(Triangulation *t) {
+		if (t->partition.empty()) {
+			return;
+		}
+
 		if (triangulations.size() + 1 > cacheSize) {
 			evict();
 		}
@@ -187,7 +191,7 @@ public:
 	bool check(const float *vertices, bool &triangleCacheFlag) {
 		const int n = triangulations.size();
 		if (n == 0) {
-			return true;
+			return false;
 		}
 
 		assert(current < n);
