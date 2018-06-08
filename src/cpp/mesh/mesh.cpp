@@ -267,7 +267,8 @@ void ColorMesh::addColor(int vertexIndex, int vertexCount, const MeshPaint &pain
     	meshData.colors, nextpow2(vertexIndex + vertexCount) * 4 * sizeof(uint8_t)));
 
     if (!meshData.colors) {
-    	throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return;
     }
 
     uint8_t *colors = &meshData.colors[4 * vertexIndex];

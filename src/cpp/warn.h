@@ -18,5 +18,6 @@ extern ToveWarningFunction tove_warn_func;
 
 void tove_warn(const char *file, int line, const char *s);
 #define TOVE_WARN(s) tove_warn(__FILE__, __LINE__, s)
+#define TOVE_BAD_ALLOC() { TOVE_WARN("Out of memory"); throw std::bad_alloc(); }
 
 #endif // __TOVE_WARN

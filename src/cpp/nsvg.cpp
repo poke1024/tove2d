@@ -28,7 +28,8 @@ static NSVGparser *getNSVGparser() {
 	if (!_parser) {
 		_parser = nsvg__createParser();
 		if (!_parser) {
-			throw std::bad_alloc();
+			TOVE_BAD_ALLOC();
+			return nullptr;
 		}
 	} else {
 		nsvg__resetPath(_parser);
@@ -74,7 +75,8 @@ NSVGimage *parsePath(const char *d) {
 
 	parser->image = static_cast<NSVGimage*>(malloc(sizeof(NSVGimage)));
 	if (!parser->image) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return nullptr;
 	}
 	memset(parser->image, 0, sizeof(NSVGimage));
 

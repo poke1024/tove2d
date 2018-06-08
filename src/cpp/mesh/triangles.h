@@ -33,7 +33,8 @@ public:
 	    	triangles, size * 3 * sizeof(uint16_t)));
 
 	    if (!triangles) {
-	    	throw std::bad_alloc();
+			TOVE_BAD_ALLOC();
+			return nullptr;
 	    }
 
 		return &triangles[3 * triangleIndex];

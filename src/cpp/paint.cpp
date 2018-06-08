@@ -50,7 +50,8 @@ NSVGgradient *AbstractGradient::getInverseNSVGgradient() {
 	const size_t size = getRecordSize(nsvg->nstops);
 	nsvgInverse = static_cast<NSVGgradient*>(realloc(nsvgInverse, size));
 	if (!nsvgInverse) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return nullptr;
 	}
 	std::memcpy(nsvgInverse, nsvg, size);
 	std::memcpy(nsvgInverse->xform, xformInverse, 6 * sizeof(float));
@@ -63,7 +64,8 @@ AbstractGradient::AbstractGradient(int nstops) :
 	const size_t size = getRecordSize(nstops);
 	nsvg = static_cast<NSVGgradient*>(malloc(size));
 	if (!nsvg) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return;
 	}
 	nsvg->nstops = nstops;
 
@@ -81,7 +83,8 @@ AbstractGradient::AbstractGradient(const NSVGgradient *gradient) :
 	const size_t size = getRecordSize(gradient->nstops);
 	nsvg = static_cast<NSVGgradient*>(malloc(size));
 	if (!nsvg) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return;
 	}
 	std::memcpy(nsvg, gradient, size);
 
@@ -97,7 +100,8 @@ AbstractGradient::AbstractGradient(const AbstractGradient &gradient) :
 	const size_t size = getRecordSize(gradient.nsvg->nstops);
 	nsvg = static_cast<NSVGgradient*>(malloc(size));
 	if (!nsvg) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return;
 	}
 	std::memcpy(nsvg, gradient.nsvg, size);
 	std::memcpy(xformInverse, gradient.xformInverse, 6 * sizeof(float));
@@ -117,7 +121,8 @@ void AbstractGradient::set(const AbstractGradient *source) {
 
 	nsvg = static_cast<NSVGgradient*>(realloc(nsvg, nextpow2(size)));
 	if (!nsvg) {
-		throw std::bad_alloc();
+		TOVE_BAD_ALLOC();
+		return;
 	}
 	std::memcpy(nsvg, source->nsvg, size);
 	sorted = source->sorted;
@@ -125,7 +130,8 @@ void AbstractGradient::set(const AbstractGradient *source) {
 	if (source->nsvgInverse) {
 		nsvgInverse = static_cast<NSVGgradient*>(realloc(nsvg, size));
 		if (!nsvgInverse) {
-			throw std::bad_alloc();
+			TOVE_BAD_ALLOC();
+			return;
 		}
 		std::memcpy(nsvgInverse, source->nsvgInverse, size);
 	} else {
