@@ -50,8 +50,8 @@ void AdaptiveMeshifier::renderStrokes(
 ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 	const PathRef &path, const MeshRef &fill, const MeshRef &line) {
 
-	fill->clearTriangles();
-	line->clearTriangles();
+	fill->clear();
+	line->clear();
 
 	NSVGshape *shape = path->getNSVG();
 

@@ -33,6 +33,7 @@ public:
 
 	float *vertices(int from, int n);
 	void cache(bool keyframe);
+	void clear();
 
 	void triangulate(const ClipperPaths &paths, ToveHoles holes);
 	void addTriangles(const std::list<TPPLPoly> &triangles);

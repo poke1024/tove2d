@@ -112,7 +112,7 @@ function ColorMesh:updateVertices()
 	if cvertices.n ~= mesh:getVertexCount() then
 		self._mesh = nil
 		self:getMesh() -- need a new mesh here.
-		tove.warn("a mesh was recreated in " .. self._name)
+		tove.warn("internal error: a mesh was recreated in " .. self._name)
 		return
 	end
 

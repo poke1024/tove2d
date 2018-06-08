@@ -47,7 +47,7 @@ end
 local function _updateFlatMesh(graphics)
 	local flags = graphics:fetchChanges(lib.CHANGED_ANYTHING)
 	if flags >= lib.CHANGED_GEOMETRY then
-		return true
+		return true -- recreate from scratch
 	end
 
 	local update = 0
@@ -57,12 +57,10 @@ local function _updateFlatMesh(graphics)
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local mesh = graphics._cache.mesh
-		if mesh:getUsage("points") == "dynamic" then
-			update = bit.bor(update, lib.UPDATE_MESH_VERTICES)
-		else
+		if mesh:getUsage("points") ~= "dynamic" then
 			tove.warn("static mesh points changed in " .. graphics._name)
-			return true
 		end
+		update = bit.bor(update, lib.UPDATE_MESH_VERTICES)
 	end
 
 	if update ~= 0 then

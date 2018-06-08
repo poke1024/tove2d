@@ -70,6 +70,11 @@ void AbstractMesh::cache(bool keyframe) {
 	triangles.cache(keyframe);
 }
 
+void AbstractMesh::clear() {
+	triangles.clear();
+	meshData.nvertices = 0;
+}
+
 void AbstractMesh::triangulate(const ClipperPaths &paths, ToveHoles holes) {
 	std::list<TPPLPoly> polys;
 	for (int i = 0; i < paths.size(); i++) {
