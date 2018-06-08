@@ -60,11 +60,14 @@ end
 
 local function newObject(tx, ty, graphics)
 	graphics:setDisplay("mesh")
-	graphics:setUsage("points", "dynamic")
 
 	local scaledgraphics = tove.newGraphics()
 	scaledgraphics:setDisplay("mesh")
-	scaledgraphics:setUsage("points", "dynamic")
+
+	-- we use adaptive tesselation for meshes, since only they support
+	-- proper fill rules; for this we need a resolution of at least 2,
+	-- otherwise the strokes will look very jaggy.
+	scaledgraphics:setResolution(2)
 
 	local object = setmetatable({
 		graphics = graphics,
