@@ -40,7 +40,7 @@ void AdaptiveMeshifier::renderStrokes(
 			paths.insert(paths.end(), holes.begin(), holes.end());
 
 			if (shape->stroke.type == NSVG_PAINT_COLOR) {
-				mesh->add(paths, paint, HOLES_NONE);
+				mesh->add(paths, paint, HOLES_CW);
 			}
 		}
 		holes.clear();
