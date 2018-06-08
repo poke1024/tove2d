@@ -49,10 +49,6 @@ void AdaptiveMeshifier::renderStrokes(
 
 ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 	const PathRef &path, const MeshRef &fill, const MeshRef &line) {
-
-	fill->clear();
-	line->clear();
-
 	NSVGshape *shape = path->getNSVG();
 
 	if ((shape->flags & NSVG_FLAGS_VISIBLE) == 0) {

@@ -189,10 +189,14 @@ ToveMeshResult PathTesselate(
 
 	return exception_safe([path, fillMesh, lineMesh, scale, quality, holes, flags] () {
 		ToveMeshUpdateFlags updated;
+
 		if (quality && !quality->adaptive.valid) {
 			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		} else {
+			deref(fillMesh)->clear();
+			deref(lineMesh)->clear();
+
 			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
 		}
@@ -465,6 +469,7 @@ ToveMeshResult GraphicsTesselate(
 			FixedMeshifier meshifier(scale, quality, holes, flags);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		} else {
+			deref(mesh)->clear();
 			AdaptiveMeshifier meshifier(scale, quality);
 			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
 		}
