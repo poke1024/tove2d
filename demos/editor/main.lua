@@ -3,8 +3,7 @@
 
 require "lib/tove"
 
-local newObject = require "object"
-local ui = require "ui"
+local Object = require "object"
 
 -- msaa = 4
 love.window.setMode(800, 600, {highdpi = true})
@@ -22,13 +21,7 @@ somegraphics:fill()
 somegraphics:setLineColor(0, 0, 0)
 somegraphics:stroke()
 
-
-local radios = ui.newImageRadioButtonGroup(8, screenheight - 8 - 16,
-	"bitmap", "mesh", "curves")
-radios:select("mesh")
-
-
-editor:addObject(newObject(screenwidth / 2, screenheight / 2, somegraphics))
+editor:addObject(Object.new(screenwidth / 2, screenheight / 2, somegraphics))
 
 function love.load()
 	editor:load()
@@ -39,10 +32,6 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1)
 
 	editor:draw()
-
-	if editor.widget ~= nil then
-		radios:draw()
-	end
 end
 
 function love.update()
@@ -50,12 +39,6 @@ function love.update()
 end
 
 function love.mousepressed(x, y, button, isTouch, clickCount)
-	local mode = radios:click(x, y)
-	if mode ~= nil then
-		editor:setDisplay(mode)
-		return
-	end
-
 	editor:mousedown(x, y, button, clickCount)
 end
 
@@ -65,4 +48,12 @@ end
 
 function love.keypressed(key, scancode, isrepeat)
 	editor:keypressed(key, scancode, isrepeat)
+end
+
+function love.wheelmoved(x, y)
+	editor:wheelmoved(x, y)
+end
+
+function love.filedropped(file)
+	editor:loadfile(file)
 end

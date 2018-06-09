@@ -124,16 +124,19 @@ function PointsWidget:updateOverlayLine()
 	end
 end
 
-function PointsWidget:draw()
+function PointsWidget:draw(gtransform)
 	local transform = self.object.transform
 	local handles = self.handles
 
 	love.graphics.push("transform")
+	love.graphics.applyTransform(gtransform)
 	love.graphics.applyTransform(transform.drawtransform)
 	self.overlayLine:draw()
 	love.graphics.pop()
 
-	local tfm = transform.mousetransform
+	local tfm = love.math.newTransform()
+	tfm:apply(gtransform)
+	tfm:apply(transform.mousetransform)
 
 	self:allcontrolpoints(function(traj, pts, i, j, k0, k, lx, ly)
 		local x, y = tfm:transformPoint(lx, ly)

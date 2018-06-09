@@ -20,12 +20,15 @@ local function rotationHandlePosition(x00, y00, x10, y10, sx, sy)
 	return mx + toplen * math.cos(phi), my + toplen * math.sin(phi), mx, my
 end
 
-function TransformWidget:draw()
+function TransformWidget:draw(gtransform)
 	local lx0, ly0, lx1, ly1 = self.object.graphics:computeAABB()
 
 	local transform = self.object.transform
 
-	local tfm = transform.mousetransform
+	local tfm = love.math.newTransform()
+	tfm:apply(gtransform)
+	tfm:apply(transform.mousetransform)
+
 	local x00, y00 = tfm:transformPoint(lx0, ly0)
 	local x10, y10 = tfm:transformPoint(lx1, ly0)
 	local x11, y11 = tfm:transformPoint(lx1, ly1)

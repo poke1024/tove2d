@@ -58,7 +58,11 @@ function Object:setDisplay(mode)
     self.scaledgraphics:setDisplay(mode)
 end
 
-local function newObject(tx, ty, graphics)
+function Object:getDisplay()
+	return self.scaledgraphics:getDisplay()
+end
+
+Object.new = function(tx, ty, graphics)
 	graphics:setDisplay("mesh")
 
 	local scaledgraphics = tove.newGraphics()
@@ -80,4 +84,4 @@ local function newObject(tx, ty, graphics)
 	return object
 end
 
-return newObject
+return Object

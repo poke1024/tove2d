@@ -1,10 +1,16 @@
 -- TÖVE Editor.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
+local Control = require "ui/control"
+local stripedCircle = require "ui/striped"
+
 local ColorWheel = {}
 ColorWheel.__index = ColorWheel
+setmetatable(ColorWheel, {__index = Control})
 
 local pi2 = 2 * math.pi
+local nopaintRadius = 8
+local nopaint = stripedCircle(0, 0, nopaintRadius, 0, math.pi / 4)
 
 local function barycentric(px, py, x1, y1, x2, y2, x3, y3)
 	local dx = px - x3
@@ -86,22 +92,31 @@ function ColorWheel:setRGBColor(r, g, b)
 	triangleSpot[1] = c
 	triangleSpot[2] = m
 	triangleSpot[3] = 1 - c - m
+	self.empty = false
+end
+
+function ColorWheel:setEmpty()
+	self.empty = true
 end
 
 function ColorWheel:colorChanged()
-	local triangleSpot = self.triangleSpot
-	local triangleVertices = self.triangleVertices
+	if self.empty then
+		self.callback(nil)
+	else
+		local triangleSpot = self.triangleSpot
+		local triangleVertices = self.triangleVertices
 
-	local color = {}
-	for j = 1, 3 do
-		local v = 0
-		for i = 1, 3 do
-			v = v + triangleSpot[i] * triangleVertices[i][3 + j - 1]
+		local color = {}
+		for j = 1, 3 do
+			local v = 0
+			for i = 1, 3 do
+				v = v + triangleSpot[i] * triangleVertices[i][3 + j - 1]
+			end
+			color[j] = v
 		end
-		color[j] = v
-	end
 
-	self.callback(unpack(color))
+		self.callback(unpack(color))
+	end
 end
 
 function ColorWheel:updateSL(mx, my, mode)
@@ -109,7 +124,8 @@ function ColorWheel:updateSL(mx, my, mode)
 	local ax, ay = unpack(triangleVertices[1])
 	local bx, by = unpack(triangleVertices[2])
 	local cx, cy = unpack(triangleVertices[3])
-	local u, v, w = barycentric(mx - self.x, my - self.y, ax, ay, bx, by, cx, cy)
+	local x, y = self:center()
+	local u, v, w = barycentric(mx - x, my - y, ax, ay, bx, by, cx, cy)
 	if mode ~= "check" then
 		u = math.max(u, 0)
 		v = math.max(v, 0)
@@ -123,21 +139,24 @@ function ColorWheel:updateSL(mx, my, mode)
 		return false
 	end
 	self.triangleSpot = {u, v, w}
+	self.empty = false
 	self:colorChanged()
 	return true
 end
 
 function ColorWheel:updateHue(mx, my)
-	local dx = mx - self.x
-	local dy = my - self.y
+	local x, y = self:center()
+	local dx = mx - x
+	local dy = my - y
 	self.currentHue = math.atan2(dy, dx)
+	self.empty = false
 	self.triangleVertices = self:computeTriangleVertices()
 	self.triangle:setVertices(self.triangleVertices)
 	self:colorChanged()
 end
 
 function ColorWheel:draw()
-	local x, y = self.x, self.y
+	local x, y = self:center()
 	local halfsize = self.halfsize
 	local scale = self.scale
 
@@ -159,29 +178,58 @@ function ColorWheel:draw()
 	local cx, cy = unpack(triangleVertices[3])
 	local u, v, w = unpack(self.triangleSpot)
 	circle:draw(x + ax * u + bx * v + cx * w, y + ay * u + by * v + cy * w)
+
+	nopaint:draw(x + halfsize - nopaintRadius, y + halfsize- nopaintRadius)
+end
+
+local function distance(x, y, mx, my)
+	local dx = mx - x
+	local dy = my - y
+	return math.sqrt(dx * dx + dy * dy)
 end
 
 function ColorWheel:click(mx, my)
-	local dx = mx - self.x
-	local dy = my - self.y
-	local d = math.sqrt(dx * dx + dy * dy)
+	local x, y = self:center()
+	local d = distance(x, y, mx, my)
 	local r = self.radius
+
 	if d >= r and d <= r + self.thickness then
 		self:updateHue(mx, my)
 		return function(mx, my)
 			return self:updateHue(mx, my)
 		end
-	else
-		if self:updateSL(mx, my, "check") then
-			return function(mx, my)
-				return self:updateSL(mx, my)
-			end
+	elseif self:updateSL(mx, my, "check") then
+		return function(mx, my)
+			return self:updateSL(mx, my)
 		end
+	else
+		local halfsize = self.halfsize
+
+		local npx = x + halfsize - nopaintRadius
+		local npy = y + halfsize - nopaintRadius
+		if distance(npx, npy, mx, my) < nopaintRadius then
+			self.empty = true
+			self:colorChanged()
+			return function() end
+		end
+
 		return nil
 	end
 end
 
-return function(x, y, callback)
+function ColorWheel:center()
+	return self.x + self.w / 2, self.y + self.h / 2
+end
+
+function ColorWheel:getOptimalHeight()
+	return self.halfsize * 2
+end
+
+function ColorWheel:setCallback(callback)
+	self.callback = callback
+end
+
+ColorWheel.new = function()
 	local oversample = 1
 
 	local code = [[
@@ -252,14 +300,7 @@ return function(x, y, callback)
 	circle:setLineWidth(0.9)
 	circle:stroke()
 
-	--local x, y = love.graphics.getWidth() - halfsize, halfsize
-	x = x + halfsize
-	y = y + halfsize
-
-	local cw = setmetatable({
-		x = x,
-		y = y,
-
+	local cw = Control.init(setmetatable({
 		radius = radius,
 		thickness = thickness,
 
@@ -274,8 +315,9 @@ return function(x, y, callback)
 		triangleSpot = {1, 0, 0},
 		triangle = nil,
 
-		callback = callback
-	}, ColorWheel)
+		callback = function() end,
+		empty = false
+	}, ColorWheel))
 
 	do
 		local attributes = {{"VertexPosition", "float", 2}, {"VertexColor", "float", 3}}
@@ -287,3 +329,5 @@ return function(x, y, callback)
 
 	return cw
 end
+
+return ColorWheel

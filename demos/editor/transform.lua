@@ -46,7 +46,7 @@ local function newTransform(graphics, tx, ty)
 		tx = tx,
 		ty = ty,
 		r = 0,
-		sx = 1.5,
+		sx = 1,
 		sy = 1,
 		ox = 0,
 		oy = 0,

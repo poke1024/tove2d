@@ -1,9 +1,17 @@
 -- TÖVE Editor.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
+local Object = require "object"
+
 local newTransformWidget = require "widgets/transform"
 local newCurvesWidget = require "widgets/curves"
-local ColorPanel = require "ColorPanel"
+
+local Panel = require "ui/panel"
+local Label = require "ui/label"
+local Slider = require "ui/slider"
+local ColorDabs = require "ui/colordabs"
+local ColorWheel = require "ui/colorwheel"
+local ButtonGroup = require "ui/buttongroup"
 
 local Editor = {}
 Editor.__index = Editor
@@ -22,43 +30,83 @@ end
 function Editor:load()
 	local editor = self
 
-	self.colorpanel = ColorPanel.new(
-		love.graphics.getWidth() - 75,
-		8,
-		function(what, r, g, b)
-			local widget = editor.widget
-			if widget ~= nil then
-	            local object = widget.object
-				for i = 1, object.graphics.npaths do
-					local path = object.graphics.paths[i]
-					if what == "fill" then
-						path:setFillColor(r, g, b)
-					else
-						path:setLineColor(r, g, b)
-					end
+	self.transform = love.math.newTransform()
+	self.font = love.graphics.newFont(11)
+
+	local updateColor = function(what, ...)
+		local widget = editor.widget
+		if widget ~= nil then
+            local object = widget.object
+			for i = 1, object.graphics.npaths do
+				local path = object.graphics.paths[i]
+				if what == "fill" then
+					path:setFillColor(...)
+				else
+					path:setLineColor(...)
 				end
-				object:refresh()
 			end
-		end)
+			object:refresh()
+		end
+	end
+
+	self.colorWheel = ColorWheel.new()
+	self.colorDabs = ColorDabs.new(updateColor, self.colorWheel)
+	self.lineWidthSlider = Slider.new(function(value)
+		local widget = editor.widget
+		if widget ~= nil then
+			local object = widget.object
+			for i = 1, object.graphics.npaths do
+				local path = object.graphics.paths[i]
+				path:setLineWidth(value)
+			end
+			object:refresh()
+		end
+	end, 0, 20)
+
+	self.rpanel = Panel.new()
+	self.rpanel:add(Label.new(self.font, "Color"))
+	self.rpanel:add(self.colorDabs)
+	self.rpanel:add(self.colorWheel)
+	self.rpanel:add(Label.new(self.font, "Line Width"))
+	self.rpanel:add(self.lineWidthSlider)
+
+	self.rpanel:add(Label.new(self.font, "Renderer"))
+	self.radios = ButtonGroup.new("bitmap", "mesh", "curves")
+	self.radios:select("mesh")
+	self.rpanel:add(self.radios)
+	self.radios:setCallback(function(mode)
+		self:setDisplay(mode)
+	end)
+
+	self.rpanel:setBounds(
+		love.graphics.getWidth() - 180,
+		0,
+		180,
+		love.graphics.getHeight())
 end
 
 function Editor:draw()
+	love.graphics.setColor(1, 1, 1)
+
+	love.graphics.push("transform")
+	love.graphics.applyTransform(self.transform)
 	for _, object in ipairs(self.objects) do
 		object:draw()
 	end
+	love.graphics.pop()
 
 	if self.widget ~= nil then
-		self.widget:draw()
+		self.widget:draw(self.transform)
+		self.rpanel:draw()
 	end
-
-	self.colorpanel:draw()
 end
 
-function Editor:startdrag(x, y, func)
+function Editor:startdrag(transform, x, y, func)
     if func == nil then
         return false
     else
         self.drag = {
+			transform = transform,
             startx = x,
             starty = y,
             active = false,
@@ -68,16 +116,17 @@ function Editor:startdrag(x, y, func)
     end
 end
 
-function Editor:mousedown(x, y, button, clickCount)
-	if button == 1 then
-		if self:startdrag(x, y, self.colorpanel:click(x, y)) then
-			return
-		end
+function Editor:mousedown(gx, gy, button, clickCount)
+	local x, y = self.transform:inverseTransformPoint(gx, gy)
 
+	if button == 1 then
 		if self.widget ~= nil then
-			if not self:startdrag(x, y, self.widget:mousedown(x, y, button)) then
+			if self:startdrag(nil, gx, gy, self.rpanel:click(gx, gy)) then
+				return
+			end
+
+			if not self:startdrag(self.transform, x, y, self.widget:mousedown(x, y, button)) then
 				self.widget = nil
-				self.colorpanel.visible = false
 			end
 		end
 		if self.widget == nil then
@@ -92,15 +141,14 @@ function Editor:mousedown(x, y, button, clickCount)
 						elseif clickCount == 1 then
 							self.widget = newTransformWidget(self.handles, object)
 						end
-						--local r, g, b =
-						--self.colorwheel:setRGBColor(r, g, b)
 
 						local path = object.graphics.paths[1]
-						self.colorpanel.visible = true
-						self.colorpanel:setLineColor(unpack(path:getLineColor().rgba))
-						self.colorpanel:setFillColor(unpack(path:getFillColor().rgba))
+						self.colorDabs:setLineColor(path:getLineColor())
+						self.colorDabs:setFillColor(path:getFillColor())
+						self.lineWidthSlider:setValue(path:getLineWidth())
+						self.radios:select(object:getDisplay())
 
-						self:startdrag(x, y, makeDragObjectFunc(object, x, y))
+						self:startdrag(self.transform, x, y, makeDragObjectFunc(object, x, y))
 						return
 					end
 				end
@@ -133,6 +181,9 @@ function Editor:update()
 	if drag ~= nil then
         local x = love.mouse.getX()
 		local y = love.mouse.getY()
+		if drag.transform ~= nil then
+			x, y = drag.transform:inverseTransformPoint(x, y)
+		end
 
         if not drag.active then
             local dx = x - drag.startx
@@ -155,6 +206,35 @@ function Editor:setDisplay(mode)
     if self.widget ~= nil then
         self.widget.object:setDisplay(mode)
     end
+end
+
+function Editor:wheelmoved(wx, wy)
+	local x = love.mouse.getX()
+	local y = love.mouse.getY()
+	local lx, ly = self.transform:inverseTransformPoint(x, y)
+	self.transform:translate(lx, ly)
+	self.transform:scale(1 + wy / 10)
+	self.transform:translate(-lx, -ly)
+end
+
+function Editor:loadfile(file)
+	file:open("r")
+	local svg = file:read()
+	file:close()
+
+	local graphics = tove.newGraphics(svg, 512)
+
+	self.transform = love.math.newTransform()
+	self.objects = {}
+
+	local screenwidth = love.graphics.getWidth()
+	local screenheight = love.graphics.getHeight()
+
+	for i = 1, graphics.npaths do
+		local g = tove.newGraphics()
+		g:addPath(graphics.paths[i])
+		self:addObject(Object.new(screenwidth / 2, screenheight / 2, g))
+	end
 end
 
 local editor = setmetatable({
