@@ -185,8 +185,8 @@ Path::Path(const Path *path) : changes(path->changes) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	strcpy(nsvg.id, path->nsvg.id);
-	_setFillColor(path->fillColor->clone());
-	_setLineColor(path->lineColor->clone());
+	_setFillColor(path->fillColor ? path->fillColor->clone() : PaintRef());
+	_setLineColor(path->lineColor ? path->lineColor->clone() : PaintRef());
 
 	nsvg.opacity = path->nsvg.opacity;
 	nsvg.strokeWidth = path->nsvg.strokeWidth;

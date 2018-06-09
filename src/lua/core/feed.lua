@@ -230,8 +230,12 @@ function GeometryFeed:update(flags)
 		sendLUT(self, fillShader)
 		fillShader:send("bounds", self.boundsByteData)
 
-		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 and lineShader ~= nil then
-			sendLineArgs(lineShader, self.data)
+		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 then
+			if lineShader ~= nil then
+				sendLineArgs(lineShader, self.data)
+			else
+				sendLineArgs(fillShader, self.data)
+			end
 		end
 
 		self.listsTexture:replacePixels(self.listsImageData)

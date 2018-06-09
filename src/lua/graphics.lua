@@ -172,6 +172,10 @@ function Graphics:setDisplay(mode, quality)
 	self._display = makeDisplay(mode, quality, self._usage)
 end
 
+function Graphics:getDisplay()
+	return self._display.mode, self._display.quality
+end
+
 function Graphics:setResolution(resolution)
 	if resolution ~= self._resolution then
 		self._cache = nil

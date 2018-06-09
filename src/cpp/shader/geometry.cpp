@@ -253,7 +253,8 @@ ToveChangeFlags GeometryShaderLinkImpl::beginUpdate(const PathRef &path, bool in
 }
 
 int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
-	const ToveChangeFlags changes = path->fetchChanges(CHANGED_POINTS);
+	const ToveChangeFlags changes = path->fetchChanges(
+		CHANGED_POINTS | CHANGED_LINE_ARGS);
 	if (changes == 0 && !initial) {
 		return 0;
 	}

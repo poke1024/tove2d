@@ -368,11 +368,18 @@ void AdaptiveFlattener::operator()(const NSVGshape *shape, Tesselation &tesselat
 	ClipperLib::SimplifyPolygons(tesselation.fill, fillType);
 
 	if (hasStroke) {
+		float lineOffset = shape->strokeWidth * scale * 0.5f;
+		if (lineOffset < 1.0f) {
+			// scaled offsets < 1 will generate artefacts as the ClipperLib's
+			// underlying integer resolution cannot handle them.
+			lineOffset = 0.0f;
+		}
+
 		ClipperLib::ClipperOffset offset(shape->miterLimit);
 		offset.AddPaths(lines,
 			joinType(shape->strokeLineJoin),
 			endType(shape->strokeLineCap, closed && shape->strokeDashCount == 0));
-		offset.Execute(tesselation.stroke, shape->strokeWidth * scale * 0.5f);
+		offset.Execute(tesselation.stroke, lineOffset);
 
 		ClipperPaths stroke;
 		ClipperLib::PolyTreeToPaths(tesselation.stroke, stroke);
