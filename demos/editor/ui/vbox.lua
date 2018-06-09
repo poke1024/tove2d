@@ -33,7 +33,7 @@ function VBox:click(x, y)
             return dragfunc
         end
 	end
-    return dragfunc
+    return nil
 end
 
 function VBox:init()

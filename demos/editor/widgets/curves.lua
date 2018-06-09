@@ -29,15 +29,14 @@ function PointsWidget:allpoints(f)
 			for k = 1, traj.npts, 3 do
 				local pts = traj.pts
 				local pt = pts[k]
-				local dragfunc = f(pts, i, j, k, pt.x, pt.y)
-				if dragfunc ~= nil then
-					return dragfunc
+				if  f(pts, i, j, k, pt.x, pt.y) then
+					return true
 				end
 			end
 		end
 	end
 
-	return nil
+	return false
 end
 
 function PointsWidget:allcontrolpoints(f)
@@ -54,39 +53,38 @@ function PointsWidget:allcontrolpoints(f)
 				local pts = traj.pts
 
 				local isActive = false
-				if dragging ~= nil and dragging.path == i and dragging.traj == j and dragging.pt0 == k then
+				if dragging ~= nil and dragging.path == i and
+					dragging.traj == j and dragging.pt0 == k then
 					isActive = true
 				end
 
 				if isActive or isControlPointVisible(selected, traj, i, j, k - 1) then
 					local pt1 = pts[k - 1]
-					local dragfunc = f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y)
-					if dragfunc ~= nil then
-						return dragfunc
+					if f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y) then
+						return true
 					end
 				end
 
 				if isActive or isControlPointVisible(selected, traj, i, j, k + 1) then
 					local pt2 = pts[k + 1]
-					local dragfunc = f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y)
-					if dragfunc ~= nil then
-						return dragfunc
+					if f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y) then
+						return true
 					end
 				end
 			end
 		end
 	end
 
-	return nil
+	return false
 end
 
-function PointsWidget:oncurve(lx, ly)
+function PointsWidget:oncurve(lx, ly, gs)
 	local graphics = self.object.graphics
 	for i = 1, graphics.npaths do
 		local path = graphics.paths[i]
 		for j = 1, path.ntrajs do
 			local traj = path.trajs[i]
-			local t = traj:closest(lx, ly, 2 + path:getLineWidth())
+			local t = traj:closest(lx, ly, gs * (2 + path:getLineWidth()))
 			if t >= 0 then
 				return i, j, t
 			end
@@ -228,35 +226,37 @@ function PointsWidget:createMouldCurveFunc(i, j, t)
 	end
 end
 
-function PointsWidget:mousedown(gx, gy)
+function PointsWidget:mousedown(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
 
-	local clickRadiusSqr = self.handles.clickRadiusSqr
+	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 
-	local dragfunc = self:allpoints(function(pts, i, j, k, px, py)
+	self.dragging = nil
+
+ 	if self:allpoints(function(pts, i, j, k, px, py)
 		if lengthSqr(lx - px, ly - py) < clickRadiusSqr then
 			self.selected = {path = i, traj = j, pt = k}
 			self.dragging = self.selected
-			return self:createDragPointFunc()
+			return true
 		end
-	end)
-	if dragfunc ~= nil then
-		return dragfunc
+	end) then
+		return self:createDragPointFunc()
 	end
 
-	dragfunc = self:allcontrolpoints(function(traj, pts, i, j, k0, k, px, py)
+	if self:allcontrolpoints(function(traj, pts, i, j, k0, k, px, py)
 		if lengthSqr(lx - px, ly - py) < clickRadiusSqr then
 			self.dragging = {path = i, traj = j, pt = k, pt0 = k0}
-			return self:createDragPointFunc()
+			return true
 		end
-	end)
-	if dragfunc ~= nil then
-		return dragfunc
+	end) then
+		return self:createDragPointFunc()
 	end
 
+	self.selected = nil
+
 	-- click on curve?
-	local i, j, t = self:oncurve(lx, ly)
+	local i, j, t = self:oncurve(lx, ly, gs)
 	if t >= 0 then
 		return self:createMouldCurveFunc(i, j, t)
 	end
@@ -264,11 +264,11 @@ function PointsWidget:mousedown(gx, gy)
 	return nil
 end
 
-function PointsWidget:click(gx, gy)
+function PointsWidget:click(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
 
-	local clickRadiusSqr = self.handles.clickRadiusSqr
+	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 	if self:allpoints(function(pts, i, j, k, px, py)
 		if lengthSqr(lx - px, ly - py) < clickRadiusSqr then
 			return true
@@ -277,7 +277,7 @@ function PointsWidget:click(gx, gy)
 		return
 	end
 
-	local i, j, t = self:oncurve(lx, ly)
+	local i, j, t = self:oncurve(lx, ly, gs)
 	if t >= 0 then
 		local traj = self.object.graphics.paths[i].trajs[j]
 		local k = traj:insertCurveAt(t)

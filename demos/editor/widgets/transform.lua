@@ -172,8 +172,8 @@ local function moduloarray(a)
 	})
 end
 
-function TransformWidget:rotwidget(lcorners, gcorners, gx, gy)
-	local clickRadiusSqr = self.handles.clickRadiusSqr
+function TransformWidget:rotwidget(lcorners, gcorners, gx, gy, gs)
+	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 	local transform = self.object.transform
 
 	local x00, y00 = unpack(gcorners[1])
@@ -197,8 +197,8 @@ function TransformWidget:rotwidget(lcorners, gcorners, gx, gy)
 	return nil
 end
 
-function TransformWidget:midwidgets(lcorners, gcorners, gx, gy)
-	local clickRadiusSqr = self.handles.clickRadiusSqr
+function TransformWidget:midwidgets(lcorners, gcorners, gx, gy, gs)
+	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 
 	for i = 1, 4 do
 		local x0, y0 = unpack(gcorners[i])
@@ -240,8 +240,8 @@ function TransformWidget:midwidgets(lcorners, gcorners, gx, gy)
 	return nil
 end
 
-function TransformWidget:cornerwidgets(lcorners, gcorners, gx, gy)
-	local clickRadiusSqr = self.handles.clickRadiusSqr
+function TransformWidget:cornerwidgets(lcorners, gcorners, gx, gy, gs)
+	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 
 	for i = 1, 4 do
 		local x0, y0 = unpack(gcorners[i])
@@ -280,7 +280,7 @@ function TransformWidget:cornerwidgets(lcorners, gcorners, gx, gy)
 	return nil
 end
 
-function TransformWidget:mousedown(gx, gy, button)
+function TransformWidget:mousedown(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
 
@@ -308,7 +308,7 @@ function TransformWidget:mousedown(gx, gy, button)
 
 	local dragfunc = nil
 	for _, w in ipairs {self.rotwidget, self.midwidgets, self.cornerwidgets} do
-		dragfunc = w(self, lcorners, gcorners, gx, gy)
+		dragfunc = w(self, lcorners, gcorners, gx, gy, gs)
 		if dragfunc ~= nil then
 			break
 		end

@@ -27,10 +27,18 @@ local function makeDragObjectFunc(object, x0, y0)
 	end
 end
 
+function Editor:transformChanged()
+	local x, y = self.transform:inverseTransformPoint(0, 1)
+	local nx, ny = self.transform:inverseTransformPoint(1, 1)
+	self.scale = math.sqrt((x - nx) * (x - nx) + (y - ny) * (y - ny))
+end
+
 function Editor:load()
 	local editor = self
 
 	self.transform = love.math.newTransform()
+	self.scale = 1
+
 	self.font = love.graphics.newFont(11)
 
 	local updateColor = function(what, ...)
@@ -101,7 +109,7 @@ function Editor:draw()
 	end
 end
 
-function Editor:startdrag(transform, x, y, func)
+function Editor:startdrag(transform, x, y, button, func)
     if func == nil then
         return false
     else
@@ -109,6 +117,7 @@ function Editor:startdrag(transform, x, y, func)
 			transform = transform,
             startx = x,
             starty = y,
+			button = button,
             active = false,
             func = func
         }
@@ -121,16 +130,21 @@ function Editor:mousedown(gx, gy, button, clickCount)
 
 	if button == 1 then
 		if self.widget ~= nil then
-			if self:startdrag(nil, gx, gy, self.rpanel:click(gx, gy)) then
+			if self:startdrag(nil, gx, gy, button,
+				self.rpanel:click(gx, gy)) then
 				return
 			end
 
-			if not self:startdrag(self.transform, x, y, self.widget:mousedown(x, y, button)) then
+			if not self:startdrag(self.transform, x, y, button,
+				self.widget:mousedown(x, y, self.scale, button)) then
 				self.widget = nil
 			end
 		end
 		if self.widget == nil then
-			for _, object in ipairs(self.objects) do
+			local objects = self.objects
+			local nobjects = #objects
+			for o = nobjects, 1, -1 do
+				local object = objects[o]
 				local graphics = object.graphics
 				local lx, ly = object.transform:inverseTransformPoint(x, y)
 
@@ -148,7 +162,8 @@ function Editor:mousedown(gx, gy, button, clickCount)
 						self.lineWidthSlider:setValue(path:getLineWidth())
 						self.radios:select(object:getDisplay())
 
-						self:startdrag(self.transform, x, y, makeDragObjectFunc(object, x, y))
+						self:startdrag(self.transform, x, y, button,
+							makeDragObjectFunc(object, x, y))
 						return
 					end
 				end
@@ -161,10 +176,12 @@ function Editor:mousereleased(x, y, button)
 	if button == 1 then
 		if self.widget ~= nil then
             local drag = self.drag
-            if drag ~= nil and not drag.active then
-                self.widget:click(x, y, button)
+			local lx, ly = self.transform:inverseTransformPoint(x, y)
+
+            if drag ~= nil and drag.button == button and not drag.active then
+                self.widget:click(lx, ly, self.scale, button)
             end
-			self.widget:mousereleased(x, y, button)
+			self.widget:mousereleased(lx, ly, button)
 		end
 		self.drag = nil
 	end
@@ -188,7 +205,7 @@ function Editor:update()
         if not drag.active then
             local dx = x - drag.startx
             local dy = y - drag.starty
-            if math.sqrt(dx * dx + dy * dy) < 2 then
+            if math.sqrt(dx * dx + dy * dy) < 2 * self.scale then
                 return
             end
             drag.active = true
@@ -215,6 +232,7 @@ function Editor:wheelmoved(wx, wy)
 	self.transform:translate(lx, ly)
 	self.transform:scale(1 + wy / 10)
 	self.transform:translate(-lx, -ly)
+	self:transformChanged()
 end
 
 function Editor:loadfile(file)
@@ -225,7 +243,9 @@ function Editor:loadfile(file)
 	local graphics = tove.newGraphics(svg, 512)
 
 	self.transform = love.math.newTransform()
+	self:transformChanged()
 	self.objects = {}
+	self.widget = nil
 
 	local screenwidth = love.graphics.getWidth()
 	local screenheight = love.graphics.getHeight()

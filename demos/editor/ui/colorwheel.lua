@@ -198,7 +198,7 @@ function ColorWheel:click(mx, my)
 		return function(mx, my)
 			return self:updateHue(mx, my)
 		end
-	elseif self:updateSL(mx, my, "check") then
+	elseif d < r and self:updateSL(mx, my, "check") then
 		return function(mx, my)
 			return self:updateSL(mx, my)
 		end
