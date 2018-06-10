@@ -108,7 +108,7 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 			vec4(state.xyw, s1 * 0.5);
 	}
 
-	vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET;
+	vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET * 0.5;
 	return segmentPointDistanceSquared(curvePoint - w, curvePoint + w, pos);
 }
 
@@ -350,7 +350,7 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 	int z = 0;
 
 	vec2 blockpos = rayOnX ?
-		vec2(0, (at.y - 1 + LISTS_H / 2) / float(LISTS_H)) :
+		vec2(0, (at.y - 1) / float(LISTS_H) + 0.5f) :
 		vec2(0, (at.x - 1) / float(LISTS_H));
 	vec2 blockadv = vec2(1.0 / LISTS_W, 0);
 

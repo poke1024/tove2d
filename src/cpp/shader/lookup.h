@@ -79,7 +79,13 @@ public:
 		int numEvents, const std::vector<ExCurveData> &extended,
 		float padding, const F &finish) {
 
-		ToveShaderGeometryData &data = _data;
+        ToveShaderGeometryData &data = _data;
+
+        if (numEvents < 1) {
+            data.lookupTableMeta->n[dim] = 0;
+            return;
+        }
+
 		const int ignore = _ignore;
 
         active.clear();
@@ -87,6 +93,7 @@ public:
 
         auto i = events.cbegin();
         const auto end = events.cbegin() + numEvents;
+
         float *ylookup = lookupTable;
 
 		uint8_t *yptr = data.listsTexture;
@@ -94,25 +101,19 @@ public:
 
 		yptr += dim * rowBytes * (data.listsTextureSize[1] / 2);
 
-        float y0;
+        float y0 = i->y;
+        int z = 0;
+
+        if (data.fragmentShaderStrokes && padding > 0.0) {
+            *ylookup = y0 - padding;
+            ylookup += 2;
+            finish(y0 - padding, y0, active, yptr, z++);
+            yptr += rowBytes;
+        }
 
         while (i != end) {
-            const float y = i->y;
-
-            if (ylookup == lookupTable) {
-                if (data.fragmentShaderStrokes && padding > 0.0) {
-                    y0 = y - padding;
-                    *ylookup = y0;
-					ylookup += 2;
-                    finish(y0, y, active, yptr);
-					yptr += rowBytes;
-                } else {
-                    y0 = y;
-                }
-            }
-
             auto j = i;
-            while (j != end && j->y == y) {
+            while (j != end && j->y == y0) {
                 switch (j->t) {
 					case EVENT_ENTER:
                     	active.insert(j->curve);
@@ -126,7 +127,16 @@ public:
                 j++;
             }
 
-            *ylookup = y;
+            float y;
+            if (j != end) {
+                y = j->y;
+            } else if (data.fragmentShaderStrokes && padding > 0.0) {
+                y = y0 + padding;
+            } else {
+                y = y0;
+            }
+
+            *ylookup = y0;
 			ylookup += 2;
 
             int k = 0;
@@ -138,21 +148,16 @@ public:
 				}
             }
 
-            finish(y0, y, active, &yptr[k]);
+            finish(y0, y, active, &yptr[k], z++);
 
             i = j;
             y0 = y;
 			yptr += rowBytes;
         }
 
-        if (data.fragmentShaderStrokes && ylookup > lookupTable && padding > 0.0) {
-            float y0 = ylookup[-2];
-            float y1 = y0 + padding;
-            *ylookup = y1;
-			ylookup += 2;
-            finish(y0, y1, active, yptr);
-			yptr += rowBytes;
-        }
+        *ylookup = y0;
+        ylookup += 2;
+        *yptr = SENTINEL_END;
 
         data.lookupTableMeta->n[dim] = (ylookup - lookupTable) / 2;
 		assert(data.lookupTableMeta->n[dim] <= data.lookupTableSize);
@@ -161,7 +166,7 @@ public:
     inline void build(int dim, const std::vector<Event> &events,
 		int numEvents, const std::vector<ExCurveData> &extended) {
         build(dim, events, numEvents, extended, 0.0,
-			[] (float y0, float y1, const CurveSet &active, uint8_t *list) {
+			[] (float y0, float y1, const CurveSet &active, uint8_t *list, int z) {
             	*list = SENTINEL_END;
         	});
     }

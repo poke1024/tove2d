@@ -34,26 +34,31 @@ static void queryLUT(
 	const float *lut = data->lookupTable + dim;
 	const int n = data->lookupTableMeta->n[dim];
 
-	if (n < 1 || y0 >= lut[2 * (n - 1)]) {
+	if (n < 1) {
 		return;
 	}
 
-	int lo = 1;
+	int lo = 0;
 	int hi = n;
 
 	do {
-		int mid = (lo + hi) / 2;
-		if (lut[2 * (mid - 1)] < y0) {
+		const int mid = (lo + hi) / 2;
+		if (lut[2 * mid] < y0) {
 			lo = mid + 1;
 		} else {
 			hi = mid;
 		}
 	} while (lo < hi);
 
+	while (lo > 0 && lut[2 * lo] > y0) {
+		lo -= 1;
+	}
+
 	const uint8_t *base = data->listsTexture;
 	const int rowBytes = data->listsTextureRowBytes;
+	base += dim * rowBytes * (data->listsTextureSize[1] / 2);
 
-	for (int i = lo - 1; i < n; i++) {
+	for (int i = lo; i < n; i++) {
 		if (lut[2 * i] > y1) {
 			break;
 		}
@@ -145,6 +150,11 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 	const int numFillEvents = e - fillEvents.begin();
 	const int numLineEvents = se - strokeEvents.begin();
 
+	std::sort(fillEvents.begin(), fillEvents.begin() + numFillEvents,
+		[] (const Event &a, const Event &b) {
+			return a.y < b.y;
+		});
+
 	if (hasFragLine) {
 		std::sort(strokeEvents.begin(), strokeEvents.begin() + numLineEvents,
 			[] (const Event &a, const Event &b) {
@@ -152,16 +162,9 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 			});
 
 		strokeEventsLUT.build(dim, strokeEvents, numLineEvents, extended);
-	}
 
-	std::sort(fillEvents.begin(), fillEvents.begin() + numFillEvents,
-		[] (const Event &a, const Event &b) {
-			return a.y < b.y;
-		});
-
-	if (hasFragLine) {
 		fillEventsLUT.build(dim, fillEvents, numFillEvents, extended, lineWidth,
-			[this, dim] (float y0, float y1, const CurveSet &active, uint8_t *list) {
+			[this, dim] (float y0, float y1, const CurveSet &active, uint8_t *list, int z) {
 				strokeCurves.clear();
 				queryLUT(&strokeShaderData, dim, y0, y1, strokeCurves);
 
@@ -176,6 +179,37 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 						*list++ = curveIndex;
 					}
 				}
+
+#if 0
+				for (int i = 0; i < geometryData.numCurves; i++) {
+					const int curveIndex = i;
+					const ExCurveData &ext = extended[curveIndex];
+					if (ext.ignore & IGNORE_FILL) {
+						continue;
+					}
+					const CurveBounds *bounds = ext.bounds;
+					const float cy0 = bounds->bounds[dim + 0];
+					const float cy1 = bounds->bounds[dim + 2];
+					const float lineWidth = geometryData.strokeWidth;
+					if (cy1 + lineWidth <= y0 || cy0 - lineWidth >= y1) {
+						if (i == 3 && dim == 0) {
+							printf("skip %d %f %f %f %f\n", z, cy0 - lineWidth, cy1 + lineWidth, y0, y1);
+							continue;
+						}
+					}
+					/*if (i == 3) {
+						continue;
+					}*/
+					if (active.find(curveIndex) == active.end() &&
+						strokeCurves.find(curveIndex) == strokeCurves.end()) {
+						if (!hasStrokeSentinel) {
+							*list++ = SENTINEL_STROKES;
+							hasStrokeSentinel = true;
+						}
+						*list++ = curveIndex;
+					}
+				}
+#endif
 
 				*list = SENTINEL_END;
 			});
@@ -287,10 +321,10 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 					&geometryData, j, curveIndex, extended[curveIndex])) {
 
 					extended[curveIndex].ignore = 0;
-					curveIndex++;
 				} else {
 					extended[curveIndex].ignore = IGNORE_FILL | IGNORE_LINE;
 				}
+				curveIndex++;
 			}
 			/*if (n > 0) {
 				assert(curveIndex < maxCurves);

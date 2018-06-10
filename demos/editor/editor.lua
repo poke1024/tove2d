@@ -241,6 +241,7 @@ function Editor:loadfile(file)
 	file:close()
 
 	local graphics = tove.newGraphics(svg, 512)
+	graphics:clean()
 
 	self.transform = love.math.newTransform()
 	self:transformChanged()
