@@ -147,7 +147,11 @@ int PathGetNumTrajectories(TovePathRef path) {
 }
 
 ToveTrajectoryRef PathGetTrajectory(TovePathRef path, int i) {
-	return trajectories.publish(deref(path)->getTrajectory(i - 1));
+	if (i >= 1 && i <= deref(path)->getNumTrajectories()) {
+		return trajectories.publish(deref(path)->getTrajectory(i - 1));
+	} else {
+		return trajectories.publishEmpty();
+	}
 }
 
 void PathAnimate(TovePathRef path, TovePathRef a, TovePathRef b, float t) {
@@ -394,7 +398,11 @@ int GraphicsGetNumPaths(ToveGraphicsRef shape) {
 }
 
 TovePathRef GraphicsGetPath(ToveGraphicsRef shape, int i) {
-	return paths.publish(deref(shape)->getPath(i - 1));
+	if (i >= 1 && i <= deref(shape)->getNumPaths()) {
+		return paths.publish(deref(shape)->getPath(i - 1));
+	} else {
+		return paths.publishEmpty();
+	}
 }
 
 ToveChangeFlags GraphicsFetchChanges(ToveGraphicsRef shape, ToveChangeFlags flags) {

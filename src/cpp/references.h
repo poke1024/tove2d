@@ -44,29 +44,35 @@ public:
 	}
 };
 
+#define DEREF(RefType)													\
+	{ const RefType &r = *static_cast<const RefType*>(ref.ptr); 		\
+	if (!r.get()) { TOVE_WARN(#RefType " is nil"); } return r; }
+
 inline const GraphicsRef &deref(const ToveGraphicsRef &ref) {
-	return *static_cast<const GraphicsRef*>(ref.ptr);
+	DEREF(GraphicsRef)
 }
 
 inline const PathRef &deref(const TovePathRef &ref) {
-	return *static_cast<const PathRef*>(ref.ptr);
+	DEREF(PathRef)
 }
 
 inline const TrajectoryRef &deref(const ToveTrajectoryRef &ref) {
-	return *static_cast<const TrajectoryRef*>(ref.ptr);
+	DEREF(TrajectoryRef)
 }
 
 inline const PaintRef &deref(const TovePaintRef &ref) {
-	return *static_cast<const PaintRef*>(ref.ptr);
+	DEREF(PaintRef)
 }
 
 inline const ShaderLinkRef &deref(const ToveShaderLinkRef &ref) {
-	return *static_cast<const ShaderLinkRef*>(ref.ptr);
+	DEREF(ShaderLinkRef)
 }
 
 inline const MeshRef &deref(const ToveMeshRef &ref) {
-	return *static_cast<const MeshRef*>(ref.ptr);
+	DEREF(MeshRef)
 }
+
+#undef DEREF
 
 References<Graphics, ToveGraphicsRef> shapes;
 References<Path, TovePathRef> paths;
