@@ -61,7 +61,7 @@ inline const TrajectoryRef &deref(const ToveTrajectoryRef &ref) {
 }
 
 inline const PaintRef &deref(const TovePaintRef &ref) {
-	DEREF(PaintRef)
+	return *static_cast<const PaintRef*>(ref.ptr);
 }
 
 inline const ShaderLinkRef &deref(const ToveShaderLinkRef &ref) {
