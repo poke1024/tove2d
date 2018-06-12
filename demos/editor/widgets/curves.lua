@@ -29,7 +29,7 @@ function PointsWidget:allpoints(f)
 			for k = 1, traj.npts, 3 do
 				local pts = traj.pts
 				local pt = pts[k]
-				if  f(pts, i, j, k, pt.x, pt.y) then
+				if  f(traj, pts, i, j, k, pt.x, pt.y) then
 					return true
 				end
 			end
@@ -49,26 +49,29 @@ function PointsWidget:allcontrolpoints(f)
 		for j = 1, path.ntrajs do
 			local traj = path.trajs[j]
 
+			local pts = traj.pts
 			for k = 1, traj.npts, 3 do
-				local pts = traj.pts
-
-				local isActive = false
-				if dragging ~= nil and dragging.path == i and
-					dragging.traj == j and dragging.pt0 == k then
-					isActive = true
-				end
-
-				if isActive or isControlPointVisible(selected, traj, i, j, k - 1) then
-					local pt1 = pts[k - 1]
-					if f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y) then
-						return true
+				if not traj:isEdgeAt(k) then
+					local isActive = false
+					if dragging ~= nil and dragging.path == i and
+						dragging.traj == j and dragging.pt0 == k then
+						isActive = true
 					end
-				end
 
-				if isActive or isControlPointVisible(selected, traj, i, j, k + 1) then
-					local pt2 = pts[k + 1]
-					if f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y) then
-						return true
+					if isActive or isControlPointVisible(
+						selected, traj, i, j, k - 1) then
+						local pt1 = pts[k - 1]
+						if f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y) then
+							return true
+						end
+					end
+
+					if isActive or isControlPointVisible(
+						selected, traj, i, j, k + 1) then
+						local pt2 = pts[k + 1]
+						if f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y) then
+							return true
+						end
 					end
 				end
 			end
@@ -145,13 +148,16 @@ function PointsWidget:draw(gtransform)
 
 	local selected = self.selected
 
-	self:allpoints(function(pts, i, j, k, lx, ly)
-		local handle = handles.normal
+	self:allpoints(function(traj, pts, i, j, k, lx, ly)
+		local type = traj:isEdgeAt(k) and "edge" or "smooth"
+		local h
 		if selected ~= nil and selected.path == i and selected.traj == j and selected.pt == k then
-			handle = handles.selected
+			h = handles.knots.selected
+		else
+			h = handles.knots.normal
 		end
 		local x, y = tfm:transformPoint(lx, ly)
-		handle:draw(x, y)
+		h[type]:draw(x, y)
 	end)
 end
 
@@ -165,27 +171,29 @@ function PointsWidget:createDragPointFunc()
 			local mx, my = transform:inverseTransformPoint(gx, gy)
 
 			local traj = graphics.paths[dragging.path].trajs[dragging.traj]
-			local p = traj.pts[dragging.pt]
+			traj:move(dragging.pt, mx, my)
 
-			local qx, qy = p.x, p.y
-
-			p.x = mx
-			p.y = my
-
-			if (dragging.pt - 1) % 3 == 0 then
+			if true then -- (dragging.pt - 1) % 3 == 0 then
 				-- if this is not a control point, also drag adjacent control points.
-				local dx = mx - qx
-				local dy = my - qy
+				--local dx = mx - qx
+				--local dy = my - qy
 
-				local cp0 = traj.pts[dragging.pt - 1]
-				cp0.x = cp0.x + dx
-				cp0.y = cp0.y + dy
+				--local cp0 = traj.pts[dragging.pt - 1]
+				--cp0.x = cp0.x + dx
+				--cp0.y = cp0.y + dy
 
-				local cp1 = traj.pts[dragging.pt + 1]
-				cp1.x = cp1.x + dx
-				cp1.y = cp1.y + dy
+				--local cp1 = traj.pts[dragging.pt + 1]
+				--cp1.x = cp1.x + dx
+				--cp1.y = cp1.y + dy
 			else
 				-- if control point, mirror movement on other control point
+				local p = traj.pts[dragging.pt]
+
+				local qx, qy = p.x, p.y
+
+				p.x = mx
+				p.y = my
+
 				local p0 = traj.pts[dragging.pt0]
 				local p = traj.pts[dragging.pt]
 				local cp1 = traj.pts[dragging.pt0 - (dragging.pt - dragging.pt0)]
@@ -234,7 +242,7 @@ function PointsWidget:mousedown(gx, gy, gs, button)
 
 	self.dragging = nil
 
- 	if self:allpoints(function(pts, i, j, k, px, py)
+ 	if self:allpoints(function(traj, pts, i, j, k, px, py)
 		if lengthSqr(lx - px, ly - py) < clickRadiusSqr then
 			self.selected = {path = i, traj = j, pt = k}
 			self.dragging = self.selected
@@ -269,7 +277,7 @@ function PointsWidget:click(gx, gy, gs, button)
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
 
 	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
-	if self:allpoints(function(pts, i, j, k, px, py)
+	if self:allpoints(function(traj, pts, i, j, k, px, py)
 		if lengthSqr(lx - px, ly - py) < clickRadiusSqr then
 			return true
 		end

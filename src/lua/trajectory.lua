@@ -75,10 +75,12 @@ end
 Trajectory.insertCurveAt = lib.TrajectoryInsertCurveAt
 Trajectory.removeCurve = lib.TrajectoryRemoveCurve
 Trajectory.mould = lib.TrajectoryMould
+Trajectory.move = lib.TrajectoryMove
 Trajectory.setPoints = lib.TrajectorySetPoints
 Trajectory.moveTo = lib.TrajectoryMoveTo
 Trajectory.lineTo = lib.TrajectoryLineTo
 Trajectory.curveTo = lib.TrajectoryCurveTo
+Trajectory.isEdgeAt = lib.TrajectoryIsEdgeAt
 
 ffi.metatype("ToveTrajectoryRef", Trajectory)
 

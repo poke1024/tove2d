@@ -104,6 +104,7 @@ public:
     void removeCurve(int curve);
     void remove(int from, int n);
     int mould(float t, float x, float y);
+    void move(int k, float x, float y);
 
 	inline float getCurveValue(int curve, int index) const {
         commit();
@@ -156,6 +157,9 @@ public:
     void setLovePointValue(int index, int dim, float value);
 
 	void setLovePoints(const float *pts, int npts);
+
+    bool isCollinear(int u, int v, int w) const;
+    bool isEdgeAt(int k) const;
 
 	inline float getCommandPoint(const Command &command, int what) {
 		const float *p = nsvg.pts + 2 * command.index;

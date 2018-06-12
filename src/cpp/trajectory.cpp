@@ -289,9 +289,23 @@ void Trajectory::removeCurve(int curve) {
 	curve = (curve % nc + nc) % nc;
 
 	const int i = std::max(curve * 3, 0);
+	float *pts = nsvg.pts;
+
+	if (isEdgeAt(i + 3)) {
+		const int k = i + 3;
+		if (k > 0 && k + 3 < npts) {
+			float *p0 = &pts[2 * (k - 3)];
+			float *p1 = &pts[2 * (k + 3)];
+			for (int j = 0; j < 2; j++) {
+				pts[2 * (k - 2) + j] = (p0[j] * 2 + p1[j]) / 3.0;
+				pts[2 * (k + 2) + j] = (p0[j] + p1[j] * 2) / 3.0;
+			}
+			remove(k - 1, 3);
+		}
+		return;
+	}
 
 	float t = 0.0f;
-	float *pts = nsvg.pts;
 
 	for (int j = 0; j < 2; j++) {
 		const float p01_12 = pts[2 * ((i + 2) % npts) + j];
@@ -431,6 +445,129 @@ int Trajectory::mould(float globalt, float x, float y) {
 	return curve;
 }
 
+inline void polar(float x, float y, float ox, float oy,
+	float &phi, float &mag) {
+	const float dx = x - ox;
+	const float dy = y - oy;
+	phi = std::atan2(dy, dx);
+	mag = std::sqrt(dx * dx + dy * dy);
+}
+
+static void mirrorControlPoint(float qx, float qy,
+	float px, float py, float p0x, float p0y, float *cp1) {
+	float oldphi, oldmag;
+	polar(qx, qy, p0x, p0y, oldphi, oldmag);
+	float newphi, newmag;
+	polar(px, py, p0x, p0y, newphi, newmag);
+
+	float cp1phi, cp1mag;
+	polar(cp1[0], cp1[1], p0x, p0y, cp1phi, cp1mag);
+
+	cp1phi = cp1phi + (newphi - oldphi);
+
+	cp1[0] = p0x + std::cos(cp1phi) * cp1mag;
+	cp1[1] = p0y + std::sin(cp1phi) * cp1mag;
+}
+
+void Trajectory::move(int k, float x, float y) {
+	const bool closed = isClosed();
+	const int n = nsvg.npts - (closed ? 1 : 0);
+
+	if (closed) {
+		k = (k % n + n) % n;
+	}
+
+	if (n < 3 || k < 0 || k >= n) {
+		return;
+	}
+
+	commit();
+
+	float *pts = nsvg.pts;
+
+	const int t = k % 3;
+	if (t == 0) {
+		// not a control point.
+		if (isEdgeAt(k)) {
+			// fix edge lines.
+			if (k - 3 >= 0 || closed) {
+				const bool neighbor = isEdgeAt((k + n - 3) % n);
+				const int u = (k + n - 3) % n;
+				const int v = (k + n - 2) % n;
+				const int w = (k + n - 1) % n;
+
+				const float dx = pts[2 * u + 0] - x;
+				const float dy = pts[2 * u + 1] - y;
+				pts[2 * w + 0] = x + dx / 3.0;
+				pts[2 * w + 1] = y + dy / 3.0;
+				if (neighbor) {
+					pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
+					pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
+				}
+			}
+			if (k + 3 < n || closed) {
+				const bool neighbor = isEdgeAt((k + 3) % n);
+				const int u = (k + 3) % n;
+				const int v = (k + 2) % n;
+				const int w = (k + 1) % n;
+
+				const float dx = pts[2 * u + 0] - x;
+				const float dy = pts[2 * u + 1] - y;
+				pts[2 * w + 0] = x + dx / 3.0;
+				pts[2 * w + 1] = y + dy / 3.0;
+				if (neighbor) {
+					pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
+					pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
+				}
+			}
+
+			pts[2 * k + 0] = x;
+			pts[2 * k + 1] = y;
+		} else {
+			// move adjacent control points.
+			const float qx = pts[2 * k + 0];
+			const float qy = pts[2 * k + 1];
+
+			pts[2 * k + 0] = x;
+			pts[2 * k + 1] = y;
+
+			const float dx = x - qx;
+			const float dy = y - qy;
+
+			if (k - 1 >= 0 || closed) {
+				const int u = (k + n - 1) % n;
+				pts[2 * u + 0] += dx;
+				pts[2 * u + 1] += dy;
+			}
+			if (k + 1 < n || closed) {
+				const int u = (k + 1) % n;
+				pts[2 * u + 0] += dx;
+				pts[2 * u + 1] += dy;
+			}
+		}
+	} else {
+		// moving a control point.
+		const float qx = pts[2 * k + 0];
+		const float qy = pts[2 * k + 1];
+
+		pts[2 * k + 0] = x;
+		pts[2 * k + 1] = y;
+
+		const int knot = (t == 1) ? k - 1 : k + 1;
+		const int opposite = (t == 1) ? k - 2 : k + 2;
+
+		if (closed || (opposite >= 0 && opposite < n)) {
+			float *p0 = &pts[2 * ((knot + n) % n)];
+			float *cp1 = &pts[2 * ((opposite + n) % n)];
+			mirrorControlPoint(qx, qy, x, y, p0[0], p0[1], cp1);
+		}
+	}
+
+	fixLoop();
+
+	changed(CHANGED_POINTS);
+}
+
 void Trajectory::setLovePoints(const float *pts, int npts) {
 	bool loop = isClosed() && npts > 0;
 	const int n1 = npts + (loop ? 1 : 0);
@@ -441,6 +578,37 @@ void Trajectory::setLovePoints(const float *pts, int npts) {
 		nsvg.pts[n1 * 2 - 1] = nsvg.pts[1];
 	}
 	commands.clear();
+}
+
+bool Trajectory::isCollinear(int u, int v, int w) const {
+	const int n = nsvg.npts - (isClosed() ? 1 : 0);
+	if (n < 1) {
+		return false;
+	}
+	const float *pts = nsvg.pts;
+
+	u = (u % n + n) % n;
+	v = (v % n + n) % n;
+	w = (w % n + n) % n;
+
+	const float Ax = pts[2 * u + 0];
+	const float Ay = pts[2 * u + 1];
+	const float Bx = pts[2 * v + 0];
+	const float By = pts[2 * v + 1];
+	const float Cx = pts[2 * w + 0];
+	const float Cy = pts[2 * w + 1];
+
+	return std::abs(Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By)) < 0.1;
+}
+
+bool Trajectory::isEdgeAt(int k) const {
+	if (!isClosed()) {
+		if (k < 3 || k + 3 >= nsvg.npts) {
+			return true;
+		}
+	}
+	return isCollinear(k - 3, k - 1, k) &&
+		isCollinear(k, k + 1, k + 3);
 }
 
 float Trajectory::getCommandValue(int commandIndex, int what) {

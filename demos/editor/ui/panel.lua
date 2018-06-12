@@ -15,6 +15,18 @@ function Panel:draw()
     VBox.draw(self)
 end
 
+function Panel:click(x, y)
+    local dragfunc = VBox.click(self, x, y)
+    if dragfunc ~= nil then
+        return dragfunc
+    end
+    if x >= self.x and y >= self.y and
+        x < self.x + self.w and y < self.y + self.h then
+        return function() end
+    end
+    return nil
+end
+
 function Panel.new()
     local self = VBox.init(setmetatable({}, Panel))
     self.padding = 0

@@ -248,6 +248,8 @@ EXPORT float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, f
 EXPORT int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t);
 EXPORT void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve);
 EXPORT int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y);
+EXPORT bool TrajectoryIsEdgeAt(ToveTrajectoryRef trajectory, int k);
+EXPORT void TrajectoryMove(ToveTrajectoryRef trajectory, int k, float x, float y);
 EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);

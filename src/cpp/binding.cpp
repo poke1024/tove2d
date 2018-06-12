@@ -351,6 +351,14 @@ int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y) {
 	return deref(trajectory)->mould(t, x, y);
 }
 
+bool TrajectoryIsEdgeAt(ToveTrajectoryRef trajectory, int k) {
+	return deref(trajectory)->isEdgeAt(k - 1);
+}
+
+void TrajectoryMove(ToveTrajectoryRef trajectory, int k, float x, float y) {
+	return deref(trajectory)->move(k - 1, x, y);
+}
+
 
 ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
 	GraphicsRef shape;

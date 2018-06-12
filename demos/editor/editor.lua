@@ -5,6 +5,7 @@ local Object = require "object"
 
 local newTransformWidget = require "widgets/transform"
 local newCurvesWidget = require "widgets/curves"
+local newPenWidget = require "widgets/pen"
 
 local Panel = require "ui/panel"
 local Label = require "ui/label"
@@ -162,8 +163,13 @@ function Editor:mousedown(gx, gy, button, clickCount)
 						self.lineWidthSlider:setValue(path:getLineWidth())
 						self.radios:select(object:getDisplay())
 
-						self:startdrag(self.transform, x, y, button,
-							makeDragObjectFunc(object, x, y))
+						if clickCount == 1 then
+							self:startdrag(self.transform, x, y, button,
+								makeDragObjectFunc(object, x, y))
+						else
+							self.drag = nil
+						end
+
 						return
 					end
 				end
@@ -172,7 +178,7 @@ function Editor:mousedown(gx, gy, button, clickCount)
 	end
 end
 
-function Editor:mousereleased(x, y, button)
+function Editor:mousereleased(x, y, button, clickCount)
 	if button == 1 then
 		if self.widget ~= nil then
             local drag = self.drag
@@ -188,7 +194,11 @@ function Editor:mousereleased(x, y, button)
 end
 
 function Editor:keypressed(key, scancode, isrepeat)
-    if self.widget ~= nil then
+	if key == "escape" then
+		self.widget = nil
+	elseif key == "p" then
+		self.widget = newPenWidget(self)
+    elseif self.widget ~= nil then
         self.widget:keypressed(key, scancode, isrepeat)
     end
 end
