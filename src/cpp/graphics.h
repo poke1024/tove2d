@@ -20,6 +20,7 @@ private:
 	bool newPath;
 
 	float bounds[4];
+	float exactBounds[4];
 
 	PaintRef fillColor;
 	PaintRef strokeColor;
@@ -45,6 +46,23 @@ private:
 	void closePath(bool closeCurves = false);
 
 	void initialize(float width, float height);
+
+	template<typename Get>
+	void computeBounds(float *bounds, const Get &get) {
+	    for (int i = 0; i < paths.size(); i++) {
+	        const float *pathBounds = get(paths[i]);
+	        if (i == 0) {
+	            for (int j = 0; j < 4; j++) {
+	                bounds[j] = pathBounds[j];
+	            }
+	        } else {
+	            bounds[0] = std::min(bounds[0], pathBounds[0]);
+	            bounds[1] = std::min(bounds[1], pathBounds[1]);
+	            bounds[2] = std::max(bounds[2], pathBounds[2]);
+	            bounds[3] = std::max(bounds[3], pathBounds[3]);
+	        }
+	    }
+	}
 
 public:
 	NSVGimage nsvg;
@@ -108,6 +126,7 @@ public:
 	NSVGimage *getImage();
 
 	const float *getBounds();
+	const float *getExactBounds();
 
 	void clean(float eps = 0.0);
 	PathRef hit(float x, float y) const;
@@ -118,7 +137,7 @@ public:
 
 	inline void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
-			flags |= CHANGED_BOUNDS;
+			flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 		}
 		changes |= flags;
 	}

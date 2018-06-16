@@ -196,17 +196,13 @@ public:
 		int n = ncurves(npts);
 
 		if (countClose && n > 0) {
-			// always count an additional "close" curve (might change due to mutable points).
+			// always count an additional "close" curve
+            // (might change due to mutable points).
 			n += 1;
 		}
 
 		return n;
 	}
-
-	/*bool computeShaderCloseCurveData(
-		ToveShaderGeometryData *shaderData,
-		int target,
-		ExtendedCurveData &extended);*/
 
 	bool computeShaderCurveData(
 		ToveShaderGeometryData *shaderData,
@@ -245,7 +241,7 @@ public:
     ToveVec2 getPosition(float globalt) const;
     ToveVec2 getNormal(float globalt) const;
 
-    float closest(float x, float y, float dmin, float dmax) const;
+    ToveNearest nearest(float x, float y, float dmin, float dmax) const;
 };
 
 #endif // __TOVE_TRAJECTORY

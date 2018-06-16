@@ -12,11 +12,14 @@
 uniform sampler2D curves;
 uniform int max_curves;
 uniform int num_curves;
+uniform int curve_index;
 uniform int segments_per_curve;
 
 uniform vec2 lineargs;
 #define LINE_OFFSET lineargs.x
 #define MITER_LIMIT lineargs.y
+
+varying vec2 raw_vertex_pos;
 
 vec2 at(vec4 bx, vec4 by, float t) {
     float t2 = t * t;
@@ -25,13 +28,13 @@ vec2 at(vec4 bx, vec4 by, float t) {
 }
 
 vec2 vertex(float curveTY, float t) {
-    vec4 bx = texture(curves, vec2(0.0f / float(CURVE_DATA_SIZE), curveTY));
-    vec4 by = texture(curves, vec2(1.0f / float(CURVE_DATA_SIZE), curveTY));
+    vec4 bx = Texel(curves, vec2(0.0f / float(CURVE_DATA_SIZE), curveTY));
+    vec4 by = Texel(curves, vec2(1.0f / float(CURVE_DATA_SIZE), curveTY));
     return at(bx, by, t);
 }
 
 vec4 position(mat4 transform_projection, vec4 mesh_position) {
-    int instanceId = love_InstanceID + int(mesh_position.x);
+    int instanceId = curve_index + love_InstanceID + int(mesh_position.x);
 
     int numInstances = num_curves * segments_per_curve;
 
@@ -45,8 +48,8 @@ vec4 position(mat4 transform_projection, vec4 mesh_position) {
     vec2 p0, p1, p2;
 
     if (curveIds == ivec3(curveIds.x)) {
-        vec4 bx = texture(curves, vec2(0.0f / float(CURVE_DATA_SIZE), curveTYs.x));
-        vec4 by = texture(curves, vec2(1.0f / float(CURVE_DATA_SIZE), curveTYs.x));
+        vec4 bx = Texel(curves, vec2(0.0f / float(CURVE_DATA_SIZE), curveTYs.x));
+        vec4 by = Texel(curves, vec2(1.0f / float(CURVE_DATA_SIZE), curveTYs.x));
 
         p0 = at(bx, by, ts.x);
         p1 = at(bx, by, ts.y);
@@ -72,5 +75,6 @@ vec4 position(mat4 transform_projection, vec4 mesh_position) {
 
     vec2 q = vec2(p1 + l * m * mesh_position.y);
 
+    raw_vertex_pos = q;
     return transform_projection * vec4(q, mesh_position.zw);
 }

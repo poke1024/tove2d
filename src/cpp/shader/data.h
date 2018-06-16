@@ -21,6 +21,7 @@ protected:
 public:
 	AllocateGeometryData(
 		int maxCurves,
+		int maxSubPaths,
 		bool fragmentShaderStrokes,
 		ToveShaderGeometryData &data);
 	~AllocateGeometryData();
@@ -29,6 +30,7 @@ public:
 struct AllocateGeometryNoLinkData : public AllocateGeometryData {
 	AllocateGeometryNoLinkData(
 		int maxCurves,
+		int maxSubPaths,
 		bool fragmentShaderStrokes,
 		ToveShaderGeometryData &data);
 	~AllocateGeometryNoLinkData();

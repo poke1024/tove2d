@@ -24,6 +24,36 @@ namespace nsvg {
 thread_local NSVGparser *_parser = nullptr;
 thread_local NSVGrasterizer *rasterizer = nullptr;
 
+NSVGrasterizer *getRasterizer(const ToveTesselationQuality *quality) {
+	static float defaultTessTol;
+	static float defaultDistTol;
+
+	if (!rasterizer) {
+		rasterizer = nsvgCreateRasterizer();
+		if (!rasterizer) {
+			return nullptr;
+		}
+		// skipping nsvgDeleteRasterizer(rasterizer)
+
+		defaultTessTol = rasterizer->tessTol;
+		defaultDistTol = rasterizer->distTol;
+	}
+
+	if (quality && quality->adaptive.valid) {
+		rasterizer->tessTol = quality->adaptive.angleTolerance;
+		rasterizer->distTol = quality->adaptive.distanceTolerance;
+	} else {
+		rasterizer->tessTol = defaultTessTol;
+		rasterizer->distTol = defaultDistTol;
+	}
+
+	rasterizer->nedges = 0;
+	rasterizer->npoints = 0;
+	rasterizer->npoints2 = 0;
+
+	return rasterizer;
+}
+
 static NSVGparser *getNSVGparser() {
 	if (!_parser) {
 		_parser = nsvg__createParser();
@@ -110,34 +140,62 @@ void CachedPaint::init(const NSVGpaint &paint, float opacity) {
 	}
 }
 
+bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
+	float scale, const ToveTesselationQuality *quality) {
+
+	// computing the shape stroke bounds is not trivial as miters
+	// might take varying amounts of space.
+
+	NSVGrasterizer *rasterizer = getRasterizer(quality);
+	nsvg__flattenShapeStroke(
+		rasterizer, const_cast<NSVGshape*>(shape), scale);
+
+	const int n = rasterizer->nedges;
+	if (n < 1) {
+		return false;
+	} else {
+		const NSVGedge *edges = rasterizer->edges;
+
+		float bx0 = edges->x0, by0 = edges->y0;
+		float bx1 = bx0, by1 = by0;
+
+ 		for (int i = 0; i < n; i++) {
+			const float x0 = edges->x0;
+			const float y0 = edges->y0;
+			const float x1 = edges->x1;
+			const float y1 = edges->y1;
+			edges++;
+
+			bx0 = std::min(bx0, x0);
+			bx0 = std::min(bx0, x1);
+
+			by0 = std::min(by0, y0);
+			by0 = std::min(by0, y1);
+
+			bx1 = std::max(bx1, x0);
+			bx1 = std::max(bx1, x1);
+
+			by1 = std::max(by1, y0);
+			by1 = std::max(by1, y1);
+		}
+
+		bounds[0] = bx0;
+		bounds[1] = by0;
+		bounds[2] = bx1;
+		bounds[3] = by1;
+		return true;
+	}
+}
+
 uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 	int width, int height, const ToveTesselationQuality *quality) {
 
-	static float defaultTessTol;
-	static float defaultDistTol;
-
-	if (!rasterizer) {
-		rasterizer = nsvgCreateRasterizer();
-		if (!rasterizer) {
-			return nullptr;
-		}
-		// skipping nsvgDeleteRasterizer(rasterizer)
-
-		defaultTessTol = rasterizer->tessTol;
-		defaultDistTol = rasterizer->distTol;
-	}
-
-	if (quality && quality->adaptive.valid) {
-		rasterizer->tessTol = quality->adaptive.angleTolerance;
-		rasterizer->distTol = quality->adaptive.distanceTolerance;
-	} else {
-		rasterizer->tessTol = defaultTessTol;
-		rasterizer->distTol = defaultDistTol;
-	}
+	NSVGrasterizer *rasterizer = getRasterizer(quality);
 
 	uint8_t *pixels = static_cast<uint8_t*>(malloc(width * height * 4));
 	if (pixels) {
-		nsvgRasterize(rasterizer, image, tx, ty, scale, pixels, width, height, width * 4);
+		nsvgRasterize(rasterizer, image, tx, ty, scale, pixels,
+			width, height, width * 4);
 	}
 
 	return pixels;

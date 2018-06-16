@@ -66,6 +66,7 @@ enum {
 	CHANGED_GEOMETRY = 8,
 	CHANGED_LINE_ARGS = 16,
 	CHANGED_BOUNDS = 32,
+	CHANGED_EXACT_BOUNDS = 64,
 	CHANGED_RECREATE = 128,
 	CHANGED_ANYTHING = 255
 };
@@ -134,6 +135,11 @@ typedef struct {
 	float x, y;
 } ToveVec2;
 
+typedef struct {
+	float t;
+	float distanceSquared;
+} ToveNearest;
+
 typedef float ToveMatrix3x3[3 * 3];
 
 typedef struct {
@@ -159,17 +165,25 @@ typedef struct {
 } ToveLookupTableMeta;
 
 typedef struct {
-	int maxCurves;
-	int numCurves;
+	int16_t curveIndex;
+	int16_t numCurves;
+	bool isClosed;
+} ToveLineRun;
+
+typedef struct {
+	int16_t maxCurves;
+	int16_t numCurves;
+	int16_t numSubPaths;
 
 	ToveBounds *bounds;
 	float strokeWidth;
 	float miterLimit;
 	int8_t fillRule;
 	bool fragmentShaderStrokes;
+	ToveLineRun *lineRuns;
 
 	float *lookupTable;
-	int lookupTableSize;
+	int16_t lookupTableSize;
 	ToveLookupTableMeta *lookupTableMeta;
 
 	uint8_t *listsTexture;
@@ -244,7 +258,7 @@ EXPORT float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command
 EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value);
 EXPORT ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t);
 EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
-EXPORT float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
+EXPORT ToveNearest TrajectoryNearest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
 EXPORT int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t);
 EXPORT void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve);
 EXPORT int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y);
@@ -262,6 +276,7 @@ EXPORT TovePaintRef PathGetFillColor(TovePathRef path);
 EXPORT TovePaintRef PathGetLineColor(TovePathRef path);
 EXPORT void PathSetLineWidth(TovePathRef path, float width);
 EXPORT void PathSetMiterLimit(TovePathRef path, float limit);
+EXPORT float PathGetMiterLimit(TovePathRef path);
 EXPORT void PathSetLineDash(TovePathRef path, const float *dashes, int count);
 EXPORT void PathSetLineDashOffset(TovePathRef path, float offset);
 EXPORT float PathGetLineWidth(TovePathRef path);
@@ -301,7 +316,7 @@ EXPORT void GraphicsSetLineDash(ToveGraphicsRef shape, const float *dashes, int 
 EXPORT void GraphicsSetLineDashOffset(ToveGraphicsRef shape, float offset);
 EXPORT void GraphicsFill(ToveGraphicsRef shape);
 EXPORT void GraphicsStroke(ToveGraphicsRef shape);
-EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape);
+EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact);
 EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
 	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
 	float ox, float oy, float kx, float ky);
@@ -317,7 +332,7 @@ EXPORT TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
 EXPORT ToveShaderLinkRef NewColorShaderLink();
-EXPORT ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path);
+EXPORT ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path, bool enableFragmentShaderStrokes);
 EXPORT ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);
 EXPORT ToveChangeFlags ShaderLinkEndUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);
 EXPORT ToveShaderData *ShaderLinkGetData(ToveShaderLinkRef link);

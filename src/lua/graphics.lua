@@ -56,6 +56,7 @@ tove.newGraphics = function(svg, size)
 end
 
 local function makeDisplay(mode, quality, usage)
+	quality = quality or 1
 	return {mode = mode, quality = quality,
 		cquality = cquality(quality, usage)}
 end
@@ -158,8 +159,8 @@ end
 bind("fill", "GraphicsFill")
 bind("stroke", "GraphicsStroke")
 
-function Graphics:computeAABB()
-	local bounds = lib.GraphicsGetBounds(self._ref)
+function Graphics:computeAABB(mode)
+	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 

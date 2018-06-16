@@ -125,7 +125,7 @@ void Path::set(const NSVGshape *shape) {
 	changed(CHANGED_GEOMETRY);
 }
 
-Path::Path() : changes(CHANGED_BOUNDS) {
+Path::Path() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	nsvg.stroke.type = NSVG_PAINT_NONE;
@@ -146,7 +146,7 @@ Path::Path() : changes(CHANGED_BOUNDS) {
 	newTrajectory = true;
 }
 
-Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS) {
+Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	memset(&nsvg, 0, sizeof(nsvg));
 	nsvg.stroke.type = NSVG_PAINT_NONE;
 	nsvg.fill.type = NSVG_PAINT_NONE;
@@ -269,7 +269,7 @@ void Path::invertTrajectory() {
 }
 
 void Path::updateBoundsPartial(int from) {
-	float w = nsvg.strokeWidth * 0.5;
+	const float w = hasStroke() ? nsvg.strokeWidth * 0.5 : 0.0;
 	for (int i = from; i < trajectories.size(); i++) {
 		const TrajectoryRef &t = trajectories[i];
 		t->updateBounds();
@@ -293,6 +293,31 @@ void Path::updateBounds() {
 		return;
 	}
 	updateBoundsPartial(0);
+}
+
+const float *Path::getBounds() {
+	updateBounds();
+	return nsvg.bounds;
+}
+
+const float *Path::getExactBounds() {
+	if (!hasStroke()) {
+		return getBounds();
+	}
+
+	if ((changes & CHANGED_EXACT_BOUNDS) == 0) {
+		return exactBounds;
+	}
+
+	if (!nsvg::shapeStrokeBounds(exactBounds, &nsvg, 1.0f, nullptr)) {
+		updateBounds();
+		for (int i = 0; i < 4; i++) {
+			exactBounds[i] = nsvg.bounds[i];
+		}
+	}
+
+	changes &= ~CHANGED_EXACT_BOUNDS;
+	return exactBounds;
 }
 
 void Path::addTrajectory(const TrajectoryRef &t) {
@@ -529,14 +554,18 @@ bool Path::isInside(float x, float y) {
 		case FILLRULE_NON_ZERO: {
 			NonZeroInsideTest test;
 			for (const auto &t : trajectories) {
-				t->testInside(x, y, test);
+				if (t->isClosed()) {
+					t->testInside(x, y, test);
+				}
 			}
 			return test.get();
 		} break;
 		case FILLRULE_EVEN_ODD: {
 			EvenOddInsideTest test;
 			for (const auto &t : trajectories) {
-				t->testInside(x, y, test);
+				if (t->isClosed()) {
+					t->testInside(x, y, test);
+				}
 			}
 			return test.get();
 		}
@@ -578,7 +607,7 @@ void Path::colorChanged(AbstractPaint *paint) {
 }
 
 void Path::clearChanges(ToveChangeFlags flags) {
-	flags &= ~CHANGED_BOUNDS;
+	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
 	changes &= ~flags;
 	for (const auto &t : trajectories) {
 		t->clearChanges(flags);
@@ -587,7 +616,7 @@ void Path::clearChanges(ToveChangeFlags flags) {
 
 void Path::changed(ToveChangeFlags flags) {
 	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
-		flags |= CHANGED_BOUNDS;
+		flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 	}
 	if ((changes & flags) == flags) {
 		return;

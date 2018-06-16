@@ -142,6 +142,10 @@ void PathSetMiterLimit(TovePathRef path, float limit) {
 	deref(path)->setMiterLimit(limit);
 }
 
+float PathGetMiterLimit(TovePathRef path) {
+	return deref(path)->getMiterLimit();
+}
+
 int PathGetNumTrajectories(TovePathRef path) {
 	return deref(path)->getNumTrajectories();
 }
@@ -323,7 +327,8 @@ float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int p
 	return deref(trajectory)->getCommandValue(command, property);
 }
 
-void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value) {
+void TrajectorySetCommandValue(ToveTrajectoryRef trajectory,
+	int command, int property, float value) {
 	deref(trajectory)->setCommandValue(command, property, value);
 }
 
@@ -335,8 +340,9 @@ ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t) {
 	return deref(trajectory)->getNormal(t);
 }
 
-float TrajectoryClosest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax) {
-	return deref(trajectory)->closest(x, y, dmin, dmax);
+ToveNearest TrajectoryNearest(ToveTrajectoryRef trajectory,
+	float x, float y, float dmin, float dmax) {
+	return deref(trajectory)->nearest(x, y, dmin, dmax);
 }
 
 int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t) {
@@ -449,8 +455,15 @@ void GraphicsStroke(ToveGraphicsRef shape) {
 	deref(shape)->stroke();
 }
 
-ToveBounds GraphicsGetBounds(ToveGraphicsRef shape) {
-	const float *computed = deref(shape)->getBounds();
+ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact) {
+	const float *computed;
+
+	if (exact) {
+		computed = deref(shape)->getExactBounds();
+	} else {
+		computed  = deref(shape)->getBounds();
+	}
+
 	ToveBounds bounds;
 	bounds.x0 = computed[0];
 	bounds.y0 = computed[1];
@@ -528,8 +541,9 @@ ToveShaderLinkRef NewColorShaderLink() {
 	return shaderLinks.publish(std::make_shared<ColorShaderLink>());
 }
 
-ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path) {
-	return shaderLinks.publish(std::make_shared<GeometryShaderLink>(deref(path)));
+ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path, bool enableFragmentShaderStrokes) {
+	return shaderLinks.publish(std::make_shared<GeometryShaderLink>(
+		deref(path), enableFragmentShaderStrokes));
 }
 
 ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial) {

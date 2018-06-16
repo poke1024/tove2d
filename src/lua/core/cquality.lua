@@ -50,9 +50,9 @@ local function setAdaptiveQuality(record, quality)
 		adaptive.colinearityEpsilon = 1.0 / quality
 		adaptive.angleTolerance = (math.pi / 16) * (0.5 / quality)
 	else
-		adaptive.distanceTolerance = 100.0 / (1 + quality)
+		adaptive.distanceTolerance = 100.0 / (1 + 10 * quality)
 		adaptive.colinearityEpsilon = 0.1 / (1 + 10 * quality)
-		adaptive.angleTolerance = math.pi / (8 + math.min(1, quality) * 8)
+		adaptive.angleTolerance = math.pi / (2 + math.min(1, quality) * 16)
 	end
 	adaptive.angleEpsilon = 0.0
 	adaptive.cuspLimit = 0.0

@@ -244,12 +244,14 @@ GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 	bool enableFragmentShaderStrokes) :
 
 	maxCurves(path->getNumCurves()),
+	maxSubPaths(path->getNumTrajectories()),
 	geometryData(data),
 	lineColorData(lineColorData),
 	fillEventsLUT(maxCurves, geometryData, IGNORE_FILL),
 	strokeEventsLUT(maxCurves, strokeShaderData, IGNORE_LINE),
-	allocData(maxCurves, enableFragmentShaderStrokes && path->hasStroke(), geometryData),
-	allocStrokeData(maxCurves, true, strokeShaderData),
+	allocData(maxCurves, maxSubPaths,
+		enableFragmentShaderStrokes && path->hasStroke(), geometryData),
+	allocStrokeData(maxCurves, maxSubPaths, true, strokeShaderData),
 	enableFragmentShaderStrokes(enableFragmentShaderStrokes) {
 
 	if (maxCurves < 1) {
@@ -293,28 +295,40 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 		return 0;
 	}
 
+	assert(path->getNumCurves() <= maxCurves);
+
 	assert(geometryData.lookupTable != nullptr);
 	assert(geometryData.lookupTableMeta != nullptr);
-	//assert(geometryData.lookupTableSize == maxCurves * 4 + 2);
 
 	assert(geometryData.listsTexture != nullptr);
 	assert(geometryData.listsTextureRowBytes >=
 		geometryData.listsTextureSize[0] * 4);
-	//assert(geometryData.listsTextureSize[1] == 2 * (maxCurves * 2 + 2));
 
 	assert(geometryData.curvesTexture != nullptr);
 	assert(geometryData.curvesTextureRowBytes >=
 		geometryData.curvesTextureSize[0] * 2);
 	assert(geometryData.curvesTextureSize[1] == maxCurves);
 
-	// (2) build curve data
+	// build curve data
 
 	int numTrajectories = path->getNumTrajectories();
+	assert(numTrajectories <= maxSubPaths);
+
+	ToveLineRun *lineRuns = geometryData.lineRuns;
+
 	int curveIndex = 0;
 	for (int i = 0; i < numTrajectories; i++) {
 		const TrajectoryRef t = path->getTrajectory(i);
+		const int n = t->getNumCurves(false);
+
+		if (lineRuns) {
+			lineRuns->curveIndex = curveIndex;
+			lineRuns->numCurves = n;
+			lineRuns->isClosed = t->isClosed();
+			lineRuns++;
+		}
+
 		if (initial || t->fetchChanges() != 0) {
-			const int n = t->getNumCurves(false);
 			for (int j = 0; j < n; j++) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCurveData(
@@ -326,13 +340,6 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 				}
 				curveIndex++;
 			}
-			/*if (n > 0) {
-				assert(curveIndex < maxCurves);
-				if (t->computeShaderCloseCurveData(
-					&geometryData, curveIndex, extended[curveIndex])) {
-					curveIndex++;
-				}
-			}*/
 		} else {
 			assert(false); // not implemented yet
 			//curveIndex += t->getNumCurves();
@@ -340,6 +347,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	}
 	assert(curveIndex <= maxCurves);
 	geometryData.numCurves = curveIndex;
+	geometryData.numSubPaths = numTrajectories;
 
 #if 0
 	if (initial) {

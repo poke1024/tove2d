@@ -17,6 +17,7 @@
 
 AllocateGeometryData::AllocateGeometryData(
 	int maxCurves,
+	int maxSubPaths,
 	bool fragmentShaderStrokes,
 	ToveShaderGeometryData &data) : data(data) {
 
@@ -64,6 +65,12 @@ AllocateGeometryData::AllocateGeometryData(
     data.curvesTextureSize[1] = maxCurves;
     data.curvesTextureFormat = "rgba16f";
 
+	if (fragmentShaderStrokes) {
+		data.lineRuns = nullptr;
+	} else {
+		data.lineRuns = new ToveLineRun[maxSubPaths];
+	}
+
 	// except for AllocateGeometryNoLinkData, the following fields will
 	// be initialized in tove's lua lib using LÖVE ByteData:
 
@@ -75,11 +82,13 @@ AllocateGeometryData::AllocateGeometryData(
 }
 
 AllocateGeometryData::~AllocateGeometryData() {
+	delete[] data.lineRuns;
 }
 
 AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
-	int maxCurves, bool fragmentShaderStrokes, ToveShaderGeometryData &data) :
-	AllocateGeometryData(maxCurves, fragmentShaderStrokes, data) {
+	int maxCurves, int maxSubPaths,
+	bool fragmentShaderStrokes, ToveShaderGeometryData &data) :
+	AllocateGeometryData(maxCurves, maxSubPaths, fragmentShaderStrokes, data) {
 
 	// do not use this variant for data linked to tove's lua lib.
 

@@ -47,6 +47,9 @@ struct CachedPaint {
 	void init(const NSVGpaint &paint, float opacity);
 };
 
+bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
+	float scale, const ToveTesselationQuality *quality);
+
 uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
 	int width, int height, const ToveTesselationQuality *quality);
 

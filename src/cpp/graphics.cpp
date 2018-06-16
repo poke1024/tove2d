@@ -108,15 +108,17 @@ void Graphics::initialize(float width, float height) {
 	for (int i = 0; i < 4; i++) {
 		bounds[i] = 0.0;
 	}
-    changes |= CHANGED_BOUNDS;
+    changes |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 }
 
-Graphics::Graphics() : changes(CHANGED_BOUNDS) {
+Graphics::Graphics() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	initialize(1.0, 1.0);
 }
 
-Graphics::Graphics(const NSVGimage *image) : changes(CHANGED_BOUNDS) {
-	initialize(image->width, image->height);
+Graphics::Graphics(const NSVGimage *image) :
+    changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
+
+    initialize(image->width, image->height);
 
 	NSVGshape *shape = image->shapes;
 	while (shape) {
@@ -242,24 +244,26 @@ const float *Graphics::getBounds() {
 	closePath();
 
 	if (changes & CHANGED_BOUNDS) {
-		for (int i = 0; i < paths.size(); i++) {
-			const PathRef &path = paths[i];
-			path->updateBounds();
-			if (i == 0) {
-				for (int j = 0; j < 4; j++) {
-					bounds[j] = path->nsvg.bounds[j];
-				}
-			} else {
-				bounds[0] = std::min(bounds[0], path->nsvg.bounds[0]);
-				bounds[1] = std::min(bounds[1], path->nsvg.bounds[1]);
-				bounds[2] = std::max(bounds[2], path->nsvg.bounds[2]);
-				bounds[3] = std::max(bounds[3], path->nsvg.bounds[3]);
-			}
-		}
+        computeBounds(bounds, [] (const PathRef &path) {
+            return path->getBounds();
+        });
 		changes &= ~CHANGED_BOUNDS;
 	}
 
 	return bounds;
+}
+
+const float *Graphics::getExactBounds() {
+    closePath();
+
+    if (changes & CHANGED_EXACT_BOUNDS) {
+        computeBounds(exactBounds, [] (const PathRef &path) {
+            return path->getExactBounds();
+        });
+        changes &= ~CHANGED_EXACT_BOUNDS;
+    }
+
+    return exactBounds;
 }
 
 void Graphics::clean(float eps) {
@@ -293,7 +297,7 @@ void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) 
 }
 
 ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags, bool clearAll) {
-    flags &= ~CHANGED_BOUNDS;
+    flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
 	const ToveChangeFlags c = changes & flags;
 	changes &= ~flags;
 	if (clearAll && c != 0) {

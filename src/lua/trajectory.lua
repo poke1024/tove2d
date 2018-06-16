@@ -68,8 +68,9 @@ function Trajectory:normal(t)
 	return v.x, v.y
 end
 
-function Trajectory:closest(x, y, dmax, dmin)
-	return lib.TrajectoryClosest(self, x, y, dmin or 1e-4, dmax or 1e50)
+function Trajectory:nearest(x, y, dmax, dmin)
+	local n = lib.TrajectoryNearest(self, x, y, dmin or 1e-4, dmax or 1e50)
+	return n.t, math.sqrt(n.distanceSquared)
 end
 
 Trajectory.insertCurveAt = lib.TrajectoryInsertCurveAt

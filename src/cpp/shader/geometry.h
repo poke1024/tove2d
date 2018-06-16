@@ -17,6 +17,7 @@
 class GeometryShaderLinkImpl {
 private:
 	const int maxCurves;
+	const int maxSubPaths;
 
 	ToveShaderGeometryData &geometryData;
 	const ToveShaderColorData &lineColorData;

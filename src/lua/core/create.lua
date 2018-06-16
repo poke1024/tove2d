@@ -89,7 +89,7 @@ end
 
 create.bitmap = function(self)
 	local resolution = self._resolution
-	local x0, y0, x1, y1 = self:computeAABB()
+	local x0, y0, x1, y1 = self:computeAABB("exact")
 
 	x0 = math.floor(x0)
 	y0 = math.floor(y0)
@@ -169,7 +169,14 @@ create.mesh = function(self)
 end
 
 create.curves = function(self)
-	local shaders = self:shaders(_shaders.newPathShader)
+	local fragLine = true
+	local quality = self._display.quality
+	if type(quality) == "table" and quality.line == "vertex" then
+		fragLine = false
+	end
+	local shaders = self:shaders(function(path)
+		return _shaders.newPathShader(path, fragLine)
+	end)
 	return {
 		shaders = shaders,
 		draw = createDrawShaders(shaders, 1),

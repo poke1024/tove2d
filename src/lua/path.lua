@@ -30,6 +30,7 @@ Path.setLineDashOffset = lib.PathSetLineDashOffset
 Path.getLineWidth = lib.PathGetLineWidth
 Path.setLineWidth = lib.PathSetLineWidth
 Path.setMiterLimit = lib.PathSetMiterLimit
+Path.getMiterLimit = lib.PathGetMiterLimit
 Path.getNumCurves = lib.PathGetNumCurves
 Path.getOpacity = lib.PathGetOpacity
 Path.setOpacity = lib.PathSetOpacity
@@ -84,6 +85,19 @@ end
 
 function Path:animate(a, b, t)
 	lib.PathAnimate(self, a, b, t)
+end
+
+function Path:nearest(x, y, max, min)
+	local n = lib.PathGetNumTrajectories(self)
+	local trajs = self.trajs
+	for i = 1, n do
+		local traj = trajs[i]
+		local t, d = traj:nearest(x, y, max, min)
+		if t >= 0 then
+			return d, t, traj
+		end
+	end
+	return false
 end
 
 ffi.metatype("TovePathRef", Path)

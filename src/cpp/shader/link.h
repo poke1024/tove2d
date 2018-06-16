@@ -66,10 +66,10 @@ private:
 	GeometryShaderLinkImpl geometry;
 
 public:
-	GeometryShaderLink(const PathRef &path) :
+	GeometryShaderLink(const PathRef &path, bool enableFragmentShaderStrokes) :
 		lineColor(data.color.line),
 		fillColor(data.color.fill),
-		geometry(data.geometry, data.color.line, path, true) {
+		geometry(data.geometry, data.color.line, path, enableFragmentShaderStrokes) {
 	}
 
 	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {

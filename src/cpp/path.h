@@ -26,6 +26,7 @@ private:
 	PaintRef lineColor;
 
 	uint8_t changes;
+	float exactBounds[4];
 
 	inline const TrajectoryRef &current() const {
 		return trajectories[trajectories.size() - 1];
@@ -60,6 +61,9 @@ public:
 
 	void updateBoundsPartial(int from);
 	void updateBounds();
+
+	const float *getBounds();
+	const float *getExactBounds();
 
 	void addTrajectory(const TrajectoryRef &t);
 

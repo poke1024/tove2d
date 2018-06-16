@@ -794,43 +794,6 @@ void Trajectory::setIsClosed(bool closed) {
 	nsvg.closed = closed;
 }
 
-#if 0
-bool Trajectory::computeShaderCloseCurveData(
-	ToveShaderGeometryData *shaderData,
-	int target,
-	ExtendedCurveData &extended) {
-
-	commit();
-
-	const int n = nsvg.npts;
-	assert(n > 0);
-
-	float p[8];
-	const float *pts = nsvg.pts;
-
-	float x = pts[0];
-	float y = pts[1];
-	float px = pts[n * 2 - 2];
-	float py = pts[n * 2 - 1];
-
-	float dx = x - px;
-	float dy = y - py;
-
-	p[0] = px; p[1] = py;
-	p[2] = px + dx/3.0f; p[3] = py + dy/3.0f;
-	p[4] = x - dx/3.0f; p[5] = y - dy/3.0f;
-	p[6] = x; p[7] = y;
-
-	computeShaderCurveData(shaderData, p, target, extended);
-
-	if (!isClosed()) {
-		extended.ignore |= IGNORE_LINE;
-	}
-
-	return extended.ignore != (IGNORE_FILL | IGNORE_LINE);
-}
-#endif
-
 bool Trajectory::computeShaderCurveData(
 	ToveShaderGeometryData *shaderData,
 	int curveIndex,
@@ -1148,17 +1111,12 @@ inline float distance(const coeff *bx, const coeff *by, float t, float x, float 
 	return dx * dx + dy * dy;
 }
 
-struct Nearest {
-	float t;
-	float distanceSquared;
-};
-
 void bisect(
 	const coeff *bx, const coeff *by,
 	float t0, float t1,
 	float x, float y,
 	float curveIndex,
-	Nearest &nearest,
+	ToveNearest &nearest,
 	float eps2) {
 
 	float s = (t1 - t0) * 0.5f;
@@ -1167,7 +1125,7 @@ void bisect(
 	float bestT = curveIndex + t;
 	float bestDistance = distance(bx, by, t, x, y);
 
-	for (int i = 0; i < 10 && bestDistance > eps2; i++) {
+	for (int i = 0; i < 16 && bestDistance > eps2; i++) {
 		s *= 0.5f;
 
 		float d0 = distance(bx, by, t - s, x, y);
@@ -1194,13 +1152,15 @@ void bisect(
 	}
 }
 
-float Trajectory::closest(float x, float y, float dmin, float dmax) const {
+ToveNearest Trajectory::nearest(
+	float x, float y, float dmin, float dmax) const {
+
 	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
 	const int nc = ncurves(nsvg.npts);
 	const float eps2 = dmin * dmin;
 	const float maxDistance = dmax;
 
-	Nearest nearest;
+	ToveNearest nearest;
 	nearest.distanceSquared = 1e50;
 	nearest.t = -1;
 
@@ -1220,7 +1180,7 @@ float Trajectory::closest(float x, float y, float dmin, float dmax) const {
 			float t1 = j < 4 ? roots[j] : 1.0f;
 			bisect(c.bx, c.by, t0, t1, x, y, curve, nearest, eps2);
 			if (nearest.distanceSquared < eps2) {
-				return nearest.t;
+				return nearest;
 			}
 			t0 = t1;
 			if (t0 >= 1.0f) {
@@ -1232,8 +1192,9 @@ float Trajectory::closest(float x, float y, float dmin, float dmax) const {
 	}
 
 	if (std::sqrt(nearest.distanceSquared) > maxDistance) {
-		return -1.0f;
+		nearest.t = -1.0f;
+		return nearest;
 	} else {
-		return nearest.t;
+		return nearest;
 	}
 }

@@ -325,10 +325,9 @@ end
 local PathShader = {}
 PathShader.__index = PathShader
 
-local function newPathShaderLinkData(path)
-	local fragLine = true
-
-	local link = ffi.gc(lib.NewGeometryShaderLink(path), lib.ReleaseShaderLink)
+local function newPathShaderLinkData(path, fragLine)
+	local link = ffi.gc(
+		lib.NewGeometryShaderLink(path, fragLine), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetData(link)
 
 	lib.ShaderLinkBeginUpdate(link, path, true)
@@ -340,12 +339,15 @@ local function newPathShaderLinkData(path)
 		lineShader = newGeometryLineShader(data)
 	end
 
-	local lineColorFeed = feed.newColorFeed(lineShader, "line", data.color.line)
+	local lineColorFeed = feed.newColorFeed(
+		lineShader, "line", data.color.line)
 	lineColorFeed:beginInit()
-	local fillColorFeed = feed.newColorFeed(fillShader, "fill", data.color.fill)
+	local fillColorFeed = feed.newColorFeed(
+		fillShader, "fill", data.color.fill)
 	fillColorFeed:beginInit()
 
-	local geometryFeed = feed.newGeometryFeed(fillShader, lineShader, data.geometry)
+	local geometryFeed = feed.newGeometryFeed(
+		fillShader, lineShader, data.geometry)
 	geometryFeed:beginInit()
 
 	lib.ShaderLinkEndUpdate(link, path, true)
@@ -367,10 +369,10 @@ local function newPathShaderLinkData(path)
 	}
 end
 
-local newPathShader = function(path)
+local newPathShader = function(path, fragLine)
 	return setmetatable({
 		path = path,
-		linkdata = newPathShaderLinkData(path)
+		linkdata = newPathShaderLinkData(path, fragLine)
 	}, PathShader)
 end
 
@@ -404,11 +406,24 @@ function PathShader:draw()
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		lg.setShader(lineShader)
-		local segments = 25
-		lineShader:send("segments_per_curve", segments)
-		local ncurves = linkdata.data.geometry.numCurves
-		lineShader:send("num_curves", ncurves)
-		lg.drawInstanced(linkdata.geometryFeed.lineMesh, segments * ncurves)
+		local numSegments = 25
+		lineShader:send("segments_per_curve", numSegments)
+		local geometry = linkdata.data.geometry
+		local lineRuns = geometry.lineRuns
+		if lineRuns ~= nil then
+			local lineMesh = linkdata.geometryFeed.lineMesh
+			for i = 0, geometry.numSubPaths - 1 do
+				local run = lineRuns[i]
+				local numCurves = run.numCurves
+				local numInstances = numSegments * run.numCurves
+				if not run.isClosed then
+					numInstances = numInstances - 1
+				end
+				lineShader:send("num_curves", numCurves)
+				lineShader:send("curve_index", run.curveIndex)
+				lg.drawInstanced(lineMesh, numInstances)
+			end
+		end
 	end
 end
 
