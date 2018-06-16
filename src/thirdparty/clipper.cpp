@@ -3974,8 +3974,11 @@ void ClipperOffset::DoOffset(double delta)
   }
 
   //see offset_triginometry3.svg in the documentation folder ...
-  if (MiterLimit > 2) m_miterLim = 2/(MiterLimit * MiterLimit);
-  else m_miterLim = 0.5;
+  // --TÖVE-- begin patch
+  // ClipperLib's original miter limit takes a delta values and
+  // transforms, we want an absolute value.
+  m_miterLim = MiterLimit * MiterLimit;
+  // --TÖVE-- end pazch
 
   double y;
   if (ArcTolerance <= 0.0) y = def_arc_tolerance;
@@ -4162,7 +4165,16 @@ void ClipperOffset::OffsetPoint(int j, int& k, JoinType jointype)
         {
           double r = 1 + (m_normals[j].X * m_normals[k].X +
             m_normals[j].Y * m_normals[k].Y);
-          if (r >= m_miterLim) DoMiter(j, k, r); else DoSquare(j, k);
+
+          // --TÖVE-- begin patch
+          // ClipperLib's original miter limit calculation is based on
+          // deltas, but we want an absolute value here.
+          double x = (m_normals[j].X + m_normals[k].X) * 0.5;
+          double y = (m_normals[j].Y + m_normals[k].Y) * 0.5;
+          double d = x * x + y * y;
+
+          if (d * m_miterLim >= 1.0) DoMiter(j, k, r); else DoSquare(j, k);
+          // --TÖVE-- end patch
           break;
         }
       case jtSquare: DoSquare(j, k); break;
@@ -4174,8 +4186,10 @@ void ClipperOffset::OffsetPoint(int j, int& k, JoinType jointype)
 
 void ClipperOffset::DoSquare(int j, int k)
 {
-  double dx = std::tan(std::atan2(m_sinA,
-      m_normals[k].X * m_normals[j].X + m_normals[k].Y * m_normals[j].Y) / 4);
+  // --TÖVE-- begin patch
+  // with the original value of dx, the bevel is farer off than we want it.
+  double dx = 0.0;
+  // --TÖVE-- end patch
   m_destPoly.push_back(IntPoint(
       Round(m_srcPoly[j].X + m_delta * (m_normals[k].X - m_normals[k].Y * dx)),
       Round(m_srcPoly[j].Y + m_delta * (m_normals[k].Y + m_normals[k].X * dx))));
