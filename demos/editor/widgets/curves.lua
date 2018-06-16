@@ -81,13 +81,14 @@ function PointsWidget:allcontrolpoints(f)
 	return false
 end
 
-function PointsWidget:oncurve(lx, ly, gs)
-	local graphics = self.object.graphics
-	for i = 1, graphics.npaths do
-		local path = graphics.paths[i]
+function PointsWidget:oncurve(ux, uy, gs)
+	local scaledgraphics = self.object.scaledgraphics
+	for i = 1, scaledgraphics.npaths do
+		local path = scaledgraphics.paths[i]
 		for j = 1, path.ntrajs do
 			local traj = path.trajs[i]
-			local t = traj:closest(lx, ly, gs * (2 + path:getLineWidth()))
+			local dmax = 2 / gs + path:getLineWidth()
+			local t, d = traj:nearest(ux, uy, dmax)
 			if t >= 0 then
 				return i, j, t
 			end
@@ -169,37 +170,8 @@ function PointsWidget:createDragPointFunc()
 	return function(gx, gy)
 		self.object:changePoints(function()
 			local mx, my = transform:inverseTransformPoint(gx, gy)
-
 			local traj = graphics.paths[dragging.path].trajs[dragging.traj]
 			traj:move(dragging.pt, mx, my)
-
-			if true then -- (dragging.pt - 1) % 3 == 0 then
-				-- if this is not a control point, also drag adjacent control points.
-				--local dx = mx - qx
-				--local dy = my - qy
-
-				--local cp0 = traj.pts[dragging.pt - 1]
-				--cp0.x = cp0.x + dx
-				--cp0.y = cp0.y + dy
-
-				--local cp1 = traj.pts[dragging.pt + 1]
-				--cp1.x = cp1.x + dx
-				--cp1.y = cp1.y + dy
-			else
-				-- if control point, mirror movement on other control point
-				local p = traj.pts[dragging.pt]
-
-				local qx, qy = p.x, p.y
-
-				p.x = mx
-				p.y = my
-
-				local p0 = traj.pts[dragging.pt0]
-				local p = traj.pts[dragging.pt]
-				local cp1 = traj.pts[dragging.pt0 - (dragging.pt - dragging.pt0)]
-
-				cp1.x, cp1.y = mirrorControlPoint(qx, qy, mx, my, p0.x, p0.y, cp1.x, cp1.y)
-			end
 		end)
 
 		self:updateOverlayLine()
@@ -237,6 +209,7 @@ end
 function PointsWidget:mousedown(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
+	local ux, uy = transform:inverseUnscaledTransformPoint(gx, gy)
 
 	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 
@@ -264,7 +237,7 @@ function PointsWidget:mousedown(gx, gy, gs, button)
 	self.selected = nil
 
 	-- click on curve?
-	local i, j, t = self:oncurve(lx, ly, gs)
+	local i, j, t = self:oncurve(ux, uy, gs)
 	if t >= 0 then
 		return self:createMouldCurveFunc(i, j, t)
 	end
@@ -275,6 +248,7 @@ end
 function PointsWidget:click(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
+	local ux, uy = transform:inverseUnscaledTransformPoint(gx, gy)
 
 	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
 	if self:allpoints(function(traj, pts, i, j, k, px, py)
@@ -285,7 +259,7 @@ function PointsWidget:click(gx, gy, gs, button)
 		return
 	end
 
-	local i, j, t = self:oncurve(lx, ly, gs)
+	local i, j, t = self:oncurve(ux, uy, gs)
 	if t >= 0 then
 		local traj = self.object.graphics.paths[i].trajs[j]
 		local k = traj:insertCurveAt(t)

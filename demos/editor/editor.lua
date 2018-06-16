@@ -7,9 +7,11 @@ local newTransformWidget = require "widgets/transform"
 local newCurvesWidget = require "widgets/curves"
 local newPenWidget = require "widgets/pen"
 
+local VBox = require "ui/vbox"
 local Panel = require "ui/panel"
 local Label = require "ui/label"
 local Slider = require "ui/slider"
+local Checkbox = require "ui/checkbox"
 local ColorDabs = require "ui/colordabs"
 local ColorWheel = require "ui/colorwheel"
 local ButtonGroup = require "ui/buttongroup"
@@ -71,6 +73,24 @@ function Editor:load()
 			object:refresh()
 		end
 	end, 0, 20)
+	self.miterLimitSlider = Slider.new(function(value)
+		local widget = editor.widget
+		if widget ~= nil then
+			local object = widget.object
+			for i = 1, object.graphics.npaths do
+				local path = object.graphics.paths[i]
+				path:setMiterLimit(value)
+			end
+			object:refresh()
+		end
+	end, 0, 20)
+
+	self.lpanel = Panel.new()
+	self.lpanel:setBounds(
+		0,
+		0,
+		32,
+		love.graphics.getHeight())
 
 	self.rpanel = Panel.new()
 	self.rpanel:add(Label.new(self.font, "Color"))
@@ -78,13 +98,48 @@ function Editor:load()
 	self.rpanel:add(self.colorWheel)
 	self.rpanel:add(Label.new(self.font, "Line Width"))
 	self.rpanel:add(self.lineWidthSlider)
+	self.rpanel:add(Label.new(self.font, "Miter Limit"))
+	self.rpanel:add(self.miterLimitSlider)
 
 	self.rpanel:add(Label.new(self.font, "Renderer"))
 	self.radios = ButtonGroup.new("bitmap", "mesh", "curves")
-	self.radios:select("mesh")
 	self.rpanel:add(self.radios)
-	self.radios:setCallback(function(mode)
-		self:setDisplay(mode)
+	self.displaycontrol = VBox.new()
+	self.displaycontrol.frame = true
+	self.displaycontrol.padding = 8
+	function updateDisplayUI(mode, quality)
+		self.displaycontrol:empty()
+		if mode == "mesh" then
+			self.displaycontrol:add(Label.new(
+				self.font, "tesselation quality"))
+			local slider = Slider.new(function(value)
+				self:setDisplay("mesh", value)
+			end, 0, 1)
+			self.displaycontrol:add(slider)
+			slider:setValue(quality)
+		elseif mode == "curves" then
+			local checkbox = Checkbox.new(
+				self.font, "vertex shader lines", function(value)
+					self:setDisplay("curves",
+						{line = value and "vertex" or "fragment"})
+				end)
+			checkbox:setChecked(quality.line == "vertex")
+			self.displaycontrol:add(checkbox)
+			self.displaycontrol:add(Label.new(
+				self.font, "line quality"))
+			local slider = Slider.new(function(value)
+			end, 0, 1)
+			self.displaycontrol:add(slider)
+		end
+	end
+	self.rpanel:add(self.displaycontrol)
+	self.radios:setClickedCallback(function(mode)
+		local quality = 0.5
+		if mode == "curves" then
+			quality = {line = "vertex"}
+		end
+		self:setDisplay(mode, quality)
+		updateDisplayUI(mode, quality)
 	end)
 
 	self.rpanel:setBounds(
@@ -108,6 +163,7 @@ function Editor:draw()
 		self.widget:draw(self.transform)
 		self.rpanel:draw()
 	end
+	self.lpanel:draw()
 end
 
 function Editor:startdrag(transform, x, y, button, func)
@@ -147,10 +203,20 @@ function Editor:mousedown(gx, gy, button, clickCount)
 			for o = nobjects, 1, -1 do
 				local object = objects[o]
 				local graphics = object.graphics
+				local scaledgraphics = object.scaledgraphics
 				local lx, ly = object.transform:inverseTransformPoint(x, y)
+				local ux, uy = object.transform:inverseUnscaledTransformPoint(x, y)
+				local gs = self.scale
 
 				for i = 1, graphics.npaths do
-					if graphics.paths[i]:inside(lx, ly) then
+					local hit = graphics.paths[i]:inside(lx, ly)
+					if not hit then
+						local scaledpath = scaledgraphics.paths[i]
+						local offset = scaledpath:getLineWidth() / 2
+						hit = scaledpath:nearest(ux, uy, offset + 2 / gs) ~= false
+					end
+
+					if hit then
 						if clickCount == 2 then
 							self.widget = newCurvesWidget(self.handles, object)
 						elseif clickCount == 1 then
@@ -161,7 +227,10 @@ function Editor:mousedown(gx, gy, button, clickCount)
 						self.colorDabs:setLineColor(path:getLineColor())
 						self.colorDabs:setFillColor(path:getFillColor())
 						self.lineWidthSlider:setValue(path:getLineWidth())
-						self.radios:select(object:getDisplay())
+						self.miterLimitSlider:setValue(path:getMiterLimit())
+						local mode, quality = object:getDisplay()
+						self.radios:select(mode)
+						updateDisplayUI(mode, quality)
 
 						if clickCount == 1 then
 							self:startdrag(self.transform, x, y, button,
@@ -229,9 +298,9 @@ function Editor:addObject(object)
     table.insert(self.objects, object)
 end
 
-function Editor:setDisplay(mode)
+function Editor:setDisplay(...)
     if self.widget ~= nil then
-        self.widget.object:setDisplay(mode)
+        self.widget.object:setDisplay(...)
     end
 end
 

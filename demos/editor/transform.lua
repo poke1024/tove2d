@@ -37,6 +37,10 @@ function Transform:inverseTransformPoint(x, y)
 	return self.mousetransform:inverseTransformPoint(x, y)
 end
 
+function Transform:inverseUnscaledTransformPoint(x, y)
+	return self.drawtransform:inverseTransformPoint(x, y)
+end
+
 function Transform:apply()
 end
 

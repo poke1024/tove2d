@@ -31,7 +31,7 @@ ImageButton.new = function(name)
 	local image = tove.newGraphics(svg, 24)
 	image:setResolution(2)
 
-	local r = 4
+	local r = 2
 
 	local frame = tove.newGraphics()
 	frame:drawRect(-16, -16, 32, 32, r, r)

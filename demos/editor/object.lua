@@ -54,19 +54,20 @@ function Object:changePoints(f)
 	self:refresh()
 end
 
-function Object:setDisplay(mode)
-    self.scaledgraphics:setDisplay(mode)
+function Object:setDisplay(...)
+    self.scaledgraphics:setDisplay(...)
 end
 
 function Object:getDisplay()
-	return self.scaledgraphics:getDisplay()
+	local mode, quality = self.scaledgraphics:getDisplay()
+	return mode, quality
 end
 
 Object.new = function(tx, ty, graphics)
-	graphics:setDisplay("mesh")
+	graphics:setDisplay("mesh", 0.5)
 
 	local scaledgraphics = tove.newGraphics()
-	scaledgraphics:setDisplay("mesh")
+	scaledgraphics:setDisplay("mesh", 0.5)
 
 	-- we use adaptive tesselation for meshes, since only they support
 	-- proper fill rules; for this we need a resolution of at least 2,

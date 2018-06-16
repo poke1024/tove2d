@@ -32,9 +32,12 @@ function ButtonGroup:click(x, y)
 	return nil
 end
 
-function ButtonGroup:select(name)
+function ButtonGroup:select(name, triggerCallback)
 	for i, n in ipairs(self.names) do
 		self.buttons[i].selected = n == name
+	end
+	if triggerCallback then
+		self.callback(name)
 	end
 end
 
@@ -55,7 +58,7 @@ function ButtonGroup:getOptimalHeight()
     return h
 end
 
-function ButtonGroup:setCallback(callback)
+function ButtonGroup:setClickedCallback(callback)
     self.callback = callback
 end
 

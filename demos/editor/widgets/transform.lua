@@ -21,7 +21,7 @@ local function rotationHandlePosition(x00, y00, x10, y10, sx, sy)
 end
 
 function TransformWidget:draw(gtransform)
-	local lx0, ly0, lx1, ly1 = self.object.graphics:computeAABB()
+	local lx0, ly0, lx1, ly1 = self.object.graphics:computeAABB("exact")
 
 	local transform = self.object.transform
 
@@ -284,7 +284,7 @@ function TransformWidget:mousedown(gx, gy, gs, button)
 	local transform = self.object.transform
 	local lx, ly = transform:inverseTransformPoint(gx, gy)
 
-	local lx0, ly0, lx1, ly1 = self.object.graphics:computeAABB()
+	local lx0, ly0, lx1, ly1 = self.object.graphics:computeAABB("exact")
 
 	local tfm = transform.mousetransform
 	local x00, y00 = tfm:transformPoint(lx0, ly0)

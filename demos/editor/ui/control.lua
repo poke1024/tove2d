@@ -22,4 +22,8 @@ function Control:init()
     return self
 end
 
+function Control.new()
+    return Control.init(setmetatable({}, Control))
+end
+
 return Control
