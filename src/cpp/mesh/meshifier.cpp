@@ -55,7 +55,8 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 		return 0;
 	}
 
-	if (shape->fill.type == NSVG_PAINT_NONE && shape->stroke.type == NSVG_PAINT_NONE) {
+	if (shape->fill.type == NSVG_PAINT_NONE &&
+		shape->stroke.type == NSVG_PAINT_NONE) {
 		return 0;
 	}
 
@@ -71,7 +72,8 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
  		fill->add(t.fill, paint, HOLES_CW);
 	}
 
-	if (t.stroke.ChildCount() > 0 && shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
+	if (t.stroke.ChildCount() > 0 &&
+		shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
 		MeshPaint paint;
 		line->initializePaint(paint, shape->stroke, shape->opacity, scale);
 		ClipperPaths holes;
