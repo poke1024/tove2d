@@ -1,10 +1,10 @@
 #!python
 
 AddOption(
-    '--tovedebug',
-    action='store_true',
-    help='debug build',
-    default=False)
+	'--tovedebug',
+	action='store_true',
+	help='debug build',
+	default=False)
 
 sources = [
 	"src/cpp/version.cpp",
@@ -24,7 +24,7 @@ sources = [
 	"src/cpp/shader/geometry.cpp",
 	"src/thirdparty/clipper.cpp",
 	"src/thirdparty/polypartition.cpp",
-    "src/cpp/warn.cpp"]
+	"src/cpp/warn.cpp"]
 
 env = Environment()
 
@@ -114,6 +114,7 @@ def minify_lua(target, source, env):
 
 env.Append(BUILDERS={'MinifyLua':Builder(action=minify_lua)})
 env.MinifyLua('lib/tove.lua',
+	Glob("src/cpp/_interface.h") +
 	Glob("src/lua/*.lua") +
 	Glob("src/lua/core/*.lua") +
 	Glob("src/lua/core/*.glsl"))
