@@ -204,7 +204,7 @@ function GeometryFeed:endInit(lineStyle)
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		self.lineMesh = love.graphics.newMesh(
-			{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
+			{{0, -1}, {0, 1}, {1, -1}, {1, 1}, {2, -1}, {2, 1}}, "strip")
 	end
 
 	sendLUT(self, fillShader)

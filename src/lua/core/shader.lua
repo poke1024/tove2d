@@ -416,9 +416,7 @@ function PathShader:draw()
 				local run = lineRuns[i]
 				local numCurves = run.numCurves
 				local numInstances = numSegments * run.numCurves
-				if not run.isClosed then
-					numInstances = numInstances - 1
-				end
+				lineShader:send("is_closed", run.isClosed and 1 or 0)
 				lineShader:send("num_curves", numCurves)
 				lineShader:send("curve_index", run.curveIndex)
 				lg.drawInstanced(lineMesh, numInstances)
