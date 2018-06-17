@@ -182,6 +182,56 @@ function Editor:startdrag(transform, x, y, button, func)
     end
 end
 
+function Editor:createWidget(x, y, button, clickCount)
+	local objects = self.objects
+	local nobjects = #objects
+	for o = nobjects, 1, -1 do
+		local object = objects[o]
+		local graphics = object.graphics
+		local scaledgraphics = object.scaledgraphics
+		local lx, ly = object.transform:inverseTransformPoint(x, y)
+		local ux, uy = object.transform:inverseUnscaledTransformPoint(x, y)
+		local gs = self.scale
+
+		for i = 1, graphics.npaths do
+			local hit = graphics.paths[i]:inside(lx, ly)
+			if not hit then
+				local scaledpath = scaledgraphics.paths[i]
+				local offset = scaledpath:getLineWidth() / 2
+				hit = scaledpath:nearest(ux, uy, offset + 2 * gs) ~= false
+			end
+
+			if hit then
+				if clickCount == 2 then
+					self.widget = newCurvesWidget(self.handles, object)
+				elseif clickCount == 1 then
+					self.widget = newTransformWidget(self.handles, object)
+				end
+
+				local path = object.graphics.paths[1]
+				self.colorDabs:setLineColor(path:getLineColor())
+				self.colorDabs:setFillColor(path:getFillColor())
+				self.lineWidthSlider:setValue(path:getLineWidth())
+				self.miterLimitSlider:setValue(path:getMiterLimit())
+				local mode, quality = object:getDisplay()
+				self.radios:select(mode)
+				updateDisplayUI(mode, quality)
+
+				if clickCount == 1 then
+					self:startdrag(self.transform, x, y, button,
+						makeDragObjectFunc(object, x, y))
+				else
+					self.drag = nil
+				end
+
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 function Editor:mousedown(gx, gy, button, clickCount)
 	local x, y = self.transform:inverseTransformPoint(gx, gy)
 
@@ -198,49 +248,15 @@ function Editor:mousedown(gx, gy, button, clickCount)
 			end
 		end
 		if self.widget == nil then
-			local objects = self.objects
-			local nobjects = #objects
-			for o = nobjects, 1, -1 do
-				local object = objects[o]
-				local graphics = object.graphics
-				local scaledgraphics = object.scaledgraphics
-				local lx, ly = object.transform:inverseTransformPoint(x, y)
-				local ux, uy = object.transform:inverseUnscaledTransformPoint(x, y)
-				local gs = self.scale
-
-				for i = 1, graphics.npaths do
-					local hit = graphics.paths[i]:inside(lx, ly)
-					if not hit then
-						local scaledpath = scaledgraphics.paths[i]
-						local offset = scaledpath:getLineWidth() / 2
-						hit = scaledpath:nearest(ux, uy, offset + 2 / gs) ~= false
-					end
-
-					if hit then
-						if clickCount == 2 then
-							self.widget = newCurvesWidget(self.handles, object)
-						elseif clickCount == 1 then
-							self.widget = newTransformWidget(self.handles, object)
-						end
-
-						local path = object.graphics.paths[1]
-						self.colorDabs:setLineColor(path:getLineColor())
-						self.colorDabs:setFillColor(path:getFillColor())
-						self.lineWidthSlider:setValue(path:getLineWidth())
-						self.miterLimitSlider:setValue(path:getMiterLimit())
-						local mode, quality = object:getDisplay()
-						self.radios:select(mode)
-						updateDisplayUI(mode, quality)
-
-						if clickCount == 1 then
-							self:startdrag(self.transform, x, y, button,
-								makeDragObjectFunc(object, x, y))
-						else
-							self.drag = nil
-						end
-
-						return
-					end
+			if not self:createWidget(x, y, button, clickCount) then
+				if button == 1 and clickCount == 1 then
+					local transform0 = self.transform:clone()
+					self:startdrag(self.transform, x, y, button,
+						function(mx, my)
+							local t = transform0:clone()
+							t:translate(mx - x, my - y)
+							self.transform = t
+						end)
 				end
 			end
 		end

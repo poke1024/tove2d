@@ -87,8 +87,8 @@ function PointsWidget:oncurve(ux, uy, gs)
 		local path = scaledgraphics.paths[i]
 		for j = 1, path.ntrajs do
 			local traj = path.trajs[i]
-			local dmax = 2 / gs + path:getLineWidth()
-			local t, d = traj:nearest(ux, uy, dmax)
+			local dmax = 2 * gs + path:getLineWidth() * 0.5
+			local t, d = traj:nearest(ux, uy, dmax, gs)
 			if t >= 0 then
 				return i, j, t
 			end
