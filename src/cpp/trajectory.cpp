@@ -121,7 +121,7 @@ Trajectory::Trajectory(const TrajectoryRef &t) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = t->nsvg.bounds[i];
 	}
-	dirty = t->dirty;
+	dirty = DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 }
 
 int Trajectory::moveTo(float x, float y) {
@@ -809,6 +809,8 @@ bool Trajectory::computeShaderCurveData(
 	uint16_t *curveTexturesData = curveTexturesDataBegin;
 
 	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
+	assert(curves.size() > 0);
+
 	const CurveData &curveData = curves[curveIndex];
 	extended.bounds = &curveData.bounds;
 
