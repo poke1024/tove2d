@@ -373,6 +373,7 @@ void AdaptiveFlattener::operator()(const NSVGshape *shape, Tesselation &tesselat
 			// scaled offsets < 1 will generate artefacts as the ClipperLib's
 			// underlying integer resolution cannot handle them.
 			lineOffset = 0.0f;
+			TOVE_WARN("Ignoring line width < 2. Please use setResolution(2).");
 		}
 
 		ClipperLib::ClipperOffset offset(shape->miterLimit);

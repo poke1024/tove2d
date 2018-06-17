@@ -13,6 +13,7 @@ for i, display in ipairs({"bitmap", "flatmesh", "mesh", "curves"}) do
 		local path = tove.newPath("M50,20 l40,40 l-40,40 l-40,-40 l40,-40 M50,40 l20,20 l-20,20 l-20,-20 l20,-20")
 		path:setFillColor("#6666ff")
 		path:setLineColor(0, 0, 0)
+		path:setLineWidth(2)
 		path:setFillRule(fillRule)
 		g:addPath(path)
 		g:setDisplay(display)
@@ -30,7 +31,7 @@ function love.draw()
 	x0 = 0
 	for i = 1, #samples do
 		x0 = math.max(x0, font:getWidth(samples[i].label))
-	end	
+	end
 
 	local dx = 100
 
