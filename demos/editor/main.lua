@@ -10,6 +10,10 @@ love.window.setMode(800, 600, {highdpi = true})
 love.window.setTitle("TÖVE miniedit")
 
 local editor = require "editor"
+local demo = require "demo"
+local app = {
+	module = editor
+}
 
 local screenwidth = love.graphics.getWidth()
 local screenheight = love.graphics.getHeight()
@@ -31,29 +35,39 @@ function love.draw()
 	love.graphics.setBackgroundColor(0.7, 0.7, 0.7)
 	love.graphics.setColor(1, 1, 1)
 
-	editor:draw()
+	app.module:draw()
 end
 
-function love.update()
-	editor:update()
+function love.update(dt)
+	app.module:update(dt)
 end
 
 function love.mousepressed(x, y, button, isTouch, clickCount)
-	editor:mousedown(x, y, button, clickCount)
+	app.module:mousedown(x, y, button, clickCount)
 end
 
 function love.mousereleased(x, y, button)
-	editor:mousereleased(x, y, button)
+	app.module:mousereleased(x, y, button)
 end
 
 function love.keypressed(key, scancode, isrepeat)
-	editor:keypressed(key, scancode, isrepeat)
+	if app.module == demo and key == "escape" then
+		app.module = editor
+	elseif key == "d" then
+		if app.module == editor then
+			demo:setObjects(editor.objects)
+			app.module = demo
+		else
+			app.module = editor
+		end
+	end
+	app.module:keypressed(key, scancode, isrepeat)
 end
 
 function love.wheelmoved(x, y)
-	editor:wheelmoved(x, y)
+	app.module:wheelmoved(x, y)
 end
 
 function love.filedropped(file)
-	editor:loadfile(file)
+	app.module:loadfile(file)
 end

@@ -120,23 +120,39 @@ function Editor:load()
 		elseif mode == "curves" then
 			local checkbox = Checkbox.new(
 				self.font, "vertex shader lines", function(value)
+					local mode, quality = self:getDisplay()
 					self:setDisplay("curves",
-						{line = value and "vertex" or "fragment"})
+						{line = {
+							type = value and "vertex" or "fragment",
+							quality = quality.line.quality
+						}})
 				end)
-			checkbox:setChecked(quality.line == "vertex")
+			checkbox:setChecked(quality.line.type == "vertex")
 			self.displaycontrol:add(checkbox)
 			self.displaycontrol:add(Label.new(
 				self.font, "line quality"))
 			local slider = Slider.new(function(value)
+				local mode, quality = self:getDisplay()
+				self:setDisplay("curves",
+					{line = {
+						type = quality.line.type,
+						quality = value
+					}})
+				local _, qq = self:getDisplay()
 			end, 0, 1)
+			slider:setValue(quality.line.quality)
 			self.displaycontrol:add(slider)
 		end
 	end
 	self.rpanel:add(self.displaycontrol)
 	self.radios:setClickedCallback(function(mode)
+		local currentMode = self:getDisplay()
+		if mode == currentMode then
+			return
+		end
 		local quality = 0.5
 		if mode == "curves" then
-			quality = {line = "vertex"}
+			quality = {line = {type = "vertex", quality = 1.0}}
 		end
 		self:setDisplay(mode, quality)
 		updateDisplayUI(mode, quality)
@@ -288,7 +304,7 @@ function Editor:keypressed(key, scancode, isrepeat)
     end
 end
 
-function Editor:update()
+function Editor:update(dt)
     local drag = self.drag
 	if drag ~= nil then
         local x = love.mouse.getX()
@@ -317,6 +333,12 @@ end
 function Editor:setDisplay(...)
     if self.widget ~= nil then
         self.widget.object:setDisplay(...)
+    end
+end
+
+function Editor:getDisplay()
+	if self.widget ~= nil then
+        return self.widget.object:getDisplay()
     end
 end
 

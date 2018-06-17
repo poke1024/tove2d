@@ -41,14 +41,27 @@ function Slider:draw()
     slider:draw(self:xpos(), y)
 end
 
+function Slider:slide(x, y, dx)
+    local f = function(x, y)
+        x = x - dx
+        local v = self.min + math.min(math.max(
+            (x - self.x) / self.w, 0), 1) * (self.max - self.min)
+        if v ~= self.value then
+            self.value = v
+            self.callback(v)
+        end
+    end
+    f(x, y)
+    return f
+end
+
 function Slider:click(x, y)
     local dx, dy = x - self:xpos(), y - self.y
     if dx * dx + dy * dy < knobRadius * knobRadius then
-        return function(x, y)
-            self.value = self.min + math.min(math.max(
-                (x - self.x) / self.w, 0), 1) * (self.max - self.min)
-            self.callback(self.value)
-        end
+        return self:slide(x, y, dx)
+    elseif x > self.x and x < self.x + self.w and
+        math.abs(dy) <= knobRadius then
+        return self:slide(x, y, 0)
     end
     return nil
 end

@@ -20,7 +20,7 @@ end
 
 function Checkbox:click(x, y)
     if x >= self.x and y >= self.y and
-        x <= self.x + 16 and y <= self.y + 16 then
+        x <= self.x + 24 + self.textwidth and y <= self.y + 16 then
         self.checked = not self.checked
         self.callback(self.checked)
     end
@@ -36,7 +36,7 @@ end
 
 function Checkbox.new(font, text, callback)
     return Control.init(setmetatable({
-        font = font, text = text,
+        font = font, text = text, textwidth = font:getWidth(text),
         checked = false, callback = callback}, Checkbox))
 end
 
