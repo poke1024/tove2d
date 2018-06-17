@@ -348,7 +348,9 @@ local function newPathShaderLinkData(path, quality)
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
-		fillShader:send("line_quality", lineQuality)
+		if data.color.line.style > 0 then
+			fillShader:send("line_quality", lineQuality)
+		end
 	else
 		lineShader = newGeometryLineShader(data)
 	end
@@ -417,7 +419,7 @@ function PathShader:updateQuality(quality)
 	local lineType, lineQuality = parseQuality(quality)
 	if lineType == linkdata.lineType then
 		linkdata.lineQuality = lineQuality
-		if lineType == "fragment" then
+		if lineType == "fragment" and linkdata.data.color.line.style > 0 then
 			linkdata.fillShader:send("line_quality", lineQuality)
 		end
 		return true
