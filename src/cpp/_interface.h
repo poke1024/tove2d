@@ -89,7 +89,7 @@ typedef struct {
 
 typedef struct {
 	void *ptr;
-} ToveTrajectoryRef;
+} ToveSubpathRef;
 
 typedef struct {
 	void *ptr;
@@ -230,46 +230,46 @@ EXPORT void GradientAddColorStop(TovePaintRef gradient, float offset, float r, f
 EXPORT void GradientSetColorStop(TovePaintRef gradient, int i, float offset, float r, float g, float b, float a);
 EXPORT void ReleasePaint(TovePaintRef color);
 
-EXPORT ToveTrajectoryRef NewTrajectory();
-EXPORT ToveTrajectoryRef CloneTrajectory(ToveTrajectoryRef trajectory);
-EXPORT int TrajectoryGetNumCurves(ToveTrajectoryRef trajectory);
-EXPORT int TrajectoryGetNumPoints(ToveTrajectoryRef trajectory);
-EXPORT bool TrajectoryIsClosed(ToveTrajectoryRef trajectory);
-EXPORT const float *TrajectoryGetPoints(ToveTrajectoryRef trajectory);
-EXPORT void TrajectorySetPoint(ToveTrajectoryRef trajectory, int index, float x, float y);
-EXPORT void TrajectorySetPoints(ToveTrajectoryRef trajectory, const float *pts, int npts);
-EXPORT float TrajectoryGetCurveValue(ToveTrajectoryRef trajectory, int curve, int index);
-EXPORT void TrajectorySetCurveValue(ToveTrajectoryRef trajectory, int curve, int index, float value);
-EXPORT float TrajectoryGetPtValue(ToveTrajectoryRef trajectory, int index, int dim);
-EXPORT void TrajectorySetPtValue(ToveTrajectoryRef trajectory, int index, int dim, float value);
-EXPORT void TrajectoryInvert(ToveTrajectoryRef trajectory);
-EXPORT void TrajectorySetOrientation(ToveTrajectoryRef trajectory, ToveOrientation orientation);
-EXPORT void TrajectoryClean(ToveTrajectoryRef trajectory, float eps);
-EXPORT int TrajectoryMoveTo(ToveTrajectoryRef trajectory, float x, float y);
-EXPORT int TrajectoryLineTo(ToveTrajectoryRef trajectory, float x, float y);
-EXPORT int TrajectoryCurveTo(ToveTrajectoryRef trajectory, float cpx1, float cpy1,
+EXPORT ToveSubpathRef NewSubpath();
+EXPORT ToveSubpathRef CloneSubpath(ToveSubpathRef trajectory);
+EXPORT int SubpathGetNumCurves(ToveSubpathRef trajectory);
+EXPORT int SubpathGetNumPoints(ToveSubpathRef trajectory);
+EXPORT bool SubpathIsClosed(ToveSubpathRef trajectory);
+EXPORT const float *SubpathGetPoints(ToveSubpathRef trajectory);
+EXPORT void SubpathSetPoint(ToveSubpathRef trajectory, int index, float x, float y);
+EXPORT void SubpathSetPoints(ToveSubpathRef trajectory, const float *pts, int npts);
+EXPORT float SubpathGetCurveValue(ToveSubpathRef trajectory, int curve, int index);
+EXPORT void SubpathSetCurveValue(ToveSubpathRef trajectory, int curve, int index, float value);
+EXPORT float SubpathGetPtValue(ToveSubpathRef trajectory, int index, int dim);
+EXPORT void SubpathSetPtValue(ToveSubpathRef trajectory, int index, int dim, float value);
+EXPORT void SubpathInvert(ToveSubpathRef trajectory);
+EXPORT void SubpathSetOrientation(ToveSubpathRef trajectory, ToveOrientation orientation);
+EXPORT void SubpathClean(ToveSubpathRef trajectory, float eps);
+EXPORT int SubpathMoveTo(ToveSubpathRef trajectory, float x, float y);
+EXPORT int SubpathLineTo(ToveSubpathRef trajectory, float x, float y);
+EXPORT int SubpathCurveTo(ToveSubpathRef trajectory, float cpx1, float cpy1,
 	float cpx2, float cpy2, float x, float y);
-EXPORT int TrajectoryArc(ToveTrajectoryRef trajectory, float x, float y, float r,
+EXPORT int SubpathArc(ToveSubpathRef trajectory, float x, float y, float r,
 	float startAngle, float endAngle, bool counterclockwise);
-EXPORT int TrajectoryDrawRect(ToveTrajectoryRef trajectory, float x, float y,
+EXPORT int SubpathDrawRect(ToveSubpathRef trajectory, float x, float y,
 	float w, float h, float rx, float ry);
-EXPORT int TrajectoryDrawEllipse(ToveTrajectoryRef trajectory, float x, float y, float rx, float ry);
-EXPORT float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int property);
-EXPORT void TrajectorySetCommandValue(ToveTrajectoryRef trajectory, int command, int property, float value);
-EXPORT ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t);
-EXPORT ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t);
-EXPORT ToveNearest TrajectoryNearest(ToveTrajectoryRef trajectory, float x, float y, float dmin, float dmax);
-EXPORT int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t);
-EXPORT void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve);
-EXPORT int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y);
-EXPORT bool TrajectoryIsEdgeAt(ToveTrajectoryRef trajectory, int k);
-EXPORT void TrajectoryMove(ToveTrajectoryRef trajectory, int k, float x, float y);
-EXPORT void ReleaseTrajectory(ToveTrajectoryRef trajectory);
+EXPORT int SubpathDrawEllipse(ToveSubpathRef trajectory, float x, float y, float rx, float ry);
+EXPORT float SubpathGetCommandValue(ToveSubpathRef trajectory, int command, int property);
+EXPORT void SubpathSetCommandValue(ToveSubpathRef trajectory, int command, int property, float value);
+EXPORT ToveVec2 SubpathGetPosition(ToveSubpathRef trajectory, float t);
+EXPORT ToveVec2 SubpathGetNormal(ToveSubpathRef trajectory, float t);
+EXPORT ToveNearest SubpathNearest(ToveSubpathRef trajectory, float x, float y, float dmin, float dmax);
+EXPORT int SubpathInsertCurveAt(ToveSubpathRef trajectory, float t);
+EXPORT void SubpathRemoveCurve(ToveSubpathRef trajectory, int curve);
+EXPORT int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y);
+EXPORT bool SubpathIsEdgeAt(ToveSubpathRef trajectory, int k);
+EXPORT void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y);
+EXPORT void ReleaseSubpath(ToveSubpathRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);
 EXPORT TovePathRef ClonePath(TovePathRef path);
-EXPORT ToveTrajectoryRef PathBeginTrajectory(TovePathRef path);
-EXPORT void PathAddTrajectory(TovePathRef path, ToveTrajectoryRef traj);
+EXPORT ToveSubpathRef PathBeginSubpath(TovePathRef path);
+EXPORT void PathAddSubpath(TovePathRef path, ToveSubpathRef traj);
 EXPORT void PathSetFillColor(TovePathRef path, TovePaintRef color);
 EXPORT void PathSetLineColor(TovePathRef path, TovePaintRef color);
 EXPORT TovePaintRef PathGetFillColor(TovePathRef path);
@@ -280,8 +280,8 @@ EXPORT float PathGetMiterLimit(TovePathRef path);
 EXPORT void PathSetLineDash(TovePathRef path, const float *dashes, int count);
 EXPORT void PathSetLineDashOffset(TovePathRef path, float offset);
 EXPORT float PathGetLineWidth(TovePathRef path);
-EXPORT int PathGetNumTrajectories(TovePathRef path);
-EXPORT ToveTrajectoryRef PathGetTrajectory(TovePathRef path, int i);
+EXPORT int PathGetNumSubpaths(TovePathRef path);
+EXPORT ToveSubpathRef PathGetSubpath(TovePathRef path, int i);
 EXPORT void PathAnimate(TovePathRef path, TovePathRef a, TovePathRef b, float t);
 EXPORT int PathGetNumCurves(TovePathRef path);
 EXPORT ToveFillRule PathGetFillRule(TovePathRef path);
@@ -300,9 +300,9 @@ EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
 EXPORT ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics);
-EXPORT ToveTrajectoryRef GraphicsBeginTrajectory(ToveGraphicsRef graphics);
-EXPORT void GraphicsCloseTrajectory(ToveGraphicsRef graphics);
-EXPORT void GraphicsInvertTrajectory(ToveGraphicsRef graphics);
+EXPORT ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics);
+EXPORT void GraphicsCloseSubpath(ToveGraphicsRef graphics);
+EXPORT void GraphicsInvertSubpath(ToveGraphicsRef graphics);
 EXPORT TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape);
 EXPORT void GraphicsAddPath(ToveGraphicsRef shape, TovePathRef path);
 EXPORT int GraphicsGetNumPaths(ToveGraphicsRef shape);

@@ -12,15 +12,15 @@
 #ifndef __TOVE_PATH
 #define __TOVE_PATH 1
 
-#include "trajectory.h"
+#include "subpath.h"
 #include "paint.h"
 #include "claimable.h"
 #include "mesh/flatten.h"
 
 class Path : public Claimable<Graphics> {
 private:
-	bool newTrajectory;
-	std::vector<TrajectoryRef> trajectories;
+	bool newSubpath;
+	std::vector<SubpathRef> trajectories;
 
 	PaintRef fillColor;
 	PaintRef lineColor;
@@ -28,12 +28,12 @@ private:
 	uint8_t changes;
 	float exactBounds[4];
 
-	inline const TrajectoryRef &current() const {
+	inline const SubpathRef &current() const {
 		return trajectories[trajectories.size() - 1];
 	}
 
-	void setTrajectoryCount(int n);
-	void _append(const TrajectoryRef &trajectory);
+	void setSubpathCount(int n);
+	void _append(const SubpathRef &trajectory);
 
 	void _setFillColor(const PaintRef &color);
 	void _setLineColor(const PaintRef &color);
@@ -55,9 +55,9 @@ public:
 
 	void clear();
 
-	TrajectoryRef beginTrajectory();
-	void closeTrajectory(bool closeCurves = false);
-	void invertTrajectory();
+	SubpathRef beginSubpath();
+	void closeSubpath(bool closeCurves = false);
+	void invertSubpath();
 
 	void updateBoundsPartial(int from);
 	void updateBounds();
@@ -65,7 +65,7 @@ public:
 	const float *getBounds();
 	const float *getExactBounds();
 
-	void addTrajectory(const TrajectoryRef &t);
+	void addSubpath(const SubpathRef &t);
 
 	inline void setFillColor(const PaintRef &color) {
 		_setFillColor(color);
@@ -94,11 +94,11 @@ public:
 
 	void set(const PathRef &path, const nsvg::Transform &transform);
 
-	inline int getNumTrajectories() const {
+	inline int getNumSubpaths() const {
 		return trajectories.size();
 	}
 
-	inline TrajectoryRef getTrajectory(int i) const {
+	inline SubpathRef getSubpath(int i) const {
 		return trajectories.at(i);
 	}
 
@@ -164,7 +164,7 @@ public:
 
 	void changed(ToveChangeFlags flags);
 
-	inline int getTrajectorySize(int i, const FixedFlattener &flattener) const {
+	inline int getSubpathSize(int i, const FixedFlattener &flattener) const {
 		return flattener.size(&trajectories[i]->nsvg);
 	}
 

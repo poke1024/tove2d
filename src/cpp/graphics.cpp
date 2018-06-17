@@ -9,21 +9,16 @@
  * All rights reserved.
  */
 
- // an important note about naming of things:
+ // on the naming of things:
 
- // what NSVG calls a "shape" is called a "path" in SVG; what NSVG calls a "path" is really
- // a "sub path" or a "trajectory". see this explanation by Mark Kilgard:
+ // what NSVG calls a "shape" is called a "path" in TÖVE; what NSVG calls a
+ // "path" is a "sub path" in TÖVE. see this explanation by Mark Kilgard:
  // (https://www.opengl.org/discussion_boards/showthread.php/175260-GPU-accelerated-path-rendering?p=1225200&viewfull=1#post1225200)
 
  // which leads us to this renaming:
- // 		NSVG path -> Trajectory
+ // 		NSVG path -> Subpath
  // 		NSVG shape -> Path
  // 		NSVG image -> Graphics
-
- // at the same time, we keep the names of beginPath() and closePath() functions in Graphics,
- // even though they should really be called begin beginTrajectory() and endTrajectory().
- // Yet HTML5, Flash and Apple's CoreGraphics all use beginPath() and closePath(), so hey,
- // who are we to change convention.
 
 #include "graphics.h"
 
@@ -50,16 +45,18 @@ void Graphics::_appendPath(const PathRef &path) {
 	paths.push_back(path);
 }
 
-void Graphics::beginPath() {
+PathRef Graphics::beginPath() {
 	if (!newPath) {
-		return;
+		return current();
 	}
 
 	PathRef path = std::make_shared<Path>(this);
 	_appendPath(path);
 
-	path->beginTrajectory();
+	path->beginSubpath();
 	newPath = false;
+
+    return path;
 }
 
 void Graphics::closePath(bool closeCurves) {
@@ -79,12 +76,12 @@ void Graphics::closePath(bool closeCurves) {
 		path->nsvg.fillRule = fillRule;
 		path->nsvg.flags = NSVG_FLAGS_VISIBLE;
 
-		path->closeTrajectory(closeCurves);
+		path->closeSubpath(closeCurves);
 		changed(CHANGED_GEOMETRY);
 
 		newPath = true;
 	} else if (closeCurves) {
-		current()->closeTrajectory(true);
+		current()->closeSubpath(true);
 	}
 }
 
@@ -163,22 +160,19 @@ void Graphics::clear() {
 	}
 }
 
-PathRef Graphics::beginTrajectory() {
-	beginPath();
-	PathRef p = current();
-	p->beginTrajectory();
-	return p;
+SubpathRef Graphics::beginSubpath() {
+	return beginPath()->beginSubpath();
 }
 
-void Graphics::closeTrajectory() {
+void Graphics::closeSubpath() {
 	if (!paths.empty()) {
-		current()->closeTrajectory();
+		current()->closeSubpath();
 	}
 }
 
-void Graphics::invertTrajectory() {
+void Graphics::invertSubpath() {
     if (!paths.empty()) {
-		current()->invertTrajectory();
+		current()->invertSubpath();
 	}
 }
 
@@ -222,7 +216,7 @@ void Graphics::addPath(const PathRef &path) {
 	} else {
 		closePath();
 
-		path->closeTrajectory();
+		path->closeSubpath();
 		_appendPath(path);
 
 		newPath = true;

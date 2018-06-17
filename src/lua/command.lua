@@ -11,10 +11,10 @@
 
 local Command = {}
 Command.__index = function (self, key)
-	return lib.TrajectoryGetCommandValue(self._t, self._c, _attributes[key])
+	return lib.SubpathGetCommandValue(self._t, self._c, _attributes[key])
 end
 Command.__newindex = function (self, key, value)
-	lib.TrajectorySetCommandValue(rawget(self, "_t"), rawget(self, "_c"), _attributes[key], value)
+	lib.SubpathSetCommandValue(rawget(self, "_t"), rawget(self, "_c"), _attributes[key], value)
 end
 
 return function(trajectory, command)

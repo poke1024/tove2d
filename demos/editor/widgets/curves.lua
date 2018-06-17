@@ -21,10 +21,10 @@ end
 function PointsWidget:allpoints(f)
 	local graphics = self.object.graphics
 
-	for i = 1, graphics.npaths do
-		local path = graphics.paths[i]
-		for j = 1, path.ntrajs do
-			local traj = path.trajs[j]
+	for i = 1, graphics.pathCount do
+		local path = graphics.path[i]
+		for j = 1, path.subpathCount do
+			local traj = path.subpath[j]
 
 			for k = 1, traj.npts, 3 do
 				local pts = traj.pts
@@ -44,10 +44,10 @@ function PointsWidget:allcontrolpoints(f)
 	local selected = self.selected
 	local dragging = self.dragging
 
-	for i = 1, graphics.npaths do
-		local path = graphics.paths[i]
-		for j = 1, path.ntrajs do
-			local traj = path.trajs[j]
+	for i = 1, graphics.pathCount do
+		local path = graphics.path[i]
+		for j = 1, path.subpathCount do
+			local traj = path.subpath[j]
 
 			local pts = traj.pts
 			for k = 1, traj.npts, 3 do
@@ -83,10 +83,10 @@ end
 
 function PointsWidget:oncurve(ux, uy, gs)
 	local scaledgraphics = self.object.scaledgraphics
-	for i = 1, scaledgraphics.npaths do
-		local path = scaledgraphics.paths[i]
-		for j = 1, path.ntrajs do
-			local traj = path.trajs[i]
+	for i = 1, scaledgraphics.pathCount do
+		local path = scaledgraphics.path[i]
+		for j = 1, path.subpathCount do
+			local traj = path.subpath[i]
 			local dmax = 2 * gs + path:getLineWidth() * 0.5
 			local t, d = traj:nearest(ux, uy, dmax, gs)
 			if t >= 0 then
@@ -118,8 +118,8 @@ function PointsWidget:updateOverlayLine()
 	local overlayLine = self.overlayLine
 	local handleColor = self.handles.color
 	overlayLine:set(self.object.scaledgraphics)
-	for i = 1, overlayLine.npaths do
-		local p = overlayLine.paths[i]
+	for i = 1, overlayLine.pathCount do
+		local p = overlayLine.path[i]
 		p:setFillColor()
 		p:setLineColor(unpack(handleColor))
 		p:setLineWidth(1)
@@ -170,7 +170,7 @@ function PointsWidget:createDragPointFunc()
 	return function(gx, gy)
 		self.object:changePoints(function()
 			local mx, my = transform:inverseTransformPoint(gx, gy)
-			local traj = graphics.paths[dragging.path].trajs[dragging.traj]
+			local traj = graphics.path[dragging.path].subpath[dragging.traj]
 			traj:move(dragging.pt, mx, my)
 		end)
 
@@ -180,7 +180,7 @@ end
 
 function PointsWidget:createMouldCurveFunc(i, j, t)
 	local transform = self.object.transform
-	local traj = self.object.graphics.paths[i].trajs[j]
+	local traj = self.object.graphics.path[i].subpath[j]
 
 	return function(gx, gy)
 		local mx, my = transform:inverseTransformPoint(gx, gy)
@@ -261,7 +261,7 @@ function PointsWidget:click(gx, gy, gs, button)
 
 	local i, j, t = self:oncurve(ux, uy, gs)
 	if t >= 0 then
-		local traj = self.object.graphics.paths[i].trajs[j]
+		local traj = self.object.graphics.path[i].subpath[j]
 		local k = traj:insertCurveAt(t)
 		self.selected = {path = i, traj = j, pt = k}
 		self.object:refresh()
@@ -279,7 +279,7 @@ function PointsWidget:keypressed(key)
 		if selected ~= nil then
 			if (selected.pt - 1) % 3 == 0 then
 				self.object:changePoints(function()
-					local traj = self.object.graphics.paths[selected.path].trajs[selected.traj]
+					local traj = self.object.graphics.path[selected.path].subpath[selected.traj]
 					traj:removeCurve((selected.pt - 1) / 3)
 				end)
 				self:updateOverlayLine()

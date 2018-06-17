@@ -48,8 +48,8 @@ function Editor:load()
 		local widget = editor.widget
 		if widget ~= nil then
             local object = widget.object
-			for i = 1, object.graphics.npaths do
-				local path = object.graphics.paths[i]
+			for i = 1, object.graphics.pathCount do
+				local path = object.graphics.path[i]
 				if what == "fill" then
 					path:setFillColor(...)
 				else
@@ -66,8 +66,8 @@ function Editor:load()
 		local widget = editor.widget
 		if widget ~= nil then
 			local object = widget.object
-			for i = 1, object.graphics.npaths do
-				local path = object.graphics.paths[i]
+			for i = 1, object.graphics.pathCount do
+				local path = object.graphics.path[i]
 				path:setLineWidth(value)
 			end
 			object:refresh()
@@ -77,8 +77,8 @@ function Editor:load()
 		local widget = editor.widget
 		if widget ~= nil then
 			local object = widget.object
-			for i = 1, object.graphics.npaths do
-				local path = object.graphics.paths[i]
+			for i = 1, object.graphics.pathCount do
+				local path = object.graphics.path[i]
 				path:setMiterLimit(value)
 			end
 			object:refresh()
@@ -209,10 +209,10 @@ function Editor:createWidget(x, y, button, clickCount)
 		local ux, uy = object.transform:inverseUnscaledTransformPoint(x, y)
 		local gs = self.scale
 
-		for i = 1, graphics.npaths do
-			local hit = graphics.paths[i]:inside(lx, ly)
+		for i = 1, graphics.pathCount do
+			local hit = graphics.path[i]:inside(lx, ly)
 			if not hit then
-				local scaledpath = scaledgraphics.paths[i]
+				local scaledpath = scaledgraphics.path[i]
 				local offset = scaledpath:getLineWidth() / 2
 				hit = scaledpath:nearest(ux, uy, offset + 2 * gs) ~= false
 			end
@@ -224,7 +224,7 @@ function Editor:createWidget(x, y, button, clickCount)
 					self.widget = newTransformWidget(self.handles, object)
 				end
 
-				local path = object.graphics.paths[1]
+				local path = object.graphics.path[1]
 				self.colorDabs:setLineColor(path:getLineColor())
 				self.colorDabs:setFillColor(path:getFillColor())
 				self.lineWidthSlider:setValue(path:getLineWidth())
@@ -368,9 +368,9 @@ function Editor:loadfile(file)
 	local screenwidth = love.graphics.getWidth()
 	local screenheight = love.graphics.getHeight()
 
-	for i = 1, graphics.npaths do
+	for i = 1, graphics.pathCount do
 		local g = tove.newGraphics()
-		g:addPath(graphics.paths[i])
+		g:addPath(graphics.path[i])
 		self:addObject(Object.new(screenwidth / 2, screenheight / 2, g))
 	end
 end

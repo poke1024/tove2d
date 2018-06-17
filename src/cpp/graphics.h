@@ -42,7 +42,7 @@ private:
 	void setNumPaths(int n);
 	void _appendPath(const PathRef &path);
 
-	void beginPath();
+	PathRef beginPath();
 	void closePath(bool closeCurves = false);
 
 	void initialize(float width, float height);
@@ -76,9 +76,9 @@ public:
 	}
 
 	void clear();
-	PathRef beginTrajectory();
-	void closeTrajectory();
-	void invertTrajectory();
+	SubpathRef beginSubpath();
+	void closeSubpath();
+	void invertSubpath();
 
 	inline void setFillColor(const PaintRef &color) {
 		fillColor = color;

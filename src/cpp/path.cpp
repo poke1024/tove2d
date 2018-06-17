@@ -26,16 +26,16 @@ inline NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 	return NSVG_JOIN_MITER;
 }
 
-void Path::setTrajectoryCount(int n) {
+void Path::setSubpathCount(int n) {
 	if (trajectories.size() != n) {
 		clear();
 		while (trajectories.size() < n) {
-			addTrajectory(std::make_shared<Trajectory>());
+			addSubpath(std::make_shared<Subpath>());
 		}
 	}
 }
 
-void Path::_append(const TrajectoryRef &trajectory) {
+void Path::_append(const SubpathRef &trajectory) {
 	if (trajectories.empty()) {
 		nsvg.paths = &trajectory->nsvg;
 	} else {
@@ -119,7 +119,7 @@ void Path::set(const NSVGshape *shape) {
 
 	NSVGpath *path = shape->paths;
 	while (path) {
-		_append(std::make_shared<Trajectory>(path));
+		_append(std::make_shared<Subpath>(path));
 		path = path->next;
 	}
 	changed(CHANGED_GEOMETRY);
@@ -143,7 +143,7 @@ Path::Path() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 		nsvg.bounds[i] = 0.0;
 	}
 
-	newTrajectory = true;
+	newSubpath = true;
 }
 
 Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
@@ -163,13 +163,13 @@ Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) 
 		nsvg.bounds[i] = 0.0;
 	}
 
-	newTrajectory = true;
+	newSubpath = true;
 	claim(graphics);
 }
 
 Path::Path(Graphics *graphics, const NSVGshape *shape) : changes(0) {
 	set(shape);
-	newTrajectory = true;
+	newSubpath = true;
 	claim(graphics);
 }
 
@@ -178,7 +178,7 @@ Path::Path(const char *d) : changes(0) {
 	set(image->shapes);
 	nsvgDelete(image);
 
-	newTrajectory = true;
+	newSubpath = true;
 }
 
 Path::Path(const Path *path) : changes(path->changes) {
@@ -206,10 +206,10 @@ Path::Path(const Path *path) : changes(path->changes) {
 
 	trajectories.reserve(path->trajectories.size());
 	for (int i = 0; i < path->trajectories.size(); i++) {
-		_append(std::make_shared<Trajectory>(path->trajectories[i]));
+		_append(std::make_shared<Subpath>(path->trajectories[i]));
 	}
 
-	newTrajectory = true;
+	newSubpath = true;
 }
 
 void Path::clear() {
@@ -223,13 +223,13 @@ void Path::clear() {
 	}
 }
 
-TrajectoryRef Path::beginTrajectory() {
-	if (!newTrajectory) {
+SubpathRef Path::beginSubpath() {
+	if (!newSubpath) {
 		return current();
 	}
-	closeTrajectory();
+	closeSubpath();
 
-	TrajectoryRef trajectory = std::make_shared<Trajectory>();
+	SubpathRef trajectory = std::make_shared<Subpath>();
 	trajectory->claim(this);
 	if (trajectories.empty()) {
 		nsvg.paths = &trajectory->nsvg;
@@ -237,20 +237,20 @@ TrajectoryRef Path::beginTrajectory() {
 		current()->setNext(trajectory);
 	}
 	trajectories.push_back(trajectory);
-	newTrajectory = false;
+	newSubpath = false;
 
 	return trajectory;
 }
 
-void Path::closeTrajectory(bool closeCurves) {
-	if (newTrajectory) {
+void Path::closeSubpath(bool closeCurves) {
+	if (newSubpath) {
 		if (closeCurves && !trajectories.empty()) {
 			current()->setIsClosed(true);
 		}
 		return;
 	}
 	if (!trajectories.empty()) {
-		const TrajectoryRef &t = current();
+		const SubpathRef &t = current();
 		t->updateBounds();
 		if ((changes & CHANGED_BOUNDS) == 0) {
 			updateBoundsPartial(trajectories.size() - 1);
@@ -259,10 +259,10 @@ void Path::closeTrajectory(bool closeCurves) {
 			t->setIsClosed(true);
 		}
 	}
-	newTrajectory = true;
+	newSubpath = true;
 }
 
-void Path::invertTrajectory() {
+void Path::invertSubpath() {
 	if (!trajectories.empty()) {
 		current()->invert();
 	}
@@ -271,7 +271,7 @@ void Path::invertTrajectory() {
 void Path::updateBoundsPartial(int from) {
 	const float w = hasStroke() ? nsvg.strokeWidth * 0.5 : 0.0;
 	for (int i = from; i < trajectories.size(); i++) {
-		const TrajectoryRef &t = trajectories[i];
+		const SubpathRef &t = trajectories[i];
 		t->updateBounds();
 		if (i == 0) {
 			nsvg.bounds[0] = t->nsvg.bounds[0] - w;
@@ -320,8 +320,8 @@ const float *Path::getExactBounds() {
 	return exactBounds;
 }
 
-void Path::addTrajectory(const TrajectoryRef &t) {
-	closeTrajectory();
+void Path::addSubpath(const SubpathRef &t) {
+	closeSubpath();
 	_append(t);
 }
 
@@ -429,7 +429,7 @@ void Path::set(const PathRef &path, const nsvg::Transform &transform) {
 		geometryChanged();
 	}
 
-	setTrajectoryCount(n);
+	setSubpathCount(n);
 
 	for (int i = 0; i < n; i++) {
 		trajectories[i]->set(path->trajectories[i], transform);
@@ -502,7 +502,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	if (n != b->trajectories.size()) {
 		return;
 	}
-	setTrajectoryCount(n);
+	setSubpathCount(n);
 	for (int i = 0; i < n; i++) {
 		trajectories[i]->animate(a->trajectories[i], b->trajectories[i], t);
 	}

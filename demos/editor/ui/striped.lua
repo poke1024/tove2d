@@ -37,9 +37,9 @@ local function stripedCircle(cx, cy, outer, inner, phi)
     g:setFillColor(1, 1, 1)
 
     if inner > 0 then
-        g:closePath()
+        g:closeSubpath()
         g:drawCircle(cx, cy, inner)
-        g:invertPath()
+        g:invertSubpath()
     end
 
     g:fill()

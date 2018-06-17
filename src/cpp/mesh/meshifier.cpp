@@ -110,7 +110,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 
 	FixedFlattener flattener(scale, depth, 0.0);
 
-	const int n = path->getNumTrajectories();
+	const int n = path->getNumSubpaths();
 	int index0 = _nvertices;
 	int index = 0;
 
@@ -128,16 +128,16 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 
 		if (compound) {
 			for (int i = 0; i < n; i++) {
-				linebase += flattener.size(&path->getTrajectory(i)->nsvg);
+				linebase += flattener.size(&path->getSubpath(i)->nsvg);
 			}
 		}
 
 		for (int i = 0; i < n; i++) {
 			int k = flattener.flatten(
-				&path->getTrajectory(i)->nsvg, fill, index0 + index);
+				&path->getSubpath(i)->nsvg, fill, index0 + index);
 
 			if (hasStroke) {
-				const bool closed = path->getTrajectory(i)->isClosed();
+				const bool closed = path->getSubpath(i)->isClosed();
 
 				float *outer = line->vertices(
 					index0 + linebase + index * 2, k * 2);
@@ -248,7 +248,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 		}
 	} else {
 		for (int i = 0; i < n; i++) {
-			index += path->getTrajectorySize(i, flattener);
+			index += path->getSubpathSize(i, flattener);
 		}
 		if (compound) {
 			linebase = index;

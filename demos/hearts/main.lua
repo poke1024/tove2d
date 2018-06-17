@@ -105,7 +105,7 @@ function love.draw()
 		h.animatedCurve.y = cy0 + (0.25 + math.sin(t * 1.2 + 0.3)) * 20
 
 		-- change fill color.
-		h.graphics.paths[1]:setFillColor(newLinearGradient(t))
+		h.graphics.path[1]:setFillColor(newLinearGradient(t))
 
 		-- now draw the heart.
 		drawHeart(i, h, t)

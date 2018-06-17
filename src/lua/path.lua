@@ -9,17 +9,17 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local Trajectories = {}
-Trajectories.__index = function (self, i)
-	return ffi.gc(lib.PathGetTrajectory(self.path, i), lib.ReleaseTrajectory)
+local Subpaths = {}
+Subpaths.__index = function (self, i)
+	return ffi.gc(lib.PathGetSubpath(self.path, i), lib.ReleaseSubpath)
 end
 
 local Path = {}
 Path.__index = function (path, key)
-	if key == "trajs" then
-		return setmetatable({path = path}, Trajectories)
-	elseif key == "ntrajs" then
-		return lib.PathGetNumTrajectories(path)
+	if key == "subpath" then
+		return setmetatable({path = path}, Subpaths)
+	elseif key == "subpathCount" then
+		return lib.PathGetNumSubpaths(path)
 	else
 		return Path[key]
 	end
@@ -38,24 +38,24 @@ Path.clearChanges = lib.PathClearChanges
 Path.fetchChanges = lib.PathFetchChanges
 Path.inside = lib.PathIsInside
 
-function Path:beginTrajectory()
-	return ffi.gc(lib.PathBeginTrajectory(self), lib.ReleaseTrajectory)
+function Path:beginSubpath()
+	return ffi.gc(lib.PathBeginSubpath(self), lib.ReleaseSubpath)
 end
 
-function Path:addTrajectory(t)
-	lib.PathAddTrajectory(self, t)
+function Path:addSubpath(t)
+	lib.PathAddSubpath(self, t)
 end
 
 function Path:moveTo(x, y)
-	lib.TrajectoryMoveTo(self:beginTrajectory(), x, y)
+	lib.SubpathMoveTo(self:beginSubpath(), x, y)
 end
 
 function Path:lineTo(x, y)
-	lib.TrajectoryLineTo(self:beginTrajectory(), x, y)
+	lib.SubpathLineTo(self:beginSubpath(), x, y)
 end
 
 function Path:curveTo(...)
-	lib.TrajectorCurveTo(self:beginTrajectory(), ...)
+	lib.TrajectorCurveTo(self:beginSubpath(), ...)
 end
 
 function Path:getFillColor()
@@ -88,7 +88,7 @@ function Path:animate(a, b, t)
 end
 
 function Path:nearest(x, y, max, min)
-	local n = lib.PathGetNumTrajectories(self)
+	local n = lib.PathGetNumSubpaths(self)
 	local trajs = self.trajs
 	for i = 1, n do
 		local traj = trajs[i]

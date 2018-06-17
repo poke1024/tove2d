@@ -53,8 +53,8 @@ typedef ClipperLib::IntPoint ClipperPoint;
 class AbstractPaint;
 typedef std::shared_ptr<AbstractPaint> PaintRef;
 
-class Trajectory;
-typedef std::shared_ptr<Trajectory> TrajectoryRef;
+class Subpath;
+typedef std::shared_ptr<Subpath> SubpathRef;
 
 class Graphics;
 typedef std::shared_ptr<Graphics> GraphicsRef;

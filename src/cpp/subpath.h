@@ -20,7 +20,7 @@
 #include "utils.h"
 #include "intersect.h"
 
-class Trajectory : public Claimable<Path>, public std::enable_shared_from_this<Trajectory> {
+class Subpath : public Claimable<Path>, public std::enable_shared_from_this<Subpath> {
 private:
 	struct Command {
 		uint8_t type; // ToveCommandType
@@ -85,11 +85,11 @@ private:
 public:
 	NSVGpath nsvg;
 
-	Trajectory();
-	Trajectory(const NSVGpath *path);
-	Trajectory(const TrajectoryRef &t);
+	Subpath();
+	Subpath(const NSVGpath *path);
+	Subpath(const SubpathRef &t);
 
-	inline ~Trajectory() {
+	inline ~Subpath() {
 		free(nsvg.pts);
 	}
 
@@ -174,7 +174,7 @@ public:
 
 	void updateBounds();
 
-	void set(const TrajectoryRef &t, const nsvg::Transform &transform);
+	void set(const SubpathRef &t, const nsvg::Transform &transform);
 
 	inline int getNumPoints() const {
 		return nsvg.npts;
@@ -210,9 +210,9 @@ public:
 		int target,
 		ExCurveData &extended);
 
-	void animate(const TrajectoryRef &a, const TrajectoryRef &b, float t);
+	void animate(const SubpathRef &a, const SubpathRef &b, float t);
 
-	inline void setNext(const TrajectoryRef &trajectory) {
+	inline void setNext(const SubpathRef &trajectory) {
 		nsvg.next = &trajectory->nsvg;
 	}
 

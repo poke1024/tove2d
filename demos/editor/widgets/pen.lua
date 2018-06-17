@@ -17,11 +17,11 @@ function PathWidget:create()
     path:addTrajectory(traj)
     object.graphics:addPath(path)
 
-    object.graphics.paths[1]:setLineColor(0, 0, 0)
-    object.graphics.paths[1]:setLineWidth(1)
+    object.graphics.path[1]:setLineColor(0, 0, 0)
+    object.graphics.path[1]:setLineWidth(1)
 
     self.object = object
-    self.trajectory = object.graphics.paths[1].trajs[1]
+    self.trajectory = object.graphics.path[1].subpath[1]
 end
 
 function PathWidget:draw(gtransform)
@@ -36,12 +36,12 @@ function PathWidget:draw(gtransform)
 	tfm:apply(gtransform)
 	tfm:apply(self.object.transform.mousetransform)
 
-    for i = 1, g.npaths do
-        local path = g.paths[i]
-        for j = 1, path.ntrajs do
-            local traj = path.trajs[j]
-            for k = 1, traj.npts, 3 do
-                local pt = traj.pts[k]
+    for i = 1, g.pathCount do
+        local path = g.path[i]
+        for j = 1, path.subpathCount do
+            local traj = path.subpath[j]
+            for k = 1, traj.pointCount, 3 do
+                local pt = traj.point[k]
                 local x, y = tfm:transformPoint(pt.x, pt.y)
                 local type = traj:isEdgeAt(k) and "edge" or "smooth"
                 handles.knots.normal[type]:draw(x, y)
@@ -53,13 +53,13 @@ end
 function PathWidget:mousedown(gx, gy, gs, button)
     self:create()
 
-    for i = 1, self.trajectory.npts do
-        local p = self.trajectory.pts[i]
+    for i = 1, self.trajectory.pointCount do
+        local p = self.trajectory.point[i]
         --print(i, p.x, p.y, self.trajectory:isEdgeAt(i))
     end
 
     self.object:changePoints(function()
-        if self.trajectory.npts < 1 then
+        if self.trajectory.pointCount < 1 then
             self.trajectory:moveTo(gx, gy)
         else
             self.trajectory:lineTo(gx, gy)

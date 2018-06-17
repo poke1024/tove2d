@@ -134,7 +134,7 @@ create.mesh = function(self)
 	local display = self._display
 	local cquality, holes = unpack(display.cquality)
 	local usage = self._usage
-	local name = self._name
+	local name = self._name or "unnamed"
 
 	if usage["gradients"] == "fast" then
 		local gref = self._ref

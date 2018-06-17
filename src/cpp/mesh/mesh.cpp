@@ -122,12 +122,12 @@ void AbstractMesh::triangulateLine(
 	const PathRef &path,
 	const FixedFlattener &flattener) {
 
-	const int numTrajectories = path->getNumTrajectories();
+	const int numSubpaths = path->getNumSubpaths();
 	int i0 = 1 + v0;
-	for (int t = 0; t < numTrajectories; t++) {
-		const bool closed = path->getTrajectory(t)->isClosed();
+	for (int t = 0; t < numSubpaths; t++) {
+		const bool closed = path->getSubpath(t)->isClosed();
 
-		const int n = path->getTrajectorySize(t, flattener);
+		const int n = path->getSubpathSize(t, flattener);
 		uint16_t *indices = triangles.allocate(2 * (n - 1) + (closed ? 2 : 0));
 
 		for (int i = 0; i < n - 1; i++) {
@@ -165,10 +165,10 @@ void AbstractMesh::triangulateFill(
 
    	int vertexIndex = vertexIndex0;
 
-	const int numTrajectories = path->getNumTrajectories();
+	const int numSubpaths = path->getNumSubpaths();
 
-	for (int i = 0; i < numTrajectories; i++) {
-		const int n = path->getTrajectorySize(i, flattener);
+	for (int i = 0; i < numSubpaths; i++) {
+		const int n = path->getSubpathSize(i, flattener);
 		if (n < 3) {
 			continue;
 		}

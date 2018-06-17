@@ -18,7 +18,7 @@ function ColorDabs:update(r, g, b)
         self.paint[self.active] = nil
         self.callback(self.active, nil)
     else
-        local path = self.dabs[self.active].paths[1]
+        local path = self.dabs[self.active].path[1]
         path:setFillColor(r, g, b)
         self.paint[self.active] = path:getFillColor()
         self.callback(self.active, r, g, b)
@@ -37,7 +37,7 @@ end
 function ColorDabs:setLineColor(paint)
     self.paint["line"] = paint
     if paint ~= nil then
-        self.dabs.line.paths[1]:setFillColor(unpack(paint.rgba))
+        self.dabs.line.path[1]:setFillColor(unpack(paint.rgba))
     end
     self:updateColorWheel()
 end
@@ -45,7 +45,7 @@ end
 function ColorDabs:setFillColor(paint)
     self.paint["fill"] = paint
     if paint ~= nil then
-        self.dabs.fill.paths[1]:setFillColor(unpack(paint.rgba))
+        self.dabs.fill.path[1]:setFillColor(unpack(paint.rgba))
     end
     self:updateColorWheel()
 end
@@ -111,9 +111,9 @@ ColorDabs.new = function(callback, colorwheel)
     dabs.line:setLineColor(0, 0, 0)
     dabs.line:setLineWidth(1)
     dabs.line:setFillColor(1, 1, 1)
-    dabs.line:closePath()
+    dabs.line:closeSubpath()
     dabs.line:drawCircle(-pos, 0, dabRadius / 2)
-    dabs.line:invertPath()
+    dabs.line:invertSubpath()
     dabs.line:fill()
     dabs.line:stroke()
 

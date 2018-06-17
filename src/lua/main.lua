@@ -119,7 +119,7 @@ tove.init = function(path)
 
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand
-	--!! import "trajectory.lua" as Trajectory
+	--!! import "subpath.lua" as Subpath
 	--!! import "path.lua" as Path
 
 	--!! import "core/mesh.lua" as _mesh

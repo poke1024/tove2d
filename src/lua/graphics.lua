@@ -18,7 +18,7 @@ end
 
 local Graphics = {}
 Graphics.__index = function (graphics, key)
-	if key == "npaths" then
+	if key == "pathCount" then
 		return lib.GraphicsGetNumPaths(graphics._ref)
 	else
 		return Graphics[key]
@@ -45,7 +45,7 @@ tove.newGraphics = function(svg, size)
 		_resolution = 1,
 		_usage = {},
 		_name = name,
-		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
+		path = setmetatable({_ref = ref}, Paths)}, Graphics)
 	if type(size) == "number" then
 		graphics:rescale(size)
 	elseif size == nil then -- auto
@@ -56,12 +56,13 @@ tove.newGraphics = function(svg, size)
 end
 
 local function makeDisplay(mode, quality, usage)
+	local clonedQuality = quality
 	if type(quality) == "table" then
-		quality = deepcopy(quality)
+		clonedQuality = deepcopy(quality)
 	else
 		quality = quality or 1
 	end
-	return {mode = mode, quality = quality,
+	return {mode = mode, quality = clonedQuality,
 		cquality = cquality(quality, usage)}
 end
 
@@ -85,12 +86,11 @@ function Graphics:clone()
 	return g
 end
 
--- API exception: call a trajectory a path here.
-function Graphics:beginPath()
-	return ffi.gc(lib.GraphicsBeginTrajectory(self._ref), lib.ReleaseTrajectory)
+function Graphics:beginSubpath()
+	return ffi.gc(lib.GraphicsBeginSubpath(self._ref), lib.ReleaseSubpath)
 end
-bind("closePath", "GraphicsCloseTrajectory")
-bind("invertPath", "GraphicsInvertTrajectory")
+bind("closeSubpath", "GraphicsCloseSubpath")
+bind("invertSubpath", "GraphicsInvertSubpath")
 
 function Graphics:getCurrentPath()
 	return ffi.gc(lib.GraphicsGetCurrentPath(self._ref), lib.ReleasePath)
@@ -103,37 +103,37 @@ function Graphics:fetchChanges(flags)
 end
 
 function Graphics:moveTo(x, y)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryMoveTo(t, x, y))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathMoveTo(t, x, y))
 end
 
 function Graphics:lineTo(x, y)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryLineTo(t, x, y))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathLineTo(t, x, y))
 end
 
 function Graphics:curveTo(...)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryCurveTo(t, ...))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathCurveTo(t, ...))
 end
 
 function Graphics:arc(x, y, r, a1, a2, ccw)
-	lib.TrajectoryArc(self:beginPath(), x, y, r, a1, a2, ccw or false)
+	lib.SubpathArc(self:beginSubpath(), x, y, r, a1, a2, ccw or false)
 end
 
 function Graphics:drawRect(x, y, w, h, rx, ry)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryDrawRect(t, x, y, w, h or w, rx or 0, ry or 0))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathDrawRect(t, x, y, w, h or w, rx or 0, ry or 0))
 end
 
 function Graphics:drawCircle(x, y, r)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryDrawEllipse(t, x, y, r, r))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathDrawEllipse(t, x, y, r, r))
 end
 
 function Graphics:drawEllipse(x, y, rx, ry)
-	local t = self:beginPath()
-	return newCommand(t, lib.TrajectoryDrawEllipse(t, x, y, rx, ry or rx))
+	local t = self:beginSubpath()
+	return newCommand(t, lib.SubpathDrawEllipse(t, x, y, rx, ry or rx))
 end
 
 function Graphics:setFillColor(r, g, b, a)

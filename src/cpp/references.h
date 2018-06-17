@@ -56,8 +56,8 @@ inline const PathRef &deref(const TovePathRef &ref) {
 	DEREF(PathRef)
 }
 
-inline const TrajectoryRef &deref(const ToveTrajectoryRef &ref) {
-	DEREF(TrajectoryRef)
+inline const SubpathRef &deref(const ToveSubpathRef &ref) {
+	DEREF(SubpathRef)
 }
 
 inline const PaintRef &deref(const TovePaintRef &ref) {
@@ -76,7 +76,7 @@ inline const MeshRef &deref(const ToveMeshRef &ref) {
 
 References<Graphics, ToveGraphicsRef> shapes;
 References<Path, TovePathRef> paths;
-References<Trajectory, ToveTrajectoryRef> trajectories;
+References<Subpath, ToveSubpathRef> trajectories;
 References<AbstractPaint, TovePaintRef> paints;
 References<AbstractShaderLink, ToveShaderLinkRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;

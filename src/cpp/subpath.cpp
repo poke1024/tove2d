@@ -9,7 +9,7 @@
  * All rights reserved.
  */
 
-#include "trajectory.h"
+#include "subpath.h"
 #include "utils.h"
 #include "path.h"
 #include "intersect.h"
@@ -18,7 +18,7 @@ inline float length(float x, float y) {
 	return std::sqrt(x * x + y * y);
 }
 
-float *Trajectory::addPoints(int n, bool allowClosedEdit) {
+float *Subpath::addPoints(int n, bool allowClosedEdit) {
 	if (!allowClosedEdit && isClosed()) {
 		TOVE_WARN("editing closed trajectory.");
 	}
@@ -34,7 +34,7 @@ float *Trajectory::addPoints(int n, bool allowClosedEdit) {
 	return p;
 }
 
-void Trajectory::setNumPoints(int npts) {
+void Subpath::setNumPoints(int npts) {
 	if (npts == nsvg.npts) {
 		return;
 	}
@@ -48,13 +48,13 @@ void Trajectory::setNumPoints(int npts) {
 	nsvg.npts = npts;
 }
 
-int Trajectory::addCommand(ToveCommandType type, int index) {
+int Subpath::addCommand(ToveCommandType type, int index) {
 	commands.push_back(
 		Command{uint8_t(type), false, uint16_t(index), 1});
 	return commands.size() - 1;
 }
 
-void Trajectory::updateCommands() const {
+void Subpath::updateCommands() const {
 	const int numCommands = commands.size();
 	for (int i = 0; i < numCommands; i++) {
 		Command &command = commands[i];
@@ -82,7 +82,7 @@ void Trajectory::updateCommands() const {
 	dirty &= ~DIRTY_COMMANDS;
 }
 
-Trajectory::Trajectory() {
+Subpath::Subpath() {
 	memset(&nsvg, 0, sizeof(nsvg));
 	nsvg.closed = 0;
 
@@ -92,7 +92,7 @@ Trajectory::Trajectory() {
 	dirty = DIRTY_BOUNDS;
 }
 
-Trajectory::Trajectory(const NSVGpath *path) {
+Subpath::Subpath(const NSVGpath *path) {
 	memset(&nsvg, 0, sizeof(nsvg));
 	nsvg.closed = path->closed;
 	nsvg.npts = path->npts;
@@ -108,7 +108,7 @@ Trajectory::Trajectory(const NSVGpath *path) {
 	dirty = DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 }
 
-Trajectory::Trajectory(const TrajectoryRef &t) {
+Subpath::Subpath(const SubpathRef &t) {
 	memset(&nsvg, 0, sizeof(nsvg));
 	nsvg.closed = t->nsvg.closed;
 	nsvg.npts = t->nsvg.npts;
@@ -124,7 +124,7 @@ Trajectory::Trajectory(const TrajectoryRef &t) {
 	dirty = DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 }
 
-int Trajectory::moveTo(float x, float y) {
+int Subpath::moveTo(float x, float y) {
 	NSVGpath *p = &nsvg;
 	const int index = nsvg.npts;
 	if (p->npts > 0) {
@@ -136,7 +136,7 @@ int Trajectory::moveTo(float x, float y) {
 	return addCommand(TOVE_MOVE_TO, nsvg.npts - 1);
 }
 
-int Trajectory::lineTo(float x, float y) {
+int Subpath::lineTo(float x, float y) {
 	const int index = nsvg.npts;
 	if (index < 1) {
 		return -1;
@@ -151,7 +151,7 @@ int Trajectory::lineTo(float x, float y) {
 	return commandIndex;
 }
 
-int Trajectory::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
+int Subpath::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
 	const int index = nsvg.npts;
 	float *q = addPoints(3);
 	q[0] = cpx1; q[1] = cpy1;
@@ -160,7 +160,7 @@ int Trajectory::curveTo(float cpx1, float cpy1, float cpx2, float cpy2, float x,
 	return addCommand(TOVE_CURVE_TO, index);
 }
 
-int Trajectory::arc(float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
+int Subpath::arc(float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
 	const float deltaAngle = wrapAngle(endAngle - startAngle);
 
 	if (std::abs(deltaAngle - 360.0f) < 0.01) {
@@ -193,7 +193,7 @@ int Trajectory::arc(float x, float y, float r, float startAngle, float endAngle,
 	return -1;
 }
 
-int Trajectory::drawRect(float x, float y, float w, float h, float rx, float ry) {
+int Subpath::drawRect(float x, float y, float w, float h, float rx, float ry) {
 	RectPrimitive rect(x, y, w, h, rx, ry);
 	const int index = nsvg.npts;
 	float *p = addPoints(rect.size());
@@ -204,7 +204,7 @@ int Trajectory::drawRect(float x, float y, float w, float h, float rx, float ry)
 	return commandIndex;
 }
 
-int Trajectory::drawEllipse(float cx, float cy, float rx, float ry) {
+int Subpath::drawEllipse(float cx, float cy, float rx, float ry) {
 	const int index = nsvg.npts;
 	EllipsePrimitive ellipse(cx, cy, rx, ry);
 	float *p = addPoints(ellipse.size());
@@ -215,7 +215,7 @@ int Trajectory::drawEllipse(float cx, float cy, float rx, float ry) {
 	return commandIndex;
 }
 
-int Trajectory::insertCurveAt(float globalt) {
+int Subpath::insertCurveAt(float globalt) {
 	const int npts0 = nsvg.npts;
 
 	if (npts0 < 4) {
@@ -277,7 +277,7 @@ int Trajectory::insertCurveAt(float globalt) {
 	return i + 4;
 }
 
-void Trajectory::removeCurve(int curve) {
+void Subpath::removeCurve(int curve) {
 	const int npts = nsvg.npts - (isClosed() ? 1 : 0);
 
 	if (npts < 7) {
@@ -336,7 +336,7 @@ void Trajectory::removeCurve(int curve) {
 	remove((i + 4) % npts, 3);
 }
 
-void Trajectory::remove(int from, int n) {
+void Subpath::remove(int from, int n) {
 	assert(from < nsvg.npts);
 	assert(n < nsvg.npts);
 
@@ -371,7 +371,7 @@ void Trajectory::remove(int from, int n) {
 	fixLoop();
 }
 
-int Trajectory::mould(float globalt, float x, float y) {
+int Subpath::mould(float globalt, float x, float y) {
 	// adapted from https://pomax.github.io/bezierinfo/#moulding
 
 	const int nc = ncurves(nsvg.npts);
@@ -469,7 +469,7 @@ static void mirrorControlPoint(float qx, float qy,
 	cp1[1] = p0y + std::sin(cp1phi) * cp1mag;
 }
 
-void Trajectory::move(int k, float x, float y) {
+void Subpath::move(int k, float x, float y) {
 	const bool closed = isClosed();
 	const int n = nsvg.npts - (closed ? 1 : 0);
 
@@ -568,7 +568,7 @@ void Trajectory::move(int k, float x, float y) {
 	changed(CHANGED_POINTS);
 }
 
-void Trajectory::setLovePoints(const float *pts, int npts) {
+void Subpath::setLovePoints(const float *pts, int npts) {
 	bool loop = isClosed() && npts > 0;
 	const int n1 = npts + (loop ? 1 : 0);
 	setNumPoints(n1);
@@ -580,7 +580,7 @@ void Trajectory::setLovePoints(const float *pts, int npts) {
 	commands.clear();
 }
 
-bool Trajectory::isCollinear(int u, int v, int w) const {
+bool Subpath::isCollinear(int u, int v, int w) const {
 	const int n = nsvg.npts - (isClosed() ? 1 : 0);
 	if (n < 1) {
 		return false;
@@ -601,7 +601,7 @@ bool Trajectory::isCollinear(int u, int v, int w) const {
 	return std::abs(Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By)) < 0.1;
 }
 
-bool Trajectory::isEdgeAt(int k) const {
+bool Subpath::isEdgeAt(int k) const {
 	if (!isClosed()) {
 		if (k < 3 || k + 3 >= nsvg.npts) {
 			return true;
@@ -611,7 +611,7 @@ bool Trajectory::isEdgeAt(int k) const {
 		isCollinear(k, k + 1, k + 3);
 }
 
-float Trajectory::getCommandValue(int commandIndex, int what) {
+float Subpath::getCommandValue(int commandIndex, int what) {
 	if (commandIndex < 0 ||commandIndex >= commands.size()) {
 		return 0.0;
 	}
@@ -658,7 +658,7 @@ float Trajectory::getCommandValue(int commandIndex, int what) {
 	return 0.0;
 }
 
-void Trajectory::setCommandValue(int commandIndex, int what, float value) {
+void Subpath::setCommandValue(int commandIndex, int what, float value) {
 	if (commandIndex < 0 ||commandIndex >= commands.size()) {
 		return;
 	}
@@ -717,7 +717,7 @@ void Trajectory::setCommandValue(int commandIndex, int what, float value) {
 	setCommandDirty(commandIndex + 1);
 }
 
-void Trajectory::setCommandDirty(int commandIndex) {
+void Subpath::setCommandDirty(int commandIndex) {
 	const int n = commands.size();
 	if (isClosed()) {
 		commandIndex = (commandIndex % n + n) % n;
@@ -729,7 +729,7 @@ void Trajectory::setCommandDirty(int commandIndex) {
 	dirty |= DIRTY_COMMANDS;
 }
 
-void Trajectory::updateBounds() {
+void Subpath::updateBounds() {
 	if ((dirty & DIRTY_BOUNDS) == 0) {
 		return;
 	}
@@ -755,7 +755,7 @@ void Trajectory::updateBounds() {
 	dirty &= ~DIRTY_BOUNDS;
 }
 
-void Trajectory::set(const TrajectoryRef &t, const nsvg::Transform &transform) {
+void Subpath::set(const SubpathRef &t, const nsvg::Transform &transform) {
 	commit();
 	t->commit();
 	const int npts = t->nsvg.npts;
@@ -765,14 +765,14 @@ void Trajectory::set(const TrajectoryRef &t, const nsvg::Transform &transform) {
 	changed(CHANGED_POINTS);
 }
 
-bool Trajectory::isLoop() const {
+bool Subpath::isLoop() const {
 	const int n = nsvg.npts;
 	return n > 0 &&
 		nsvg.pts[0] == nsvg.pts[n * 2 - 2] &&
 		nsvg.pts[1] == nsvg.pts[n * 2 - 1];
 }
 
-void Trajectory::fixLoop() {
+void Subpath::fixLoop() {
 	const int npts = nsvg.npts;
 	if (npts > 0 && isClosed()) {
 		nsvg.pts[npts * 2 - 2] = nsvg.pts[0];
@@ -780,7 +780,7 @@ void Trajectory::fixLoop() {
 	}
 }
 
-void Trajectory::setIsClosed(bool closed) {
+void Subpath::setIsClosed(bool closed) {
 	if (nsvg.closed == closed) {
 		return;
 	}
@@ -794,7 +794,7 @@ void Trajectory::setIsClosed(bool closed) {
 	nsvg.closed = closed;
 }
 
-bool Trajectory::computeShaderCurveData(
+bool Subpath::computeShaderCurveData(
 	ToveShaderGeometryData *shaderData,
 	int curveIndex,
 	int target,
@@ -860,7 +860,7 @@ bool Trajectory::computeShaderCurveData(
 	return true;
 }
 
-void Trajectory::animate(const TrajectoryRef &a, const TrajectoryRef &b, float t) {
+void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 	const int n = a->nsvg.npts;
 	if (b->nsvg.npts != n) {
 		return;
@@ -879,7 +879,7 @@ void Trajectory::animate(const TrajectoryRef &a, const TrajectoryRef &b, float t
 	changed(CHANGED_POINTS);
 }
 
-void Trajectory::updateNSVG() {
+void Subpath::updateNSVG() {
 	// NanoSVG will crash if we give it incomplete curves. so we duplicate points
 	// to make complete curves here.
 	if (nsvg.npts > 0) {
@@ -898,14 +898,14 @@ void Trajectory::updateNSVG() {
 	updateBounds();
 }
 
-void Trajectory::changed(ToveChangeFlags flags) {
+void Subpath::changed(ToveChangeFlags flags) {
 	dirty |= DIRTY_BOUNDS | DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 	if (claimer) {
 		claimer->changed(flags);
 	}
 }
 
-void Trajectory::invert() {
+void Subpath::invert() {
 	commit();
 	const int n = nsvg.npts;
 	const size_t size = n * 2 * sizeof(float);
@@ -928,7 +928,7 @@ void Trajectory::invert() {
 	changed(CHANGED_POINTS);
 }
 
-void Trajectory::clean(float eps) {
+void Subpath::clean(float eps) {
 	commit();
 	const int n = nsvg.npts;
 
@@ -958,7 +958,7 @@ void Trajectory::clean(float eps) {
 	}
 }
 
-ToveOrientation Trajectory::getOrientation() const {
+ToveOrientation Subpath::getOrientation() const {
 	commit();
 	const int n = getNumPoints();
 	float area = 0;
@@ -971,13 +971,13 @@ ToveOrientation Trajectory::getOrientation() const {
 	return area < 0 ? ORIENTATION_CW : ORIENTATION_CCW;
 }
 
-void Trajectory::setOrientation(ToveOrientation orientation) {
+void Subpath::setOrientation(ToveOrientation orientation) {
 	if (getOrientation() != orientation) {
 		invert();
 	}
 }
 
-float Trajectory::getLovePointValue(int index, int dim) {
+float Subpath::getLovePointValue(int index, int dim) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;
@@ -991,7 +991,7 @@ float Trajectory::getLovePointValue(int index, int dim) {
 	}
 }
 
-void Trajectory::setLovePointValue(int index, int dim, float value) {
+void Subpath::setLovePointValue(int index, int dim, float value) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;
@@ -1009,7 +1009,7 @@ void Trajectory::setLovePointValue(int index, int dim, float value) {
 	}
 }
 
-void Trajectory::setCommandPoint(const Command &command, int what, float value) {
+void Subpath::setCommandPoint(const Command &command, int what, float value) {
 	float *p = nsvg.pts;
 	int index = command.index + command.direction * (what / 2);
 	p[2 * index + (what & 1)] = value;
@@ -1022,7 +1022,7 @@ void Trajectory::setCommandPoint(const Command &command, int what, float value) 
 	}
 }
 
-void Trajectory::updateCurveData(uint8_t flags) const {
+void Subpath::updateCurveData(uint8_t flags) const {
 	commit();
 
 	flags &= dirty;
@@ -1047,7 +1047,7 @@ void Trajectory::updateCurveData(uint8_t flags) const {
 	dirty &= ~flags;
 }
 
-void Trajectory::testInside(float x, float y, AbstractInsideTest &test) const {
+void Subpath::testInside(float x, float y, AbstractInsideTest &test) const {
 	ensureCurveData(DIRTY_COEFFICIENTS);
 	const int nc = ncurves(nsvg.npts);
 	for (int i = 0; i < nc; i++) {
@@ -1055,7 +1055,7 @@ void Trajectory::testInside(float x, float y, AbstractInsideTest &test) const {
 	}
 }
 
-void Trajectory::intersect(const AbstractRay &ray, Intersecter &intersecter) const {
+void Subpath::intersect(const AbstractRay &ray, Intersecter &intersecter) const {
 	ensureCurveData(DIRTY_COEFFICIENTS);
 	const int nc = ncurves(nsvg.npts);
 	for (int i = 0; i < nc; i++) {
@@ -1063,7 +1063,7 @@ void Trajectory::intersect(const AbstractRay &ray, Intersecter &intersecter) con
 	}
 }
 
-ToveVec2 Trajectory::getPosition(float globalt) const {
+ToveVec2 Subpath::getPosition(float globalt) const {
 	ensureCurveData(DIRTY_COEFFICIENTS);
 	const int nc = ncurves(nsvg.npts);
 
@@ -1082,7 +1082,7 @@ ToveVec2 Trajectory::getPosition(float globalt) const {
 	}
 }
 
-ToveVec2 Trajectory::getNormal(float globalt) const {
+ToveVec2 Subpath::getNormal(float globalt) const {
 	ensureCurveData(DIRTY_COEFFICIENTS);
 	const int nc = ncurves(nsvg.npts);
 
@@ -1154,7 +1154,7 @@ void bisect(
 	}
 }
 
-ToveNearest Trajectory::nearest(
+ToveNearest Subpath::nearest(
 	float x, float y, float dmin, float dmax) const {
 
 	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);

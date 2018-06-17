@@ -12,7 +12,7 @@
 #include "geometry.h"
 #include "../common.h"
 #include "../utils.h"
-#include "../trajectory.h"
+#include "../subpath.h"
 #include "../path.h"
 #include <algorithm>
 
@@ -244,7 +244,7 @@ GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 	bool enableFragmentShaderStrokes) :
 
 	maxCurves(path->getNumCurves()),
-	maxSubPaths(path->getNumTrajectories()),
+	maxSubPaths(path->getNumSubpaths()),
 	geometryData(data),
 	lineColorData(lineColorData),
 	fillEventsLUT(maxCurves, geometryData, IGNORE_FILL),
@@ -311,14 +311,14 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 
 	// build curve data
 
-	int numTrajectories = path->getNumTrajectories();
-	assert(numTrajectories <= maxSubPaths);
+	int numSubpaths = path->getNumSubpaths();
+	assert(numSubpaths <= maxSubPaths);
 
 	ToveLineRun *lineRuns = geometryData.lineRuns;
 
 	int curveIndex = 0;
-	for (int i = 0; i < numTrajectories; i++) {
-		const TrajectoryRef t = path->getTrajectory(i);
+	for (int i = 0; i < numSubpaths; i++) {
+		const SubpathRef t = path->getSubpath(i);
 		const int n = t->getNumCurves(false);
 
 		if (lineRuns) {
@@ -347,7 +347,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	}
 	assert(curveIndex <= maxCurves);
 	geometryData.numCurves = curveIndex;
-	geometryData.numSubPaths = numTrajectories;
+	geometryData.numSubPaths = numSubpaths;
 
 #if 0
 	if (initial) {

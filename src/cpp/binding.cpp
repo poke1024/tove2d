@@ -98,12 +98,12 @@ TovePathRef ClonePath(TovePathRef path) {
 	return paths.make(deref(path).get());
 }
 
-ToveTrajectoryRef PathBeginTrajectory(TovePathRef path) {
-	return trajectories.publish(deref(path)->beginTrajectory());
+ToveSubpathRef PathBeginSubpath(TovePathRef path) {
+	return trajectories.publish(deref(path)->beginSubpath());
 }
 
-void PathAddTrajectory(TovePathRef path, ToveTrajectoryRef traj) {
-	deref(path)->addTrajectory(deref(traj));
+void PathAddSubpath(TovePathRef path, ToveSubpathRef traj) {
+	deref(path)->addSubpath(deref(traj));
 }
 
 void PathSetFillColor(TovePathRef path, TovePaintRef color) {
@@ -146,13 +146,13 @@ float PathGetMiterLimit(TovePathRef path) {
 	return deref(path)->getMiterLimit();
 }
 
-int PathGetNumTrajectories(TovePathRef path) {
-	return deref(path)->getNumTrajectories();
+int PathGetNumSubpaths(TovePathRef path) {
+	return deref(path)->getNumSubpaths();
 }
 
-ToveTrajectoryRef PathGetTrajectory(TovePathRef path, int i) {
-	if (i >= 1 && i <= deref(path)->getNumTrajectories()) {
-		return trajectories.publish(deref(path)->getTrajectory(i - 1));
+ToveSubpathRef PathGetSubpath(TovePathRef path, int i) {
+	if (i >= 1 && i <= deref(path)->getNumSubpaths()) {
+		return trajectories.publish(deref(path)->getSubpath(i - 1));
 	} else {
 		return trajectories.publishEmpty();
 	}
@@ -235,133 +235,133 @@ void ReleasePath(TovePathRef path) {
 }
 
 
-ToveTrajectoryRef NewTrajectory() {
+ToveSubpathRef NewSubpath() {
 	return trajectories.make();
 }
 
-ToveTrajectoryRef CloneTrajectory(ToveTrajectoryRef trajectory) {
+ToveSubpathRef CloneSubpath(ToveSubpathRef trajectory) {
 	return trajectories.make(deref(trajectory));
 }
 
-void ReleaseTrajectory(ToveTrajectoryRef trajectory) {
+void ReleaseSubpath(ToveSubpathRef trajectory) {
 	trajectories.release(trajectory);
 }
 
-int TrajectoryGetNumCurves(ToveTrajectoryRef trajectory) {
+int SubpathGetNumCurves(ToveSubpathRef trajectory) {
 	return deref(trajectory)->getNumCurves();
 }
 
-int TrajectoryGetNumPoints(ToveTrajectoryRef trajectory) {
+int SubpathGetNumPoints(ToveSubpathRef trajectory) {
 	return deref(trajectory)->getLoveNumPoints();
 }
 
-bool TrajectoryIsClosed(ToveTrajectoryRef trajectory) {
+bool SubpathIsClosed(ToveSubpathRef trajectory) {
 	return deref(trajectory)->isClosed();
 }
 
-const float *TrajectoryGetPoints(ToveTrajectoryRef trajectory) {
+const float *SubpathGetPoints(ToveSubpathRef trajectory) {
 	return deref(trajectory)->getPoints();
 }
 
-/*void TrajectorySetPoint(ToveTrajectoryRef trajectory, int index, float x, float y) {
+/*void SubpathSetPoint(ToveSubpathRef trajectory, int index, float x, float y) {
 	deref(trajectory)->setPoint(index, x, y);
 }*/
 
-void TrajectorySetPoints(ToveTrajectoryRef trajectory, const float *pts, int npts) {
+void SubpathSetPoints(ToveSubpathRef trajectory, const float *pts, int npts) {
 	deref(trajectory)->setLovePoints(pts, npts);
 }
 
-float TrajectoryGetCurveValue(ToveTrajectoryRef trajectory, int curve, int index) {
+float SubpathGetCurveValue(ToveSubpathRef trajectory, int curve, int index) {
 	return deref(trajectory)->getCurveValue(curve, index);
 }
 
-void TrajectorySetCurveValue(ToveTrajectoryRef trajectory, int curve, int index, float value) {
+void SubpathSetCurveValue(ToveSubpathRef trajectory, int curve, int index, float value) {
 	deref(trajectory)->setCurveValue(curve, index, value);
 }
 
-float TrajectoryGetPtValue(ToveTrajectoryRef trajectory, int index, int dim) {
+float SubpathGetPtValue(ToveSubpathRef trajectory, int index, int dim) {
 	return deref(trajectory)->getLovePointValue(index, dim);
 }
 
-void TrajectorySetPtValue(ToveTrajectoryRef trajectory, int index, int dim, float value) {
+void SubpathSetPtValue(ToveSubpathRef trajectory, int index, int dim, float value) {
 	deref(trajectory)->setLovePointValue(index, dim, value);
 }
 
-void TrajectoryInvert(ToveTrajectoryRef trajectory) {
+void SubpathInvert(ToveSubpathRef trajectory) {
 	deref(trajectory)->invert();
 }
 
-void TrajectoryClean(ToveTrajectoryRef trajectory, float eps) {
+void SubpathClean(ToveSubpathRef trajectory, float eps) {
 	deref(trajectory)->clean(eps);
 }
 
-void TrajectorySetOrientation(ToveTrajectoryRef trajectory, ToveOrientation orientation) {
+void SubpathSetOrientation(ToveSubpathRef trajectory, ToveOrientation orientation) {
 	deref(trajectory)->setOrientation(orientation);
 }
 
-int TrajectoryMoveTo(ToveTrajectoryRef trajectory, float x, float y) {
+int SubpathMoveTo(ToveSubpathRef trajectory, float x, float y) {
 	return deref(trajectory)->moveTo(x, y);
 }
 
-int TrajectoryLineTo(ToveTrajectoryRef trajectory, float x, float y) {
+int SubpathLineTo(ToveSubpathRef trajectory, float x, float y) {
 	return deref(trajectory)->lineTo(x, y);
 }
 
-int TrajectoryCurveTo(ToveTrajectoryRef trajectory, float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
+int SubpathCurveTo(ToveSubpathRef trajectory, float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
 	return deref(trajectory)->curveTo(cpx1, cpy1, cpx2, cpy2, x, y);
 }
 
-int TrajectoryArc(ToveTrajectoryRef trajectory, float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
+int SubpathArc(ToveSubpathRef trajectory, float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
 	return deref(trajectory)->arc(x, y, r, startAngle, endAngle, counterclockwise);
 }
 
-int TrajectoryDrawRect(ToveTrajectoryRef trajectory, float x, float y, float w, float h, float rx, float ry) {
+int SubpathDrawRect(ToveSubpathRef trajectory, float x, float y, float w, float h, float rx, float ry) {
 	return deref(trajectory)->drawRect(x, y, w, h, rx, ry);
 }
 
-int TrajectoryDrawEllipse(ToveTrajectoryRef trajectory, float x, float y, float rx, float ry) {
+int SubpathDrawEllipse(ToveSubpathRef trajectory, float x, float y, float rx, float ry) {
 	return deref(trajectory)->drawEllipse(x, y, rx, ry);
 }
 
-float TrajectoryGetCommandValue(ToveTrajectoryRef trajectory, int command, int property) {
+float SubpathGetCommandValue(ToveSubpathRef trajectory, int command, int property) {
 	return deref(trajectory)->getCommandValue(command, property);
 }
 
-void TrajectorySetCommandValue(ToveTrajectoryRef trajectory,
+void SubpathSetCommandValue(ToveSubpathRef trajectory,
 	int command, int property, float value) {
 	deref(trajectory)->setCommandValue(command, property, value);
 }
 
-ToveVec2 TrajectoryGetPosition(ToveTrajectoryRef trajectory, float t) {
+ToveVec2 SubpathGetPosition(ToveSubpathRef trajectory, float t) {
 	return deref(trajectory)->getPosition(t);
 }
 
-ToveVec2 TrajectoryGetNormal(ToveTrajectoryRef trajectory, float t) {
+ToveVec2 SubpathGetNormal(ToveSubpathRef trajectory, float t) {
 	return deref(trajectory)->getNormal(t);
 }
 
-ToveNearest TrajectoryNearest(ToveTrajectoryRef trajectory,
+ToveNearest SubpathNearest(ToveSubpathRef trajectory,
 	float x, float y, float dmin, float dmax) {
 	return deref(trajectory)->nearest(x, y, dmin, dmax);
 }
 
-int TrajectoryInsertCurveAt(ToveTrajectoryRef trajectory, float t) {
+int SubpathInsertCurveAt(ToveSubpathRef trajectory, float t) {
 	return deref(trajectory)->insertCurveAt(t);
 }
 
-void TrajectoryRemoveCurve(ToveTrajectoryRef trajectory, int curve) {
+void SubpathRemoveCurve(ToveSubpathRef trajectory, int curve) {
 	deref(trajectory)->removeCurve(curve);
 }
 
-int TrajectoryMould(ToveTrajectoryRef trajectory, float t, float x, float y) {
+int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y) {
 	return deref(trajectory)->mould(t, x, y);
 }
 
-bool TrajectoryIsEdgeAt(ToveTrajectoryRef trajectory, int k) {
+bool SubpathIsEdgeAt(ToveSubpathRef trajectory, int k) {
 	return deref(trajectory)->isEdgeAt(k - 1);
 }
 
-void TrajectoryMove(ToveTrajectoryRef trajectory, int k, float x, float y) {
+void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y) {
 	return deref(trajectory)->move(k - 1, x, y);
 }
 
@@ -387,16 +387,16 @@ ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics) {
 	return shapes.publish(std::make_shared<Graphics>(deref(graphics)));
 }
 
-ToveTrajectoryRef GraphicsBeginTrajectory(ToveGraphicsRef graphics) {
-	return trajectories.publish(deref(graphics)->beginTrajectory()->beginTrajectory());
+ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics) {
+	return trajectories.publish(deref(graphics)->beginSubpath());
 }
 
-void GraphicsCloseTrajectory(ToveGraphicsRef graphics) {
-	deref(graphics)->closeTrajectory();
+void GraphicsCloseSubpath(ToveGraphicsRef graphics) {
+	deref(graphics)->closeSubpath();
 }
 
-void GraphicsInvertTrajectory(ToveGraphicsRef graphics) {
-	deref(graphics)->invertTrajectory();
+void GraphicsInvertSubpath(ToveGraphicsRef graphics) {
+	deref(graphics)->invertSubpath();
 }
 
 TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape) {

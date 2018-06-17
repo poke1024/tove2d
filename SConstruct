@@ -13,7 +13,7 @@ sources = [
 	"src/cpp/nsvg.cpp",
 	"src/cpp/paint.cpp",
 	"src/cpp/path.cpp",
-	"src/cpp/trajectory.cpp",
+	"src/cpp/subpath.cpp",
 	"src/cpp/utils.cpp",
 	"src/cpp/mesh/flatten.cpp",
 	"src/cpp/mesh/mesh.cpp",
