@@ -12,9 +12,9 @@
 uniform sampler2D curves;
 uniform int max_curves;
 uniform int num_curves;
+uniform int draw_joins;
 uniform int curve_index;
 uniform int segments_per_curve;
-uniform int is_closed;
 
 uniform vec2 lineargs;
 #define LINE_OFFSET lineargs.x
@@ -28,132 +28,88 @@ vec2 at(vec4 bx, vec4 by, float t) {
     return vec2(dot(c_t, bx), dot(c_t, by));
 }
 
-vec2 vertex(float curveTY, float t) {
+/*vec2 vertex(float curveTY, float t) {
     vec4 bx = Texel(curves, vec2(0.0f / float(CURVE_DATA_SIZE), curveTY));
     vec4 by = Texel(curves, vec2(1.0f / float(CURVE_DATA_SIZE), curveTY));
     return at(bx, by, t);
+}*/
+
+vec2 normal(vec4 bx, vec4 by, float t) {
+	vec3 c_dt = vec3(3 * t * t, 2 * t, 1);
+	vec2 tangent = vec2(dot(bx.xyz, c_dt), dot(by.xyz, c_dt));
+	if (dot(tangent, tangent) < 1e-2) {
+		tangent = at(bx, by, t + 1e-2) - at(bx, by, t - 1e-2);
+	}
+	return normalize(vec2(-tangent.y, tangent.x));
+}
+
+vec2 drawjoin(mat4 transform_projection, vec4 mesh_position) {
+    int curve0 = love_InstanceID + curve_index;
+    int curve1 = (curve0 + 1) % num_curves;
+    vec2 ty = vec2(curve0, curve1) / vec2(max_curves);
+
+    vec4 bx0 = Texel(curves,
+        vec2(0.0f / float(CURVE_DATA_SIZE), ty.x));
+    vec4 by0 = Texel(curves,
+        vec2(1.0f / float(CURVE_DATA_SIZE), ty.x));
+    vec2 n10 = normal(bx0, by0, 1.0f);
+
+    vec4 bx1 = Texel(curves,
+        vec2(0.0f / float(CURVE_DATA_SIZE), ty.y));
+    vec4 by1 = Texel(curves,
+        vec2(1.0f / float(CURVE_DATA_SIZE), ty.y));
+    vec2 n21 = normal(bx1, by1, 0.0f);
+
+    float wind = sign(-n21.y * n10.x - n21.x * -n10.y);
+
+    if (mesh_position.x != 0.0f) {
+        bool up = mesh_position.y < 0.0f;
+
+        vec2 n = up ? n10 : n21;
+        vec4 bx = up ? bx0 : bx1;
+        vec4 by = up ? by0 : by1;
+        float t = up ? 1.0f : 0.0f;
+
+        return at(bx, by, t) + wind * LINE_OFFSET * n * mesh_position.x;
+    } else {
+        vec2 m = (n10 + n21) * 0.5f;
+        if (dot(m, m) * MITER_LIMIT * MITER_LIMIT < 1.0f) { // use bevel?
+            // emit a duplicate point, effectively removing the miter.
+            return at(bx0, by0, 1.0f) + wind * LINE_OFFSET * n10;
+        } else {
+            float l = LINE_OFFSET / dot(m, n10);
+            return at(bx1, by1, 0.0f) + l * m * wind;
+        }
+    }
+}
+
+vec2 drawline(mat4 transform_projection, vec4 mesh_position) {
+    int instanceId = love_InstanceID;
+
+    int curve = curve_index + instanceId / segments_per_curve;
+    int tpos0 = instanceId % segments_per_curve;
+    float tpos1 = tpos0 + mesh_position.x;
+    float t = tpos1 / float(segments_per_curve);
+    float curveTY = curve / float(max_curves);
+
+    vec4 bx = Texel(curves,
+        vec2(0.0f / float(CURVE_DATA_SIZE), curveTY));
+    vec4 by = Texel(curves,
+        vec2(1.0f / float(CURVE_DATA_SIZE), curveTY));
+
+    vec2 n = normal(bx, by, t);
+    vec2 p = at(bx, by, t);
+
+    return p - LINE_OFFSET * n * mesh_position.y;
 }
 
 vec4 position(mat4 transform_projection, vec4 mesh_position) {
-    int mx = int(mesh_position.x);
-
-    int instanceBaseId = curve_index + love_InstanceID;
-    int instanceId = instanceBaseId + mx / 2;
-
-    int numInstances = num_curves * segments_per_curve;
-    ivec3 instanceIds = ivec3(instanceId) + ivec3(-1, 0, 1);
-
-    if (is_closed != 0) {
-        instanceIds = (instanceIds + ivec3(numInstances)) % ivec3(numInstances);
-    } else {
-        instanceIds = clamp(instanceIds, ivec3(0), ivec3(numInstances));
-    }
-
-    vec3 curveIds;
-    vec3 ts = modf(vec3(instanceIds) / vec3(segments_per_curve), curveIds);
-
-#ifdef GLSL3
-    vec3 maxCurveIds = vec3(num_curves - 1);
-    bvec3 beyondEnd = greaterThan(curveIds, maxCurveIds);
-    curveIds = mix(curveIds, maxCurveIds, beyondEnd);
-    ts = mix(ts, vec3(1.0f), beyondEnd);
-#else
-    if (curveIds.y >= num_curves) {
-        curveIds.y = num_curves - 1;
-        ts.y = 1.0f;
-    }
-    if (curveIds.z >= num_curves) {
-        curveIds.z = num_curves - 1;
-        ts.z = 1.0f;
-    }
-#endif
-
-    vec3 curveTYs = curveIds / vec3(max_curves);
-    vec2 p0, p1, p2;
-
-    if (curveIds == ivec3(curveIds.x)) {
-        vec4 bx = Texel(curves,
-            vec2(0.0f / float(CURVE_DATA_SIZE), curveTYs.x));
-        vec4 by = Texel(curves,
-            vec2(1.0f / float(CURVE_DATA_SIZE), curveTYs.x));
-
-        p0 = at(bx, by, ts.x);
-        p1 = at(bx, by, ts.y);
-        p2 = at(bx, by, ts.z);
-    } else {
-        p0 = vertex(curveTYs.x, ts.x);
-        p1 = vertex(curveTYs.y, ts.y);
-        p2 = vertex(curveTYs.z, ts.z);
-    }
-
-    ivec2 c = (ivec2(instanceBaseId) + ivec2(-1, 1)) /
-        ivec2(segments_per_curve);
-    bool use_bevel = false;
-
-    if (is_closed != 0) {
-        c = (c + ivec2(num_curves)) % ivec2(num_curves);
-    } else {
-        c = clamp(c, ivec2(0), ivec2(num_curves - 1));
-    }
-
-    if (c.x != c.y) { // check miter limit for bevel case
-        vec2 pp0, pp1, pp2;
-        vec2 cTY = vec2(c) / vec2(max_curves);
-
-#if 0
-        // slower but much simpler version.
-        pp0 = vertex(cTY.x, 1.0f - 1.0f / segments_per_curve);
-        pp1 = vertex(cTY.y, 0.0f);
-        pp2 = vertex(cTY.y, 1.0f / segments_per_curve);
-#else
-        if (mx / 2 == 0) {
-            if (curveIds.x != curveIds.y) { // i.e. ts.y == 0.0f
-                pp0 = p0;
-                pp1 = p1;
-                pp2 = p2;
-            } else { // i.e. ts.z == 0.0f
-                pp0 = p1;
-                pp1 = p2;
-                pp2 = vertex(curveTYs.z, 1.0f / segments_per_curve);
-            }
-        } else {
-            if (curveIds == ivec3(curveIds.x)) { // i.e. ts.x == 0.0f
-                pp0 = vertex(cTY.x, 1.0f - 1.0f / segments_per_curve);
-                pp1 = p0;
-                pp2 = p1;
-            } else { // i.e. ts.y == 0.0f
-                pp0 = p0;
-                pp1 = p1;
-                pp2 = p2;
-            }
-        }
-#endif
-
-        vec2 dd10 = normalize(pp1 - pp0);
-        vec2 dd21 = normalize(pp2 - pp1);
-
-        vec2 dm = (dd10 + dd21) * 0.5f;
-        use_bevel = dot(dm, dm) * MITER_LIMIT * MITER_LIMIT < 1.0f;
-    }
-
-    vec2 d10 = p1 - p0;
-    vec2 d21 = p2 - p1;
-
-    d10 = normalize(dot(d10, d10) > 1e-5 ? d10 : d21);
-    d21 = normalize(dot(d21, d21) > 1e-5 ? d21 : d10);
-
-    vec2 n10 = vec2(d10.y, -d10.x);
-
     vec2 q;
-    if (use_bevel) {
-        vec2 n21 = vec2(d21.y, -d21.x);
-        q = p1 + (mx % 2 == 0 ? n10 : n21) * LINE_OFFSET * mesh_position.y;
 
+    if (draw_joins != 0) {
+        q = drawjoin(transform_projection, mesh_position);
     } else {
-        vec2 t = normalize(d10 + d21);
-        vec2 m = vec2(-t.y, t.x);
-        float l = LINE_OFFSET / dot(m, n10);
-        q = vec2(p1 - l * m * mesh_position.y);
+        q = drawline(transform_projection, mesh_position);
     }
 
     raw_vertex_pos = q;

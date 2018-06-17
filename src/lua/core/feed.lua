@@ -198,13 +198,15 @@ function GeometryFeed:endInit(lineStyle)
 	-- note: since bezier curves stay in the convex hull of their control points, we
 	-- could triangulate the mesh here. with strokes, it gets difficult though.
 
-	local vertices = {{0, 0}, {0, 1}, {1, 0}, {1, 1}}
 	self.mesh = love.graphics.newMesh(
-		{{"VertexPosition", "float", 2}}, vertices, "strip")
+		{{"VertexPosition", "float", 2}},
+		{{0, 0}, {0, 1}, {1, 0}, {1, 1}}, "strip")
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		self.lineMesh = love.graphics.newMesh(
-			{{0, -1}, {0, 1}, {1, -1}, {1, 1}, {2, -1}, {2, 1}}, "strip")
+			{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
+		self.lineJoinMesh = love.graphics.newMesh(
+			{{0, 0}, {1, -1}, {1, 1}, {-1, -1}, {-1, 1}}, "strip")
 	end
 
 	sendLUT(self, fillShader)

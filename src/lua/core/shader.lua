@@ -398,6 +398,7 @@ end
 
 function PathShader:draw()
 	local linkdata = self.linkdata
+
 	local fillShader = linkdata.fillShader
 	local lineShader = linkdata.lineShader
 
@@ -406,20 +407,24 @@ function PathShader:draw()
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		lg.setShader(lineShader)
-		local numSegments = 25
+		local numSegments = 30
 		lineShader:send("segments_per_curve", numSegments)
 		local geometry = linkdata.data.geometry
 		local lineRuns = geometry.lineRuns
 		if lineRuns ~= nil then
 			local lineMesh = linkdata.geometryFeed.lineMesh
+			local lineJoinMesh = linkdata.geometryFeed.lineJoinMesh
 			for i = 0, geometry.numSubPaths - 1 do
 				local run = lineRuns[i]
 				local numCurves = run.numCurves
-				local numInstances = numSegments * run.numCurves
-				lineShader:send("is_closed", run.isClosed and 1 or 0)
-				lineShader:send("num_curves", numCurves)
+				local numInstances = numSegments * numCurves
 				lineShader:send("curve_index", run.curveIndex)
+				lineShader:send("num_curves", numCurves)
+				lineShader:send("draw_joins", 0)
 				lg.drawInstanced(lineMesh, numInstances)
+				lineShader:send("draw_joins", 1)
+				lg.drawInstanced(lineJoinMesh,
+					numCurves - (run.isClosed and 0 or 1))
 			end
 		end
 	end
