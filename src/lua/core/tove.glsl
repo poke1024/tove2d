@@ -26,7 +26,6 @@ varying vec4 raw_vertex_pos;
 #define T_EPS 0.0
 #define SENTINEL_END 1.0
 #define SENTINEL_STROKES (254.0 / 255.0)
-#define MAX_LINE_ITERATIONS 14
 
 #define LUT_LOG_N tablemeta.z
 
@@ -46,6 +45,8 @@ uniform sampler2D curves;
 #if LINE_STYLE > 0
 #define LINE_OFFSET lineargs.x
 uniform vec2 lineargs;
+uniform float line_quality;
+#define MAX_LINE_ITERATIONS 16
 #endif
 
 #if LINE_STYLE > 0
@@ -98,7 +99,10 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 	vec2 curvePoint = eval(bx, by, t);
 	vec4 state = vec4(t, distanceSquared(curvePoint, pos), s, -s);
 
-	for (int i = 0; i < MAX_LINE_ITERATIONS && state.y > tolerance; i++) {
+	int max_iterations = clamp(int(MAX_LINE_ITERATIONS * line_quality),
+		1, MAX_LINE_ITERATIONS);
+
+	for (int i = 0; i < max_iterations && state.y > tolerance; i++) {
 		float tn = state.x + state.z;
 		curvePoint = eval(bx, by, tn);
 		float d1 = distanceSquared(curvePoint, pos);

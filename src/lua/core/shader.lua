@@ -325,7 +325,20 @@ end
 local PathShader = {}
 PathShader.__index = PathShader
 
-local function newPathShaderLinkData(path, fragLine)
+local function parseQuality(q)
+	local lineType = "fragment"
+	local lineQuality = 1.0
+	if type(q) == "table" and type(q.line) == "table" then
+		lineType = q.line.type or "fragment"
+		lineQuality = q.line.quality or 1.0
+	end
+	return lineType, lineQuality
+end
+
+local function newPathShaderLinkData(path, quality)
+	local lineType, lineQuality = parseQuality(quality)
+	local fragLine = (lineType == "fragment")
+
 	local link = ffi.gc(
 		lib.NewGeometryShaderLink(path, fragLine), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetData(link)
@@ -335,6 +348,7 @@ local function newPathShaderLinkData(path, fragLine)
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
+		fillShader:send("line_quality", lineQuality)
 	else
 		lineShader = newGeometryLineShader(data)
 	end
@@ -363,16 +377,18 @@ local function newPathShaderLinkData(path, fragLine)
 		data = data,
 		fillShader = fillShader,
 		lineShader = lineShader,
+		lineType = lineType,
+		lineQuality = lineQuality,
 		geometryFeed = geometryFeed,
 		lineColorFeed = lineColorFeed,
 		fillColorFeed = fillColorFeed
 	}
 end
 
-local newPathShader = function(path, fragLine)
+local newPathShader = function(path, quality)
 	return setmetatable({
 		path = path,
-		linkdata = newPathShaderLinkData(path, fragLine)
+		linkdata = newPathShaderLinkData(path, quality)
 	}, PathShader)
 end
 
@@ -396,24 +412,40 @@ function PathShader:update()
 	linkdata.geometryFeed:update(chg2)
 end
 
+function PathShader:updateQuality(quality)
+	local linkdata = self.linkdata
+	local lineType, lineQuality = parseQuality(quality)
+	if lineType == linkdata.lineType then
+		linkdata.lineQuality = lineQuality
+		if lineType == "fragment" then
+			linkdata.fillShader:send("line_quality", lineQuality)
+		end
+		return true
+	else
+		return false
+	end
+end
+
 function PathShader:draw()
 	local linkdata = self.linkdata
 
 	local fillShader = linkdata.fillShader
 	local lineShader = linkdata.lineShader
+	local lineQuality = linkdata.lineQuality
 
 	lg.setShader(fillShader)
 	lg.draw(linkdata.geometryFeed.mesh)
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		lg.setShader(lineShader)
-		local numSegments = 30
+		local numSegments = math.max(2, math.ceil(50 * lineQuality))
 		lineShader:send("segments_per_curve", numSegments)
 		local geometry = linkdata.data.geometry
 		local lineRuns = geometry.lineRuns
 		if lineRuns ~= nil then
-			local lineMesh = linkdata.geometryFeed.lineMesh
-			local lineJoinMesh = linkdata.geometryFeed.lineJoinMesh
+			local feed = linkdata.geometryFeed
+			local lineMesh = feed.lineMesh
+			local lineJoinMesh = feed.lineJoinMesh
 			for i = 0, geometry.numSubPaths - 1 do
 				local run = lineRuns[i]
 				local numCurves = run.numCurves

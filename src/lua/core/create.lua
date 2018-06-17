@@ -114,6 +114,7 @@ create.bitmap = function(self)
 		mesh = image,
 		draw = createDrawMesh(image, x0, y0, 1 / resolution),
 		update = _updateBitmap,
+		updateQuality = function() return false end,
 		cache = _noCache
 	}
 end
@@ -163,6 +164,7 @@ create.mesh = function(self)
 			shaders = shaders,
 			draw = createDrawShaders(shaders, 1 / resolution),
 			update = _updateShaders,
+			updateQuality = function() return false end,
 			cache = _cacheShadedMesh
 		}
 	end
@@ -171,16 +173,21 @@ end
 create.curves = function(self)
 	local fragLine = true
 	local quality = self._display.quality
-	if type(quality) == "table" and quality.line == "vertex" then
-		fragLine = false
-	end
 	local shaders = self:shaders(function(path)
-		return _shaders.newPathShader(path, fragLine)
+		return _shaders.newPathShader(path, quality)
 	end)
 	return {
 		shaders = shaders,
 		draw = createDrawShaders(shaders, 1),
 		update = _updateShaders,
+		updateQuality = function(quality)
+			for _, s in ipairs(shaders) do
+				if not s:updateQuality(quality) then
+					return false
+				end
+			end
+			return true
+		end,
 		cache = _noCache
 	}
 end

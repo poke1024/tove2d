@@ -56,7 +56,11 @@ tove.newGraphics = function(svg, size)
 end
 
 local function makeDisplay(mode, quality, usage)
-	quality = quality or 1
+	if type(quality) == "table" then
+		quality = deepcopy(quality)
+	else
+		quality = quality or 1
+	end
 	return {mode = mode, quality = quality,
 		cquality = cquality(quality, usage)}
 end
@@ -165,6 +169,12 @@ function Graphics:computeAABB(mode)
 end
 
 function Graphics:setDisplay(mode, quality)
+	if self._cache ~= nil and mode == self._display.mode then
+		if self._cache.updateQuality(quality) then
+			self._display = makeDisplay(mode, quality, self._usage)
+			return
+		end
+	end
 	if mode == "flatmesh" then
 		mode = "mesh"
 		self._usage["gradients"] = "fast"
@@ -175,6 +185,10 @@ end
 
 function Graphics:getDisplay()
 	return self._display.mode, self._display.quality
+end
+
+function Graphics:getQuality()
+	return self._display.quality
 end
 
 function Graphics:setResolution(resolution)
