@@ -108,8 +108,15 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 			vec4(state.xyw, s1 * 0.5);
 	}
 
-	vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET * 0.5;
-	return segmentPointDistanceSquared(curvePoint - w, curvePoint + w, pos);
+	if (min(
+		distanceSquared(eval0(bx, by), curvePoint),
+		distanceSquared(eval1(bx, by), curvePoint)) <
+			LINE_OFFSET * LINE_OFFSET) {
+		return distanceSquared(pos, curvePoint);
+	} else {
+		vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET * 0.5;
+		return segmentPointDistanceSquared(curvePoint - w, curvePoint + w, pos);
+	}
 }
 
 bool onCurveLine(vec2 pos, vec4 bx, vec4 by, vec4 roots, float tolerance) {
