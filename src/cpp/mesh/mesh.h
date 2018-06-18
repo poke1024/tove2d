@@ -48,6 +48,16 @@ public:
 	const ToveMeshRecord &getData() const;
 	ToveIndex16Array getTriangles() const;
 
+	inline int getVertexCount() const {
+		return meshData.nvertices;
+	}
+	inline void copyPositions(void *buffer, size_t bufferByteSize) {
+		const size_t size = sizeof(float) * meshData.nvertices * 2;
+		assert(bufferByteSize == size);
+		std::memcpy(buffer, meshData.vertices, size);
+	}
+	void copyPositionsAndColors(void *buffer, size_t bufferByteSize);
+
 	inline bool checkTriangles(bool &triangleCacheFlag) {
 		return triangles.check(meshData.vertices, triangleCacheFlag);
 	}

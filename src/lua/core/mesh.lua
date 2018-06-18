@@ -9,12 +9,15 @@
 -- All rights reserved.
 -- *****************************************************************
 
+local floatSize = ffi.sizeof("float")
+
+
 local PositionMesh = {}
 PositionMesh.__index = PositionMesh
 
 tove.newPositionMesh = function(name, usage)
 	return setmetatable({_cmesh = ffi.gc(lib.NewMesh(), lib.ReleaseMesh),
-		_mesh = nil, _usage = usage or {}}, PositionMesh)
+		_mesh = nil, _usage = usage or {}, _vdata = nil}, PositionMesh)
 end
 
 function PositionMesh:getUsage(what)
@@ -22,19 +25,12 @@ function PositionMesh:getUsage(what)
 end
 
 function PositionMesh:updateVertices()
-	local cvertices = lib.MeshGetVertices(self._cmesh)
-
-	local vertices = {}
-	local positions = cvertices.array
-	local pi = 0
-	for i = 1, cvertices.n do
-		vertices[i] = {positions[pi + 0], positions[pi + 1]}
-		pi = pi + 2
-	end
-
 	local mesh = self._mesh
 	if mesh ~= nil then
-		mesh:setVertices(vertices)
+		local vdata = self._vdata
+		lib.MeshCopyPositions(
+			self._cmesh, vdata:getPointer(), vdata:getSize())
+		mesh:setVertices(vdata)
 	end
 end
 
@@ -60,16 +56,19 @@ function PositionMesh:getMesh()
 	end
 
 	local attributes = {{"VertexPosition", "float", 2}}
-	local cvertices = lib.MeshGetVertices(self._cmesh)
-	if cvertices.n < 1 then
+	local n = lib.MeshGetVertexCount(self._cmesh)
+	if n < 1 then
 		return nil
 	end
 
 	local mesh = love.graphics.newMesh(
-		attributes, cvertices.n, "triangles", usage)
+		attributes, n, "triangles", usage)
 	self._mesh = mesh
+	self._vdata = love.data.newByteData(n * 2 * floatSize)
+
 	self:updateTriangles()
 	self:updateVertices()
+
 	return mesh
 end
 
@@ -85,7 +84,7 @@ tove.newColorMesh = function(name, usage, tess)
 	local cmesh = ffi.gc(lib.NewColorMesh(), lib.ReleaseMesh)
 	tess(cmesh, -1)
 	return setmetatable({_name = name, _cmesh = cmesh, _mesh = nil,
-		_tess = tess, _usage = usage or {}}, ColorMesh)
+		_tess = tess, _usage = usage or {}, _vdata = nil}, ColorMesh)
 end
 
 function ColorMesh:getVertexMap()
@@ -106,34 +105,11 @@ end
 
 function ColorMesh:updateVertices()
 	local mesh = self._mesh
-	local cvertices = lib.MeshGetVertices(self._cmesh)
-
-	if cvertices.n ~= mesh:getVertexCount() then
-		self._mesh = nil
-		self:getMesh() -- need a new mesh here.
-		tove.warn("internal error: a mesh was recreated in " .. self._name)
-		return
-	end
-
-	ccolors = lib.MeshGetColors(self._cmesh)
-
-	local positions = cvertices.array
-	local colors = ccolors.array
-
-	local vertices = {}
-	local pi = 0
-	local ci = 0
-	for i = 1, cvertices.n do
-		vertices[i] = {
-			positions[pi + 0], positions[pi + 1],
-			colors[ci + 0] / 255, colors[ci + 1] / 255,
-			colors[ci + 2] / 255, colors[ci + 3] / 255}
-		pi = pi + 2
-		ci = ci + 4
-	end
-
 	if mesh ~= nil then
-		mesh:setVertices(vertices)
+		local vdata = self._vdata
+		lib.MeshCopyPositionsAndColors(
+			self._cmesh, vdata:getPointer(), vdata:getSize())
+		mesh:setVertices(vdata)
 	end
 end
 
@@ -156,18 +132,20 @@ function ColorMesh:getMesh()
 		{"VertexColor", "byte", 4}}
 
 	local usage = "static"
-	if self._usage["points"] == "dynamic" or self._usage["colors"] == "dynamic" then
+	if self._usage["points"] == "dynamic" or
+		self._usage["colors"] == "dynamic" then
 		usage = "dynamic"
 	end
 
-	local cvertices = lib.MeshGetVertices(self._cmesh)
-	if cvertices.n < 1 then
+	local n = lib.MeshGetVertexCount(self._cmesh)
+	if n < 1 then
 		return nil
 	end
 
 	local mesh = love.graphics.newMesh(
-		attributes, cvertices.n, "triangles", usage)
+		attributes, n, "triangles", usage)
 	self._mesh = mesh
+	self._vdata = love.data.newByteData(n * (2 * floatSize + 4))
 	self:updateTriangles()
 	self:updateVertices()
 	return mesh

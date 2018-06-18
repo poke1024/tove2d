@@ -57,11 +57,32 @@ ToveIndex16Array AbstractMesh::getTriangles() const {
 	return triangles.get();
 }
 
+void AbstractMesh::copyPositionsAndColors(
+	void *buffer, size_t bufferByteSize) {
+	const int n = meshData.nvertices;
+	const size_t size = (2 * sizeof(float) + 4) * n;
+	assert(bufferByteSize == size);
+	const float *v = meshData.vertices;
+	const uint8_t *c = meshData.colors;
+	uint8_t *p = static_cast<uint8_t*>(buffer);
+	for (int i = 0; i < n; i++) {
+		*reinterpret_cast<float*>(p) = *v++;
+		p += sizeof(float);
+		*reinterpret_cast<float*>(p) = *v++;
+		p += sizeof(float);
+		*p++ = *c++;
+		*p++ = *c++;
+		*p++ = *c++;
+		*p++ = *c++;
+	}
+}
+
 float *AbstractMesh::vertices(int from, int n) {
 	if (from + n > meshData.nvertices) {
 		meshData.nvertices = from + n;
 	    meshData.vertices = static_cast<float*>(realloc(
-	    	meshData.vertices, nextpow2(meshData.nvertices) * 2 * sizeof(float)));
+	    	meshData.vertices,
+			nextpow2(meshData.nvertices) * 2 * sizeof(float)));
 	}
     return &meshData.vertices[2 * from];
 }
@@ -128,7 +149,9 @@ void AbstractMesh::triangulateLine(
 		const bool closed = path->getSubpath(t)->isClosed();
 
 		const int n = path->getSubpathSize(t, flattener);
-		uint16_t *indices = triangles.allocate(2 * (n - 1) + (closed ? 2 : 0));
+
+		uint16_t *indices = triangles.allocate(
+			2 * (n - 1) + (closed ? 2 : 0));
 
 		for (int i = 0; i < n - 1; i++) {
 			*indices++ = i0 + i;

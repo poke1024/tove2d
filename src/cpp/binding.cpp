@@ -575,20 +575,16 @@ ToveMeshRef NewColorMesh() {
 	return meshes.publish(std::make_shared<ColorMesh>());
 }
 
-ToveFloatArray MeshGetVertices(ToveMeshRef mesh) {
-	const MeshRef m = deref(mesh);
-	ToveFloatArray array;
-	array.array = m->getData().vertices;
-	array.n = m->getData().nvertices;
-	return array;
+int MeshGetVertexCount(ToveMeshRef mesh) {
+	return deref(mesh)->getVertexCount();
 }
 
-ToveColorArray MeshGetColors(ToveMeshRef mesh) {
-	const MeshRef m = deref(mesh);
-	ToveColorArray array;
-	array.array = m->getData().colors;
-	array.n = m->getData().nvertices;
-	return array;
+void MeshCopyPositions(ToveMeshRef mesh, void *buffer, uint32_t size) {
+	deref(mesh)->copyPositions(buffer, size);
+}
+
+void MeshCopyPositionsAndColors(ToveMeshRef mesh, void *buffer, uint32_t size) {
+	deref(mesh)->copyPositionsAndColors(buffer, size);
 }
 
 ToveIndex16Array MeshGetIndices(ToveMeshRef mesh) {
