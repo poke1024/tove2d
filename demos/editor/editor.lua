@@ -107,9 +107,16 @@ function Editor:load()
 	self.displaycontrol = VBox.new()
 	self.displaycontrol.frame = true
 	self.displaycontrol.padding = 8
-	function updateDisplayUI(mode, quality)
+	function updateDisplayUI(mode, quality, usage)
 		self.displaycontrol:empty()
 		if mode == "mesh" then
+			local dynamic = Checkbox.new(
+				self.font, "dynamic points", function(value)
+					self:setUsage("points", value and "dynamic" or "static")
+				end)
+			self.displaycontrol:add(dynamic)
+			dynamic:setChecked(usage.points == "dynamic")
+
 			self.displaycontrol:add(Label.new(
 				self.font, "tesselation quality"))
 			local slider = Slider.new(function(value)
@@ -155,7 +162,7 @@ function Editor:load()
 			quality = {line = {type = "vertex", quality = 1.0}}
 		end
 		self:setDisplay(mode, quality)
-		updateDisplayUI(mode, quality)
+		updateDisplayUI(mode, quality, self:getUsage())
 	end)
 
 	self.rpanel:setBounds(
@@ -231,7 +238,7 @@ function Editor:createWidget(x, y, button, clickCount)
 				self.miterLimitSlider:setValue(path:getMiterLimit())
 				local mode, quality = object:getDisplay()
 				self.radios:select(mode)
-				updateDisplayUI(mode, quality)
+				updateDisplayUI(mode, quality, self:getUsage())
 
 				if clickCount == 1 then
 					self:startdrag(self.transform, x, y, button,
@@ -339,6 +346,18 @@ end
 function Editor:getDisplay()
 	if self.widget ~= nil then
         return self.widget.object:getDisplay()
+    end
+end
+
+function Editor:setUsage(what, value)
+	if self.widget ~= nil then
+        return self.widget.object:setUsage(what, value)
+    end
+end
+
+function Editor:getUsage()
+	if self.widget ~= nil then
+        return self.widget.object:getUsage()
     end
 end
 

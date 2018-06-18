@@ -63,6 +63,14 @@ function Object:getDisplay()
 	return mode, quality
 end
 
+function Object:setUsage(what, value)
+	return self.scaledgraphics:setUsage(what, value)
+end
+
+function Object:getUsage()
+	return self.scaledgraphics:getUsage()
+end
+
 Object.new = function(tx, ty, graphics)
 	graphics:setDisplay("mesh", 0.5)
 

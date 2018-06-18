@@ -30,6 +30,10 @@ local function bind(methodName, libFuncName)
 	end
 end
 
+local function newUsage()
+	return {points = "static", colors = "static"}
+end
+
 tove.newGraphics = function(svg, size)
 	local name = "unnamed"
 	if tove.debug then
@@ -41,7 +45,7 @@ tove.newGraphics = function(svg, size)
 		_cache = nil,
 		_display = {mode = "bitmap"},
 		_resolution = 1,
-		_usage = {},
+		_usage = newUsage(),
 		_name = name,
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	if type(size) == "number" then
@@ -76,7 +80,7 @@ function Graphics:clone()
 		_cache = nil,
 		_display = makeDisplay(d.mode, d.quality, self._usage),
 		_resolution = self._resolution,
-		_usage = {},
+		_usage = newUsage(),
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	for k, v in pairs(self._usage) do
 		g._usage[k] = v
@@ -187,6 +191,10 @@ end
 
 function Graphics:getQuality()
 	return self._display.quality
+end
+
+function Graphics:getUsage()
+	return self._usage
 end
 
 function Graphics:setResolution(resolution)
