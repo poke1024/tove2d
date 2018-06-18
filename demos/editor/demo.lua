@@ -24,7 +24,12 @@ function Demo:draw()
     local status = "num objects:" .. tostring(#self.items) ..
         "\nfps: " .. tostring(love.timer.getFPS()) ..
         "\nstartup time: " .. string.format("%.2f", self.startupTime) .. "s" ..
-        "\nanimation: " .. tostring(self.animation)
+        "\nanimation: " .. tostring(self.animation) ..
+        "\n" ..
+        "\n+: more items" ..
+        "\n-: less items" ..
+        "\na: toggle animation" ..
+        "\nmousewheel: zoom"
 
     love.graphics.print(status, 10, 10)
 end
@@ -79,8 +84,10 @@ function Demo:keypressed(key, scancode, isrepeat)
         self.animation = not self.animation
     end
     if key == "+" then
+        self:addObjects()
     end
     if key == "-" then
+        self:removeObjects()
     end
 end
 
@@ -96,16 +103,13 @@ end
 function Demo:filedropped(file)
 end
 
-function Demo:setObjects(objects)
-    local ndup = 10
-
-    self.startupTime0 = love.timer.getTime()
-
-    local items = {}
+function Demo:addObjects()
+    local items = self.items
     local w = love.graphics.getWidth()
 	local h = love.graphics.getHeight()
-    for _, o in ipairs(objects) do
-        for i = 1, ndup do
+
+    for _, o in ipairs(self.prototypes) do
+        for i = 1, self.duplicates do
             local graphics = o.scaledgraphics:clone()
 
             local traj = graphics.paths[1].subpaths[1]
@@ -131,14 +135,30 @@ function Demo:setObjects(objects)
             graphics:cache()
         end
     end
+end
+
+function Demo:removeObjects()
+    if #self.items > self.duplicates then
+        for i = 1, self.duplicates do
+            table.remove(self.items, #self.items)
+        end
+    end
+end
+
+function Demo:setObjects(objects)
+    self.prototypes = objects
+    self.startupTime0 = love.timer.getTime()
+
+    self.items = {}
+    self:addObjects()
 
     self.measureDraw = 0
-    self.items = items
 end
 
 return setmetatable({
     transform = love.math.newTransform(),
     items = {},
+    duplicates = 10,
     startupTime = 0,
     animation = false,
     startupTime0 = 0,
