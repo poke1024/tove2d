@@ -18,9 +18,12 @@
 
 class AbstractMeshifier {
 public:
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line) = 0;
+	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
+		const MeshRef &fill, const MeshRef &line, bool append = false) = 0;
 
-	virtual ToveMeshUpdateFlags graphics(const GraphicsRef &graphics, const MeshRef &fill, const MeshRef &line) {
+	virtual ToveMeshUpdateFlags graphics(const GraphicsRef &graphics,
+		const MeshRef &fill, const MeshRef &line) {
+
 		const int n = graphics->getNumPaths();
 		ToveMeshUpdateFlags updated = 0;
 		for (int i = 0; i < n; i++) {
@@ -32,7 +35,8 @@ public:
 
 class AdaptiveMeshifier : public AbstractMeshifier {
 private:
-	void renderStrokes(NSVGshape *shape, const ClipperLib::PolyNode *node, ClipperPaths &holes, const MeshPaint &paint, const MeshRef &mesh);
+	void renderStrokes(NSVGshape *shape, const ClipperLib::PolyNode *node,
+		ClipperPaths &holes, const MeshPaint &paint, const MeshRef &mesh);
 
 	AdaptiveFlattener tess;
 
@@ -42,7 +46,8 @@ protected:
 public:
 	AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality);
 
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line);
+	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
+		const MeshRef &fill, const MeshRef &line, bool append = false);
 };
 
 class FixedMeshifier : public AbstractMeshifier {
@@ -54,9 +59,15 @@ private:
 	const ToveHoles holes;
 
 public:
-	FixedMeshifier(float scale, const ToveTesselationQuality *quality, ToveHoles holes, ToveMeshUpdateFlags update);
+	enum {
+		VERTICES_PER_SEGMENT = 4 // for line drawing
+	};
 
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line);
+	FixedMeshifier(float scale, const ToveTesselationQuality *quality,
+		ToveHoles holes, ToveMeshUpdateFlags update);
+
+	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
+		const MeshRef &fill, const MeshRef &line, bool append = false);
 };
 
 #endif // __TOVE_MESH_MESHIFIER

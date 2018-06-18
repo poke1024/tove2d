@@ -38,8 +38,10 @@ public:
 	void triangulate(const ClipperPaths &paths, ToveHoles holes);
 	void addTriangles(const std::list<TPPLPoly> &triangles);
 	void clearTriangles();
-	void triangulateFill(const int vertexIndex0, const PathRef &path, const FixedFlattener &flattener, ToveHoles holes);
-	void triangulateLine(int v0, const PathRef &path, const FixedFlattener &flattener);
+	void triangulateFill(const int vertexIndex0,
+		const PathRef &path, const FixedFlattener &flattener, ToveHoles holes);
+	void triangulateLine(int v0, int verticesPerSegment,
+		const PathRef &path, const FixedFlattener &flattener);
 
 	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale) = 0;
 	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint) = 0;

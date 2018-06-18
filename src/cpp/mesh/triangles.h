@@ -20,11 +20,12 @@
 
 class TriangleStore {
 private:
-	const ToveTrianglesMode mode;
 	int size;
 	uint16_t *triangles;
 
 public:
+	const ToveTrianglesMode mode;
+
 	uint16_t *allocate(int n, bool exact = false) {
 		const int offset = size;
 
@@ -101,6 +102,10 @@ struct Triangulation {
 		triangles(TRIANGLES_LIST) {
 	}
 
+	inline ToveTrianglesMode getMode() const {
+		return triangles.mode;
+	}
+
 	Partition partition;
 	TriangleStore triangles;
 	uint64_t useCount;
@@ -164,9 +169,19 @@ public:
 		triangulations[current]->keyframe = keyframe;
 	}
 
+	bool hasMode(ToveTrianglesMode mode) {
+		if (triangulations.empty()) {
+			return false;
+		} else {
+			return triangulations[current]->getMode() == mode;
+		}
+	}
+
 	uint16_t *allocate(ToveTrianglesMode mode, int n) {
 		if (triangulations.empty()) {
 			triangulations.push_back(new Triangulation(mode));
+		} else {
+			assert(triangulations[current]->getMode() == mode);
 		}
 		assert(current < triangulations.size());
 		return triangulations[current]->triangles.allocate(n);

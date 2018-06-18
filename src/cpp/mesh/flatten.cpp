@@ -16,7 +16,9 @@
 #include "../../thirdparty/nanosvg.h"
 #include "turtle.h"
 
-AdaptiveFlattener::AdaptiveFlattener(float scale, const ToveTesselationQuality *quality) : scale(scale) {
+AdaptiveFlattener::AdaptiveFlattener(
+	float scale, const ToveTesselationQuality *quality) : scale(scale) {
+
 	if (quality) {
 		assert(quality->adaptive.valid);
 		const float eps = std::numeric_limits<float>::epsilon();
@@ -25,7 +27,8 @@ AdaptiveFlattener::AdaptiveFlattener(float scale, const ToveTesselationQuality *
 		angleEpsilon = quality->adaptive.angleEpsilon;
 		angleTolerance = quality->adaptive.angleTolerance;
     	cuspLimit = quality->adaptive.cuspLimit;
-		recursionLimit = std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit);
+		recursionLimit = std::min(
+			MAX_FLATTEN_RECURSIONS, quality->recursionLimit);
 	} else {
 		distanceTolerance = 0.5;
 		colinearityEpsilon = 0.5;
@@ -262,12 +265,14 @@ void AdaptiveFlattener::recursive(
 ClipperPath AdaptiveFlattener::flatten(const NSVGpath *path) const {
 	ClipperPath result;
 
-	const ClipperPoint p0 = ClipperPoint(path->pts[0] * scale, path->pts[1] * scale);
+	const ClipperPoint p0 = ClipperPoint(
+		path->pts[0] * scale, path->pts[1] * scale);
 	result.push_back(p0);
 
 	for (int i = 0; i * 2 + 7 < path->npts * 2; i += 3) {
 		const float* p = &path->pts[i * 2];
-		flatten(p[0]*scale,p[1]*scale, p[2]*scale,p[3]*scale, p[4]*scale,p[5]*scale, p[6]*scale,p[7]*scale, result);
+		flatten(p[0]*scale,p[1]*scale, p[2]*scale,p[3]*scale,
+			p[4]*scale,p[5]*scale, p[6]*scale,p[7]*scale, result);
 	}
 
 	if (path->closed) {
@@ -373,7 +378,7 @@ void AdaptiveFlattener::operator()(const NSVGshape *shape, Tesselation &tesselat
 			// scaled offsets < 1 will generate artefacts as the ClipperLib's
 			// underlying integer resolution cannot handle them.
 			lineOffset = 0.0f;
-			TOVE_WARN("Ignoring line width < 2. Please use setResolution(2).");
+			TOVE_WARN("Ignoring line width < 2. Please use setResolution().");
 		}
 
 		ClipperLib::ClipperOffset offset(shape->miterLimit);

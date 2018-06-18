@@ -48,7 +48,13 @@ void AdaptiveMeshifier::renderStrokes(
 }
 
 ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
-	const PathRef &path, const MeshRef &fill, const MeshRef &line) {
+	const PathRef &path, const MeshRef &fill, const MeshRef &line, bool append) {
+
+	if (!append) {
+		fill->clear();
+		line->clear();
+	}
+
 	NSVGshape *shape = path->getNSVG();
 
 	if ((shape->flags & NSVG_FLAGS_VISIBLE) == 0) {
@@ -88,47 +94,51 @@ FixedMeshifier::FixedMeshifier(
 	const ToveTesselationQuality *quality,
 	ToveHoles holes,
 	ToveMeshUpdateFlags update) :
-	_nvertices(0),
 	scale(scale),
 	depth(std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit)),
 	holes(holes),
 	_update(update) {
 }
 
-ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRef &fill, const MeshRef &line) {
+ToveMeshUpdateFlags FixedMeshifier::operator()(
+	const PathRef &path,
+	const MeshRef &fill,
+	const MeshRef &line,
+	bool append) {
+
 	NSVGshape *shape = path->getNSVG();
 
 	if ((shape->flags & NSVG_FLAGS_VISIBLE) == 0) {
 		return _update;
 	}
 
-	if (shape->fill.type == NSVG_PAINT_NONE && shape->stroke.type == NSVG_PAINT_NONE) {
+	if (shape->fill.type == NSVG_PAINT_NONE &&
+		shape->stroke.type == NSVG_PAINT_NONE) {
 		return _update;
 	}
 
-	const bool hasStroke = shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0;
+	const bool hasStroke = path->hasStroke();
 
 	FixedFlattener flattener(scale, depth, 0.0);
 
 	const int n = path->getNumSubpaths();
-	int index0 = _nvertices;
+	const bool compound = (&fill == &line);
+	const int index0 = compound && append ? fill->getVertexCount() : 0;
 	int index = 0;
+	int linebase = 0;
 
 	ToveMeshUpdateFlags update = _update;
 	bool triangleCacheFlag = false;
-
-	const bool compound = (&fill == &line);
-	int linebase = 0;
 
 	// in case of stroke-only paths, we still produce the fill vertices for
 	// computing the stroke vertices, but then skip fill triangulation.
 
 	if (update & (UPDATE_MESH_VERTICES | UPDATE_MESH_TRIANGLES)) {
-		const float lineOffset = shape->strokeWidth * 0.5;
+		const float lineOffset = shape->strokeWidth * 0.5f;
 
 		if (compound) {
 			for (int i = 0; i < n; i++) {
-				linebase += flattener.size(&path->getSubpath(i)->nsvg);
+				linebase += path->getSubpathSize(i, flattener);
 			}
 		}
 
@@ -139,13 +149,15 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 			if (hasStroke) {
 				const bool closed = path->getSubpath(i)->isClosed();
 
-				float *outer = line->vertices(
-					index0 + linebase + index * 2, k * 2);
-				float *inner = outer + k * 2;
+				// note: for compound mode, the call to fill->vertices
+				// needs to be second here; otherwise the vertices ptr
+				// might get invalidated by a realloc in line->vertices.
+
+				float *vertex = line->vertices(
+					index0 + linebase + index * VERTICES_PER_SEGMENT,
+					k * VERTICES_PER_SEGMENT);
 
 				const float *vertices = fill->vertices(index0 + index, k);
-
-				// only supports mitered lines for now.
 
 				int previous = find_unequal_backward(vertices, k, k);
 				int next = find_unequal_forward(vertices, 0, k);
@@ -165,11 +177,11 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 					float x2 = vertices[next * 2 + 0];
 					float y2 = vertices[next * 2 + 1];
 
-					float dx10 = x1 - x0;
+					/*float dx10 = x1 - x0;
 					float dy10 = y1 - y0;
 					float d10 = sqrt(dx10 * dx10 + dy10 * dy10);
 					dx10 /= d10;
-					dy10 /= d10;
+					dy10 /= d10;*/
 
 					float dx21 = x2 - x1;
 					float dy21 = y2 - y1;
@@ -177,64 +189,25 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 					dx21 /= d21;
 					dy21 /= d21;
 
-					float tx = dx10 + dx21;
-					float ty = dy10 + dy21;
-					float td = sqrt(tx * tx + ty * ty);
-					tx /= td;
-					ty /= td;
+					float ox = -dy21 * lineOffset;
+					float oy = dx21 * lineOffset;
 
-					float mx = -ty;
-					float my = tx;
+					// outer
+					*vertex++ = x1 - ox;
+					*vertex++ = y1 - oy;
 
-					float nx = -dy10;
-					float ny = dx10;
+					// inner
+					*vertex++ = x1 + ox;
+					*vertex++ = y1 + oy;
 
-					float l_inner = lineOffset / (mx * nx + my * ny);
-					float l_outer = l_inner;
+					// outer
+					*vertex++ = x2 - ox;
+					*vertex++ = y2 - oy;
 
-					// this miter limit application is a hack, as it does not produce
-					// a bevel as it should (we'd need additional vertices here, which
-					// we don't have). still - it's much better than having no limit.
-					l_outer = std::min(l_outer, shape->miterLimit);
-					l_inner = std::min(l_inner, lineOffset * 2);
-
-					float direction = dx21 * nx + dy21 * ny;
-					if (direction < 0.0f) {
-						std::swap(l_inner, l_outer);
-					}
-
-					if (!closed) {
-						if (j == 0) {
-							l_inner = lineOffset;
-							l_outer = lineOffset;
-							mx = -dy21;
-							my = dx21;
-						} else if (j == k - 1) {
-							l_inner = lineOffset;
-							l_outer = lineOffset;
-							mx = -dy10;
-							my = dx10;
-						}
-					}
-
-					outer[j * 2 + 0] = x1 - l_outer * mx;
-					outer[j * 2 + 1] = y1 - l_outer * my;
-
-					inner[j * 2 + 0] = x1 + l_inner * mx;
-					inner[j * 2 + 1] = y1 + l_inner * my;
+					// inner
+					*vertex++ = x2 + ox;
+					*vertex++ = y2 + oy;
 				}
-
-#if 0
-				for (int j = 0; j < k; j++) {
-					printf("vertex %d  %f %f\n", j, vertices[j * 2 + 0], vertices[j * 2 + 1]);
-				}
-				for (int j = 0; j < k; j++) {
-					printf("outer %d  %f %f\n", j, outer[j * 2 + 0], outer[j * 2 + 1]);
-				}
-				for (int j = 0; j < k; j++) {
-					printf("inner %d  %f %f\n", j, inner[j * 2 + 0], inner[j * 2 + 1]);
-				}
-#endif
 			}
 
 			index += k;
@@ -257,37 +230,26 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(const PathRef &path, const MeshRe
 
 	if (shape->fill.type != NSVG_PAINT_NONE) {
 		if (update & UPDATE_MESH_TRIANGLES) {
-			fill->triangulateFill(_nvertices, path, flattener, holes);
+			fill->triangulateFill(index0, path, flattener, holes);
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;
 			fill->initializePaint(paint, shape->fill, shape->opacity, scale);
-			fill->addColor(_nvertices, index, paint);
+			fill->addColor(index0, index, paint);
 		}
 	}
 
 	if (hasStroke) {
-		int v0;
-		if (!compound) {
-			v0 = _nvertices * 2;
-		} else {
-			v0 = _nvertices + linebase;
-		}
+		const int v0 = index0 + linebase;
 
 		if (update & UPDATE_MESH_TRIANGLES) {
-			line->triangulateLine(v0, path, flattener);
+			line->triangulateLine(v0, VERTICES_PER_SEGMENT, path, flattener);
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;
 			line->initializePaint(paint, shape->stroke, shape->opacity, scale);
-			line->addColor(v0, index * 2, paint);
+			line->addColor(v0, index * VERTICES_PER_SEGMENT, paint);
 		}
-	}
-
-	if (!compound) {
-		_nvertices += index;
-	} else {
-		_nvertices += index * 3;
 	}
 
 	if (triangleCacheFlag) {

@@ -138,37 +138,88 @@ void AbstractMesh::clearTriangles() {
 	triangles.clear();
 }
 
+static void stripToList(
+	const uint16_t *in,
+	uint16_t *out,
+	int triangleCount) {
+
+	if (triangleCount > 0) {
+		uint16_t i0 = *in++;
+		uint16_t i1 = *in++;
+		for (int i = 0; i < triangleCount; i++) {
+			uint16_t i2 = *in++;
+			if (i & 1) {
+				*out++ = i1;
+				*out++ = i0;
+				*out++ = i2;
+			} else {
+				*out++ = i0;
+				*out++ = i1;
+				*out++ = i2;
+			}
+			i0 = i1;
+			i1 = i2;
+		}
+	}
+}
+
+
 void AbstractMesh::triangulateLine(
 	int v0,
+	int verticesPerSegment,
 	const PathRef &path,
 	const FixedFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
-	int i0 = 1 + v0;
+	int i0 = 1 + v0; // 1-based for love2d
+	assert(verticesPerSegment == 4);
+
 	for (int t = 0; t < numSubpaths; t++) {
 		const bool closed = path->getSubpath(t)->isClosed();
 
 		const int n = path->getSubpathSize(t, flattener);
+		if (n < 2) {
+			TOVE_WARN("cannot render line with npts < 2");
+			continue;
+		}
 
-		uint16_t *indices = triangles.allocate(
-			TRIANGLES_STRIP,
-			4 * (n - 1) + (closed ? 4 : 0));
+		uint16_t *indices;
+		const int numIndices = verticesPerSegment * (n - 1) +
+			(closed ? verticesPerSegment : 0);
+		std::vector<uint16_t> tempIndices;
 
+		if (triangles.hasMode(TRIANGLES_LIST)) {
+			// this only happens for compound (flat) meshes.
+			tempIndices.resize(numIndices);
+			indices = tempIndices.data();
+		} else {
+			// we have our own mesh. use triangle strips.
+			indices = triangles.allocate(
+				TRIANGLES_STRIP, numIndices);
+		}
+
+		int j = i0;
 		for (int i = 0; i < n - 1; i++) {
-			*indices++ = i0 + i;
-			*indices++ = i0 + i + n;
-			*indices++ = i0 + i + 1;
-			*indices++ = i0 + i + n + 1;
+			*indices++ = j++;
+			*indices++ = j++;
+			*indices++ = j++;
+			*indices++ = j++;
 		}
 
 		if (closed) {
-			*indices++ = i0 + n - 1;
-			*indices++ = i0 + (n - 1) + n;
+			*indices++ = j - 2;
+			*indices++ = j - 1;
 			*indices++ = i0 + 0;
-			*indices++ = i0 + n;
+			*indices++ = i0 + 1;
 		}
 
-		i0 += 2 * n;
+		if (!tempIndices.empty()) {
+			const int triangleCount = numIndices - 2;
+			stripToList(tempIndices.data(), triangles.allocate(
+				TRIANGLES_LIST, triangleCount), triangleCount);
+		}
+
+		i0 += verticesPerSegment * n;
 	}
 }
 
