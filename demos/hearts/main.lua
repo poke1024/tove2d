@@ -36,9 +36,12 @@ local names = {}
 local function createHearts(stroke)
 	for i = 1, 4 do
 		local heart, curve = newHeart()
-		gradient = newLinearGradient(0)
-		heart:setFillColor(gradient)
-		heart:fill()
+
+		if filled then
+			gradient = newLinearGradient(0)
+			heart:setFillColor(gradient)
+			heart:fill()
+		end
 
 		if stroke then
 			heart:stroke()
@@ -57,7 +60,8 @@ local function createHearts(stroke)
 end
 
 local outlined = true
-createHearts(outlined)
+local filled = true
+createHearts(outlined, filled)
 
 -- remember initial point position.
 local cx0 = hearts[1].animatedCurve.x
@@ -94,7 +98,7 @@ local function drawHeart(i, h, t)
 end
 
 function love.draw()
-	tovedemo.draw("Hearts.")
+	tovedemo.draw("Hearts.", "You can toggle (s)troke and (f)ill.")
 
 	local t = love.timer.getTime()
 	for i = 1, 4 do
@@ -105,7 +109,9 @@ function love.draw()
 		h.animatedCurve.y = cy0 + (0.25 + math.sin(t * 1.2 + 0.3)) * 20
 
 		-- change fill color.
-		h.graphics.paths[1]:setFillColor(newLinearGradient(t))
+		if filled then
+			h.graphics.paths[1]:setFillColor(newLinearGradient(t))
+		end
 
 		-- now draw the heart.
 		drawHeart(i, h, t)
@@ -113,8 +119,12 @@ function love.draw()
 end
 
 function love.keypressed(key)
-	if key == "space" then
+	if key == "s" then
 		outlined = not outlined
-		createHearts(outlined)
+		createHearts(outlined, filled)
+	end
+	if key == "f" then
+		filled = not filled
+		createHearts(outlined, filled)
 	end
 end

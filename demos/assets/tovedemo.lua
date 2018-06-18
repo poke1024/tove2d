@@ -6,6 +6,7 @@ local function lerp(a, b, t)
 end
 
 local font = love.graphics.newFont("assets/amatic/Amatic-Bold.ttf", 48)
+local smallFont = love.graphics.newFont("assets/amatic/Amatic-Bold.ttf", 20)
 local logo = love.graphics.newImage("assets/tovelogo.png", {mipmaps = true})
 logo:setFilter("linear", "linear", 1)
 logo:setMipmapFilter("linear")
@@ -14,7 +15,7 @@ love.window.setTitle("")
 
 tovedemo = {}
 
-function tovedemo.draw(title)
+function tovedemo.draw(title, help)
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	love.graphics.setBackgroundColor(0.722, 0.898, 0.988)
@@ -22,7 +23,14 @@ function tovedemo.draw(title)
 	love.graphics.rectangle("fill", 0, 0, width, height / 2)
 	love.graphics.setColor(0, 0, 0, 0.5)
 	love.graphics.setFont(font)
-	love.graphics.print(title, logo:getWidth() * 0.25 + 20, 20)
+	local x0 = logo:getWidth() * 0.25 + 20
+	love.graphics.print(title, x0, 20)
+
+	if help ~= nil then
+		love.graphics.setFont(smallFont)
+		love.graphics.print(help, x0, 20 + 48)
+		love.graphics.setFont(font)
+	end
 
 	love.graphics.setColor(1, 1, 1, 0.5)
 	love.graphics.draw(logo, 10, 10, 0, 0.25, 0.25)
@@ -47,7 +55,7 @@ function CoverFlow:add(name, item)
 		zoom = 0,
 		scale = 1,
 		name = name,
-		item = item	
+		item = item
 	})
 end
 
@@ -114,5 +122,5 @@ function CoverFlow:update(dt)
 			item.zoom = lerp(item.zoom, 0, dt * 10)
 		end
 		item.scale = 1 + math.sin(item.zoom * math.pi / 2)
-	end	
+	end
 end
