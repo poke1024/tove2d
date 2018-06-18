@@ -46,7 +46,7 @@ public:
 	void add(const ClipperPaths &paths, const MeshPaint &paint, const ToveHoles holes);
 
 	const ToveMeshRecord &getData() const;
-	ToveIndex16Array getTriangles() const;
+	ToveTriangles getTriangles() const;
 
 	inline int getVertexCount() const {
 		return meshData.nvertices;

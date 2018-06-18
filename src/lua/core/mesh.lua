@@ -11,6 +11,11 @@
 
 local floatSize = ffi.sizeof("float")
 
+local function getTrianglesMode(cmesh)
+	local m = lib.MeshGetTriangles(cmesh).mode
+	return m == lib.TRIANGLES_LIST and "triangles" or "strip"
+end
+
 
 local PositionMesh = {}
 PositionMesh.__index = PositionMesh
@@ -37,8 +42,8 @@ end
 function PositionMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
-		ctriangles = lib.MeshGetIndices(self._cmesh)
-		local indices = totable(ctriangles.array, ctriangles.n * 3)
+		ctriangles = lib.MeshGetTriangles(self._cmesh)
+		local indices = totable(ctriangles.array, ctriangles.size)
 		mesh:setVertexMap(indices)
 	else
 		self:getMesh()
@@ -62,7 +67,7 @@ function PositionMesh:getMesh()
 	end
 
 	local mesh = love.graphics.newMesh(
-		attributes, n, "triangles", usage)
+		attributes, n, getTrianglesMode(self._cmesh), usage)
 	self._mesh = mesh
 	self._vdata = love.data.newByteData(n * 2 * floatSize)
 
@@ -116,8 +121,8 @@ end
 function ColorMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
-		local ctriangles = lib.MeshGetIndices(self._cmesh)
-		local indices = totable(ctriangles.array, ctriangles.n * 3)
+		local ctriangles = lib.MeshGetTriangles(self._cmesh)
+		local indices = totable(ctriangles.array, ctriangles.size)
 		mesh:setVertexMap(indices)
 	else
 		self:getMesh()
@@ -143,7 +148,7 @@ function ColorMesh:getMesh()
 	end
 
 	local mesh = love.graphics.newMesh(
-		attributes, n, "triangles", usage)
+		attributes, n, getTrianglesMode(self._cmesh), usage)
 	self._mesh = mesh
 	self._vdata = love.data.newByteData(n * (2 * floatSize + 4))
 	self:updateTriangles()

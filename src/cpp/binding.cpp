@@ -587,7 +587,7 @@ void MeshCopyPositionsAndColors(ToveMeshRef mesh, void *buffer, uint32_t size) {
 	deref(mesh)->copyPositionsAndColors(buffer, size);
 }
 
-ToveIndex16Array MeshGetIndices(ToveMeshRef mesh) {
+ToveTriangles MeshGetTriangles(ToveMeshRef mesh) {
 	return deref(mesh)->getTriangles();
 }
 

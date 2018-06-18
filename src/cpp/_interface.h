@@ -8,20 +8,16 @@ typedef struct {
 	ToveMeshUpdateFlags update;
 } ToveMeshResult;
 
-typedef struct {
-	float *array;
-	int n;
-} ToveFloatArray;
+typedef enum {
+	TRIANGLES_LIST,
+	TRIANGLES_STRIP
+} ToveTrianglesMode;
 
 typedef struct {
-	uint8_t *array;
-	int n;
-} ToveColorArray;
-
-typedef struct {
+	ToveTrianglesMode mode;
 	uint16_t *array;
-	int n;
-} ToveIndex16Array;
+	int size;
+} ToveTriangles;
 
 typedef struct {
 	uint8_t *pixels;
@@ -344,6 +340,6 @@ EXPORT ToveMeshRef NewColorMesh();
 EXPORT int MeshGetVertexCount(ToveMeshRef mesh);
 EXPORT void MeshCopyPositions(ToveMeshRef mesh, void *buffer, uint32_t size);
 EXPORT void MeshCopyPositionsAndColors(ToveMeshRef mesh, void *buffer, uint32_t size);
-EXPORT ToveIndex16Array MeshGetIndices(ToveMeshRef mesh);
+EXPORT ToveTriangles MeshGetTriangles(ToveMeshRef mesh);
 EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);

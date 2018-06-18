@@ -53,7 +53,7 @@ const ToveMeshRecord &AbstractMesh::getData() const {
 	return meshData;
 }
 
-ToveIndex16Array AbstractMesh::getTriangles() const {
+ToveTriangles AbstractMesh::getTriangles() const {
 	return triangles.get();
 }
 
@@ -151,13 +151,11 @@ void AbstractMesh::triangulateLine(
 		const int n = path->getSubpathSize(t, flattener);
 
 		uint16_t *indices = triangles.allocate(
-			2 * (n - 1) + (closed ? 2 : 0));
+			TRIANGLES_STRIP,
+			4 * (n - 1) + (closed ? 4 : 0));
 
 		for (int i = 0; i < n - 1; i++) {
 			*indices++ = i0 + i;
-			*indices++ = i0 + i + 1;
-			*indices++ = i0 + i + n;
-
 			*indices++ = i0 + i + n;
 			*indices++ = i0 + i + 1;
 			*indices++ = i0 + i + n + 1;
@@ -165,9 +163,6 @@ void AbstractMesh::triangulateLine(
 
 		if (closed) {
 			*indices++ = i0 + n - 1;
-			*indices++ = i0 + 0;
-			*indices++ = i0 + (n - 1) + n;
-
 			*indices++ = i0 + (n - 1) + n;
 			*indices++ = i0 + 0;
 			*indices++ = i0 + n;

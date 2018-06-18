@@ -20,24 +20,27 @@
 
 class TriangleStore {
 private:
-	int ntris;
+	const ToveTrianglesMode mode;
+	int size;
 	uint16_t *triangles;
 
 public:
 	uint16_t *allocate(int n, bool exact = false) {
-		const int triangleIndex = ntris;
+		const int offset = size;
 
-	    ntris += n;
-		const int size = exact ? ntris : nextpow2(ntris);
+		const int k = (mode == TRIANGLES_LIST) ? 3 : 1;
+	    size += n * k;
+
+		const int count = exact ? size : nextpow2(size);
 	    triangles = static_cast<uint16_t*>(realloc(
-	    	triangles, size * 3 * sizeof(uint16_t)));
+	    	triangles, count * sizeof(uint16_t)));
 
 	    if (!triangles) {
 			TOVE_BAD_ALLOC();
 			return nullptr;
 	    }
 
-		return &triangles[3 * triangleIndex];
+		return &triangles[offset];
 	}
 
 private:
@@ -53,7 +56,8 @@ private:
 	}
 
 public:
-	TriangleStore() : triangles(nullptr), ntris(0) {
+	TriangleStore(ToveTrianglesMode mode) :
+		triangles(nullptr), mode(mode), size(0) {
 	}
 
 	~TriangleStore() {
@@ -63,33 +67,38 @@ public:
 	}
 
 	TriangleStore(const std::list<TPPLPoly> &triangles) :
-		triangles(nullptr), ntris(0) {
+		triangles(nullptr), mode(TRIANGLES_LIST), size(0) {
 
 		_add(triangles, true);
 	}
 
 	void add(const std::list<TPPLPoly> &triangles) {
+		assert(mode == TRIANGLES_LIST);
 		_add(triangles, false);
 	}
 
 	void clear() {
-		ntris = 0;
+		size = 0;
 	}
 
-	ToveIndex16Array get() const {
-		ToveIndex16Array array;
+	ToveTriangles get() const {
+		ToveTriangles array;
 		array.array = triangles;
-		array.n = ntris;
+		array.mode = mode;
+		array.size = size;
 		return array;
 	}
 };
 
 struct Triangulation {
-	Triangulation() {
+	Triangulation(ToveTrianglesMode mode) : triangles(mode) {
 	}
 
 	Triangulation(const std::list<TPPLPoly> &convex) :
-		partition(convex), useCount(0), keyframe(false) {
+		partition(convex),
+		useCount(0),
+		keyframe(false),
+		triangles(TRIANGLES_LIST) {
 	}
 
 	Partition partition;
@@ -155,9 +164,9 @@ public:
 		triangulations[current]->keyframe = keyframe;
 	}
 
-	uint16_t *allocate(int n) {
+	uint16_t *allocate(ToveTrianglesMode mode, int n) {
 		if (triangulations.empty()) {
-			triangulations.push_back(new Triangulation());
+			triangulations.push_back(new Triangulation(mode));
 		}
 		assert(current < triangulations.size());
 		return triangulations[current]->triangles.allocate(n);
@@ -165,7 +174,7 @@ public:
 
 	void add(const std::list<TPPLPoly> &triangles) {
 		if (triangulations.empty()) {
-			triangulations.push_back(new Triangulation());
+			triangulations.push_back(new Triangulation(TRIANGLES_LIST));
 		}
 		assert(current < triangulations.size());
 		triangulations[current]->triangles.add(triangles);
@@ -177,13 +186,14 @@ public:
 		}
 	}
 
-	ToveIndex16Array get() const {
+	ToveTriangles get() const {
 		if (current < triangulations.size()) {
 			return triangulations[current]->triangles.get();
 		} else {
-			ToveIndex16Array array;
+			ToveTriangles array;
 			array.array = nullptr;
-			array.n = 0;
+			array.mode = TRIANGLES_LIST;
+			array.size = 0;
 			return array;
 		}
 	}
