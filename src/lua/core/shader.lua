@@ -260,7 +260,7 @@ function MeshShader:update()
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		if self.usage["points"] ~= "dynamic" then
-			tove.warn("static mesh points changed in " .. self._name)
+			tove.slow("static mesh points changed in " .. self._name)
 			self.linkdata = newMeshShaderLinkData(
 				self.name, self.path, self.tess, self.usage)
 			return

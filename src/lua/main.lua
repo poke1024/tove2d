@@ -47,6 +47,11 @@ tove.init = function(path)
 			print(debug.traceback())
 		end
 	end
+	tove.slow = tove.warn
+
+	tove.setPerformanceWarnings = function(enabled)
+		tove.slow = enabled and tove.warn or function() end
+	end
 
 	lib.SetWarningFunction(ffi.cast("ToveWarningFunction", function(s)
 		tove.warn(ffi.string(s))
