@@ -107,13 +107,14 @@ public:
 	inline float getLineWidth() const {
 		return nsvg.strokeWidth;
 	}
+	void setLineWidth(float width);
+
+	ToveLineJoin getLineJoin() const;
+	void setLineJoin(ToveLineJoin join);
 
 	inline float getMiterLimit() const {
 		return nsvg.miterLimit;
 	}
-
-	void setLineWidth(float width);
-	void setLineJoin(ToveLineJoin join);
 	void setMiterLimit(float limit);
 
 	ToveFillRule getFillRule() const;

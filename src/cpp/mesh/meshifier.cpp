@@ -130,6 +130,9 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 	ToveMeshUpdateFlags update = _update;
 	bool triangleCacheFlag = false;
 
+	float miterLimit = path->getMiterLimit();
+	bool miter = path->getLineJoin() == LINEJOIN_MITER && miterLimit > 0.0f;
+
 	// in case of stroke-only paths, we still produce the fill vertices for
 	// computing the stroke vertices, but then skip fill triangulation.
 
@@ -148,14 +151,16 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 
 			if (hasStroke) {
 				const bool closed = path->getSubpath(i)->isClosed();
+				const int verticesPerSegment = miter ? 5 : 4;
+				const float miterLimitSquared = miterLimit * miterLimit;
 
 				// note: for compound mode, the call to fill->vertices
 				// needs to be second here; otherwise the vertices ptr
 				// might get invalidated by a realloc in line->vertices.
 
 				float *vertex = line->vertices(
-					index0 + linebase + index * VERTICES_PER_SEGMENT,
-					k * VERTICES_PER_SEGMENT);
+					index0 + linebase + index * verticesPerSegment,
+					k * verticesPerSegment);
 
 				const float *vertices = fill->vertices(index0 + index, k);
 
@@ -168,29 +173,59 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 						next = find_unequal_forward(vertices, j, k);
 					}
 
-					float x0 = vertices[previous * 2 + 0];
-					float y0 = vertices[previous * 2 + 1];
+					const float x0 = vertices[previous * 2 + 0];
+					const float y0 = vertices[previous * 2 + 1];
 
-					float x1 = vertices[j * 2 + 0];
-					float y1 = vertices[j * 2 + 1];
+					const float x1 = vertices[j * 2 + 0];
+					const float y1 = vertices[j * 2 + 1];
 
-					float x2 = vertices[next * 2 + 0];
-					float y2 = vertices[next * 2 + 1];
-
-					/*float dx10 = x1 - x0;
-					float dy10 = y1 - y0;
-					float d10 = sqrt(dx10 * dx10 + dy10 * dy10);
-					dx10 /= d10;
-					dy10 /= d10;*/
+					const float x2 = vertices[next * 2 + 0];
+					const float y2 = vertices[next * 2 + 1];
 
 					float dx21 = x2 - x1;
 					float dy21 = y2 - y1;
-					float d21 = sqrt(dx21 * dx21 + dy21 * dy21);
+					float d21 = std::sqrt(dx21 * dx21 + dy21 * dy21);
 					dx21 /= d21;
 					dy21 /= d21;
 
-					float ox = -dy21 * lineOffset;
-					float oy = dx21 * lineOffset;
+					const float ox = -dy21 * lineOffset;
+					const float oy = dx21 * lineOffset;
+
+					if (miter) {
+						float dx10 = x1 - x0;
+						float dy10 = y1 - y0;
+						float d10 = sqrt(dx10 * dx10 + dy10 * dy10);
+						dx10 /= d10;
+						dy10 /= d10;
+
+						const float n10x = -dy10;
+						const float n10y = dx10;
+
+						const float n21x = -dy21;
+						const float n21y = dx21;
+
+						const float mx = (n10x + n21x) * 0.5f;
+						const float my = (n10y + n21y) * 0.5f;
+
+						const float wind = -n21y * n10x - n21x * -n10y;
+
+						if ((mx * mx + my * my) * miterLimitSquared < 1.0f) {
+							// use bevel
+							if (wind < 0.0f) {
+								*vertex++ = x1 - ox;
+								*vertex++ = y1 - oy;
+							} else {
+								*vertex++ = x1 + ox;
+								*vertex++ = y1 + oy;
+							}
+						} else {
+							float l = lineOffset / (mx * n10x + my * n10y);
+							l = l * (wind < 0.0f ? -1.0f : 1.0f);
+
+							*vertex++ = x1 + l * mx;
+							*vertex++ = y1 + l * my;
+						}
+					}
 
 					// outer
 					*vertex++ = x1 - ox;
@@ -241,14 +276,15 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 
 	if (hasStroke) {
 		const int v0 = index0 + linebase;
+		const int verticesPerSegment = miter ? 5 : 4;
 
 		if (update & UPDATE_MESH_TRIANGLES) {
-			line->triangulateLine(v0, VERTICES_PER_SEGMENT, path, flattener);
+			line->triangulateLine(v0, miter, path, flattener);
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;
 			line->initializePaint(paint, shape->stroke, shape->opacity, scale);
-			line->addColor(v0, index * VERTICES_PER_SEGMENT, paint);
+			line->addColor(v0, index * verticesPerSegment, paint);
 		}
 	}
 

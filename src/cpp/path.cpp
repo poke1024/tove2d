@@ -26,6 +26,18 @@ inline NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 	return NSVG_JOIN_MITER;
 }
 
+inline ToveLineJoin toveLineJoin(NSVGlineJoin join) {
+	switch (join) {
+		case NSVG_JOIN_MITER:
+			return LINEJOIN_MITER;
+		case NSVG_JOIN_ROUND:
+			return LINEJOIN_ROUND;
+		case NSVG_JOIN_BEVEL:
+			return LINEJOIN_BEVEL;
+	}
+	return LINEJOIN_MITER;
+}
+
 void Path::setSubpathCount(int n) {
 	if (trajectories.size() != n) {
 		clear();
@@ -456,6 +468,11 @@ void Path::setLineWidth(float width) {
 	}
 }
 
+ToveLineJoin Path::getLineJoin() const {
+	return toveLineJoin(
+		static_cast<NSVGlineJoin>(nsvg.strokeLineJoin));
+}
+
 void Path::setLineJoin(ToveLineJoin join) {
 	NSVGlineJoin nsvgJoin = nsvgLineJoin(join);
 	if (nsvgJoin != nsvg.strokeLineJoin) {
@@ -466,6 +483,9 @@ void Path::setLineJoin(ToveLineJoin join) {
 
 void Path::setMiterLimit(float limit) {
 	if (limit != nsvg.miterLimit) {
+		if ((nsvg.miterLimit != 0.0f) != (limit != 0.0f)) {
+			changed(CHANGED_GEOMETRY);
+		}
 		nsvg.miterLimit = limit;
 		changed(CHANGED_POINTS | CHANGED_LINE_ARGS);
 	}

@@ -40,7 +40,7 @@ public:
 	void clearTriangles();
 	void triangulateFill(const int vertexIndex0,
 		const PathRef &path, const FixedFlattener &flattener, ToveHoles holes);
-	void triangulateLine(int v0, int verticesPerSegment,
+	void triangulateLine(int v0, bool miter,
 		const PathRef &path, const FixedFlattener &flattener);
 
 	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale) = 0;

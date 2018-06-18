@@ -166,30 +166,31 @@ static void stripToList(
 
 void AbstractMesh::triangulateLine(
 	int v0,
-	int verticesPerSegment,
+	bool miter,
 	const PathRef &path,
 	const FixedFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
 	int i0 = 1 + v0; // 1-based for love2d
-	assert(verticesPerSegment == 4);
 
 	for (int t = 0; t < numSubpaths; t++) {
 		const bool closed = path->getSubpath(t)->isClosed();
 
-		const int n = path->getSubpathSize(t, flattener);
-		if (n < 2) {
+		const int numVertices = path->getSubpathSize(t, flattener);
+		if (numVertices < 2) {
 			TOVE_WARN("cannot render line with npts < 2");
 			continue;
 		}
+		const int numSegments = numVertices - 1;
 
 		uint16_t *indices;
-		const int numIndices = verticesPerSegment * (n - 1) +
-			(closed ? verticesPerSegment : 0);
+		const int num0 = 4 * numSegments + (numSegments - 1) * (miter ? 1 : 0);
+		const int numIndices = num0 + (closed ? 2 + (miter ? 1 : 0) : 0);
 		std::vector<uint16_t> tempIndices;
 
-		if (triangles.hasMode(TRIANGLES_LIST)) {
-			// this only happens for compound (flat) meshes.
+		if (triangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
+			// this only happens for compound (flat) meshes and
+			// multiple subpaths (we don't want them connected).
 			tempIndices.resize(numIndices);
 			indices = tempIndices.data();
 		} else {
@@ -198,17 +199,16 @@ void AbstractMesh::triangulateLine(
 				TRIANGLES_STRIP, numIndices);
 		}
 
-		int j = i0;
-		for (int i = 0; i < n - 1; i++) {
-			*indices++ = j++;
-			*indices++ = j++;
-			*indices++ = j++;
+		int j = i0 + (miter ? 1 : 0);
+
+		for (int i = 0; i < num0; i++) {
 			*indices++ = j++;
 		}
 
 		if (closed) {
-			*indices++ = j - 2;
-			*indices++ = j - 1;
+			if (miter) {
+				*indices++ = i0; // miter point
+			}
 			*indices++ = i0 + 0;
 			*indices++ = i0 + 1;
 		}
@@ -219,7 +219,7 @@ void AbstractMesh::triangulateLine(
 				TRIANGLES_LIST, triangleCount), triangleCount);
 		}
 
-		i0 += verticesPerSegment * n;
+		i0 += (miter ? 5 : 4) * numVertices; // advance vertex index
 	}
 }
 

@@ -59,10 +59,6 @@ private:
 	const ToveHoles holes;
 
 public:
-	enum {
-		VERTICES_PER_SEGMENT = 4 // for line drawing
-	};
-
 	FixedMeshifier(float scale, const ToveTesselationQuality *quality,
 		ToveHoles holes, ToveMeshUpdateFlags update);
 
