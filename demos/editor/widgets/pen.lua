@@ -12,9 +12,9 @@ function PathWidget:create()
     local object = Object.new(0, 0, tove.newGraphics())
 	table.insert(self.editor.objects, object)
 
-    local traj = tove.newTrajectory()
+    local subpath = tove.newSubpath()
     local path = tove.newPath()
-    path:addTrajectory(traj)
+    path:addSubpath(subpath)
     object.graphics:addPath(path)
 
     object.graphics.paths[1]:setLineColor(0, 0, 0)

@@ -91,7 +91,7 @@ end
 
 function Path:nearest(x, y, max, min)
 	local n = lib.PathGetNumSubpaths(self)
-	local subpaths = self.subpath
+	local subpaths = self.subpaths
 	for i = 1, n do
 		local traj = subpaths[i]
 		local t, d = traj:nearest(x, y, max, min)
