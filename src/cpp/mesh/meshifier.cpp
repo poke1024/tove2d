@@ -134,7 +134,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 	// computing the stroke vertices, but then skip fill triangulation.
 
 	if (update & (UPDATE_MESH_VERTICES | UPDATE_MESH_TRIANGLES)) {
-		const float lineOffset = shape->strokeWidth * 0.5f;
+		const float lineOffset = scale * shape->strokeWidth * 0.5f;
 
 		if (compound) {
 			for (int i = 0; i < n; i++) {
