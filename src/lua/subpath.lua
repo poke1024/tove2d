@@ -11,10 +11,16 @@
 
 local Curve = {}
 Curve.__index = function (self, key)
-	return lib.SubpathGetCurveValue(self.traj, self.curve, _attributes[key])
+	if key == "count" then
+		return lib.SubpathGetNumCurves(self.traj)
+	else
+		return lib.SubpathGetCurveValue(
+			self.traj, self.curve, _attributes[key])
+	end
 end
 Curve.__newindex = function (self, key, value)
-	return lib.SubpathSetCurveValue(self.traj, self.curve, _attributes[key], value)
+	return lib.SubpathSetCurveValue(
+		self.traj, self.curve, _attributes[key], value)
 end
 
 local Curves = {}
@@ -37,20 +43,20 @@ end
 
 local Points = {}
 Points.__index = function (self, i)
-	return setmetatable({traj = self.traj, i = i - 1}, Point)
+	if i == "count" then
+		return lib.SubpathGetNumPoints(self.traj)
+	else
+		return setmetatable({traj = self.traj, i = i - 1}, Point)
+	end
 end
 
 
 local Subpath = {}
 Subpath.__index = function (self, key)
-	if key == "curve" then
+	if key == "curves" then
 		return setmetatable({traj = self}, Curves)
-	elseif key == "curveCount" then
-		return lib.SubpathGetNumCurves(self)
-	elseif key == "point" then
+	elseif key == "points" then
 		return setmetatable({traj = self}, Points)
-	elseif key == "pointCount" then
-		return lib.SubpathGetNumPoints(self)
 	elseif key == "isClosed" then
 		return lib.SubpathIsClosed(self)
 	else

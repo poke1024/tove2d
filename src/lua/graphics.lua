@@ -13,17 +13,15 @@
 
 local Paths = {}
 Paths.__index = function (self, i)
-	return ffi.gc(lib.GraphicsGetPath(self._ref, i), lib.ReleasePath)
+	if i == "count" then
+		return lib.GraphicsGetNumPaths(self._ref)
+	else
+		return ffi.gc(lib.GraphicsGetPath(self._ref, i), lib.ReleasePath)
+	end
 end
 
 local Graphics = {}
-Graphics.__index = function (graphics, key)
-	if key == "pathCount" then
-		return lib.GraphicsGetNumPaths(graphics._ref)
-	else
-		return Graphics[key]
-	end
-end
+Graphics.__index = Graphics
 
 local function bind(methodName, libFuncName)
 	Graphics[methodName] = function(self, ...)
@@ -45,7 +43,7 @@ tove.newGraphics = function(svg, size)
 		_resolution = 1,
 		_usage = {},
 		_name = name,
-		path = setmetatable({_ref = ref}, Paths)}, Graphics)
+		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	if type(size) == "number" then
 		graphics:rescale(size)
 	elseif size == nil then -- auto

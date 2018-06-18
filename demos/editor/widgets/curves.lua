@@ -12,7 +12,7 @@ local function isControlPointVisible(selected, traj, i, j, k)
 	if selected ~= nil and selected.path == i and selected.traj == j then
 		local s = selected.pt
 		local distance = math.abs(s - k)
-		distance = math.min(distance, traj.npts - distance)
+		distance = math.min(distance, traj.points.count - distance)
 
 		return distance <= 2
 	end
@@ -21,13 +21,13 @@ end
 function PointsWidget:allpoints(f)
 	local graphics = self.object.graphics
 
-	for i = 1, graphics.pathCount do
-		local path = graphics.path[i]
-		for j = 1, path.subpathCount do
-			local traj = path.subpath[j]
+	for i = 1, graphics.paths.count do
+		local path = graphics.paths[i]
+		for j = 1, path.subpaths.count do
+			local traj = path.subpaths[j]
 
-			for k = 1, traj.npts, 3 do
-				local pts = traj.pts
+			for k = 1, traj.points.count, 3 do
+				local pts = traj.points
 				local pt = pts[k]
 				if  f(traj, pts, i, j, k, pt.x, pt.y) then
 					return true
@@ -44,13 +44,13 @@ function PointsWidget:allcontrolpoints(f)
 	local selected = self.selected
 	local dragging = self.dragging
 
-	for i = 1, graphics.pathCount do
-		local path = graphics.path[i]
-		for j = 1, path.subpathCount do
-			local traj = path.subpath[j]
+	for i = 1, graphics.paths.count do
+		local path = graphics.paths[i]
+		for j = 1, path.subpaths.count do
+			local traj = path.subpaths[j]
 
-			local pts = traj.pts
-			for k = 1, traj.npts, 3 do
+			local pts = traj.points
+			for k = 1, traj.points.count, 3 do
 				if not traj:isEdgeAt(k) then
 					local isActive = false
 					if dragging ~= nil and dragging.path == i and
@@ -83,10 +83,10 @@ end
 
 function PointsWidget:oncurve(ux, uy, gs)
 	local scaledgraphics = self.object.scaledgraphics
-	for i = 1, scaledgraphics.pathCount do
-		local path = scaledgraphics.path[i]
-		for j = 1, path.subpathCount do
-			local traj = path.subpath[i]
+	for i = 1, scaledgraphics.paths.count do
+		local path = scaledgraphics.paths[i]
+		for j = 1, path.subpaths.count do
+			local traj = path.subpaths[i]
 			local dmax = 2 * gs + path:getLineWidth() * 0.5
 			local t, d = traj:nearest(ux, uy, dmax, gs)
 			if t >= 0 then
@@ -118,8 +118,8 @@ function PointsWidget:updateOverlayLine()
 	local overlayLine = self.overlayLine
 	local handleColor = self.handles.color
 	overlayLine:set(self.object.scaledgraphics)
-	for i = 1, overlayLine.pathCount do
-		local p = overlayLine.path[i]
+	for i = 1, overlayLine.paths.count do
+		local p = overlayLine.paths[i]
 		p:setFillColor()
 		p:setLineColor(unpack(handleColor))
 		p:setLineWidth(1)
@@ -170,7 +170,7 @@ function PointsWidget:createDragPointFunc()
 	return function(gx, gy)
 		self.object:changePoints(function()
 			local mx, my = transform:inverseTransformPoint(gx, gy)
-			local traj = graphics.path[dragging.path].subpath[dragging.traj]
+			local traj = graphics.paths[dragging.path].subpaths[dragging.traj]
 			traj:move(dragging.pt, mx, my)
 		end)
 
@@ -180,7 +180,7 @@ end
 
 function PointsWidget:createMouldCurveFunc(i, j, t)
 	local transform = self.object.transform
-	local traj = self.object.graphics.path[i].subpath[j]
+	local traj = self.object.graphics.paths[i].subpaths[j]
 
 	return function(gx, gy)
 		local mx, my = transform:inverseTransformPoint(gx, gy)
@@ -261,7 +261,7 @@ function PointsWidget:click(gx, gy, gs, button)
 
 	local i, j, t = self:oncurve(ux, uy, gs)
 	if t >= 0 then
-		local traj = self.object.graphics.path[i].subpath[j]
+		local traj = self.object.graphics.paths[i].subpaths[j]
 		local k = traj:insertCurveAt(t)
 		self.selected = {path = i, traj = j, pt = k}
 		self.object:refresh()
@@ -279,7 +279,7 @@ function PointsWidget:keypressed(key)
 		if selected ~= nil then
 			if (selected.pt - 1) % 3 == 0 then
 				self.object:changePoints(function()
-					local traj = self.object.graphics.path[selected.path].subpath[selected.traj]
+					local traj = self.object.graphics.paths[selected.path].subpaths[selected.traj]
 					traj:removeCurve((selected.pt - 1) / 3)
 				end)
 				self:updateOverlayLine()

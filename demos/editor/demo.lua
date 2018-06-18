@@ -5,9 +5,12 @@ local Demo = {}
 Demo.__index = Demo
 
 function Demo:draw()
+    love.graphics.push("transform")
+	love.graphics.applyTransform(self.transform)
     for _, o in ipairs(self.items) do
         o.graphics:draw(o.x, o.y, o.r, o.s, o.s)
     end
+    love.graphics.pop()
 
     if self.measureDraw == 1 then
         -- some things liker shaders are only compiled on the first draw
@@ -58,9 +61,9 @@ function Demo:update(dt)
             o.vs = -o.vs
         end
         if animation then
-            local pt = o.graphics.path[1].subpath[1].pts[1]
-            pt.x = o.pts[1].x + anim1
-            pt.y = o.pts[1].y + anim2
+            local pt = o.graphics.paths[1].subpaths[1].points[1]
+            pt.x = o.points[1].x + anim1
+            pt.y = o.points[1].y + anim2
         end
     end
 end
@@ -81,7 +84,13 @@ function Demo:keypressed(key, scancode, isrepeat)
     end
 end
 
-function Demo:wheelmoved(x, y)
+function Demo:wheelmoved(wx, wy)
+    local x = love.mouse.getX()
+	local y = love.mouse.getY()
+	local lx, ly = self.transform:inverseTransformPoint(x, y)
+	self.transform:translate(lx, ly)
+	self.transform:scale(1 + wy / 10)
+	self.transform:translate(-lx, -ly)
 end
 
 function Demo:filedropped(file)
@@ -99,10 +108,10 @@ function Demo:setObjects(objects)
         for i = 1, ndup do
             local graphics = o.scaledgraphics:clone()
 
-            local traj = graphics.path[1].subpath[1]
-            local pts = traj.pts
+            local traj = graphics.paths[1].subpaths[1]
+            local pts = traj.points
             local newpts = {}
-            for j = 1, traj.npts do
+            for j = 1, traj.points.count do
                 local pt = pts[j]
                 newpts[j] = {x = pt.x, y = pt.y}
             end
@@ -117,7 +126,7 @@ function Demo:setObjects(objects)
                 vy = (math.random() - 0.5) * 1000,
                 vr = math.random() * 0.5,
                 vs = math.random() * 0.01,
-                pts = newpts
+                points = newpts
             })
             graphics:cache()
         end
@@ -128,6 +137,7 @@ function Demo:setObjects(objects)
 end
 
 return setmetatable({
+    transform = love.math.newTransform(),
     items = {},
     startupTime = 0,
     animation = false,

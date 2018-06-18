@@ -11,15 +11,17 @@
 
 local Subpaths = {}
 Subpaths.__index = function (self, i)
-	return ffi.gc(lib.PathGetSubpath(self.path, i), lib.ReleaseSubpath)
+	if i == "count" then
+		return lib.PathGetNumSubpaths(self.path)
+	else
+		return ffi.gc(lib.PathGetSubpath(self.path, i), lib.ReleaseSubpath)
+	end
 end
 
 local Path = {}
 Path.__index = function (path, key)
-	if key == "subpath" then
+	if key == "subpaths" then
 		return setmetatable({path = path}, Subpaths)
-	elseif key == "subpathCount" then
-		return lib.PathGetNumSubpaths(path)
 	else
 		return Path[key]
 	end
@@ -55,7 +57,7 @@ function Path:lineTo(x, y)
 end
 
 function Path:curveTo(...)
-	lib.TrajectorCurveTo(self:beginSubpath(), ...)
+	lib.SubpathCurveTo(self:beginSubpath(), ...)
 end
 
 function Path:getFillColor()
