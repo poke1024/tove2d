@@ -327,5 +327,19 @@ function Graphics:shaders(gen)
 	return shaders
 end
 
+function Graphics:setMonochrome(r, g, b)
+	local paths = self.paths
+	r = r or 1
+	g = g or 1
+	b = b or 1
+    for i = 1, paths.count do
+        local p = paths[i]
+        if p:getFillColor() ~= nil then
+            p:setFillColor(r, g, b)
+        end
+        p:setLineColor(r, g, b)
+    end
+end
+
 --!! import "core/create.lua" as create
 Graphics._create = create
