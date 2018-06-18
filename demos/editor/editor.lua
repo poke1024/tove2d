@@ -307,7 +307,17 @@ function Editor:keypressed(key, scancode, isrepeat)
 	elseif key == "p" then
 		self.widget = newPenWidget(self)
     elseif self.widget ~= nil then
-        self.widget:keypressed(key, scancode, isrepeat)
+        if not self.widget:keypressed(key, scancode, isrepeat) then
+			if key == "backspace" then
+				for i, o in ipairs(self.objects) do
+					if o == self.widget.object then
+						table.remove(self.objects, i)
+						self.widget = nil
+						break
+					end
+				end
+			end
+		end
     end
 end
 

@@ -324,6 +324,7 @@ function TransformWidget:mousereleased()
 end
 
 function TransformWidget:keypressed(key)
+	return false
 end
 
 return function(handles, object)

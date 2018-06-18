@@ -285,7 +285,9 @@ function PointsWidget:keypressed(key)
 				self:updateOverlayLine()
 			end
 		end
+		return true
 	end
+	return false
 end
 
 return function(handles, object)
