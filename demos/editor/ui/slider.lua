@@ -19,14 +19,14 @@ slider:fill()
 slider:setResolution(2)
 
 function Slider:setBounds(x, y, w, h)
-    local px = self.padding + knobRadius
-    local py = self.padding
+    local px = self.xpad + knobRadius
+    local py = self.ypad
 	self.x, self.y, self.w, self.h = x + px, y + py, w - 2 * px, h - 2 * py
 	self:layout()
 end
 
 function Slider:getOptimalHeight()
-	return knobRadius + 2 * self.padding
+	return knobRadius
 end
 
 function Slider:xpos()
@@ -70,8 +70,14 @@ function Slider:setValue(value)
     self.value = value
 end
 
+function Slider:init()
+    self.xpad = 0
+    self.ypad = 0
+    return Control.init(self)
+end
+
 Slider.new = function(callback, min, max)
-    return Control.init(setmetatable({value = 0, min = min or 0, max = max or 1,
+    return Slider.init(setmetatable({value = 0, min = min or 0, max = max or 1,
         callback = callback}, Slider))
 end
 

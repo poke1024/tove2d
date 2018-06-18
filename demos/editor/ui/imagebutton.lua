@@ -9,51 +9,84 @@ setmetatable(ImageButton, {__index = Control})
 
 function ImageButton:draw()
 	local x, y = self.x, self.y
+
+	x = x + 12
+	y = y + 12
+
 	if self.selected then
-		self.sframe:draw(x, y)
-	else
-		self.frame:draw(x, y)
+		love.graphics.setColor(0.75, 0.75, 0.75)
+		love.graphics.rectangle("fill", x - 12, y - 12, 24, 24)
 	end
+
+	love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.rectangle("line", x - 12, y - 12, 24, 24)
+
+	if self.selected then
+		love.graphics.setColor(0.25, 0.25, 0.25)
+	else
+		love.graphics.setColor(1, 1, 1)
+	end
+
 	self.image:draw(x, y)
 end
 
 function ImageButton:inside(mx, my)
 	local x, y = self.x, self.y
-	return mx >= x - 16 and my >= y - 16 and mx <= x + 16 and my <= y + 16
+	return mx >= x and my >= y and mx <= x + 24 and my <= y + 24
+end
+
+function ImageButton:click(x, y)
+	if self:inside(x, y) then
+		self.selected = true
+		if self.callback ~= nil then
+			self.callback(self)
+		end
+		return function() end
+	end
+end
+
+function ImageButton:getOptimalWidth()
+    return 24
 end
 
 function ImageButton:getOptimalHeight()
-    return 32
+    return 24
 end
 
-ImageButton.new = function(name)
-	local svg = love.filesystem.read("images/" .. name .. ".svg")
-	local image = tove.newGraphics(svg, 24)
-	image:setResolution(2)
+local function loadImage(name)
+    local svg = love.filesystem.read("images/" .. name .. ".svg")
+    local image = tove.newGraphics(svg, 16)
+    image:setResolution(2)
+    image:setMonochrome(1, 1, 1)
+    return image
+end
 
-	local r = 2
+function ImageButton:setCallback(callback)
+    self.callback = callback
+end
 
-	local frame = tove.newGraphics()
-	frame:drawRect(-16, -16, 32, 32, r, r)
-	frame:setLineColor(0, 0, 0)
-	frame:setLineWidth(1)
-	frame:stroke()
-	frame:setResolution(2)
+ImageButton.group = function(container, ...)
+	local buttons = {}
+	for _, name in ipairs({...}) do
+		local b = ImageButton.new(name)
+		b.ypad = 4
+		b.xpad = 4
+		container:add(b)
+		table.insert(buttons, b)
+	end
+	return buttons
+end
 
-	local sframe = tove.newGraphics()
-	sframe:drawRect(-16, -16, 32, 32, r, r)
-	sframe:setLineColor(0, 0, 0)
-	sframe:setLineWidth(1)
-	sframe:stroke()
-	sframe:setFillColor(0.8, 0.8, 0.8)
-	sframe:fill()
-	sframe:setResolution(2)
-
+ImageButton.new = function(path, callback)
+	local name
+	for n in string.gmatch(path, "[^/]+$") do
+		name = n
+	end
 	return Control.init(setmetatable({
+		name = name,
 		selected = false,
-		frame = frame,
-		sframe = sframe,
-		image = image}, ImageButton))
+		image = loadImage(path),
+		callback = callback}, ImageButton))
 end
 
 return ImageButton

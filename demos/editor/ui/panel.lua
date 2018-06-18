@@ -27,10 +27,15 @@ function Panel:click(x, y)
     return nil
 end
 
-function Panel.new()
-    local self = VBox.init(setmetatable({}, Panel))
-    self.padding = 0
+function Panel:init()
+    VBox.init(self)
+    self.xpad = 0
+    self.ypad = 0
     return self
+end
+
+function Panel.new()
+    return Panel.init(setmetatable({}, Panel))
 end
 
 return Panel

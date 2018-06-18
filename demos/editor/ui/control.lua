@@ -5,8 +5,8 @@ local Control = {}
 Control.__index = Control
 
 function Control:setBounds(x, y, w, h)
-    local p = self.padding
-	self.x, self.y, self.w, self.h = x + p, y + p, w - 2 * p, h - 2 * p
+    local px, py = self.xpad, self.ypad
+	self.x, self.y, self.w, self.h = x + px, y + py, w - 2 * px, h - 2 * py
 	self:layout()
 end
 
@@ -18,7 +18,8 @@ function Control:layout()
 end
 
 function Control:init()
-    self.padding = 8
+    self.xpad = 8
+    self.ypad = 8
     return self
 end
 

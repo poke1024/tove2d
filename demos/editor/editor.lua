@@ -8,13 +8,16 @@ local newCurvesWidget = require "widgets/curves"
 local newPenWidget = require "widgets/pen"
 
 local VBox = require "ui/vbox"
+local HBox = require "ui/hbox"
 local Panel = require "ui/panel"
 local Label = require "ui/label"
 local Slider = require "ui/slider"
 local Checkbox = require "ui/checkbox"
 local ColorDabs = require "ui/colordabs"
 local ColorWheel = require "ui/colorwheel"
-local ButtonGroup = require "ui/buttongroup"
+local RadioGroup = require "ui/radiogroup"
+local Toolbar = require "ui/toolbar"
+local ImageButton = require "ui/imagebutton"
 
 local Editor = {}
 Editor.__index = Editor
@@ -85,8 +88,15 @@ function Editor:load()
 		end
 	end, 0, 20)
 
-	self.lpanel = Panel.new()
-	self.lpanel:setBounds(
+	self.toolbar = Toolbar.new(function(button)
+		local name = button.name
+		if name == "pencil" then
+			self.widget = newPenWidget(self)
+		else
+			self.widget = nil
+		end
+	end)
+	self.toolbar:setBounds(
 		0,
 		0,
 		32,
@@ -102,29 +112,46 @@ function Editor:load()
 	self.rpanel:add(self.miterLimitSlider)
 
 	self.rpanel:add(Label.new(self.font, "Renderer"))
-	self.radios = ButtonGroup.new("bitmap", "mesh", "curves")
-	self.rpanel:add(self.radios)
+
+	do
+		local hbox = HBox.new()
+		local buttons = ImageButton.group(
+			hbox, "bitmap", "mesh", "curves")
+	    self.radios = RadioGroup.new(unpack(buttons))
+		self.rpanel:add(hbox)
+	end
+
 	self.displaycontrol = VBox.new()
-	self.displaycontrol.frame = true
-	self.displaycontrol.padding = 8
+	self.displaycontrol.xpad = 0
+	self.displaycontrol.ypad = 0
 	function updateDisplayUI(mode, quality, usage)
 		self.displaycontrol:empty()
 		if mode == "mesh" then
+			self.displaycontrol:add(Label.new(self.font, "Settings"))
+			local vbox = VBox.new()
+			vbox.frame = true
+
 			local dynamic = Checkbox.new(
-				self.font, "dynamic points", function(value)
+				self.font, "animated properties", function(value)
 					self:setUsage("points", value and "dynamic" or "static")
 				end)
-			self.displaycontrol:add(dynamic)
+			vbox:add(dynamic)
 			dynamic:setChecked(usage.points == "dynamic")
 
-			self.displaycontrol:add(Label.new(
+			vbox:add(Label.new(
 				self.font, "tesselation quality"))
 			local slider = Slider.new(function(value)
 				self:setDisplay("mesh", value)
 			end, 0, 1)
-			self.displaycontrol:add(slider)
+			vbox:add(slider)
 			slider:setValue(quality)
+
+			self.displaycontrol:add(vbox)
 		elseif mode == "curves" then
+			self.displaycontrol:add(Label.new(self.font, "Settings"))
+			local vbox = VBox.new()
+			vbox.frame = true
+
 			local checkbox = Checkbox.new(
 				self.font, "vertex shader lines", function(value)
 					local mode, quality = self:getDisplay()
@@ -135,8 +162,8 @@ function Editor:load()
 						}})
 				end)
 			checkbox:setChecked(quality.line.type == "vertex")
-			self.displaycontrol:add(checkbox)
-			self.displaycontrol:add(Label.new(
+			vbox:add(checkbox)
+			vbox:add(Label.new(
 				self.font, "line quality"))
 			local slider = Slider.new(function(value)
 				local mode, quality = self:getDisplay()
@@ -148,20 +175,24 @@ function Editor:load()
 				local _, qq = self:getDisplay()
 			end, 0, 1)
 			slider:setValue(quality.line.quality)
-			self.displaycontrol:add(slider)
+			vbox:add(slider)
+
+			self.displaycontrol:add(vbox)
 		end
 	end
 	self.rpanel:add(self.displaycontrol)
-	self.radios:setClickedCallback(function(mode)
-		local currentMode = self:getDisplay()
-		if mode == currentMode then
-			return
+	self.radios:setCallback(function(button)
+		local newmode = button.name
+		local mode, quality = self:getDisplay()
+		if mode ~= newmode then
+			if newmode == "curves" then
+				quality = {line = {type = "vertex", quality = 1.0}}
+			else
+				quality = 0.5
+			end
+			self:setDisplay(newmode, quality)
+			mode = newmode
 		end
-		local quality = 0.5
-		if mode == "curves" then
-			quality = {line = {type = "vertex", quality = 1.0}}
-		end
-		self:setDisplay(mode, quality)
 		updateDisplayUI(mode, quality, self:getUsage())
 	end)
 
@@ -186,7 +217,7 @@ function Editor:draw()
 		self.widget:draw(self.transform)
 		self.rpanel:draw()
 	end
-	self.lpanel:draw()
+	self.toolbar:draw()
 end
 
 function Editor:startdrag(transform, x, y, button, func)
@@ -238,7 +269,6 @@ function Editor:createWidget(x, y, button, clickCount)
 				self.miterLimitSlider:setValue(path:getMiterLimit())
 				local mode, quality = object:getDisplay()
 				self.radios:select(mode)
-				updateDisplayUI(mode, quality, self:getUsage())
 
 				if clickCount == 1 then
 					self:startdrag(self.transform, x, y, button,
@@ -259,6 +289,11 @@ function Editor:mousedown(gx, gy, button, clickCount)
 	local x, y = self.transform:inverseTransformPoint(gx, gy)
 
 	if button == 1 then
+		if self:startdrag(nil, gx, gy, button,
+			self.toolbar:click(gx, gy)) then
+			return
+		end
+
 		if self.widget ~= nil then
 			if self:startdrag(nil, gx, gy, button,
 				self.rpanel:click(gx, gy)) then
@@ -305,7 +340,7 @@ function Editor:keypressed(key, scancode, isrepeat)
 	if key == "escape" then
 		self.widget = nil
 	elseif key == "p" then
-		self.widget = newPenWidget(self)
+		self.toolbar:select("pencil")
     elseif self.widget ~= nil then
         if not self.widget:keypressed(key, scancode, isrepeat) then
 			if key == "backspace" then

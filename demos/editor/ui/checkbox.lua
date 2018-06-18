@@ -8,19 +8,19 @@ Checkbox.__index = Checkbox
 setmetatable(Checkbox, {__index = Control})
 
 function Checkbox:draw()
-    love.graphics.rectangle("line", self.x, self.y, 16, 16)
+    love.graphics.rectangle("line", self.x, self.y, 12, 12)
     if self.checked then
-        love.graphics.rectangle("fill", self.x + 2, self.y + 2, 12, 12)
+        love.graphics.rectangle("fill", self.x + 2, self.y + 2, 8, 8)
     end
 
 	love.graphics.setFont(self.font)
     love.graphics.setColor(0.8, 0.8, 0.8)
-	love.graphics.print(self.text, self.x + 24, self.y)
+	love.graphics.print(self.text, self.x + 20, self.y)
 end
 
 function Checkbox:click(x, y)
     if x >= self.x and y >= self.y and
-        x <= self.x + 24 + self.textwidth and y <= self.y + 16 then
+        x <= self.x + 20 + self.textwidth and y <= self.y + 12 then
         self.checked = not self.checked
         self.callback(self.checked)
     end
