@@ -13,6 +13,21 @@
 #include "meshifier.h"
 #include "mesh.h"
 
+ToveMeshUpdateFlags AbstractMeshifier::graphics(const GraphicsRef &graphics,
+	const MeshRef &fill, const MeshRef &line) {
+
+	fill->clear();
+	line->clear();
+
+	const int n = graphics->getNumPaths();
+	ToveMeshUpdateFlags updated = 0;
+	for (int i = 0; i < n; i++) {
+		updated |= (*this)(graphics->getPath(i), fill, line, true);
+	}
+	return updated;
+}
+
+
 AdaptiveMeshifier::AdaptiveMeshifier(
 	float scale, const ToveTesselationQuality *quality) :
 	tess(scale, quality) {

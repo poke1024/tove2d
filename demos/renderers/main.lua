@@ -19,6 +19,9 @@ bitmapRabbit:setDisplay("bitmap")
 local meshRabbit = newRabbit()
 meshRabbit:setDisplay("mesh")
 
+local flatmeshRabbit = newRabbit()
+flatmeshRabbit:setDisplay("flatmesh")
+
 local curveRabbit = newRabbit()
 curveRabbit:setDisplay("curves")
 
@@ -26,6 +29,7 @@ curveRabbit:setDisplay("curves")
 local flow = tovedemo.newCoverFlow()
 flow:add("bitmap", bitmapRabbit)
 flow:add("mesh", meshRabbit)
+flow:add("flatmesh", flatmeshRabbit)
 flow:add("curves", curveRabbit)
 
 function love.draw()

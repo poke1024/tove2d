@@ -22,15 +22,7 @@ public:
 		const MeshRef &fill, const MeshRef &line, bool append = false) = 0;
 
 	virtual ToveMeshUpdateFlags graphics(const GraphicsRef &graphics,
-		const MeshRef &fill, const MeshRef &line) {
-
-		const int n = graphics->getNumPaths();
-		ToveMeshUpdateFlags updated = 0;
-		for (int i = 0; i < n; i++) {
-			updated |= (*this)(graphics->getPath(i), fill, line);
-		}
-		return updated;
-	}
+		const MeshRef &fill, const MeshRef &line);
 };
 
 class AdaptiveMeshifier : public AbstractMeshifier {
