@@ -13,7 +13,6 @@ local function newRabbit()
 end
 
 local bitmapRabbit = newRabbit()
-bitmapRabbit:setResolution(1)
 bitmapRabbit:setDisplay("bitmap")
 
 local meshRabbit = newRabbit()

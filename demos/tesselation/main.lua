@@ -9,7 +9,6 @@ local rabbit = love.filesystem.read("assets/rabbit.svg")
 local function newRabbit()
 	-- make a new rabbit graphics, prescaled to 200 px
 	local graphics = tove.newGraphics(rabbit, 200)
-	graphics:setResolution(2)
 	graphics:setUsage("gradients", "fast")
 	return graphics
 end

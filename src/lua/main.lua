@@ -35,27 +35,38 @@ tove.init = function(path)
 		return ffi.string(lib.GetVersion())
 	end
 
-	tove.debug = false
+	tove._debug = false
 
-	tove.warnverbose = 1
+	tove._warnverbose = 1
 	tove.warn = function(s)
-		if tove.warnverbose == 0 then
+		if tove._warnverbose == 0 then
 			return
 		end
 		print("TÖVE warning: " .. s)
-		if tove.warnverbose >= 2 then
+		if tove._warnverbose >= 2 then
 			print(debug.traceback())
 		end
 	end
 	tove.slow = tove.warn
 
-	tove.setPerformanceWarnings = function(enabled)
-		tove.slow = enabled and tove.warn or function() end
-	end
-
 	lib.SetWarningFunction(ffi.cast("ToveWarningFunction", function(s)
 		tove.warn(ffi.string(s))
   	end))
+
+	tove._highdpi = 1
+
+	tove.configure = function(config)
+		if config.debug ~= nil then
+			tove_debug = config.debug
+			tove.slow = tove.warn
+		end
+		if config.performancewarnings ~= nil then
+			tove.slow = enabled and tove.warn or function() end
+		end
+		if config.highdpi ~= nil then
+			tove._highdpi = config.highdpi and 2 or 1
+		end
+	end
 
 	local env = {
 		graphics = love.graphics.getSupported(),

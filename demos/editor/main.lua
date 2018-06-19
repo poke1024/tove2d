@@ -9,7 +9,10 @@ local Object = require "object"
 love.window.setMode(800, 600, {highdpi = true})
 love.window.setTitle("TÖVE miniedit")
 
-tove.setPerformanceWarnings(false)
+tove.configure{
+	highdpi = true,
+	performancewarnings = false
+}
 
 local editor = require "editor"
 local demo = require "demo"

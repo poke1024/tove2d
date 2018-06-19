@@ -36,7 +36,7 @@ end
 
 tove.newGraphics = function(svg, size)
 	local name = "unnamed"
-	if tove.debug then
+	if tove._debug then
 		name = "Graphics originally created at " .. debug.traceback()
 	end
 	local ref = ffi.gc(lib.NewGraphics(svg, "px", 72), lib.ReleaseGraphics)
@@ -199,11 +199,6 @@ function Graphics:getUsage()
 end
 
 function Graphics:setResolution(resolution)
-	local mode = self._display.mode
-	if mode == "mesh" then
-		-- allow line strokes <= 1 by prescaling.
-		resolution = resolution * 1024
-	end
 	if resolution ~= self._resolution then
 		self._cache = nil
 		self._resolution = resolution

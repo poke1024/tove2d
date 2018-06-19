@@ -56,7 +56,6 @@ end
 local function loadImage(name)
     local svg = love.filesystem.read("images/" .. name .. ".svg")
     local image = tove.newGraphics(svg, 16)
-    image:setResolution(2)
     image:setMonochrome(1, 1, 1)
     return image
 end

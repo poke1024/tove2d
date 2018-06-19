@@ -77,11 +77,6 @@ Object.new = function(tx, ty, graphics)
 	local scaledgraphics = tove.newGraphics()
 	scaledgraphics:setDisplay("mesh", 0.5)
 
-	-- we use adaptive tesselation for meshes, since only they support
-	-- proper fill rules; for this we need a resolution of at least 2,
-	-- otherwise the strokes will look very jaggy.
-	scaledgraphics:setResolution(2)
-
 	local object = setmetatable({
 		graphics = graphics,
 		scaledgraphics = scaledgraphics,

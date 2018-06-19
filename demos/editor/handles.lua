@@ -26,7 +26,6 @@ local function createHandle(smooth, selected)
 		handle:stroke()
 	end
 	handle:setDisplay("bitmap")
-	handle:setResolution(2)
 	return handle
 end
 

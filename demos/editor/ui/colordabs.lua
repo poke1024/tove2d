@@ -142,13 +142,6 @@ ColorDabs.new = function(callback, colorwheel)
         fill = highlight(dabRadius * 1.5)
     }
 
-    --dabs.line:setDisplay("flatmesh", tove.quasifixed(4))
-    --dabs.line:setUsage("colors", "dynamic")
-    --dabs.line:setResolution(5)
-    --dabs.fill:setDisplay("flatmesh", tove.quasifixed(4))
-    --dabs.fill:setUsage("colors", "dynamic")
-    --dabs.fill:setResolution(5)
-
     local p = Control.init(setmetatable({
         active = "fill", colorwheel = colorwheel, paint = {},
         dabs = dabs, dabRadius = dabRadius, callback = callback}, ColorDabs))

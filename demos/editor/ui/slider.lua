@@ -16,7 +16,6 @@ slider:setLineWidth(2)
 slider:stroke()
 slider:setFillColor(1, 1, 1)
 slider:fill()
-slider:setResolution(2)
 
 function Slider:setBounds(x, y, w, h)
     local px = self.xpad + knobRadius

@@ -88,7 +88,7 @@ local function _noCache()
 end
 
 create.bitmap = function(self)
-	local resolution = self._resolution
+	local resolution = self._resolution * tove._highdpi
 	local x0, y0, x1, y1 = self:computeAABB("exact")
 
 	x0 = math.floor(x0)
@@ -130,7 +130,8 @@ local function _cacheShadedMesh(data, ...)
 end
 
 create.mesh = function(self)
-	local resolution = self._resolution
+	-- allow line strokes <= 1 by prescaling.
+	local resolution = self._resolution * 1024
 	local display = self._display
 	local cquality, holes = unpack(display.cquality)
 	local usage = self._usage
