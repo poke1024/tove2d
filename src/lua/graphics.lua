@@ -183,6 +183,7 @@ function Graphics:setDisplay(mode, quality)
 	end
 	self._cache = nil
 	self._display = makeDisplay(mode, quality, self._usage)
+	self:setResolution(1)
 end
 
 function Graphics:getDisplay()
@@ -198,6 +199,11 @@ function Graphics:getUsage()
 end
 
 function Graphics:setResolution(resolution)
+	local mode = self._display.mode
+	if mode == "mesh" then
+		-- allow line strokes <= 1 by prescaling.
+		resolution = resolution * 1024
+	end
 	if resolution ~= self._resolution then
 		self._cache = nil
 		self._resolution = resolution
