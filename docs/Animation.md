@@ -190,16 +190,14 @@ Using  Command  is what you want to animate one path most of the time. Sometimes
 Let's first talk about how TÖVE stores your curves and how it names things:
 
 * A `Graphics` is a collection of `Path`s
-* A `Path` is a collection of `Trajectory`s (plus fill and stroke styles etc.)
-* A `Trajectory` consists of `Curve`s
+* A `Path` is a collection of `Subpath`s (plus fill and stroke styles etc.)
+* A `Subpath` consists of `Curve`s
 * A `Curve` is a cubic bezier curve and consists of four control points
 
-Sometimes paths are called compound paths, and trajectories are called sub paths. TÖVE though calls paths simply `Path` because this matches the naming convention in SVG and because "compound" and "sub" paths are sometimes confusing.
-
-With this scheme, you can access paths, trajectories and curves (all indices are 1-based):
+With this scheme, you can access paths, subpaths and curves (all indices are 1-based):
 
 ```
-local myCurve = myGraphics.paths[1].trajs[2].curves[5]
+local myCurve = myGraphics.paths[1].subpaths[2].curves[5]
 ```
 
 Once you have picked a curve, you can modify its points by accessing its attributes `x0`, `y0`,  `cp1x`, `cp1y`, `cp2x`, `cp2y`, `x`, `y` (the latter 6 correspond to the parameters you'd pass to `Graphics:curveTo`). This works for reading and writing.
@@ -208,15 +206,24 @@ For example, to animate the x target point of curve 1 of some graphics using you
 
 ```
 function love.draw()
-	myDrawing.paths[1].trajs[1].curves[1].x = love.mouse.getX()
+	myDrawing.paths[1].subpaths[1].curves[1].x = love.mouse.getX()
 	myDrawing:Draw()
 end
 ```
 
-By the way, to find out how many paths, trajectory and curves you have, you can use `npaths`, `ntrajs` and `ncurves`, e.g.:
+If you don't want to access curves, but the underlying points of all the subpath's curves as one continuous array, you can do it like this:
 
 ```
-myDrawing.paths[1].ntrajs -- number of trajectories in path 1
+ myGraphics.paths[1].subpaths[2].points[3].x
+ myGraphics.paths[1].subpaths[2].points[3].y
+```
+
+To find out how many paths, subpaths, curves or points you have, you can use the `count` attribute, e.g.:
+
+```
+myDrawing.paths.count -- number of paths
+myDrawing.paths[1].subpaths.count -- number of subpaths in path 1
+myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in path 1
 ``` 
 
 ## Mesh Animation Caveats
