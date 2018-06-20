@@ -292,6 +292,9 @@ EXPORT ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags)
 EXPORT void PathSetOrientation(TovePathRef path, ToveOrientation orientation);
 EXPORT void PathClean(TovePathRef path, float eps);
 EXPORT bool PathIsInside(TovePathRef path, float x, float y);
+EXPORT void PathSet(TovePathRef path, TovePathRef source,
+	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
+	float ox, float oy, float kx, float ky);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
@@ -325,6 +328,7 @@ EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphi
 EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation);
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);
 EXPORT TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y);
+EXPORT void GraphicsClear(ToveGraphicsRef graphics);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
 EXPORT ToveShaderLinkRef NewColorShaderLink();

@@ -136,7 +136,7 @@ public:
 	void set(const GraphicsRef &source, const nsvg::Transform &transform);
 
 	inline void changed(ToveChangeFlags flags) {
-		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
+		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
 			flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 		}
 		changes |= flags;

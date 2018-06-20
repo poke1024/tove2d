@@ -43,6 +43,7 @@ void Graphics::_appendPath(const PathRef &path) {
 	path->clearNext();
 	path->claim(this);
 	paths.push_back(path);
+    changed(CHANGED_GEOMETRY);
 }
 
 PathRef Graphics::beginPath() {
@@ -104,6 +105,7 @@ void Graphics::initialize(float width, float height) {
 
 	for (int i = 0; i < 4; i++) {
 		bounds[i] = 0.0;
+        exactBounds[i] = 0.0;
 	}
     changes |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 }

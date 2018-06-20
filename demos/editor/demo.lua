@@ -110,7 +110,7 @@ function Demo:addObjects()
 
     for _, o in ipairs(self.prototypes) do
         for i = 1, self.duplicates do
-            local graphics = o.scaledgraphics:clone()
+            local graphics = o:clone()
 
             local traj = graphics.paths[1].subpaths[1]
             local pts = traj.points
@@ -146,7 +146,25 @@ function Demo:removeObjects()
 end
 
 function Demo:setObjects(objects)
-    self.prototypes = objects
+    local g = nil
+    for _, o in ipairs(objects) do
+        local og = o.scaledgraphics
+        if g == nil then
+            g = og:clone() -- clone display settings
+            g:clear()
+        end
+        for i = 1, og.paths.count do
+            local path = tove.newPath()
+            local t = o.transform
+            path:set(tove.transformed(
+                og.paths[i], t.tx, t.ty, t.r, t.sx, t.sy, t.ox, o.oy), true)
+            g:addPath(path)
+        end
+    end
+
+    self.prototypes = {}
+    table.insert(self.prototypes, g)
+
     self.startupTime0 = love.timer.getTime()
 
     self.items = {}

@@ -131,6 +131,8 @@ tove.init = function(path)
 		return t
 	end
 
+	tove.Transform = {}
+
 	local bit = require("bit")
 
 	--!! import "paint.lua" as Paint

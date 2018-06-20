@@ -127,6 +127,7 @@ void Path::set(const NSVGshape *shape) {
 	nsvg.flags = shape->flags;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = shape->bounds[i];
+		exactBounds[i] = 0.0f;
 	}
 
 	NSVGpath *path = shape->paths;
@@ -152,7 +153,8 @@ Path::Path() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	nsvg.fillRule = NSVG_FILLRULE_NONZERO;
 	nsvg.flags = NSVG_FLAGS_VISIBLE;
 	for (int i = 0; i < 4; i++) {
-		nsvg.bounds[i] = 0.0;
+		nsvg.bounds[i] = 0.0f;
+		exactBounds[i] = 0.0f;
 	}
 
 	newSubpath = true;
@@ -173,6 +175,7 @@ Path::Path(Graphics *graphics) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) 
 	nsvg.flags = NSVG_FLAGS_VISIBLE;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0;
+		exactBounds[i] = 0.0f;
 	}
 
 	newSubpath = true;
@@ -193,7 +196,7 @@ Path::Path(const char *d) : changes(0) {
 	newSubpath = true;
 }
 
-Path::Path(const Path *path) : changes(path->changes) {
+Path::Path(const Path *path) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	strcpy(nsvg.id, path->nsvg.id);
@@ -214,6 +217,7 @@ Path::Path(const Path *path) : changes(path->changes) {
 	nsvg.flags = path->nsvg.flags;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = path->nsvg.bounds[i];
+		exactBounds[i] = path->exactBounds[i];
 	}
 
 	trajectories.reserve(path->trajectories.size());
@@ -297,7 +301,6 @@ void Path::updateBoundsPartial(int from) {
 			nsvg.bounds[3] = std::max(nsvg.bounds[3], t->nsvg.bounds[3] + w);
 		}
 	}
-	changes &= ~CHANGED_BOUNDS;
 }
 
 void Path::updateBounds() {
@@ -305,6 +308,7 @@ void Path::updateBounds() {
 		return;
 	}
 	updateBoundsPartial(0);
+	changes &= ~CHANGED_BOUNDS;
 }
 
 const float *Path::getBounds() {
@@ -635,7 +639,7 @@ void Path::clearChanges(ToveChangeFlags flags) {
 }
 
 void Path::changed(ToveChangeFlags flags) {
-	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS)) {
+	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
 		flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 	}
 	if ((changes & flags) == flags) {

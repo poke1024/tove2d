@@ -102,6 +102,21 @@ function Path:nearest(x, y, max, min)
 	return false
 end
 
+function Path:set(arg, swl)
+	if getmetatable(arg) == tove.Transform then
+		lib.PathSet(
+			self,
+			arg.s,
+			swl or false,
+			unpack(arg.args))
+	else
+		lib.PathSet(
+			self,
+			arg,
+			false, 0, 0, 0, 1, 1, 0, 0, 0, 0)
+	end
+end
+
 ffi.metatype("TovePathRef", Path)
 
 tove.newPath = function(d)

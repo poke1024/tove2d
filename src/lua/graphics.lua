@@ -48,13 +48,19 @@ tove.newGraphics = function(svg, size)
 		_usage = newUsage(),
 		_name = name,
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
-	if type(size) == "number" then
-		graphics:rescale(size)
-	elseif size == nil then -- auto
-		local x0, y0, x1, y1 = graphics:computeAABB()
-		graphics:rescale(math.min(1024, math.max(x1 - x0, y1 - y0)))
+	if svg ~= nil then
+		if type(size) == "number" then
+			graphics:rescale(size)
+		elseif size == nil then -- auto
+			local x0, y0, x1, y1 = graphics:computeAABB()
+			graphics:rescale(math.min(1024, math.max(x1 - x0, y1 - y0)))
+		end
 	end
 	return graphics
+end
+
+function Graphics:clear()
+	lib.GraphicsClear(self._ref)
 end
 
 local function makeDisplay(mode, quality, usage)
@@ -227,42 +233,45 @@ function Graphics:cache(...)
 end
 
 
-tove.transformed = function(graphics, ...)
-	return {g = graphics, args = {...}}
+tove.transformed = function(source, ...)
+	local tx, ty, r, sx, sy, ox, oy, kx, ky = unpack({...})
+	sx = sx or 1
+	sy = sy or sx
+	return setmetatable({s = source, args = {
+		tx or 0, ty or 0,
+		r or 0,
+		sx, sy,
+		ox or 0, oy or 0,
+		kx or 0, ky or 0}}, tove.Transform)
 end
 
 
 function Graphics:set(arg, swl)
-	local mt = getmetatable(arg)
-	if mt == Graphics then
+	if getmetatable(arg) == tove.Transform then
+		lib.GraphicsSet(
+			self._ref,
+			arg.s._ref,
+			swl or false,
+			unpack(arg.args))
+	else
 		lib.GraphicsSet(
 			self._ref,
 			arg._ref,
 			false, 0, 0, 0, 1, 1, 0, 0, 0, 0)
-	else
-		local tx, ty, r, sx, sy, ox, oy, kx, ky = unpack(arg.args)
-		sx = sx or 1
-		sy = sy or sx
-
-		lib.GraphicsSet(
-			self._ref,
-			arg.g._ref,
-			swl or false,
-			tx or 0, ty or 0,
-			r or 0,
-			sx, sy,
-			ox or 0, oy or 0,
-			kx or 0, ky or 0)
 	end
 end
 
 function Graphics:rescale(size, center)
 	local x0, y0, x1, y1 = self:computeAABB()
-	local s = size / math.max(x1 - x0, y1 - y0)
-	if center or true then
-		self:set(tove.transformed(self, 0, 0, 0, s, s, (x0 + x1) / 2, (y0 + y1) / 2), true)
-	else
-		self:set(tove.transformed(self, 0, 0, 0, s, s), true)
+	local r = math.max(x1 - x0, y1 - y0)
+	if math.abs(r) > 1e-8 then
+		local s = size / r
+		if center or true then
+			self:set(tove.transformed(
+				self, 0, 0, 0, s, s, (x0 + x1) / 2, (y0 + y1) / 2), true)
+		else
+			self:set(tove.transformed(self, 0, 0, 0, s, s), true)
+		end
 	end
 end
 

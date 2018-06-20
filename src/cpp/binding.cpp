@@ -230,6 +230,15 @@ bool PathIsInside(TovePathRef path, float x, float y) {
 	return deref(path)->isInside(x, y);
 }
 
+void PathSet(TovePathRef path, TovePathRef source,
+	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
+	float ox, float oy, float kx, float ky) {
+
+	nsvg::Transform transform(tx, ty, r, sx, sy, ox, oy, kx, ky);
+	transform.setWantsScaleLineWidth(scaleLineWidth);
+	deref(path)->set(deref(source), transform);
+}
+
 void ReleasePath(TovePathRef path) {
 	paths.release(path);
 }
@@ -530,6 +539,10 @@ void GraphicsClean(ToveGraphicsRef shape, float eps) {
 
 TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y) {
 	return paths.publishOrNil(deref(graphics)->hit(x, y));
+}
+
+EXPORT void GraphicsClear(ToveGraphicsRef graphics) {
+	deref(graphics)->clear();
 }
 
 void ReleaseGraphics(ToveGraphicsRef shape) {

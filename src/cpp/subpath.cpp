@@ -121,7 +121,8 @@ Subpath::Subpath(const SubpathRef &t) {
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = t->nsvg.bounds[i];
 	}
-	dirty = DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
+	commands = t->commands;
+	dirty = t->dirty | DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
 }
 
 int Subpath::moveTo(float x, float y) {
@@ -1025,7 +1026,7 @@ void Subpath::setCommandPoint(const Command &command, int what, float value) {
 void Subpath::updateCurveData(uint8_t flags) const {
 	commit();
 
-	flags &= dirty;
+	flags &= dirty & (DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
 
 	const int npts = nsvg.npts;
 	const float *pts = nsvg.pts;
