@@ -330,6 +330,19 @@ function MeshShader:draw(...)
 end
 
 
+local function setLineQuality(linkData, lineQuality)
+	linkData.lineQuality = lineQuality
+	if linkData.data.color.line.style > 0 then
+		if linkData.lineShader == linkData.fillShader then
+			linkData.fillShader:send("line_quality", lineQuality)
+		else
+			local numSegments = math.max(2, math.ceil(50 * lineQuality))
+			linkData.lineShader:send("segments_per_curve", numSegments)
+			linkData.numSegments = numSegments
+		end
+	end
+end
+
 local PathShader = {}
 PathShader.__index = PathShader
 
@@ -356,9 +369,6 @@ local function newPathShaderLinkData(path, quality)
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
-		if data.color.line.style > 0 then
-			fillShader:send("line_quality", lineQuality)
-		end
 	else
 		lineShader = newGeometryLineShader(data)
 	end
@@ -382,7 +392,7 @@ local function newPathShaderLinkData(path, quality)
 
 	path:clearChanges()
 
-	return {
+	local linkData = {
 		link = link,
 		data = data,
 		fillShader = fillShader,
@@ -393,6 +403,8 @@ local function newPathShaderLinkData(path, quality)
 		lineColorFeed = lineColorFeed,
 		fillColorFeed = fillColorFeed
 	}
+	setLineQuality(linkData, lineQuality)
+	return linkData
 end
 
 local newPathShader = function(path, quality)
@@ -426,10 +438,7 @@ function PathShader:updateQuality(quality)
 	local linkdata = self.linkdata
 	local lineType, lineQuality = parseQuality(quality)
 	if lineType == linkdata.lineType then
-		linkdata.lineQuality = lineQuality
-		if lineType == "fragment" and linkdata.data.color.line.style > 0 then
-			linkdata.fillShader:send("line_quality", lineQuality)
-		end
+		setLineQuality(linkdata, lineQuality)
 		return true
 	else
 		return false
@@ -442,33 +451,37 @@ function PathShader:draw(...)
 	local fillShader = linkdata.fillShader
 	local lineShader = linkdata.lineShader
 	local lineQuality = linkdata.lineQuality
+	local feed = linkdata.geometryFeed
 
 	lg.setShader(fillShader)
-	lg.draw(linkdata.geometryFeed.mesh, ...)
+	lg.draw(feed.mesh, ...)
 
-	if fillShader ~= lineShader and lineShader ~= nil then
-		lg.setShader(lineShader)
-		local numSegments = math.max(2, math.ceil(50 * lineQuality))
-		lineShader:send("segments_per_curve", numSegments)
-		local geometry = linkdata.data.geometry
-		local lineRuns = geometry.lineRuns
-		if lineRuns ~= nil then
-			local feed = linkdata.geometryFeed
-			local lineMesh = feed.lineMesh
-			local lineJoinMesh = feed.lineJoinMesh
-			for i = 0, geometry.numSubPaths - 1 do
-				local run = lineRuns[i]
-				local numCurves = run.numCurves
-				local numInstances = numSegments * numCurves
-				lineShader:send("curve_index", run.curveIndex)
-				lineShader:send("num_curves", numCurves)
-				lineShader:send("draw_joins", 0)
-				lg.drawInstanced(lineMesh, numInstances, ...)
-				lineShader:send("draw_joins", 1)
-				lg.drawInstanced(lineJoinMesh,
-					numCurves - (run.isClosed and 0 or 1), ...)
-			end
-		end
+	if fillShader == lineShader or lineShader == nil then
+		return
+	end
+
+	local geometry = linkdata.data.geometry
+	local lineRuns = geometry.lineRuns
+	if lineRuns == nil then
+		return
+	end
+
+	lg.setShader(lineShader)
+
+	local lineMesh = feed.lineMesh
+	local lineJoinMesh = feed.lineJoinMesh
+	local numSegments = linkdata.numSegments
+	for i = 0, geometry.numSubPaths - 1 do
+		local run = lineRuns[i]
+		local numCurves = run.numCurves
+		local numInstances = numSegments * numCurves
+		lineShader:send("curve_index", run.curveIndex)
+		lineShader:send("num_curves", numCurves)
+		lineShader:send("draw_joins", 0)
+		lg.drawInstanced(lineMesh, numInstances, ...)
+		lineShader:send("draw_joins", 1)
+		lg.drawInstanced(lineJoinMesh,
+			numCurves - (run.isClosed and 0 or 1), ...)
 	end
 end
 
