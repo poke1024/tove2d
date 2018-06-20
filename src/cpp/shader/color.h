@@ -13,6 +13,9 @@
 
 class ColorShaderLinkImpl {
 protected:
+	const float scale;
+
+protected:
 	ToveShaderColorData &shaderData;
 
 	static TovePaintType getStyle(const PaintRef &paint) {
@@ -91,11 +94,12 @@ protected:
 		}
 
 		assert(gradient.data->matrix != nullptr);
-		paint->getGradientMatrix(*gradient.data->matrix);
+		paint->getGradientMatrix(*gradient.data->matrix, scale);
 	}
 
 public:
-	ColorShaderLinkImpl(ToveShaderColorData &data) : shaderData(data) {
+	ColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
+		shaderData(data), scale(scale) {
 		shaderData.style = PAINT_UNDEFINED;
 	}
 };
@@ -138,7 +142,8 @@ public:
     	return 0;
     }
 
-	LineColorShaderLinkImpl(ToveShaderColorData &data) : ColorShaderLinkImpl(data) {
+	LineColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
+		ColorShaderLinkImpl(data, scale) {
 	}
 };
 
@@ -178,6 +183,7 @@ public:
     	return 0;
     }
 
-	FillColorShaderLinkImpl(ToveShaderColorData &data) : ColorShaderLinkImpl(data) {
+	FillColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
+		ColorShaderLinkImpl(data, scale) {
 	}
 };

@@ -550,8 +550,8 @@ void ReleaseGraphics(ToveGraphicsRef shape) {
 }
 
 
-ToveShaderLinkRef NewColorShaderLink() {
-	return shaderLinks.publish(std::make_shared<ColorShaderLink>());
+ToveShaderLinkRef NewColorShaderLink(float scale) {
+	return shaderLinks.publish(std::make_shared<ColorShaderLink>(scale));
 }
 
 ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path, bool enableFragmentShaderStrokes) {

@@ -159,7 +159,7 @@ create.mesh = function(self)
 			return res.update
 		end
 		local shaders = self:shaders(function (path)
-			return _shaders.newMeshShader(name, path, tess, usage)
+			return _shaders.newMeshShader(name, path, tess, usage, resolution)
 		end)
 		return {
 			shaders = shaders,

@@ -331,7 +331,7 @@ EXPORT TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y);
 EXPORT void GraphicsClear(ToveGraphicsRef graphics);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
-EXPORT ToveShaderLinkRef NewColorShaderLink();
+EXPORT ToveShaderLinkRef NewColorShaderLink(float scale);
 EXPORT ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path, bool enableFragmentShaderStrokes);
 EXPORT ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);
 EXPORT ToveChangeFlags ShaderLinkEndUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial);

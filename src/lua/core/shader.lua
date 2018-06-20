@@ -211,13 +211,14 @@ end
 local MeshShader = {}
 MeshShader.__index = MeshShader
 
-local function newMeshShaderLinkData(name, path, tess, usage)
+local function newMeshShaderLinkData(name, path, tess, usage, resolution)
 	local fillMesh = tove.newPositionMesh(name, usage)
 	local lineMesh = tove.newPositionMesh(name, usage)
 
 	tess(path, fillMesh._cmesh, lineMesh._cmesh, lib.UPDATE_MESH_EVERYTHING)
 
-	local link = ffi.gc(lib.NewColorShaderLink(), lib.ReleaseShaderLink)
+	local link = ffi.gc(
+		lib.NewColorShaderLink(resolution), lib.ReleaseShaderLink)
 	local data = lib.ShaderLinkGetColorData(link)
 	lib.ShaderLinkBeginUpdate(link, path, true)
 
@@ -247,9 +248,11 @@ local function newMeshShaderLinkData(name, path, tess, usage)
 	}
 end
 
-local newMeshShader = function(name, path, tess, usage)
-	return setmetatable({path = path, tess = tess, usage = usage, _name = name,
-		linkdata = newMeshShaderLinkData(name, path, tess, usage)}, MeshShader)
+local newMeshShader = function(name, path, tess, usage, resolution)
+	return setmetatable({
+		path = path, tess = tess, usage = usage, _name = name,
+		linkdata = newMeshShaderLinkData(
+			name, path, tess, usage, resolution)}, MeshShader)
 end
 
 function MeshShader:update()

@@ -34,12 +34,16 @@ public:
 
 class ColorShaderLink : public AbstractShaderLink {
 private:
+	const float scale;
 	ToveShaderLineFillColorData data;
 	LineColorShaderLinkImpl lineColor;
 	FillColorShaderLinkImpl fillColor;
 
 public:
-	ColorShaderLink() : lineColor(data.line), fillColor(data.fill) {
+	ColorShaderLink(float scale) :
+		scale(scale),
+		lineColor(data.line, scale),
+		fillColor(data.fill, scale) {
 	}
 
 	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {
@@ -67,8 +71,8 @@ private:
 
 public:
 	GeometryShaderLink(const PathRef &path, bool enableFragmentShaderStrokes) :
-		lineColor(data.color.line),
-		fillColor(data.color.fill),
+		lineColor(data.color.line, 1),
+		fillColor(data.color.fill, 1),
 		geometry(data.geometry, data.color.line, path, enableFragmentShaderStrokes) {
 	}
 
