@@ -436,7 +436,7 @@ function PathShader:updateQuality(quality)
 	end
 end
 
-function PathShader:draw()
+function PathShader:draw(...)
 	local linkdata = self.linkdata
 
 	local fillShader = linkdata.fillShader
@@ -444,7 +444,7 @@ function PathShader:draw()
 	local lineQuality = linkdata.lineQuality
 
 	lg.setShader(fillShader)
-	lg.draw(linkdata.geometryFeed.mesh)
+	lg.draw(linkdata.geometryFeed.mesh, ...)
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		lg.setShader(lineShader)
@@ -463,10 +463,10 @@ function PathShader:draw()
 				lineShader:send("curve_index", run.curveIndex)
 				lineShader:send("num_curves", numCurves)
 				lineShader:send("draw_joins", 0)
-				lg.drawInstanced(lineMesh, numInstances)
+				lg.drawInstanced(lineMesh, numInstances, ...)
 				lineShader:send("draw_joins", 1)
 				lg.drawInstanced(lineJoinMesh,
-					numCurves - (run.isClosed and 0 or 1))
+					numCurves - (run.isClosed and 0 or 1), ...)
 			end
 		end
 	end
