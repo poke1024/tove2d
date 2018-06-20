@@ -251,6 +251,7 @@ end
 local newMeshShader = function(name, path, tess, usage, resolution)
 	return setmetatable({
 		path = path, tess = tess, usage = usage, _name = name,
+		resolution = resolution,
 		linkdata = newMeshShaderLinkData(
 			name, path, tess, usage, resolution)}, MeshShader)
 end
@@ -265,7 +266,7 @@ function MeshShader:update()
 		if self.usage["points"] ~= "dynamic" then
 			tove.slow("static mesh points changed in " .. self._name)
 			self.linkdata = newMeshShaderLinkData(
-				self.name, self.path, self.tess, self.usage)
+				self.name, self.path, self.tess, self.usage, self.resolution)
 			return
 		end
 
@@ -306,20 +307,24 @@ function MeshShader:update()
 	lib.ShaderLinkEndUpdate(link, path, false)
 end
 
-function MeshShader:draw()
+function MeshShader:draw(...)
 	local linkdata = self.linkdata
-	if linkdata.fillShader ~= nil then
-		lg.setShader(linkdata.fillShader)
+
+	local fillShader = linkdata.fillShader
+	if fillShader ~= nil then
+		lg.setShader(fillShader)
 		local mesh = linkdata.fillMesh:getMesh()
 		if mesh ~= nil then
-			lg.draw(mesh)
+			lg.draw(mesh, ...)
 		end
 	end
-	if linkdata.lineShader ~= nil then
-		lg.setShader(linkdata.lineShader)
+
+	local lineShader = linkdata.lineShader
+	if lineShader ~= nil then
+		lg.setShader(lineShader)
 		local mesh = linkdata.lineMesh:getMesh()
 		if mesh ~= nil then
-			lg.draw(mesh)
+			lg.draw(mesh, ...)
 		end
 	end
 end

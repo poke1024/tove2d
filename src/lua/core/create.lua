@@ -25,18 +25,13 @@ local function createDrawMesh(mesh, x0, y0, s)
 	end
 end
 
-local function createDrawShaders(shaders, s)
-	local g = love.graphics
-	return function(x, y, r, sx, sy)
-		g.push("transform")
-		g.translate(x or 0, y or 0)
-		g.rotate(r or 0)
-		g.scale((sx or 1) * s, (sy or 1) * s)
+local function createDrawShaders(shaders)
+	local setShader = love.graphics.setShader
+	return function(...)
 		for _, s in ipairs(shaders) do
-			s:draw()
+			s:draw(...)
 		end
-		g.pop()
-		g.setShader()
+		setShader()
 	end
 end
 
@@ -131,11 +126,17 @@ end
 
 create.mesh = function(self)
 	-- allow line strokes <= 1 by prescaling.
-	local resolution = self._resolution * 1024
 	local display = self._display
 	local cquality, holes = unpack(display.cquality)
 	local usage = self._usage
 	local name = self._name or "unnamed"
+
+	local resolution
+	if not cquality.adaptive.valid then
+		resolution = 1
+	else
+		resolution = self._resolution * 1024
+	end
 
 	if usage["gradients"] == "fast" then
 		local gref = self._ref
@@ -148,22 +149,23 @@ create.mesh = function(self)
 		return {
 			mesh = mesh,
 			draw = createDrawMesh(
-				mesh:getMesh(), 0, 0, 1 / resolution),
+				mesh:getMesh(), 0, 0, 1),
 			update = _updateFlatMesh,
 			cache = _cacheFlatMesh
 		}
 	else
 		local tess = function(path, fill, line, flags)
 			local res = lib.PathTesselate(
-				path, fill, line, resolution or 1, cquality, holes, flags)
+				path, fill, line, resolution, cquality, holes, flags)
 			return res.update
 		end
 		local shaders = self:shaders(function (path)
-			return _shaders.newMeshShader(name, path, tess, usage, resolution)
+			return _shaders.newMeshShader(
+				name, path, tess, usage, 1)
 		end)
 		return {
 			shaders = shaders,
-			draw = createDrawShaders(shaders, 1 / resolution),
+			draw = createDrawShaders(shaders),
 			update = _updateShaders,
 			updateQuality = function() return false end,
 			cache = _cacheShadedMesh
@@ -179,7 +181,7 @@ create.curves = function(self)
 	end)
 	return {
 		shaders = shaders,
-		draw = createDrawShaders(shaders, 1),
+		draw = createDrawShaders(shaders),
 		update = _updateShaders,
 		updateQuality = function(quality)
 			for _, s in ipairs(shaders) do

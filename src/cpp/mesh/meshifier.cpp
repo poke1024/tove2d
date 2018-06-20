@@ -55,7 +55,7 @@ void AdaptiveMeshifier::renderStrokes(
 			paths.insert(paths.end(), holes.begin(), holes.end());
 
 			if (shape->stroke.type == NSVG_PAINT_COLOR) {
-				mesh->add(paths, paint, HOLES_CW);
+				mesh->add(paths, tess.scale, paint, HOLES_CW);
 			}
 		}
 		holes.clear();
@@ -84,19 +84,17 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 	Tesselation t;
 	tess(shape, t);
 
-	const float scale = tess.scale;
-
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		MeshPaint paint;
-		fill->initializePaint(paint, shape->fill, shape->opacity, scale);
+		fill->initializePaint(paint, shape->fill, shape->opacity, 1.0f);
  		// ClipperLib always gives us HOLES_CW.
- 		fill->add(t.fill, paint, HOLES_CW);
+ 		fill->add(t.fill, tess.scale, paint, HOLES_CW);
 	}
 
 	if (t.stroke.ChildCount() > 0 &&
 		shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
 		MeshPaint paint;
-		line->initializePaint(paint, shape->stroke, shape->opacity, scale);
+		line->initializePaint(paint, shape->stroke, shape->opacity, 1.0f);
 		ClipperPaths holes;
 		renderStrokes(shape, &t.stroke, holes, paint, line);
 	}
@@ -109,10 +107,10 @@ FixedMeshifier::FixedMeshifier(
 	const ToveTesselationQuality *quality,
 	ToveHoles holes,
 	ToveMeshUpdateFlags update) :
-	scale(scale),
 	depth(std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit)),
 	holes(holes),
 	_update(update) {
+	assert(scale == 1.0f);
 }
 
 ToveMeshUpdateFlags FixedMeshifier::operator()(
@@ -134,7 +132,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 
 	const bool hasStroke = path->hasStroke();
 
-	FixedFlattener flattener(scale, depth, 0.0);
+	FixedFlattener flattener(depth, 0.0);
 
 	const int n = path->getNumSubpaths();
 	const bool compound = (&fill == &line);
@@ -152,7 +150,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 	// computing the stroke vertices, but then skip fill triangulation.
 
 	if (update & (UPDATE_MESH_VERTICES | UPDATE_MESH_TRIANGLES)) {
-		const float lineOffset = scale * shape->strokeWidth * 0.5f;
+		const float lineOffset = shape->strokeWidth * 0.5f;
 
 		if (compound) {
 			for (int i = 0; i < n; i++) {
@@ -284,7 +282,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;
-			fill->initializePaint(paint, shape->fill, shape->opacity, scale);
+			fill->initializePaint(paint, shape->fill, shape->opacity, 1.0f);
 			fill->addColor(index0, index, paint);
 		}
 	}
@@ -298,7 +296,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 		}
 		if (update & UPDATE_MESH_COLORS) {
 			MeshPaint paint;
-			line->initializePaint(paint, shape->stroke, shape->opacity, scale);
+			line->initializePaint(paint, shape->stroke, shape->opacity, 1.0f);
 			line->addColor(v0, index * verticesPerSegment, paint);
 		}
 	}

@@ -45,7 +45,6 @@ public:
 class FixedMeshifier : public AbstractMeshifier {
 private:
 	int _nvertices;
-	const float scale;
 	const int depth;
 	const ToveMeshUpdateFlags _update;
 	const ToveHoles holes;

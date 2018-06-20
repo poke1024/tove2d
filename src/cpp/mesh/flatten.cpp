@@ -271,8 +271,8 @@ ClipperPath AdaptiveFlattener::flatten(const NSVGpath *path) const {
 
 	for (int i = 0; i * 2 + 7 < path->npts * 2; i += 3) {
 		const float* p = &path->pts[i * 2];
-		flatten(p[0]*scale,p[1]*scale, p[2]*scale,p[3]*scale,
-			p[4]*scale,p[5]*scale, p[6]*scale,p[7]*scale, result);
+		flatten(p[0] * scale,p[1] * scale, p[2] * scale,p[3] * scale,
+			p[4] * scale,p[5] * scale, p[6] * scale,p[7] * scale, result);
 	}
 
 	if (path->closed) {
@@ -446,7 +446,8 @@ int FixedFlattener::size(const NSVGpath *path) const {
 	return 1 + n * verticesPerCurve;
 }
 
-int FixedFlattener::flatten(const NSVGpath *path, const MeshRef &mesh, int index) const {
+int FixedFlattener::flatten(
+	const NSVGpath *path, const MeshRef &mesh, int index) const {
 	const int npts = path->npts;
 	const int n = ncurves(npts);
 
@@ -457,15 +458,16 @@ int FixedFlattener::flatten(const NSVGpath *path, const MeshRef &mesh, int index
 	float * const vertices0 = mesh->vertices(index, nvertices);
 	float *vertices = vertices0;
 
-	*vertices++ = path->pts[0] * scale;
-	*vertices++ = path->pts[1] * scale;
+	*vertices++ = path->pts[0];
+	*vertices++ = path->pts[1];
 
 	int k = 0;
 	for (int i = 0; i < n; i++) {
 		const float *p = &path->pts[k * 2];
 		k += 3;
 		float *v0 = vertices;
-		vertices = flatten(vertices, 0, p[0]*scale,p[1]*scale, p[2]*scale,p[3]*scale, p[4]*scale,p[5]*scale, p[6]*scale,p[7]*scale);
+		vertices = flatten(vertices, 0,
+			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
 		assert(vertices - v0 == verticesPerCurve * 2);
 	}
 

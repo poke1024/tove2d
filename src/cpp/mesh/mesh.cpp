@@ -96,7 +96,9 @@ void AbstractMesh::clear() {
 	meshData.nvertices = 0;
 }
 
-void AbstractMesh::triangulate(const ClipperPaths &paths, ToveHoles holes) {
+void AbstractMesh::triangulate(
+	const ClipperPaths &paths, float scale, ToveHoles holes) {
+
 	std::list<TPPLPoly> polys;
 	for (int i = 0; i < paths.size(); i++) {
 		const int n = paths[i].size();
@@ -107,10 +109,14 @@ void AbstractMesh::triangulate(const ClipperPaths &paths, ToveHoles holes) {
 
 		for (int j = 0; j < n; j++) {
 			const ClipperPoint &p = paths[i][j];
-			*vertex++ = p.X;
-			*vertex++ = p.Y;
-			poly[j].x = p.X;
-			poly[j].y = p.Y;
+
+			const float x = p.X / scale;
+			const float y = p.Y / scale;
+
+			*vertex++ = x;
+			*vertex++ = y;
+			poly[j].x = x;
+			poly[j].y = y;
 			poly[j].id = index++;
 		}
 
@@ -317,28 +323,48 @@ void AbstractMesh::triangulateFill(
 	triangles.add(triangulation);
 }
 
-void AbstractMesh::add(const ClipperPaths &paths, const MeshPaint &paint, const ToveHoles holes) {
+void AbstractMesh::add(
+	const ClipperPaths &paths,
+	float scale,
+	const MeshPaint &paint,
+	const ToveHoles holes) {
+
 	const int vertexIndex = meshData.nvertices;
-	triangulate(paths, holes);
+	triangulate(paths, scale, holes);
 	const int vertexCount = meshData.nvertices - vertexIndex;
 	addColor(vertexIndex, vertexCount, paint);
 }
 
 
-void Mesh::initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale) {
+void Mesh::initializePaint(
+	MeshPaint &paint,
+	const NSVGpaint &nsvg,
+	float opacity,
+	float scale) {
 }
 
-void Mesh::addColor(int vertexIndex, int vertexCount, const MeshPaint &paint) {
+void Mesh::addColor(
+	int vertexIndex,
+	int vertexCount,
+	const MeshPaint &paint) {
 }
 
 
-void ColorMesh::initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale) {
+void ColorMesh::initializePaint(
+	MeshPaint &paint,
+	const NSVGpaint &nsvg,
+	float opacity,
+	float scale) {
+
 	paint.initialize(nsvg, opacity, scale);
 }
 
-void ColorMesh::addColor(int vertexIndex, int vertexCount, const MeshPaint &paint) {
+void ColorMesh::addColor(
+	int vertexIndex, int vertexCount, const MeshPaint &paint) {
+
     meshData.colors = static_cast<uint8_t*>(realloc(
-    	meshData.colors, nextpow2(vertexIndex + vertexCount) * 4 * sizeof(uint8_t)));
+    	meshData.colors,
+		nextpow2(vertexIndex + vertexCount) * 4 * sizeof(uint8_t)));
 
     if (!meshData.colors) {
 		TOVE_BAD_ALLOC();

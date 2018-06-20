@@ -45,15 +45,10 @@ local function setAdaptiveQuality(record, quality)
 	-- tricky stuff: some configurations make higher qualities produce
 	-- less triangles due to colinearityEpsilon being too high.
 
-	if quality < 0.1 then -- special low quality tier
-		adaptive.distanceTolerance = 100.0
-		adaptive.colinearityEpsilon = 1.0 / quality
-		adaptive.angleTolerance = (math.pi / 16) * (0.5 / quality)
-	else
-		adaptive.distanceTolerance = 100.0 / (1 + 10 * quality)
-		adaptive.colinearityEpsilon = 0.1 / (1 + 10 * quality)
-		adaptive.angleTolerance = math.pi / (2 + math.min(1, quality) * 16)
-	end
+	adaptive.distanceTolerance = 100 * 1000.0 / quality
+	adaptive.colinearityEpsilon = 100 * 1000.0 / (quality * quality * 10)
+	adaptive.angleTolerance = math.pi / (2 + math.min(1, quality) * 16)
+
 	adaptive.angleEpsilon = 0.0
 	adaptive.cuspLimit = 0.0
 end

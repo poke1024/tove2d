@@ -62,7 +62,6 @@ class FixedFlattener {
 private:
 	const int _depth;
 	const float _offset;
-	const float scale;
 
 	float *flatten(
 		float *vertices, int level,
@@ -70,7 +69,7 @@ private:
 		float x3, float y3, float x4, float y4) const;
 
 public:
-	FixedFlattener(float scale, int depth, float offset) : scale(scale), _depth(depth), _offset(offset) {
+	FixedFlattener(int depth, float offset) : _depth(depth), _offset(offset) {
 	}
 
 	int size(const NSVGpath *path) const;
