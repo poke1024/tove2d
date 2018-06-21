@@ -2,6 +2,7 @@
 -- (C) 2018 Bernhard Liebl, MIT license.
 
 local newTransform = require "transform"
+local handles = require "handles"
 
 Object = {}
 Object.__index = Object
@@ -9,12 +10,25 @@ Object.__index = Object
 function Object:refresh()
 	self.scaledgraphics:set(tove.transformed(
 		self.graphics, 0, 0, 0, self.transform.sx, self.transform.sy))
+
+	local overlayline = self.overlayline
+	local handleColor = handles.color
+	overlayline:set(self.scaledgraphics)
+	for i = 1, overlayline.paths.count do
+		local p = overlayline.paths[i]
+		p:setFillColor()
+		p:setLineColor(unpack(handleColor))
+		p:setLineWidth(1)
+	end
 end
 
 function Object:draw()
 	love.graphics.push("transform")
 	love.graphics.applyTransform(self.transform.drawtransform)
 	self.scaledgraphics:draw()
+	if self.selected then
+		self.overlayline:draw()
+	end
 	love.graphics.pop()
 end
 
@@ -77,10 +91,16 @@ Object.new = function(tx, ty, graphics)
 	local scaledgraphics = tove.newGraphics()
 	scaledgraphics:setDisplay("mesh", 0.5)
 
+	local overlayline = tove.newGraphics()
+	overlayline:setDisplay("mesh")
+	overlayline:setUsage("points", "dynamic")
+
 	local object = setmetatable({
 		graphics = graphics,
 		scaledgraphics = scaledgraphics,
-		transform = newTransform(graphics, tx, ty)
+		transform = newTransform(graphics, tx, ty),
+		overlayline = overlayline,
+		selected = false
 	}, Object)
 
 	object:refresh()

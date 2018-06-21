@@ -12,11 +12,16 @@ setmetatable(Toolbar, {__index = Panel})
 
 local items = {
     "thirdparty/cursor",
+    "thirdparty/location",
     "thirdparty/pencil"
 }
 
 function Toolbar:select(name)
     self.group:select(name)
+end
+
+function Toolbar:current()
+    return self.group:current()
 end
 
 Toolbar.new = function(callback)

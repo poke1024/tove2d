@@ -44,6 +44,7 @@ function VBox:draw()
 end
 
 function VBox:click(x, y)
+	self:layout()
     for _, item in ipairs(self.items) do
 		local dragfunc = item:click(x, y)
         if dragfunc ~= nil then

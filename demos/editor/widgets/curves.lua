@@ -114,27 +114,9 @@ local function mirrorControlPoint(qx, qy, px, py, p0x, p0y, rx, ry)
 	return p0x + math.cos(cp1phi) * cp1mag, p0y + math.sin(cp1phi) * cp1mag
 end
 
-function PointsWidget:updateOverlayLine()
-	local overlayLine = self.overlayLine
-	local handleColor = self.handles.color
-	overlayLine:set(self.object.scaledgraphics)
-	for i = 1, overlayLine.paths.count do
-		local p = overlayLine.paths[i]
-		p:setFillColor()
-		p:setLineColor(unpack(handleColor))
-		p:setLineWidth(1)
-	end
-end
-
 function PointsWidget:draw(gtransform)
 	local transform = self.object.transform
 	local handles = self.handles
-
-	love.graphics.push("transform")
-	love.graphics.applyTransform(gtransform)
-	love.graphics.applyTransform(transform.drawtransform)
-	self.overlayLine:draw()
-	love.graphics.pop()
 
 	local tfm = love.math.newTransform()
 	tfm:apply(gtransform)
@@ -173,8 +155,6 @@ function PointsWidget:createDragPointFunc()
 			local traj = graphics.paths[dragging.path].subpaths[dragging.traj]
 			traj:move(dragging.pt, mx, my)
 		end)
-
-		self:updateOverlayLine()
 	end
 end
 
@@ -202,7 +182,6 @@ function PointsWidget:createMouldCurveFunc(i, j, t)
 			cp2x, cp2y, c1.cp2x, c1.cp2y, c1.x, c1.y, next.cp1x, next.cp1y)
 
 		self.object:refresh()
-		self:updateOverlayLine()
 	end
 end
 
@@ -265,7 +244,6 @@ function PointsWidget:click(gx, gy, gs, button)
 		local k = traj:insertCurveAt(t)
 		self.selected = {path = i, traj = j, pt = k}
 		self.object:refresh()
-		self:updateOverlayLine()
 	end
 end
 
@@ -282,7 +260,6 @@ function PointsWidget:keypressed(key)
 					local traj = self.object.graphics.paths[selected.path].subpaths[selected.traj]
 					traj:removeCurve((selected.pt - 1) / 3)
 				end)
-				self:updateOverlayLine()
 			end
 		end
 		return true
@@ -291,18 +268,9 @@ function PointsWidget:keypressed(key)
 end
 
 return function(handles, object)
-	local overlayLine = tove.newGraphics()
-	overlayLine:setDisplay("mesh")
-	overlayLine:setUsage("points", "dynamic")
-
-	local pw = setmetatable({
+	return setmetatable({
 		handles = handles,
 		object = object,
 		selected = nil,
-		dragging = nil,
-		overlayLine = overlayLine}, PointsWidget)
-
-	pw:updateOverlayLine()
-
-	return pw
+		dragging = nil}, PointsWidget)
 end

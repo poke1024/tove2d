@@ -22,13 +22,15 @@ local ImageButton = require "ui/imagebutton"
 local Editor = {}
 Editor.__index = Editor
 
-local function makeDragObjectFunc(object, x0, y0)
+local function makeDragSelectionFunc(selection, x0, y0)
 	local x, y = x0, y0
-	local transform = object.transform
 	return function(mx, my)
-		transform.tx = transform.tx + (mx - x)
-		transform.ty = transform.ty + (my - y)
-		transform:update()
+		for o, _ in pairs(selection) do
+			local transform = o.transform
+			transform.tx = transform.tx + (mx - x)
+			transform.ty = transform.ty + (my - y)
+			transform:update()
+		end
 		x, y = mx, my
 	end
 end
@@ -48,9 +50,7 @@ function Editor:load()
 	self.font = love.graphics.newFont(11)
 
 	local updateColor = function(what, ...)
-		local widget = editor.widget
-		if widget ~= nil then
-            local object = widget.object
+		for object, _ in pairs(self.selection) do
 			for i = 1, object.graphics.paths.count do
 				local path = object.graphics.paths[i]
 				if what == "fill" then
@@ -66,9 +66,7 @@ function Editor:load()
 	self.colorWheel = ColorWheel.new()
 	self.colorDabs = ColorDabs.new(updateColor, self.colorWheel)
 	self.lineWidthSlider = Slider.new(function(value)
-		local widget = editor.widget
-		if widget ~= nil then
-			local object = widget.object
+		for object, _ in pairs(self.selection) do
 			for i = 1, object.graphics.paths.count do
 				local path = object.graphics.paths[i]
 				path:setLineWidth(value)
@@ -77,9 +75,7 @@ function Editor:load()
 		end
 	end, 0, 20)
 	self.miterLimitSlider = Slider.new(function(value)
-		local widget = editor.widget
-		if widget ~= nil then
-			local object = widget.object
+		for object, _ in pairs(self.selection) do
 			for i = 1, object.graphics.paths.count do
 				local path = object.graphics.paths[i]
 				path:setMiterLimit(value)
@@ -89,12 +85,7 @@ function Editor:load()
 	end, 0, 20)
 
 	self.toolbar = Toolbar.new(function(button)
-		local name = button.name
-		if name == "pencil" then
-			self.widget = newPenWidget(self)
-		else
-			self.widget = nil
-		end
+		self:updateWidget()
 	end)
 	self.toolbar:setBounds(
 		0,
@@ -236,7 +227,58 @@ function Editor:startdrag(transform, x, y, button, func)
     end
 end
 
-function Editor:createWidget(x, y, button, clickCount)
+function Editor:deselect()
+	for o, _ in pairs(self.selection) do
+		o.selected = false
+	end
+	self.selection = {}
+	self.widget = nil
+end
+
+function Editor:updateWidget()
+	local object = next(self.selection)
+	local tool = self.toolbar:current()
+	if tool == "cursor" then
+		if object == nil then
+			self.widget = nil
+		else
+			self.widget = newTransformWidget(self.handles, object)
+		end
+	elseif tool == "location" then
+		if object == nil then
+			self.widget = nil
+		else
+			self.widget = newCurvesWidget(self.handles, object)
+		end
+	elseif tool == "pencil" then
+		self.widget = newPenWidget(self)
+	else
+		self.widget = nil
+	end
+end
+
+function Editor:selectionChanged()
+	object = next(self.selection)
+	if object == nil then
+		self.widget = nil
+		return
+	end
+
+	local path = object.graphics.paths[1]
+	self.colorDabs:setLineColor(path:getLineColor())
+	self.colorDabs:setFillColor(path:getFillColor())
+	self.lineWidthSlider:setValue(path:getLineWidth())
+	self.miterLimitSlider:setValue(path:getMiterLimit())
+	local mode, quality = object:getDisplay()
+	self.radios:select(mode)
+
+	self:updateWidget()
+end
+
+function Editor:mouseselect(x, y, button, clickCount)
+	local shift = love.keyboard.isDown("lshift") or
+		love.keyboard.isDown("rshift")
+
 	local objects = self.objects
 	local nobjects = #objects
 	for o = nobjects, 1, -1 do
@@ -256,26 +298,32 @@ function Editor:createWidget(x, y, button, clickCount)
 			end
 
 			if hit then
-				if clickCount == 2 then
-					self.widget = newCurvesWidget(self.handles, object)
-				elseif clickCount == 1 then
-					self.widget = newTransformWidget(self.handles, object)
+				do
+					local s = true
+					if not shift and self.selection[object] == nil then
+						self:deselect()
+					end
+					if shift and self.selection[object] ~= nil then
+						s = nil
+					end
+					self.selection[object] = s
+					object.selected = (s ~= nil)
 				end
 
-				local path = object.graphics.paths[1]
-				self.colorDabs:setLineColor(path:getLineColor())
-				self.colorDabs:setFillColor(path:getFillColor())
-				self.lineWidthSlider:setValue(path:getLineWidth())
-				self.miterLimitSlider:setValue(path:getMiterLimit())
-				local mode, quality = object:getDisplay()
-				self.radios:select(mode)
+				if next(self.selection) ~= nil then
+					if clickCount == 2 then
+						self.toolbar:select("location")
+					end
 
-				if clickCount == 1 then
-					self:startdrag(self.transform, x, y, button,
-						makeDragObjectFunc(object, x, y))
-				else
-					self.drag = nil
+					if clickCount == 1 then
+						self:startdrag(self.transform, x, y, button,
+							makeDragSelectionFunc(self.selection, x, y))
+					else
+						self.drag = nil
+					end
 				end
+
+				self:selectionChanged()
 
 				return true
 			end
@@ -294,28 +342,30 @@ function Editor:mousedown(gx, gy, button, clickCount)
 			return
 		end
 
-		if self.widget ~= nil then
+		if next(self.selection) ~= nil then
 			if self:startdrag(nil, gx, gy, button,
 				self.rpanel:click(gx, gy)) then
 				return
 			end
+		end
 
-			if not self:startdrag(self.transform, x, y, button,
+		if self.widget ~= nil then
+			if self:startdrag(self.transform, x, y, button,
 				self.widget:mousedown(x, y, self.scale, button)) then
-				self.widget = nil
+				return
 			end
 		end
-		if self.widget == nil then
-			if not self:createWidget(x, y, button, clickCount) then
-				if button == 1 and clickCount == 1 then
-					local transform0 = self.transform:clone()
-					self:startdrag(self.transform, x, y, button,
-						function(mx, my)
-							local t = transform0:clone()
-							t:translate(mx - x, my - y)
-							self.transform = t
-						end)
-				end
+
+		if not self:mouseselect(x, y, button, clickCount) then
+			self:deselect()
+			if button == 1 and clickCount == 1 then
+				local transform0 = self.transform:clone()
+				self:startdrag(self.transform, x, y, button,
+					function(mx, my)
+						local t = transform0:clone()
+						t:translate(mx - x, my - y)
+						self.transform = t
+					end)
 			end
 		end
 	end
@@ -337,20 +387,30 @@ function Editor:mousereleased(x, y, button, clickCount)
 end
 
 function Editor:keypressed(key, scancode, isrepeat)
+	local command = love.keyboard.isDown("lgui") or
+		love.keyboard.isDown("rgui")
+
 	if key == "escape" then
-		self.widget = nil
+		self:deselect()
 	elseif key == "p" then
 		self.toolbar:select("pencil")
+	elseif command and key == "a" then
+		self.selection = {}
+		for i, o in ipairs(self.objects) do
+			self.selection[o] = true
+			o.selected = true
+		end
+		self:selectionChanged()
     elseif self.widget ~= nil then
         if not self.widget:keypressed(key, scancode, isrepeat) then
 			if key == "backspace" then
 				for i, o in ipairs(self.objects) do
-					if o == self.widget.object then
+					if self.selection[o] ~= nil then
 						table.remove(self.objects, i)
-						self.widget = nil
-						break
 					end
 				end
+				self.selection = {}
+				self:selectionChanged()
 			end
 		end
     end
@@ -383,26 +443,28 @@ function Editor:addObject(object)
 end
 
 function Editor:setDisplay(...)
-    if self.widget ~= nil then
-        self.widget.object:setDisplay(...)
-    end
+	for o, _ in pairs(self.selection) do
+		o:setDisplay(...)
+	end
 end
 
 function Editor:getDisplay()
-	if self.widget ~= nil then
-        return self.widget.object:getDisplay()
+	local object = next(self.selection)
+	if object ~= nil then
+        return object:getDisplay()
     end
 end
 
 function Editor:setUsage(what, value)
-	if self.widget ~= nil then
-        return self.widget.object:setUsage(what, value)
-    end
+	for o, _ in pairs(self.selection) do
+		o:setUsage(what, value)
+	end
 end
 
 function Editor:getUsage()
-	if self.widget ~= nil then
-        return self.widget.object:getUsage()
+	local object = next(self.selection)
+	if object ~= nil then
+        return object:getUsage()
     end
 end
 
@@ -427,7 +489,8 @@ function Editor:loadfile(file)
 	self.transform = love.math.newTransform()
 	self:transformChanged()
 	self.objects = {}
-	self.widget = nil
+	self.selection = {}
+	self:selectionChanged()
 
 	local screenwidth = love.graphics.getWidth()
 	local screenheight = love.graphics.getHeight()
@@ -442,6 +505,7 @@ end
 local editor = setmetatable({
 	handles = require "handles",
 	objects = {},
+	selection = {},
 	widget = nil,
 	drag = nil
 }, Editor)

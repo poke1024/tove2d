@@ -10,6 +10,14 @@ function RadioGroup:setCallback(callback)
     self.callback = callback
 end
 
+function RadioGroup:current()
+    for _, button in ipairs(self.buttons) do
+        if button.selected then
+            return button.name
+        end
+    end
+end
+
 function RadioGroup:select(name)
     for _, button in ipairs(self.buttons) do
         local selected = button.name == name
