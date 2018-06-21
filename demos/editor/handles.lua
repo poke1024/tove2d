@@ -25,7 +25,7 @@ local function createHandle(smooth, selected)
 		handle:setLineWidth(1)
 		handle:stroke()
 	end
-	handle:setDisplay("bitmap")
+	handle:setDisplay("texture")
 	return handle
 end
 

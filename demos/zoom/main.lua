@@ -13,14 +13,14 @@ local function newRabbit()
 	return graphics
 end
 
-local bitmapRabbit = newRabbit()
-bitmapRabbit:setDisplay("bitmap")
+local textureRabbit = newRabbit()
+textureRabbit:setDisplay("texture")
 
 local meshRabbit = newRabbit()
 meshRabbit:setDisplay("mesh", 0.05)
 
-local curveRabbit = newRabbit()
-curveRabbit:setDisplay("curves")
+local shaderRabbit = newRabbit()
+shaderRabbit:setDisplay("shader")
 
 function love.draw()
 	tovedemo.draw("Zoom.")
@@ -36,14 +36,14 @@ function love.draw()
 		love.graphics.push("transform")
 		love.graphics.scale(5, 5)
 		if i == 1 then
-			bitmapRabbit:draw(20, 20)
-			name = "bitmap"
+			textureRabbit:draw(20, 20)
+			name = "texture"
 		elseif i == 2 then
 			meshRabbit:draw(70, 20)
 			name = "mesh"
 		elseif i == 3 then
-			curveRabbit:draw(110, 20)
-			name = "curves"
+			shaderRabbit:draw(110, 20)
+			name = "shader"
 		end
 		love.graphics.pop()
 

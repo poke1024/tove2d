@@ -6,7 +6,7 @@ require "assets/tovedemo"
 
 -- fill rule example taken from http://tutorials.jenkov.com/svg/fill.html
 local samples = {}
-for i, display in ipairs({"bitmap", "flatmesh", "mesh", "curves"}) do
+for i, display in ipairs({"texture", "flatmesh", "mesh", "shader"}) do
 	samples[i] = {label = display, row = {}}
 	for j, fillRule in ipairs({"evenodd", "nonzero"}) do
 		local g = tove.newGraphics()

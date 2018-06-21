@@ -11,14 +11,14 @@ local tween = tove.newTween(svg1):to(svg2, 1)
 
 local animations = {}
 
-table.insert(animations, tove.newFlipbook(8, tween, "bitmap"))
+table.insert(animations, tove.newFlipbook(8, tween, "texture"))
 table.insert(animations, tove.newAnimation(tween, "mesh", tove.fixed(2, "none")))
-table.insert(animations, tove.newAnimation(tween, "curves"))
+table.insert(animations, tove.newAnimation(tween, "shader"))
 
 local flow = tovedemo.newCoverFlow(0.5)
 flow:add("flipbook", animations[1])
 flow:add("mesh", animations[2])
-flow:add("curves", animations[3])
+flow:add("shader", animations[3])
 
 function love.draw()
 	tovedemo.draw("Blob.")

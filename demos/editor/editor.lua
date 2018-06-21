@@ -107,7 +107,7 @@ function Editor:load()
 	do
 		local hbox = HBox.new()
 		local buttons = ImageButton.group(
-			hbox, "bitmap", "mesh", "curves")
+			hbox, "texture", "mesh", "shader")
 	    self.radios = RadioGroup.new(unpack(buttons))
 		self.rpanel:add(hbox)
 	end
@@ -138,7 +138,7 @@ function Editor:load()
 			slider:setValue(quality)
 
 			self.displaycontrol:add(vbox)
-		elseif mode == "curves" then
+		elseif mode == "shader" then
 			self.displaycontrol:add(Label.new(self.font, "Settings"))
 			local vbox = VBox.new()
 			vbox.frame = true
@@ -146,7 +146,7 @@ function Editor:load()
 			local checkbox = Checkbox.new(
 				self.font, "vertex shader lines", function(value)
 					local mode, quality = self:getDisplay()
-					self:setDisplay("curves",
+					self:setDisplay("shader",
 						{line = {
 							type = value and "vertex" or "fragment",
 							quality = quality.line.quality
@@ -158,7 +158,7 @@ function Editor:load()
 				self.font, "line quality"))
 			local slider = Slider.new(function(value)
 				local mode, quality = self:getDisplay()
-				self:setDisplay("curves",
+				self:setDisplay("shader",
 					{line = {
 						type = quality.line.type,
 						quality = value
@@ -176,7 +176,7 @@ function Editor:load()
 		local newmode = button.name
 		local mode, quality = self:getDisplay()
 		if mode ~= newmode then
-			if newmode == "curves" then
+			if newmode == "shader" then
 				quality = {line = {type = "vertex", quality = 1.0}}
 			else
 				quality = 0.5

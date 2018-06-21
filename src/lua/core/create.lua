@@ -82,7 +82,7 @@ local create = {}
 local function _noCache()
 end
 
-create.bitmap = function(self)
+create.texture = function(self)
 	local resolution = self._resolution * tove._highdpi
 	local x0, y0, x1, y1 = self:computeAABB("exact")
 
@@ -173,7 +173,7 @@ create.mesh = function(self)
 	end
 end
 
-create.curves = function(self)
+create.shader = function(self)
 	local fragLine = true
 	local quality = self._display.quality
 	local shaders = self:shaders(function(path)

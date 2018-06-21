@@ -30,7 +30,7 @@ local function newLinearGradient(r)
 end
 
 local hearts = {}
-local modes = {"bitmap", "flatmesh", "mesh", "curves"}
+local modes = {"texture", "flatmesh", "mesh", "shader"}
 local names = {}
 
 local function createHearts(stroke)

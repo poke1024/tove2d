@@ -39,7 +39,7 @@ local Flipbook = {}
 tove.newFlipbook = function(fps, tween, ...)
 	display = {...}
 	if next(display) == nil then
-		display = {"bitmap"}
+		display = {"texture"}
 	end
 	local frames = {}
 	local looping = tween._graphics0 == tween._to[#tween._to].graphics

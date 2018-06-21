@@ -43,7 +43,7 @@ tove.newGraphics = function(svg, size)
 	local graphics = setmetatable({
 		_ref = ref,
 		_cache = nil,
-		_display = {mode = "bitmap"},
+		_display = {mode = "texture"},
 		_resolution = 1,
 		_usage = newUsage(),
 		_name = name,

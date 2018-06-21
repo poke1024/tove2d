@@ -12,8 +12,8 @@ local function newRabbit()
 	return graphics
 end
 
-local bitmapRabbit = newRabbit()
-bitmapRabbit:setDisplay("bitmap")
+local textureRabbit = newRabbit()
+textureRabbit:setDisplay("texture")
 
 local meshRabbit = newRabbit()
 meshRabbit:setDisplay("mesh")
@@ -21,15 +21,15 @@ meshRabbit:setDisplay("mesh")
 local flatmeshRabbit = newRabbit()
 flatmeshRabbit:setDisplay("flatmesh")
 
-local curveRabbit = newRabbit()
-curveRabbit:setDisplay("curves")
+local shaderRabbit = newRabbit()
+shaderRabbit:setDisplay("shader")
 
 -- just some glue code for presentation.
 local flow = tovedemo.newCoverFlow()
-flow:add("bitmap", bitmapRabbit)
+flow:add("texture", textureRabbit)
 flow:add("mesh", meshRabbit)
 flow:add("flatmesh", flatmeshRabbit)
-flow:add("curves", curveRabbit)
+flow:add("shader", shaderRabbit)
 
 function love.draw()
 	tovedemo.draw("Renderers.")
