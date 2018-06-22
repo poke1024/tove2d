@@ -99,8 +99,8 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 	vec2 curvePoint = eval(bx, by, t);
 	vec4 state = vec4(t, distanceSquared(curvePoint, pos), s, -s);
 
-	int max_iterations = clamp(int(MAX_LINE_ITERATIONS * line_quality),
-		1, MAX_LINE_ITERATIONS);
+	int max_iterations = int(clamp(int(MAX_LINE_ITERATIONS * line_quality),
+		1, MAX_LINE_ITERATIONS));
 
 	for (int i = 0; i < max_iterations && state.y > tolerance; i++) {
 		float tn = state.x + state.z;
