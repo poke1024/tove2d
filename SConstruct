@@ -30,7 +30,7 @@ env = Environment()
 
 if env["PLATFORM"] == 'win32':
 	env["CCFLAGS"] = ' /EHsc '
-	if not GetOption('tove-debug'):
+	if not GetOption('tovedebug'):
 		env["CCFLAGS"] += ' /O1 /Oy /Oi /fp:fast '
 		env["LINKFLAGS"] = ' /OPT:REF '
 else:
