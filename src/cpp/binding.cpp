@@ -230,11 +230,14 @@ bool PathIsInside(TovePathRef path, float x, float y) {
 	return deref(path)->isInside(x, y);
 }
 
-void PathSet(TovePathRef path, TovePathRef source,
-	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
-	float ox, float oy, float kx, float ky) {
+void PathSet(
+	TovePathRef path,
+	TovePathRef source,
+	bool scaleLineWidth,
+	float a, float b, float c,
+	float d, float e, float f) {
 
-	nsvg::Transform transform(tx, ty, r, sx, sy, ox, oy, kx, ky);
+	nsvg::Transform transform(a, b, c, d, e, f);
 	transform.setWantsScaleLineWidth(scaleLineWidth);
 	deref(path)->set(deref(source), transform);
 }
@@ -481,11 +484,14 @@ ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact) {
 	return bounds;
 }
 
-void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
-	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
-	float ox, float oy, float kx, float ky) {
+void GraphicsSet(
+	ToveGraphicsRef graphics,
+	ToveGraphicsRef source,
+	bool scaleLineWidth,
+	float a, float b, float c,
+	float d, float e, float f) {
 
-	nsvg::Transform transform(tx, ty, r, sx, sy, ox, oy, kx, ky);
+	nsvg::Transform transform(a, b, c, d, e, f);
 	transform.setWantsScaleLineWidth(scaleLineWidth);
 	deref(graphics)->set(deref(source), transform);
 }

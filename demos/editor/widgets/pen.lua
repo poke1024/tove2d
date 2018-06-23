@@ -34,7 +34,7 @@ function PathWidget:draw(gtransform)
 
     local tfm = love.math.newTransform()
 	tfm:apply(gtransform)
-	tfm:apply(self.object.transform.mousetransform)
+	tfm:apply(self.object.transform:get("full"))
 
     for i = 1, g.paths.count do
         local path = g.paths[i]
@@ -78,6 +78,7 @@ function PathWidget:mousereleased()
 end
 
 function PathWidget:keypressed(key)
+    return false
 end
 
 return function(editor)

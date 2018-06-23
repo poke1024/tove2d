@@ -234,15 +234,16 @@ end
 
 
 tove.transformed = function(source, ...)
-	local tx, ty, r, sx, sy, ox, oy, kx, ky = unpack({...})
-	sx = sx or 1
-	sy = sy or sx
-	return setmetatable({s = source, args = {
-		tx or 0, ty or 0,
-		r or 0,
-		sx, sy,
-		ox or 0, oy or 0,
-		kx or 0, ky or 0}}, tove.Transform)
+	local args = {...}
+	local t
+	if type(args[1]) == "number" then
+		t = love.math.newTransform(...)
+	else
+		t = args[1]
+	end
+	local a, b, _, c, d, e, _, f = t:getMatrix()
+	return setmetatable({
+		s = source, args = {a, b, c, d, e, f}}, tove.Transform)
 end
 
 
@@ -257,7 +258,7 @@ function Graphics:set(arg, swl)
 		lib.GraphicsSet(
 			self._ref,
 			arg._ref,
-			false, 0, 0, 0, 1, 1, 0, 0, 0, 0)
+			false, 1, 0, 0, 0, 1, 0)
 	end
 end
 

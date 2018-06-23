@@ -113,7 +113,7 @@ function Path:set(arg, swl)
 		lib.PathSet(
 			self,
 			arg,
-			false, 0, 0, 0, 1, 1, 0, 0, 0, 0)
+			false, 1, 0, 0, 0, 1, 0)
 	end
 end
 

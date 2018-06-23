@@ -293,8 +293,7 @@ EXPORT void PathSetOrientation(TovePathRef path, ToveOrientation orientation);
 EXPORT void PathClean(TovePathRef path, float eps);
 EXPORT bool PathIsInside(TovePathRef path, float x, float y);
 EXPORT void PathSet(TovePathRef path, TovePathRef source,
-	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
-	float ox, float oy, float kx, float ky);
+	bool scaleLineWidth, float a, float b, float c, float d, float e, float f);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
@@ -317,8 +316,7 @@ EXPORT void GraphicsFill(ToveGraphicsRef shape);
 EXPORT void GraphicsStroke(ToveGraphicsRef shape);
 EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact);
 EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
-	bool scaleLineWidth, float tx, float ty, float r, float sx, float sy,
-	float ox, float oy, float kx, float ky);
+	bool scaleLineWidth, float a, float b, float c, float d, float e, float f);
 EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh,
 	float scale, const ToveTesselationQuality *quality, ToveHoles holes,
 	ToveMeshUpdateFlags flags);

@@ -62,11 +62,8 @@ private:
 public:
 	Transform();
 	Transform(
-		float tx, float ty,
-		float r,
-		float sx, float sy,
-		float ox, float oy,
-		float kx, float ky);
+		float a, float b, float c,
+		float d, float e, float f);
 
 	void multiply(const Transform &t);
 

@@ -120,7 +120,7 @@ function PointsWidget:draw(gtransform)
 
 	local tfm = love.math.newTransform()
 	tfm:apply(gtransform)
-	tfm:apply(transform.mousetransform)
+	tfm:apply(transform:get("full"))
 
 	self:allcontrolpoints(function(traj, pts, i, j, k0, k, lx, ly)
 		local x, y = tfm:transformPoint(lx, ly)

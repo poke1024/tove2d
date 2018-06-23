@@ -209,29 +209,18 @@ Transform::Transform() {
 }
 
 Transform::Transform(
-	float tx, float ty,
-	float r,
-	float sx, float sy,
-	float ox, float oy,
-	float kx, float ky) {
+	float a, float b, float c,
+	float d, float e, float f) {
 
 	identity = false;
 	scaleLineWidth = false;
 
-	// adapted from love2d:
-	const float c = cosf(r);
-	const float s = sinf(r);
-	// matrix multiplication carried out on paper:
-	// |1    x| |c -s  | |sx     | | 1 ky  | |1   -ox|
-	// |  1  y| |s  c  | |   sy  | |kx  1  | |  1 -oy|
-	// |     1| |     1| |      1| |      1| |     1 |
-	//   move    rotate    scale     skew      origin
-	matrix[0] = c * sx - ky * s * sy; // = a
-	matrix[1] = s * sx + ky * c * sy; // = b
-	matrix[2] = kx * c * sx - s * sy; // = c
-	matrix[3] = kx * s * sx + c * sy; // = d
-	matrix[4] = tx - ox * matrix[0] - oy * matrix[2];
-	matrix[5] = ty - ox * matrix[1] - oy * matrix[3];
+	matrix[0] = a;
+	matrix[1] = d;
+	matrix[2] = b;
+	matrix[3] = e;
+	matrix[4] = c;
+	matrix[5] = f;
 }
 
 void Transform::multiply(const Transform &t) {

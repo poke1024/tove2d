@@ -9,7 +9,7 @@ Object.__index = Object
 
 function Object:refresh()
 	self.scaledgraphics:set(tove.transformed(
-		self.graphics, 0, 0, 0, self.transform.sx, self.transform.sy))
+		self.graphics, self.transform:get("sr")))
 
 	local overlayline = self.overlayline
 	local handleColor = handles.color
@@ -24,7 +24,7 @@ end
 
 function Object:draw()
 	love.graphics.push("transform")
-	love.graphics.applyTransform(self.transform.drawtransform)
+	love.graphics.applyTransform(self.transform:get("draw"))
 	self.scaledgraphics:draw()
 	if self.selected then
 		self.overlayline:draw()
@@ -60,7 +60,7 @@ function Object:changePoints(f)
 
 	local sx, sy = transform.sx, transform.sy
 
-	transform.tx = tx0 - (ox0 - ox1) * sx* cosr + (oy0 - oy1) * sy * sinr
+	transform.tx = tx0 - (ox0 - ox1) * sx * cosr + (oy0 - oy1) * sy * sinr
 	transform.ty = ty0 - (oy0 - oy1) * sy * cosr - (ox0 - ox1) * sx * sinr
 
 	transform:update()
@@ -98,7 +98,7 @@ Object.new = function(tx, ty, graphics)
 	local object = setmetatable({
 		graphics = graphics,
 		scaledgraphics = scaledgraphics,
-		transform = newTransform(graphics, tx, ty),
+		transform = newTransform(tx, ty),
 		overlayline = overlayline,
 		selected = false
 	}, Object)
