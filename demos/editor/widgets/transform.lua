@@ -10,10 +10,10 @@ local function lengthSqr(dx, dy)
 	return dx * dx + dy * dy
 end
 
-local function rotationHandlePosition(x00, y00, x10, y10, x11, y11)
+local function rotationHandlePosition(x00, y00, x10, y10, x11, y11, gs)
 	local phi = math.atan2(y11 - y10, x11 - x10) + math.pi
 	local mx, my = (x00 + x10) / 2, (y00 + y10) / 2
-	local toplen = 30
+	local toplen = 30 * gs
 	return mx + toplen * math.cos(phi), my + toplen * math.sin(phi), mx, my
 end
 
@@ -37,7 +37,7 @@ function TransformWidget:draw(gtransform)
 	love.graphics.line(x01, y01, x00, y00)
 
 	local tx, ty, mx, my = rotationHandlePosition(
-		x00, y00, x10, y10, x11, y11)
+		x00, y00, x10, y10, x11, y11, 1)
 	love.graphics.line(mx, my, tx, ty)
 
 	local handle = self.handles.selected
@@ -134,18 +134,19 @@ end
 
 function TransformWidget:rotwidget(lcorners, gcorners, gx, gy, gs)
 	local clickRadiusSqr = self.handles.clickRadiusSqr * gs * gs
-	local transform = self.selection:getTransform()
 
 	local x00, y00 = unpack(gcorners[1])
 	local x10, y10 = unpack(gcorners[2])
 	local x11, y11 = unpack(gcorners[3])
 
 	local tx, ty = rotationHandlePosition(
-		x00, y00, x10, y10, x11, y11)
+		x00, y00, x10, y10, x11, y11, gs)
+
 	if lengthSqr(tx - gx, ty - gy) < clickRadiusSqr then
 		local cx = (x00 + x11) / 2
 		local cy = (y00 + y11) / 2
 
+		local transform = self.selection:getTransform()
 		local phi0 = transform.r - math.atan2(gy - cy, gx - cx)
 
 		local rotate = function(transform, phi)
@@ -290,7 +291,7 @@ function TransformWidget:mousedown(gx, gy, gs, button)
 	}
 
 	local dragfunc = nil
-	for _, w in ipairs {self.rotwidget, self.midwidgets, self.cornerwidgets} do
+	for _, w in ipairs(self.widgets) do
 		dragfunc = w(self, lcorners, gcorners, gx, gy, gs)
 		if dragfunc ~= nil then
 			break
@@ -313,5 +314,9 @@ end
 return function(handles, selection)
 	return setmetatable({
 		handles = handles,
-		selection = selection}, TransformWidget)
+		selection = selection,
+		widgets = {
+			TransformWidget.rotwidget,
+			TransformWidget.midwidgets,
+			TransformWidget.cornerwidgets}}, TransformWidget)
 end

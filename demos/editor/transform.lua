@@ -8,12 +8,12 @@ function Transform:update()
 	local transform = self._transform
 	local sx, sy = self.sx, self.sy
 
-	local sr = transform.sr
-	sr:reset()
-	sr:scale(sx, sy)
-	sr:apply(transform.rest)
+	local stretch = transform.stretch
+	stretch:reset()
+	stretch:scale(sx, sy)
+	stretch:apply(transform.rest)
 
-	local q1, q2 = sr:transformPoint(-self.ox, -self.oy)
+	local q1, q2 = stretch:transformPoint(-self.ox, -self.oy)
 	local draw = transform.draw
 	draw:reset()
 	draw:translate(self.tx, self.ty)
@@ -24,7 +24,7 @@ function Transform:update()
 	full:reset()
 	full:translate(self.tx, self.ty)
 	full:rotate(self.r)
-	full:apply(sr)
+	full:apply(stretch)
 	full:translate(-self.ox, -self.oy)
 end
 
@@ -142,7 +142,7 @@ function Transform:set(t)
 	self.ox = t.ox
 	self.oy = t.oy
 
-	for _, name in ipairs({"full", "draw", "rest", "sr"}) do
+	for _, name in ipairs({"full", "draw", "rest", "stretch"}) do
 		self._transform[name]:setMatrix(
 			t._transform[name]:getMatrix())
 	end
@@ -174,7 +174,7 @@ local function newTransform(tx, ty)
 			full = love.math.newTransform(),
 			draw = love.math.newTransform(),
 			rest = love.math.newTransform(),
-			sr = love.math.newTransform()
+			stretch = love.math.newTransform()
 		}
 	}, Transform)
 	t:update()

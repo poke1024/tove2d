@@ -7,13 +7,21 @@ local handles = require "handles"
 Object = {}
 Object.__index = Object
 
+function Object:transformChanged(scaleChanged)
+	self.transform:update()
+	if scaleChanged then
+		self:refresh()
+	end
+	self._aabb = nil
+end
+
 function Object:refresh()
-	self.scaledgraphics:set(tove.transformed(
-		self.graphics, self.transform:get("sr")))
+	self.scaledGraphics:set(tove.transformed(
+		self.graphics, self.transform:get("stretch")))
 
 	local overlayline = self.overlayline
 	local handleColor = handles.color
-	overlayline:set(self.scaledgraphics)
+	overlayline:set(self.scaledGraphics)
 	for i = 1, overlayline.paths.count do
 		local p = overlayline.paths[i]
 		p:setFillColor()
@@ -25,11 +33,22 @@ end
 function Object:draw()
 	love.graphics.push("transform")
 	love.graphics.applyTransform(self.transform:get("draw"))
-	self.scaledgraphics:draw()
+	self.scaledGraphics:draw()
 	if self.selected then
 		self.overlayline:draw()
 	end
 	love.graphics.pop()
+end
+
+function Object:computeAABB()
+	if self._aabb == nil then
+		local g = self.aaabGraphics
+		local t = self.transform
+		g:set(tove.transformed(
+			self.graphics, t:get("full")), true)
+		self._aabb = {g:computeAABB("exact")}
+	end
+	return unpack(self._aabb)
 end
 
 function Object:changePoints(f)
@@ -59,37 +78,43 @@ function Object:changePoints(f)
 	local sinr = math.sin(r)
 
 	local sx, sy = transform.sx, transform.sy
+	local a, b, _, _, c, d, _, _ = transform:get("rest"):getMatrix()
 
-	transform.tx = tx0 - (ox0 - ox1) * sx * cosr + (oy0 - oy1) * sy * sinr
-	transform.ty = ty0 - (oy0 - oy1) * sy * cosr - (ox0 - ox1) * sx * sinr
+	transform.tx = tx0 +
+		(a*(-ox0 + ox1) + b*(-oy0 + oy1))*sx*cosr +
+		(c*(ox0 - ox1) + d*(oy0 - oy1))*sy*sinr
+	transform.ty = ty0 +
+		(c*(-ox0 + ox1) + d*(-oy0 + oy1))*sy*cosr +
+		(a*(-ox0 + ox1) + b*(-oy0 + oy1))*sx*sinr
 
 	transform:update()
+	self._aabb = nil
 
 	self:refresh()
 end
 
 function Object:setDisplay(...)
-    self.scaledgraphics:setDisplay(...)
+    self.scaledGraphics:setDisplay(...)
 end
 
 function Object:getDisplay()
-	local mode, quality = self.scaledgraphics:getDisplay()
+	local mode, quality = self.scaledGraphics:getDisplay()
 	return mode, quality
 end
 
 function Object:setUsage(what, value)
-	return self.scaledgraphics:setUsage(what, value)
+	return self.scaledGraphics:setUsage(what, value)
 end
 
 function Object:getUsage()
-	return self.scaledgraphics:getUsage()
+	return self.scaledGraphics:getUsage()
 end
 
 Object.new = function(tx, ty, graphics)
 	graphics:setDisplay("mesh", 0.5)
 
-	local scaledgraphics = tove.newGraphics()
-	scaledgraphics:setDisplay("mesh", 0.5)
+	local scaledGraphics = tove.newGraphics()
+	scaledGraphics:setDisplay("mesh", 0.5)
 
 	local overlayline = tove.newGraphics()
 	overlayline:setDisplay("mesh")
@@ -97,7 +122,9 @@ Object.new = function(tx, ty, graphics)
 
 	local object = setmetatable({
 		graphics = graphics,
-		scaledgraphics = scaledgraphics,
+		scaledGraphics = scaledGraphics,
+		aaabGraphics = tove.newGraphics(),
+		_aabb = nil,
 		transform = newTransform(tx, ty),
 		overlayline = overlayline,
 		selected = false

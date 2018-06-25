@@ -82,9 +82,9 @@ function PointsWidget:allcontrolpoints(f)
 end
 
 function PointsWidget:oncurve(ux, uy, gs)
-	local scaledgraphics = self.object.scaledgraphics
-	for i = 1, scaledgraphics.paths.count do
-		local path = scaledgraphics.paths[i]
+	local scaledGraphics = self.object.scaledGraphics
+	for i = 1, scaledGraphics.paths.count do
+		local path = scaledGraphics.paths[i]
 		for j = 1, path.subpaths.count do
 			local traj = path.subpaths[i]
 			local dmax = 2 * gs + path:getLineWidth() * 0.5

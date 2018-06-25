@@ -148,7 +148,7 @@ end
 function Demo:setObjects(objects)
     local g = nil
     for _, o in ipairs(objects) do
-        local og = o.scaledgraphics
+        local og = o.scaledGraphics
         if g == nil then
             g = og:clone() -- clone display settings
             g:clear()

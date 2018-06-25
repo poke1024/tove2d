@@ -90,12 +90,7 @@ function Selection:computeAABB()
 		local x0, y0, x1, y1 = nil, nil, nil, nil
 		local min, max = math.min, math.max
 		for o in pairs(self._objects) do
-			local g = tove.newGraphics()
-			local t = o.transform
-			g:set(tove.transformed(
-				o.graphics, t:get("full")), true)
-			local tx0, ty0, tx1, ty1 =
-				g:computeAABB("exact")
+			local tx0, ty0, tx1, ty1 = o:computeAABB()
 			if x0 == nil then
 				x0, y0, x1, y1 = tx0, ty0, tx1, ty1
 			else
@@ -143,20 +138,16 @@ function Selection:transform(f, ...)
 
 	local tfm = self:getTransform()
 
-	local scaleChanged = f(tfm, ...)
-	tfm:update()
+	local stretchChanged = f(tfm, ...)
+	if n == 1 then
+		self:first():transformChanged(stretchChanged)
+	else
+		tfm:update()
 
-	if self._n > 1 then
 		for o, ot in pairs(self._transforms.objects) do
 			o.transform:set(tfm)
 			o.transform:compose(ot)
-			o.transform:update()
-		end
-	end
-
-	if scaleChanged then
-		for o in pairs(self._objects) do
-			o:refresh()
+			o:transformChanged(stretchChanged)
 		end
 	end
 end
@@ -357,6 +348,9 @@ function Editor:draw()
 		object:draw()
 	end
 	love.graphics.pop()
+	if self.drag and self.drag.active and self.drag.drawfunc then
+		self.drag.drawfunc()
+	end
 
 	if self.widget ~= nil then
 		self.widget:draw(self.transform)
@@ -365,7 +359,7 @@ function Editor:draw()
 	self.toolbar:draw()
 end
 
-function Editor:startdrag(transform, x, y, button, func)
+function Editor:startdrag(transform, x, y, button, func, drawfunc)
     if func == nil then
         return false
     else
@@ -375,7 +369,8 @@ function Editor:startdrag(transform, x, y, button, func)
             starty = y,
 			button = button,
             active = false,
-            func = func
+            func = func,
+			drawfunc = drawfunc
         }
         return true
     end
@@ -425,8 +420,7 @@ function Editor:selectionChanged()
 	self.miterLimitSlider:setValue(path:getMiterLimit())
 	local mode, quality = object:getDisplay()
 	self.radios:select(mode)
-
-	self:updateWidget()
+	self.widgetDirty = true
 end
 
 local function isShiftDown()
@@ -434,16 +428,31 @@ local function isShiftDown()
 		love.keyboard.isDown("rshift")
 end
 
+function Editor:selectRectangle(x0, y0, x1, y1)
+	self:deselect()
+
+	x0, x1 = math.min(x0, x1), math.max(x0, x1)
+	y0, y1 = math.min(y0, y1), math.max(y0, y1)
+
+	for _, o in ipairs(self.objects) do
+		local tx0, ty0, tx1, ty1 = o:computeAABB()
+		if tx0 >= x0 and tx1 <= x1 and ty0 >= y0 and ty1 <= y1 then
+			self.selection:add(o)
+		end
+	end
+
+	self:selectionChanged()
+end
+
 function Editor:mouseselect(x, y, button, clickCount)
 	local shift = isShiftDown()
-	self.clicked = nil
 
 	local objects = self.objects
 	local nobjects = #objects
 	for o = nobjects, 1, -1 do
 		local object = objects[o]
 		local graphics = object.graphics
-		local scaledgraphics = object.scaledgraphics
+		local scaledGraphics = object.scaledGraphics
 		local lx, ly = object.transform:inverseTransformPoint(x, y)
 		local ux, uy = object.transform:inverseUnscaledTransformPoint(x, y)
 		local gs = self.scale
@@ -451,7 +460,7 @@ function Editor:mouseselect(x, y, button, clickCount)
 		for i = 1, graphics.paths.count do
 			local hit = graphics.paths[i]:inside(lx, ly)
 			if not hit then
-				local scaledpath = scaledgraphics.paths[i]
+				local scaledpath = scaledGraphics.paths[i]
 				local offset = scaledpath:getLineWidth() / 2
 				hit = scaledpath:nearest(ux, uy, offset + 2 * gs) ~= false
 			end
@@ -498,6 +507,8 @@ function Editor:mousedown(gx, gy, button, clickCount)
 	local x, y = self.transform:inverseTransformPoint(gx, gy)
 
 	if button == 1 then
+		self.clicked = nil
+
 		if self:startdrag(nil, gx, gy, button,
 			self.toolbar:click(gx, gy)) then
 			return
@@ -519,29 +530,52 @@ function Editor:mousedown(gx, gy, button, clickCount)
 
 		if not self:mouseselect(x, y, button, clickCount) then
 			self:deselect()
-			if button == 1 and clickCount == 1 then
-				local transform0 = self.transform:clone()
+			if clickCount == 1 then
+				local x0, y0, x1, y1 = x, y, x, y
+				local linecolor = self.handles.color
+				local fillcolor = {unpack(linecolor)}
+				table.insert(fillcolor, 0.2)
 				self:startdrag(self.transform, x, y, button,
 					function(mx, my)
-						local t = transform0:clone()
-						t:translate(mx - x, my - y)
-						self.transform = t
+						x1 = mx
+						y1 = my
+						self:selectRectangle(x0, y0, x1, y1)
+					end,
+					function()
+						local gx0, gy0 = self.transform:transformPoint(x0, y0)
+						local gx1, gy1 = self.transform:transformPoint(x1, y1)
+
+						love.graphics.setColor(unpack(fillcolor))
+						love.graphics.polygon("fill", gx0, gy0, gx1, gy0,
+							gx1, gy1, gx0, gy1)
+
+						love.graphics.setColor(unpack(linecolor))
+						love.graphics.line(gx0, gy0, gx1, gy0,
+							gx1, gy1, gx0, gy1, gx0, gy0)
 					end)
 			end
 		end
+	end
+
+	if button == 2 and clickCount == 1 then
+		local transform0 = self.transform:clone()
+		self:startdrag(self.transform, x, y, button,
+			function(mx, my)
+				local t = transform0:clone()
+				t:translate(mx - x, my - y)
+				self.transform = t
+			end)
 	end
 end
 
 function Editor:mousereleased(x, y, button, clickCount)
 	if button == 1 then
 		local tool = self.toolbar:current()
-		if tool == "cursor"
+		if self.clicked ~= nil and tool == "cursor"
 			and (self.drag == nil or not self.drag.active)
 			and not isShiftDown() then
 			self:deselect()
-			if self.clicked ~= nil then
-				self.selection:add(self.clicked)
-			end
+			self.selection:add(self.clicked)
 			self:selectionChanged()
 		end
 
@@ -553,7 +587,10 @@ function Editor:mousereleased(x, y, button, clickCount)
                 self.widget:click(lx, ly, self.scale, button)
             end
 			self.widget:mousereleased(lx, ly, button)
+		elseif self.widgetDirty then
+			self:updateWidget()
 		end
+		self.widgetDirty = false
 		self.drag = nil
 	end
 end
@@ -678,6 +715,7 @@ local editor = setmetatable({
 	objects = {},
 	selection = newSelection(),
 	widget = nil,
+	widgetDirty = false,
 	drag = nil,
 	clicked = nil
 }, Editor)
