@@ -174,7 +174,6 @@ create.mesh = function(self)
 end
 
 create.shader = function(self)
-	local fragLine = true
 	local quality = self._display.quality
 	local shaders = self:shaders(function(path)
 		return _shaders.newPathShader(path, quality)

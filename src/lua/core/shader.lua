@@ -352,6 +352,15 @@ local function parseQuality(q)
 	if type(q) == "table" and type(q.line) == "table" then
 		lineType = q.line.type or "fragment"
 		lineQuality = q.line.quality or 1.0
+		if lineType == "vertex" then
+			if not env.graphics.instancing then
+				tove.warn("falling back on fragment line mode.")
+				lineType = "fragment"
+				lineQuality = 1
+			end
+		elseif lineType ~= "fragment" then
+			error("line type must be \"fragment\" or \"vertex\".")
+		end
 	end
 	return lineType, lineQuality
 end
