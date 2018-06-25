@@ -292,7 +292,7 @@ void Subpath::removeCurve(int curve) {
 	const int i = std::max(curve * 3, 0);
 	float *pts = nsvg.pts;
 
-	if (isEdgeAt(i + 3)) {
+	if (isLineAt(i + 3, 0)) {
 		const int k = i + 3;
 		if (k > 0 && k + 3 < npts) {
 			float *p0 = &pts[2 * (k - 3)];
@@ -489,62 +489,61 @@ void Subpath::move(int k, float x, float y) {
 	const int t = k % 3;
 	if (t == 0) {
 		// not a control point.
-		if (isEdgeAt(k)) {
-			// fix edge lines.
-			if (k - 3 >= 0 || closed) {
-				const bool neighbor = isEdgeAt((k + n - 3) % n);
-				const int u = (k + n - 3) % n;
-				const int v = (k + n - 2) % n;
-				const int w = (k + n - 1) % n;
+		bool fixedLeft = false, fixedRight = false;
 
-				const float dx = pts[2 * u + 0] - x;
-				const float dy = pts[2 * u + 1] - y;
-				pts[2 * w + 0] = x + dx / 3.0;
-				pts[2 * w + 1] = y + dy / 3.0;
-				if (neighbor) {
-					pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
-					pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
-				}
+		// fix edge lines.
+		if ((k - 3 >= 0 || closed) && isLineAt(k, -1)) {
+			const bool neighbor = isLineAt((k + n - 3) % n, 1);
+			const int u = (k + n - 3) % n;
+			const int v = (k + n - 2) % n;
+			const int w = (k + n - 1) % n;
+
+			const float dx = pts[2 * u + 0] - x;
+			const float dy = pts[2 * u + 1] - y;
+			pts[2 * w + 0] = x + dx / 3.0;
+			pts[2 * w + 1] = y + dy / 3.0;
+			if (neighbor) {
+				pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
+				pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
 			}
-			if (k + 3 < n || closed) {
-				const bool neighbor = isEdgeAt((k + 3) % n);
-				const int u = (k + 3) % n;
-				const int v = (k + 2) % n;
-				const int w = (k + 1) % n;
+			fixedLeft = true;
+		}
+		if ((k + 3 < n || closed) && isLineAt(k, 1)) {
+			const bool neighbor = isLineAt((k + 3) % n, -1);
+			const int u = (k + 3) % n;
+			const int v = (k + 2) % n;
+			const int w = (k + 1) % n;
 
-				const float dx = pts[2 * u + 0] - x;
-				const float dy = pts[2 * u + 1] - y;
-				pts[2 * w + 0] = x + dx / 3.0;
-				pts[2 * w + 1] = y + dy / 3.0;
-				if (neighbor) {
-					pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
-					pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
-				}
+			const float dx = pts[2 * u + 0] - x;
+			const float dy = pts[2 * u + 1] - y;
+			pts[2 * w + 0] = x + dx / 3.0;
+			pts[2 * w + 1] = y + dy / 3.0;
+			if (neighbor) {
+				pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
+				pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
 			}
+			fixedRight = true;
+		}
 
-			pts[2 * k + 0] = x;
-			pts[2 * k + 1] = y;
-		} else {
-			// move adjacent control points.
-			const float qx = pts[2 * k + 0];
-			const float qy = pts[2 * k + 1];
+		// move adjacent control points.
+		const float qx = pts[2 * k + 0];
+		const float qy = pts[2 * k + 1];
 
-			pts[2 * k + 0] = x;
-			pts[2 * k + 1] = y;
+		pts[2 * k + 0] = x;
+		pts[2 * k + 1] = y;
 
-			const float dx = x - qx;
-			const float dy = y - qy;
+		const float dx = x - qx;
+		const float dy = y - qy;
 
-			if (k - 1 >= 0 || closed) {
-				const int u = (k + n - 1) % n;
-				pts[2 * u + 0] += dx;
-				pts[2 * u + 1] += dy;
-			}
-			if (k + 1 < n || closed) {
-				const int u = (k + 1) % n;
-				pts[2 * u + 0] += dx;
-				pts[2 * u + 1] += dy;
-			}
+		if (!fixedLeft && (k - 1 >= 0 || closed)) {
+			const int u = (k + n - 1) % n;
+			pts[2 * u + 0] += dx;
+			pts[2 * u + 1] += dy;
+		}
+		if (!fixedRight && (k + 1 < n || closed)) {
+			const int u = (k + 1) % n;
+			pts[2 * u + 0] += dx;
+			pts[2 * u + 1] += dy;
 		}
 	} else {
 		// moving a control point.
@@ -602,14 +601,34 @@ bool Subpath::isCollinear(int u, int v, int w) const {
 	return std::abs(Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By)) < 0.1;
 }
 
-bool Subpath::isEdgeAt(int k) const {
+bool Subpath::isLineAt(int k, int dir) const {
+	if (k % 3 != 0) {
+		return false; // not a knot point
+	}
+
+	if (nsvg.npts <= 3) {
+		return true;
+	}
+
 	if (!isClosed()) {
-		if (k < 3 || k + 3 >= nsvg.npts) {
+		if (k < 0 || k >= nsvg.npts) {
 			return true;
+		} else if (k < 3) {
+			return dir >= 0 ? isCollinear(k, k + 1, k + 3) : true;
+		} else if (k + 3 >= nsvg.npts) {
+			return dir <= 0 ? isCollinear(k - 3, k - 1, k) : true;
 		}
 	}
-	return isCollinear(k - 3, k - 1, k) &&
-		isCollinear(k, k + 1, k + 3);
+
+	bool r = false;
+	if (dir <= 0) {
+		r = r || isCollinear(k - 3, k - 1, k);
+	}
+	if (dir >= 0) {
+		r = r || isCollinear(k, k + 1, k + 3);
+	}
+
+	return r;
 }
 
 float Subpath::getCommandValue(int commandIndex, int what) {

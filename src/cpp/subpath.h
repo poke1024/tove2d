@@ -62,12 +62,6 @@ private:
 		return nsvg.pts + 2 * index;
 	}
 
-	inline void commit() const {
-		if (dirty & DIRTY_COMMANDS) {
-			updateCommands();
-		}
-	}
-
 	void updateCommands() const;
 
     bool isLoop() const;
@@ -91,6 +85,12 @@ public:
 
 	inline ~Subpath() {
 		free(nsvg.pts);
+	}
+
+    inline void commit() const {
+		if (dirty & DIRTY_COMMANDS) {
+			updateCommands();
+		}
 	}
 
 	int moveTo(float x, float y);
@@ -159,7 +159,7 @@ public:
 	void setLovePoints(const float *pts, int npts);
 
     bool isCollinear(int u, int v, int w) const;
-    bool isEdgeAt(int k) const;
+    bool isLineAt(int k, int dir) const;
 
 	inline float getCommandPoint(const Command &command, int what) {
 		const float *p = nsvg.pts + 2 * command.index;

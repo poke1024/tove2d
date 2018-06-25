@@ -255,6 +255,10 @@ ToveSubpathRef CloneSubpath(ToveSubpathRef trajectory) {
 	return trajectories.make(deref(trajectory));
 }
 
+EXPORT void SubpathCommit(ToveSubpathRef trajectory) {
+	deref(trajectory)->commit();
+}
+
 void ReleaseSubpath(ToveSubpathRef trajectory) {
 	trajectories.release(trajectory);
 }
@@ -269,6 +273,10 @@ int SubpathGetNumPoints(ToveSubpathRef trajectory) {
 
 bool SubpathIsClosed(ToveSubpathRef trajectory) {
 	return deref(trajectory)->isClosed();
+}
+
+void SubpathSetIsClosed(ToveSubpathRef trajectory, bool closed) {
+	deref(trajectory)->setIsClosed(closed);
 }
 
 const float *SubpathGetPoints(ToveSubpathRef trajectory) {
@@ -369,8 +377,8 @@ int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y) {
 	return deref(trajectory)->mould(t, x, y);
 }
 
-bool SubpathIsEdgeAt(ToveSubpathRef trajectory, int k) {
-	return deref(trajectory)->isEdgeAt(k - 1);
+bool SubpathIsLineAt(ToveSubpathRef trajectory, int k, int dir) {
+	return deref(trajectory)->isLineAt(k - 1, dir);
 }
 
 void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y) {

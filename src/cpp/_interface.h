@@ -231,6 +231,7 @@ EXPORT ToveSubpathRef CloneSubpath(ToveSubpathRef trajectory);
 EXPORT int SubpathGetNumCurves(ToveSubpathRef trajectory);
 EXPORT int SubpathGetNumPoints(ToveSubpathRef trajectory);
 EXPORT bool SubpathIsClosed(ToveSubpathRef trajectory);
+EXPORT void SubpathSetIsClosed(ToveSubpathRef trajectory, bool closed);
 EXPORT const float *SubpathGetPoints(ToveSubpathRef trajectory);
 EXPORT void SubpathSetPoint(ToveSubpathRef trajectory, int index, float x, float y);
 EXPORT void SubpathSetPoints(ToveSubpathRef trajectory, const float *pts, int npts);
@@ -258,8 +259,9 @@ EXPORT ToveNearest SubpathNearest(ToveSubpathRef trajectory, float x, float y, f
 EXPORT int SubpathInsertCurveAt(ToveSubpathRef trajectory, float t);
 EXPORT void SubpathRemoveCurve(ToveSubpathRef trajectory, int curve);
 EXPORT int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y);
-EXPORT bool SubpathIsEdgeAt(ToveSubpathRef trajectory, int k);
+EXPORT bool SubpathIsLineAt(ToveSubpathRef trajectory, int k, int dir);
 EXPORT void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y);
+EXPORT void SubpathCommit(ToveSubpathRef trajectory);
 EXPORT void ReleaseSubpath(ToveSubpathRef trajectory);
 
 EXPORT TovePathRef NewPath(const char *d);

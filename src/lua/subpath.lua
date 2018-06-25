@@ -52,7 +52,7 @@ end
 
 
 local Subpath = {}
-Subpath.__index = function (self, key)
+Subpath.__index = function(self, key)
 	if key == "curves" then
 		return setmetatable({traj = self}, Curves)
 	elseif key == "points" then
@@ -61,6 +61,11 @@ Subpath.__index = function (self, key)
 		return lib.SubpathIsClosed(self)
 	else
 		return Subpath[key]
+	end
+end
+Subpath.__newindex = function(self, key, value)
+	if key == "isClosed" then
+		lib.SubpathSetIsClosed(self, value)
 	end
 end
 
@@ -84,10 +89,33 @@ Subpath.removeCurve = lib.SubpathRemoveCurve
 Subpath.mould = lib.SubpathMould
 Subpath.move = lib.SubpathMove
 Subpath.setPoints = lib.SubpathSetPoints
+Subpath.commit = lib.SubpathCommit
 Subpath.moveTo = lib.SubpathMoveTo
 Subpath.lineTo = lib.SubpathLineTo
 Subpath.curveTo = lib.SubpathCurveTo
-Subpath.isEdgeAt = lib.SubpathIsEdgeAt
+
+function Subpath:arc(x, y, r, a1, a2, ccw)
+	lib.SubpathArc(self, x, y, r, a1, a2, ccw or false)
+end
+
+function Subpath:drawRect(x, y, w, h, rx, ry)
+	return newCommand(self, lib.SubpathDrawRect(
+		self, x, y, w, h or w, rx or 0, ry or 0))
+end
+
+function Subpath:drawCircle(x, y, r)
+	return newCommand(self, lib.SubpathDrawEllipse(
+		self, x, y, r, r))
+end
+
+function Subpath:drawEllipse(x, y, rx, ry)
+	return newCommand(self, lib.SubpathDrawEllipse(
+		self, x, y, rx, ry or rx))
+end
+
+function Subpath:isLineAt(k, dir)
+	return lib.SubpathIsLineAt(self, k, dir or 0)
+end
 
 ffi.metatype("ToveSubpathRef", Subpath)
 
