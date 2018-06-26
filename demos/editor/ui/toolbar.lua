@@ -13,7 +13,8 @@ setmetatable(Toolbar, {__index = Panel})
 local items = {
     "thirdparty/cursor",
     "thirdparty/location",
-    "thirdparty/pencil"
+    "thirdparty/pencil",
+    "circle"
 }
 
 function Toolbar:select(name)

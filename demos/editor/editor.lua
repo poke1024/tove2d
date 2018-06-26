@@ -3,9 +3,10 @@
 
 local Object = require "object"
 
-local newTransformWidget = require "widgets/transform"
-local newCurvesWidget = require "widgets/curves"
-local newPenWidget = require "widgets/pen"
+local newTransformWidget = require "tools/transform"
+local newCurvesWidget = require "tools/curves"
+local newPenWidget = require "tools/pen"
+local newEllipseTool = require "tools/ellipse"
 
 local newTransform = require "transform"
 
@@ -382,6 +383,7 @@ function Editor:deselect()
 end
 
 function Editor:updateWidget()
+	self.widgetDirty = false
 	local tool = self.toolbar:current()
 	if tool == "cursor" then
 		if self.selection:empty() then
@@ -401,6 +403,8 @@ function Editor:updateWidget()
 		end
 	elseif tool == "pencil" then
 		self.widget = newPenWidget(self)
+	elseif tool == "circle" then
+		self.widget = newEllipseTool(self)
 	else
 		self.widget = nil
 	end
@@ -609,6 +613,7 @@ function Editor:keypressed(key, scancode, isrepeat)
 			self.selection:add(o)
 		end
 		self:selectionChanged()
+		self:updateWidget()
     elseif self.widget ~= nil then
         if not self.widget:keypressed(key, scancode, isrepeat) then
 			if key == "backspace" then
@@ -652,6 +657,15 @@ function Editor:addObject(object)
     table.insert(self.objects, object)
 end
 
+function Editor:removeObject(object)
+	for i, o in ipairs(self.objects) do
+		if o == object then
+			table.remove(self.objects, i)
+			break
+		end
+	end
+end
+
 function Editor:setDisplay(...)
 	for o in self.selection:objects() do
 		o:setDisplay(...)
@@ -674,6 +688,49 @@ function Editor:getUsage()
 	if not self.selection:empty() then
         return self.selection:first():getUsage()
     end
+end
+
+function Editor:newObjectWithPath(mode)
+	local object = Object.new(0, 0, tove.newGraphics())
+	table.insert(self.objects, object)
+
+    local subpath = tove.newSubpath()
+    local path = tove.newPath()
+    path:addSubpath(subpath)
+    object.graphics:addPath(path)
+
+    local dabs = self.colorDabs
+    local path = object.graphics.paths[1]
+    local line = dabs:getPaint("line")
+    local fill = dabs:getPaint("fill")
+
+	local lineWidth = self.lineWidthSlider:getValue()
+	if mode == "line" then
+		lineWidth = math.max(lineWidth, 1)
+	end
+	if lineWidth < 0.1 then
+		line = nil
+	end
+
+	if mode == "line" then
+		fill = nil
+	end
+    if line == nil and fill == nil then
+		if mode == "line" then
+			line = tove.newColor(0.5, 0.5, 0.5)
+		else
+        	fill = tove.newColor(0.5, 0.5, 0.5)
+		end
+    end
+
+    path:setLineColor(line)
+    path:setLineWidth(lineWidth)
+    path:setFillColor(fill)
+
+	self.selection:clear()
+	self.selection:add(object)
+
+	return object
 end
 
 function Editor:wheelmoved(wx, wy)

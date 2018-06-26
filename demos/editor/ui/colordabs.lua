@@ -13,6 +13,10 @@ local other = {
     line = "fill"
 }
 
+function ColorDabs:getPaint(type)
+    return self.paint[type]
+end
+
 function ColorDabs:update(r, g, b)
     if r == nil then
         self.paint[self.active] = nil

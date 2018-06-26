@@ -69,6 +69,10 @@ function Slider:setValue(value)
     self.value = value
 end
 
+function Slider:getValue()
+    return self.value
+end
+
 function Slider:init()
     self.xpad = 0
     self.ypad = 0

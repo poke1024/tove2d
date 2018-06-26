@@ -51,7 +51,7 @@ function Object:computeAABB()
 	return unpack(self._aabb)
 end
 
-function Object:changePoints(f)
+function Object:changePoints(f, ...)
 	local graphics = self.graphics
 	local transform = self.transform
 
@@ -62,7 +62,7 @@ function Object:changePoints(f)
 	local ox0 = transform.ox
 	local oy0 = transform.oy
 
-	f()
+	f(...)
 
 	x0, y0, x1, y1 = graphics:computeAABB()
 	local ox1 = (x0 + x1) / 2

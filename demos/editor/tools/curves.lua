@@ -51,27 +51,25 @@ function PointsWidget:allcontrolpoints(f)
 
 			local pts = traj.points
 			for k = 1, traj.points.count, 3 do
-				if not traj:isEdgeAt(k) then
-					local isActive = false
-					if dragging ~= nil and dragging.path == i and
-						dragging.traj == j and dragging.pt0 == k then
-						isActive = true
-					end
+				local isActive = false
+				if dragging ~= nil and dragging.path == i and
+					dragging.traj == j and dragging.pt0 == k then
+					isActive = true
+				end
 
-					if isActive or isControlPointVisible(
-						selected, traj, i, j, k - 1) then
-						local pt1 = pts[k - 1]
-						if f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y) then
-							return true
-						end
+				if not traj:isLineAt(k, -1) and (isActive or
+					isControlPointVisible(selected, traj, i, j, k - 1)) then
+					local pt1 = pts[k - 1]
+					if f(traj, pts, i, j, k, k - 1, pt1.x, pt1.y) then
+						return true
 					end
+				end
 
-					if isActive or isControlPointVisible(
-						selected, traj, i, j, k + 1) then
-						local pt2 = pts[k + 1]
-						if f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y) then
-							return true
-						end
+				if not traj:isLineAt(k, 1) and (isActive or
+					isControlPointVisible(selected, traj, i, j, k + 1)) then
+					local pt2 = pts[k + 1]
+					if f(traj, pts, i, j, k, k + 1, pt2.x, pt2.y) then
+						return true
 					end
 				end
 			end
@@ -132,7 +130,7 @@ function PointsWidget:draw(gtransform)
 	local selected = self.selected
 
 	self:allpoints(function(traj, pts, i, j, k, lx, ly)
-		local type = traj:isEdgeAt(k) and "edge" or "smooth"
+		local type = traj:isLineAt(k) and "edge" or "smooth"
 		local h
 		if selected ~= nil and selected.path == i and selected.traj == j and selected.pt == k then
 			h = handles.knots.selected
@@ -149,12 +147,14 @@ function PointsWidget:createDragPointFunc()
 	local graphics = self.object.graphics
 	local dragging = self.dragging
 
-	return function(gx, gy)
-		self.object:changePoints(function()
-			local mx, my = transform:inverseTransformPoint(gx, gy)
-			local traj = graphics.paths[dragging.path].subpaths[dragging.traj]
-			traj:move(dragging.pt, mx, my)
-		end)
+	local modify = function(x, y)
+		local mx, my = transform:inverseTransformPoint(x, y)
+		local traj = graphics.paths[dragging.path].subpaths[dragging.traj]
+		traj:move(dragging.pt, mx, my)
+	end
+
+	return function(x, y)
+		self.object:changePoints(modify, x, y)
 	end
 end
 
@@ -173,13 +173,21 @@ function PointsWidget:createMouldCurveFunc(i, j, t)
 
 		traj:mould(t, mx, my)
 
-		local prev = traj.curves[ci - 1]
-		prev.cp2x, prev.cp2y = mirrorControlPoint(
-			cp1x, cp1y, c1.cp1x, c1.cp1y, c1.x0, c1.y0, prev.cp2x, prev.cp2y)
+		local k = 1 + 3 * math.floor(t)
 
-		local next = traj.curves[ci + 1]
-		next.cp1x, next.cp1y = mirrorControlPoint(
-			cp2x, cp2y, c1.cp2x, c1.cp2y, c1.x, c1.y, next.cp1x, next.cp1y)
+		if not traj:isLineAt(k, -1) then
+			local prev = traj.curves[ci - 1]
+			prev.cp2x, prev.cp2y = mirrorControlPoint(
+				cp1x, cp1y, c1.cp1x, c1.cp1y,
+				c1.x0, c1.y0, prev.cp2x, prev.cp2y)
+		end
+
+		if not traj:isLineAt(k + 3, 1) then
+			local next = traj.curves[ci + 1]
+			next.cp1x, next.cp1y = mirrorControlPoint(
+				cp2x, cp2y, c1.cp2x, c1.cp2y,
+				c1.x, c1.y, next.cp1x, next.cp1y)
+		end
 
 		self.object:refresh()
 	end
