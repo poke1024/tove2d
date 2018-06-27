@@ -117,6 +117,14 @@ function Subpath:isLineAt(k, dir)
 	return lib.SubpathIsLineAt(self, k, dir or 0)
 end
 
+function Subpath:makeFlat(k, dir)
+	return lib.SubpathMakeFlat(self, k, dir or 0)
+end
+
+function Subpath:makeSmooth(k, a, dir)
+	return lib.SubpathMakeSmooth(self, k, dir or 0, a or 0.5)
+end
+
 ffi.metatype("ToveSubpathRef", Subpath)
 
 tove.newSubpath = function()

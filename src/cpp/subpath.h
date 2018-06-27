@@ -106,6 +106,9 @@ public:
     int mould(float t, float x, float y);
     void move(int k, float x, float y);
 
+    void makeFlat(int k, int dir);
+    void makeSmooth(int k, int dir, float a = 0.5);
+
 	inline float getCurveValue(int curve, int index) const {
         commit();
         const int npts = nsvg.npts;

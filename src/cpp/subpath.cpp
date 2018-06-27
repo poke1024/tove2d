@@ -470,6 +470,156 @@ static void mirrorControlPoint(float qx, float qy,
 	cp1[1] = p0y + std::sin(cp1phi) * cp1mag;
 }
 
+void Subpath::makeFlat(int k, int dir) {
+	if (k % 3 != 0) {
+		return; // not a knot point
+	}
+
+	const bool closed = isClosed();
+	const int n = nsvg.npts - (closed ? 1 : 0);
+
+	if (n < 3 || k < 0 || k >= n) {
+		return;
+	}
+
+	commit();
+	float *pts = nsvg.pts;
+
+	const float x = pts[2 * k + 0];
+	const float y = pts[2 * k + 1];
+
+	if (dir <= 0 && (k - 3 >= 0 || closed)) {
+		const int u = (k + n - 3) % n;
+		const int w = (k + n - 1) % n;
+
+		const float dx = pts[2 * u + 0] - x;
+		const float dy = pts[2 * u + 1] - y;
+		pts[2 * w + 0] = x + dx / 3.0;
+		pts[2 * w + 1] = y + dy / 3.0;
+	}
+
+	if (dir >= 0 && (k + 3 < n || closed)) {
+		const int u = (k + 3) % n;
+		const int w = (k + 1) % n;
+
+		const float dx = pts[2 * u + 0] - x;
+		const float dy = pts[2 * u + 1] - y;
+		pts[2 * w + 0] = x + dx / 3.0;
+		pts[2 * w + 1] = y + dy / 3.0;
+	}
+
+	fixLoop();
+	changed(CHANGED_POINTS);
+}
+
+
+inline float distance(float x1, float y1, float x2, float y2) {
+	const float dx = x1 - x2;
+	const float dy = y1 - y2;
+	return std::sqrt(dx * dx + dy * dy);
+}
+
+void Subpath::makeSmooth(int k, int dir, float a) {
+	// Catmull-Rom smoothing, adapted from paper.js's
+	// Segment.smooth.
+
+	if (k % 3 != 0) {
+		return; // not a knot point
+	}
+
+	const bool closed = isClosed();
+	const int n = nsvg.npts - (closed ? 1 : 0);
+
+	if (closed) {
+		k = (k % n + n) % n;
+	}
+
+	if (n < 3 || k < 0 || k >= n) {
+		return;
+	}
+
+	commit();
+	float *pts = nsvg.pts;
+
+	const float p1x = pts[2 * k + 0];
+	const float p1y = pts[2 * k + 1];
+
+	const bool prev = closed || k - 3 >= 0;
+	const bool next = closed || k + 3 < n;
+
+	float p0x, p0y, p2x, p2y;
+
+	if (prev) {
+		const int u = (k + n - 3) % n;
+		p0x = pts[2 * u + 0];
+		p0y = pts[2 * u + 1];
+	} else {
+		p0x = p1x;
+		p0y = p1y;
+	}
+
+	if (next) {
+		const int u = (k + 3) % n;
+		p2x = pts[2 * u + 0];
+		p2y = pts[2 * u + 1];
+	} else {
+		p2x = p1x;
+		p2y = p1y;
+	}
+
+	// hacky: to provide smoothing for start and end
+	// of non-closed paths, we mirror the adjacent
+	// knot's control point.
+	if (!prev && next) {
+		const int u = (k + 2) % n;
+		p0x = p1x - (pts[2 * u + 0] - p1x);
+		p0y = p1y - (pts[2 * u + 1] - p1y);
+	} else if (prev && !next) {
+		const int u = (k + n - 2) % n;
+		p2x = p1x - (pts[2 * u + 0] - p1x);
+		p2y = p1y - (pts[2 * u + 1] - p1y);
+	}
+
+	const float d1 = distance(p0x, p0y, p1x, p1y);
+	const float d2 = distance(p1x, p1y, p2x, p2y);
+
+	const float d1_a = std::pow(d1, a);
+    const float d1_2a = d1_a * d1_a;
+    const float d2_a = std::pow(d2, a);
+    const float d2_2a = d2_a * d2_a;
+
+	if (dir <= 0 && prev) {
+		const float A = 2 * d2_2a + 3 * d2_a * d1_a + d1_2a;
+		const float N = 3 * d2_a * (d2_a + d1_a);
+		if (std::abs(N) > 1e-6) {
+			const int w = (k + n - 1) % n;
+			pts[w * 2 + 0] =
+				(d2_2a * p0x + A * p1x - d1_2a * p2x) / N;
+			pts[w * 2 + 1] =
+				(d2_2a * p0y + A * p1y - d1_2a * p2y) / N;
+		} else {
+			makeFlat(k, -1);
+		}
+	}
+
+	if (dir >= 0 && next) {
+		const float A = 2 * d1_2a + 3 * d1_a * d2_a + d2_2a;
+		const float N = 3 * d1_a * (d1_a + d2_a);
+		if (std::abs(N) > 1e-6) {
+			const int w = (k + 1) % n;
+			pts[w * 2 + 0] =
+				(d1_2a * p2x + A * p1x - d2_2a * p0x) / N;
+			pts[w * 2 + 1] =
+				(d1_2a * p2y + A * p1y - d2_2a * p0y) / N;
+		} else {
+			makeFlat(k, 1);
+		}
+	}
+
+	fixLoop();
+	changed(CHANGED_POINTS);
+}
+
 void Subpath::move(int k, float x, float y) {
 	const bool closed = isClosed();
 	const int n = nsvg.npts - (closed ? 1 : 0);
@@ -483,64 +633,51 @@ void Subpath::move(int k, float x, float y) {
 	}
 
 	commit();
-
 	float *pts = nsvg.pts;
 
 	const int t = k % 3;
 	if (t == 0) {
 		// not a control point.
-		bool fixedLeft = false, fixedRight = false;
+		const int k0 = (k + n - 3) % n;
+		const int k1 = k;
+		const int k2 = (k + 3) % n;
 
-		// fix edge lines.
-		if ((k - 3 >= 0 || closed) && isLineAt(k, -1)) {
-			const bool neighbor = isLineAt((k + n - 3) % n, 1);
-			const int u = (k + n - 3) % n;
-			const int v = (k + n - 2) % n;
-			const int w = (k + n - 1) % n;
+		const bool f0 = isLineAt(k, -1);
+		const bool f1 = f0 && (closed || k - 3 >= 0) && isLineAt(k0, 1);
 
-			const float dx = pts[2 * u + 0] - x;
-			const float dy = pts[2 * u + 1] - y;
-			pts[2 * w + 0] = x + dx / 3.0;
-			pts[2 * w + 1] = y + dy / 3.0;
-			if (neighbor) {
-				pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
-				pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
-			}
-			fixedLeft = true;
-		}
-		if ((k + 3 < n || closed) && isLineAt(k, 1)) {
-			const bool neighbor = isLineAt((k + 3) % n, -1);
-			const int u = (k + 3) % n;
-			const int v = (k + 2) % n;
-			const int w = (k + 1) % n;
+		const bool f2 = isLineAt(k, 1);
+		const bool f3 = f2 && (closed || k + 3 < n) && isLineAt(k2, -1);
 
-			const float dx = pts[2 * u + 0] - x;
-			const float dy = pts[2 * u + 1] - y;
-			pts[2 * w + 0] = x + dx / 3.0;
-			pts[2 * w + 1] = y + dy / 3.0;
-			if (neighbor) {
-				pts[2 * v + 0] = pts[2 * u + 0] - dx / 3.0;
-				pts[2 * v + 1] = pts[2 * u + 1] - dy / 3.0;
-			}
-			fixedRight = true;
-		}
-
-		// move adjacent control points.
 		const float qx = pts[2 * k + 0];
 		const float qy = pts[2 * k + 1];
 
 		pts[2 * k + 0] = x;
 		pts[2 * k + 1] = y;
 
+		// fix edge lines.
+		if (f0) {
+			makeFlat(k1, -1);
+			if (f1) {
+				makeFlat(k0, 1);
+			}
+		}
+		if (f2) {
+			makeFlat(k1, 1);
+			if (f3) {
+				makeFlat(k2, -1);
+			}
+		}
+
+		// move adjacent control points.
 		const float dx = x - qx;
 		const float dy = y - qy;
 
-		if (!fixedLeft && (k - 1 >= 0 || closed)) {
+		if (!f0 && (closed || k - 1 >= 0)) {
 			const int u = (k + n - 1) % n;
 			pts[2 * u + 0] += dx;
 			pts[2 * u + 1] += dy;
 		}
-		if (!fixedRight && (k + 1 < n || closed)) {
+		if (!f2 && (closed || k + 1 < n)) {
 			const int u = (k + 1) % n;
 			pts[2 * u + 0] += dx;
 			pts[2 * u + 1] += dy;
@@ -564,7 +701,6 @@ void Subpath::move(int k, float x, float y) {
 	}
 
 	fixLoop();
-
 	changed(CHANGED_POINTS);
 }
 
@@ -606,16 +742,17 @@ bool Subpath::isLineAt(int k, int dir) const {
 		return false; // not a knot point
 	}
 
-	if (nsvg.npts <= 3) {
+	const int n = nsvg.npts;
+	if (n <= 3) {
 		return true;
 	}
 
 	if (!isClosed()) {
-		if (k < 0 || k >= nsvg.npts) {
+		if (k < 0 || k >= n) {
 			return true;
 		} else if (k < 3) {
 			return dir >= 0 ? isCollinear(k, k + 1, k + 3) : true;
-		} else if (k + 3 >= nsvg.npts) {
+		} else if (k + 3 >= n) {
 			return dir <= 0 ? isCollinear(k - 3, k - 1, k) : true;
 		}
 	}
@@ -1125,7 +1262,10 @@ ToveVec2 Subpath::getNormal(float globalt) const {
 	}
 }
 
-inline float distance(const coeff *bx, const coeff *by, float t, float x, float y) {
+inline float distance(
+	const coeff *bx, const coeff *by, float t,
+	float x, float y) {
+
 	float t2 = t * t;
 	float t3 = t2 * t;
 	float dx = dot4(bx, t3, t2, t, 1) - x;

@@ -260,6 +260,8 @@ EXPORT int SubpathInsertCurveAt(ToveSubpathRef trajectory, float t);
 EXPORT void SubpathRemoveCurve(ToveSubpathRef trajectory, int curve);
 EXPORT int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y);
 EXPORT bool SubpathIsLineAt(ToveSubpathRef trajectory, int k, int dir);
+EXPORT void SubpathMakeFlat(ToveSubpathRef trajectory, int k, int dir);
+EXPORT void SubpathMakeSmooth(ToveSubpathRef trajectory, int k, int dir, float a);
 EXPORT void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y);
 EXPORT void SubpathCommit(ToveSubpathRef trajectory);
 EXPORT void ReleaseSubpath(ToveSubpathRef trajectory);

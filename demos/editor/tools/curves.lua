@@ -259,16 +259,34 @@ function PointsWidget:mousereleased()
 	self.dragging = nil
 end
 
+function PointsWidget:getSelectedSubpath()
+	local object, selected = self.object, self.selected
+	return object.graphics.paths[selected.path].subpaths[selected.traj]
+end
+
 function PointsWidget:keypressed(key)
 	if key == "backspace" then
-		local selected = self.selected
+		local object, selected = self.object, self.selected
 		if selected ~= nil then
 			if (selected.pt - 1) % 3 == 0 then
-				self.object:changePoints(function()
-					local traj = self.object.graphics.paths[selected.path].subpaths[selected.traj]
-					traj:removeCurve((selected.pt - 1) / 3)
+				object:changePoints(function()
+					local subpath = self:getSelectedSubpath()
+					subpath:removeCurve((selected.pt - 1) / 3)
 				end)
 			end
+		end
+		return true
+	elseif key == "s" and self.selected ~= nil then
+		local object, selected = self.object, self.selected
+		if (selected.pt - 1) % 3 == 0 then
+			object:changePoints(function()
+				local subpath = self:getSelectedSubpath()
+				if subpath:isLineAt(selected.pt) then
+					subpath:makeSmooth(selected.pt)
+				else
+					subpath:makeFlat(selected.pt)
+				end
+			end)
 		end
 		return true
 	end

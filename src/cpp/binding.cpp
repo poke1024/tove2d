@@ -381,6 +381,14 @@ bool SubpathIsLineAt(ToveSubpathRef trajectory, int k, int dir) {
 	return deref(trajectory)->isLineAt(k - 1, dir);
 }
 
+void SubpathMakeFlat(ToveSubpathRef trajectory, int k, int dir) {
+	deref(trajectory)->makeFlat(k - 1, dir);
+}
+
+void SubpathMakeSmooth(ToveSubpathRef trajectory, int k, int dir, float a) {
+	deref(trajectory)->makeSmooth(k - 1, dir, a);	
+}
+
 void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y) {
 	return deref(trajectory)->move(k - 1, x, y);
 }
