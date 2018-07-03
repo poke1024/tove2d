@@ -14,24 +14,30 @@
 
 #include "triangles.h"
 #include "paint.h"
-#include "flatten.h"
+#include "utils.h"
 
-typedef struct {
-	float *vertices;
-	uint8_t *colors;
-	int nvertices;
-} ToveMeshRecord;
+class FixedFlattener;
 
 class AbstractMesh {
 protected:
-	ToveMeshRecord meshData;
-	TriangleCache triangles;
+	void *mVertices;
+	uint32_t mVertexCount;
+	const uint16_t mStride;
+	TriangleCache mTriangles;
+
+	void reserve(uint32_t n);
 
 public:
-	AbstractMesh();
+	AbstractMesh(uint16_t stride);
 	~AbstractMesh();
 
-	float *vertices(int from, int n);
+	inline Vertices vertices(int from, int n) {
+		if (from + n > mVertexCount) {
+			reserve(from + n);
+		}
+		return Vertices(mVertices, mStride, from);
+	}
+
 	void cache(bool keyframe);
 	void clear();
 
@@ -52,32 +58,34 @@ public:
 	void add(const ClipperPaths &paths, float scale,
 		const MeshPaint &paint, const ToveHoles holes);
 
-	const ToveMeshRecord &getData() const;
 	ToveTriangles getTriangles() const;
 
 	inline int getVertexCount() const {
-		return meshData.nvertices;
+		return mVertexCount;
 	}
-	inline void copyPositions(void *buffer, size_t bufferByteSize) {
-		const size_t size = sizeof(float) * meshData.nvertices * 2;
+
+	inline void copyVertexData(void *buffer, size_t bufferByteSize) {
+		const size_t size = mStride * mVertexCount;
 		assert(bufferByteSize == size);
-		std::memcpy(buffer, meshData.vertices, size);
+		std::memcpy(buffer, mVertices, size);
 	}
-	void copyPositionsAndColors(void *buffer, size_t bufferByteSize);
 
 	inline bool checkTriangles(bool &triangleCacheFlag) {
-		return triangles.check(meshData.vertices, triangleCacheFlag);
+		return mTriangles.check(
+			Vertices(mVertices, mStride), triangleCacheFlag);
 	}
 };
 
 class Mesh : public AbstractMesh {
 public:
+	Mesh();
 	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale);
 	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint);
 };
 
 class ColorMesh : public AbstractMesh {
 public:
+	ColorMesh();
 	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale);
 	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint);
 };

@@ -15,6 +15,8 @@
 #include "../utils.h"
 #include "../../thirdparty/nanosvg.h"
 #include "turtle.h"
+#include "../path.h"
+#include "../subpath.h"
 
 AdaptiveFlattener::AdaptiveFlattener(
 	float scale, const ToveTesselationQuality *quality) : scale(scale) {
@@ -262,7 +264,8 @@ void AdaptiveFlattener::recursive(
 	recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, level + 1);
 }
 
-ClipperPath AdaptiveFlattener::flatten(const NSVGpath *path) const {
+ClipperPath AdaptiveFlattener::flatten(const SubpathRef &subpath) const {
+	NSVGpath *path = &subpath->nsvg;
 	ClipperPath result;
 
 	const ClipperPoint p0 = ClipperPoint(
@@ -341,14 +344,16 @@ inline ClipperLib::EndType endType(int t, bool closed) {
 	}
 }
 
-void AdaptiveFlattener::operator()(const NSVGshape *shape, Tesselation &tesselation) const {
-	NSVGpath *path = shape->paths;
+void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation) const {
+	const int n = path->getNumSubpaths();
 	bool closed = true;
-	while (path) {
-		tesselation.fill.push_back(flatten(path));
-		closed = closed && path->closed;
-		path = path->next;
+	for (int i = 0; i < n; i++) {
+		const auto subpath = path->getSubpath(i);
+		tesselation.fill.push_back(flatten(subpath));
+		closed = closed && subpath->isClosed();
 	}
+
+	NSVGshape * const shape = &path->nsvg;
 
 	ClipperLib::PolyFillType fillType;
 	switch (shape->fillRule) {
@@ -398,23 +403,25 @@ void AdaptiveFlattener::operator()(const NSVGshape *shape, Tesselation &tesselat
 
 
 
-float *FixedFlattener::flatten(
-	float *vertices, int level,
+int FixedFlattener::flatten(
+	const Vertices &vertices,
+	int index, int level,
 	float x1, float y1, float x2, float y2,
 	float x3, float y3, float x4, float y4) const
 {
 	if (level >= _depth) {
+		auto &v = vertices[index++];
 		if (_offset != 0.0) {
 			float dx = x4 - x1;
 			float dy = y4 - y1;
 			float s = _offset / sqrt(dx * dx + dy * dy);
-			*vertices++ = x4 - s * dy;
-			*vertices++ = y4 + s * dx;
+			v.x = x4 - s * dy;
+			v.y = y4 + s * dx;
 		} else {
-			*vertices++ = x4;
-			*vertices++ = y4;
+			v.x = x4;
+			v.y = y4;
 		}
-		return vertices;
+		return index;
 	}
 
 	float x12,y12,x23,y23,x34,y34,x123,y123,x234,y234,x1234,y1234;
@@ -433,13 +440,17 @@ float *FixedFlattener::flatten(
 	x1234 = (x123+x234)*0.5f;
 	y1234 = (y123+y234)*0.5f;
 
-	vertices = flatten(vertices, level+1, x1,y1, x12,y12, x123,y123, x1234,y1234);
-	vertices = flatten(vertices, level+1, x1234,y1234, x234,y234, x34,y34, x4,y4);
-	return vertices;
+	index = flatten(vertices, index, level+1,
+		x1,y1, x12,y12, x123,y123, x1234,y1234);
+	index = flatten(vertices, index, level+1,
+		x1234,y1234, x234,y234, x34,y34, x4,y4);
+	return index;
 }
 
 
-int FixedFlattener::size(const NSVGpath *path) const {
+int FixedFlattener::size(const SubpathRef &subpath) const {
+
+	NSVGpath *path = &subpath->nsvg;
 	const int npts = path->npts;
 	const int n = ncurves(npts);
 	const int verticesPerCurve = (1 << _depth);
@@ -447,31 +458,30 @@ int FixedFlattener::size(const NSVGpath *path) const {
 }
 
 int FixedFlattener::flatten(
-	const NSVGpath *path, const MeshRef &mesh, int index) const {
+	const SubpathRef &subpath, const MeshRef &mesh, int index) const {
+
+	NSVGpath *path = &subpath->nsvg;
 	const int npts = path->npts;
 	const int n = ncurves(npts);
 
 	const int verticesPerCurve = (1 << _depth);
+	const int nvertices = 1 + n * verticesPerCurve;
+	const auto vertices = mesh->vertices(index, nvertices);
 
-	int nvertices = 1 + n * verticesPerCurve;
+	vertices[0].x = path->pts[0];
+	vertices[0].y = path->pts[1];
 
-	float * const vertices0 = mesh->vertices(index, nvertices);
-	float *vertices = vertices0;
-
-	*vertices++ = path->pts[0];
-	*vertices++ = path->pts[1];
-
+	int v = 1;
 	int k = 0;
 	for (int i = 0; i < n; i++) {
 		const float *p = &path->pts[k * 2];
 		k += 3;
-		float *v0 = vertices;
-		vertices = flatten(vertices, 0,
+		const int v0 = v;
+		v = flatten(vertices, v, 0,
 			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-		assert(vertices - v0 == verticesPerCurve * 2);
+		assert(v - v0 == verticesPerCurve);
 	}
 
-	assert(vertices - vertices0 == nvertices * 2);
-
+	assert(v == nvertices);
 	return nvertices;
 }

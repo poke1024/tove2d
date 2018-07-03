@@ -166,7 +166,7 @@ public:
 	void changed(ToveChangeFlags flags);
 
 	inline int getSubpathSize(int i, const FixedFlattener &flattener) const {
-		return flattener.size(&trajectories[i]->nsvg);
+		return flattener.size(trajectories[i]);
 	}
 
 	inline bool hasStroke() const {

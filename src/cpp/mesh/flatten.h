@@ -13,6 +13,7 @@
 #define __TOVE_MESH_FLATTEN 1
 
 #include "../common.h"
+#include "mesh.h"
 
 struct Tesselation {
 	ClipperLib::Paths fill;
@@ -40,7 +41,7 @@ private:
 		float x3, float y3, float x4, float y4,
 		ClipperPath &points, int level) const;
 
-	ClipperPath flatten(const NSVGpath *path) const;
+	ClipperPath flatten(const SubpathRef &subpath) const;
 
 	inline double squareDistance(double x1, double y1, double x2, double y2) const {
         double dx = x2-x1;
@@ -55,7 +56,7 @@ public:
 
 	AdaptiveFlattener(float scale, const ToveTesselationQuality *quality);
 
-	void operator()(const NSVGshape *shape, Tesselation &tesselation) const;
+	void operator()(const PathRef &path, Tesselation &tesselation) const;
 };
 
 class FixedFlattener {
@@ -63,8 +64,9 @@ private:
 	const int _depth;
 	const float _offset;
 
-	float *flatten(
-		float *vertices, int level,
+	int flatten(
+		const Vertices &vertices,
+		int index, int level,
 		float x1, float y1, float x2, float y2,
 		float x3, float y3, float x4, float y4) const;
 
@@ -72,9 +74,8 @@ public:
 	FixedFlattener(int depth, float offset) : _depth(depth), _offset(offset) {
 	}
 
-	int size(const NSVGpath *path) const;
-	int flatten(const NSVGpath *path, const MeshRef &mesh, int index) const;
-	int flatten(const PathRef &path, const MeshRef &mesh, int index) const;
+	int size(const SubpathRef &subpath) const;
+	int flatten(const SubpathRef &subpath, const MeshRef &mesh, int index) const;
 };
 
 #endif // __TOVE_MESH_FLATTEN

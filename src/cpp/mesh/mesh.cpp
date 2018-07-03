@@ -34,66 +34,37 @@ static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
 	}
 }
 
-AbstractMesh::AbstractMesh() {
-	meshData.vertices = NULL;
-	meshData.colors = NULL;
-	meshData.nvertices = 0;
+AbstractMesh::AbstractMesh(uint16_t stride) : mStride(stride) {
+	mVertices = nullptr;
+	mVertexCount = 0;
 }
 
 AbstractMesh::~AbstractMesh() {
-	if (meshData.colors) {
-		free(meshData.colors);
+	if (mVertices) {
+		free(mVertices);
 	}
-	if (meshData.vertices) {
-		free(meshData.vertices);
-	}
-}
-
-const ToveMeshRecord &AbstractMesh::getData() const {
-	return meshData;
 }
 
 ToveTriangles AbstractMesh::getTriangles() const {
-	return triangles.get();
+	return mTriangles.get();
 }
 
-void AbstractMesh::copyPositionsAndColors(
-	void *buffer, size_t bufferByteSize) {
-	const int n = meshData.nvertices;
-	const size_t size = (2 * sizeof(float) + 4) * n;
-	assert(bufferByteSize == size);
-	const float *v = meshData.vertices;
-	const uint8_t *c = meshData.colors;
-	uint8_t *p = static_cast<uint8_t*>(buffer);
-	for (int i = 0; i < n; i++) {
-		*reinterpret_cast<float*>(p) = *v++;
-		p += sizeof(float);
-		*reinterpret_cast<float*>(p) = *v++;
-		p += sizeof(float);
-		*p++ = *c++;
-		*p++ = *c++;
-		*p++ = *c++;
-		*p++ = *c++;
+void AbstractMesh::reserve(uint32_t n) {
+	if (n > mVertexCount) {
+		mVertexCount = n;
+	    mVertices = realloc(
+	    	mVertices,
+			nextpow2(mVertexCount) * mStride);
 	}
-}
-
-float *AbstractMesh::vertices(int from, int n) {
-	if (from + n > meshData.nvertices) {
-		meshData.nvertices = from + n;
-	    meshData.vertices = static_cast<float*>(realloc(
-	    	meshData.vertices,
-			nextpow2(meshData.nvertices) * 2 * sizeof(float)));
-	}
-    return &meshData.vertices[2 * from];
 }
 
 void AbstractMesh::cache(bool keyframe) {
-	triangles.cache(keyframe);
+	mTriangles.cache(keyframe);
 }
 
 void AbstractMesh::clear() {
-	triangles.clear();
-	meshData.nvertices = 0;
+	mTriangles.clear();
+	mVertexCount = 0;
 }
 
 void AbstractMesh::triangulate(
@@ -104,8 +75,8 @@ void AbstractMesh::triangulate(
 		const int n = paths[i].size();
 		TPPLPoly poly;
 		poly.Init(n);
-		int index = meshData.nvertices;
- 	   	float *vertex = vertices(index, n);
+		int index = mVertexCount;
+ 	   	auto v = vertices(index, n);
 
 		for (int j = 0; j < n; j++) {
 			const ClipperPoint &p = paths[i][j];
@@ -113,8 +84,10 @@ void AbstractMesh::triangulate(
 			const float x = p.X / scale;
 			const float y = p.Y / scale;
 
-			*vertex++ = x;
-			*vertex++ = y;
+			v->x = x;
+			v->y = y;
+			v++;
+
 			poly[j].x = x;
 			poly[j].y = y;
 			poly[j].id = index++;
@@ -137,11 +110,11 @@ void AbstractMesh::triangulate(
 
 
 void AbstractMesh::addTriangles(const std::list<TPPLPoly> &tris) {
-	triangles.add(tris);
+	mTriangles.add(tris);
 }
 
 void AbstractMesh::clearTriangles() {
-	triangles.clear();
+	mTriangles.clear();
 }
 
 static void stripToList(
@@ -194,14 +167,14 @@ void AbstractMesh::triangulateLine(
 		const int numIndices = num0 + (closed ? 2 + (miter ? 1 : 0) : 0);
 		std::vector<uint16_t> tempIndices;
 
-		if (triangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
+		if (mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
 			// this only happens for compound (flat) meshes and
 			// multiple subpaths (we don't want them connected).
 			tempIndices.resize(numIndices);
 			indices = tempIndices.data();
 		} else {
 			// we have our own mesh. use triangle strips.
-			indices = triangles.allocate(
+			indices = mTriangles.allocate(
 				TRIANGLES_STRIP, numIndices);
 		}
 
@@ -221,7 +194,7 @@ void AbstractMesh::triangulateLine(
 
 		if (!tempIndices.empty()) {
 			const int triangleCount = numIndices - 2;
-			stripToList(tempIndices.data(), triangles.allocate(
+			stripToList(tempIndices.data(), mTriangles.allocate(
 				TRIANGLES_LIST, triangleCount), triangleCount);
 		}
 
@@ -248,7 +221,7 @@ void AbstractMesh::triangulateFill(
 			continue;
 		}
 
-	   	const float *vertex = vertices(vertexIndex, n);
+	   	const auto vertex = vertices(vertexIndex, n);
 
 		TPPLPoly poly;
 		poly.Init(n);
@@ -260,8 +233,8 @@ void AbstractMesh::triangulateFill(
 			// duplicated points are a very common issue that breaks the
 			// complete triangulation, that's why we special case here.
 			if (j == next) {
-				poly[written].x = vertex[2 * j + 0];
-				poly[written].y = vertex[2 * j + 1];
+				poly[written].x = vertex[j].x;
+				poly[written].y = vertex[j].y;
 				poly[written].id = vertexIndex;
 				written++;
 			}
@@ -320,7 +293,7 @@ void AbstractMesh::triangulateFill(
 		triangulation->triangles.add(triangles);
 	}
 
-	triangles.add(triangulation);
+	mTriangles.add(triangulation);
 }
 
 void AbstractMesh::add(
@@ -329,12 +302,15 @@ void AbstractMesh::add(
 	const MeshPaint &paint,
 	const ToveHoles holes) {
 
-	const int vertexIndex = meshData.nvertices;
+	const int vertexIndex = mVertexCount;
 	triangulate(paths, scale, holes);
-	const int vertexCount = meshData.nvertices - vertexIndex;
+	const int vertexCount = mVertexCount - vertexIndex;
 	addColor(vertexIndex, vertexCount, paint);
 }
 
+
+Mesh::Mesh() : AbstractMesh(sizeof(float) * 2) {
+}
 
 void Mesh::initializePaint(
 	MeshPaint &paint,
@@ -350,6 +326,9 @@ void Mesh::addColor(
 }
 
 
+ColorMesh::ColorMesh() : AbstractMesh(sizeof(float) * 2 + 4) {
+}
+
 void ColorMesh::initializePaint(
 	MeshPaint &paint,
 	const NSVGpaint &nsvg,
@@ -362,7 +341,7 @@ void ColorMesh::initializePaint(
 void ColorMesh::addColor(
 	int vertexIndex, int vertexCount, const MeshPaint &paint) {
 
-    meshData.colors = static_cast<uint8_t*>(realloc(
+    /*meshData.colors = static_cast<uint8_t*>(realloc(
     	meshData.colors,
 		nextpow2(vertexIndex + vertexCount) * 4 * sizeof(uint8_t)));
 
@@ -371,34 +350,40 @@ void ColorMesh::addColor(
 		return;
     }
 
-    uint8_t *colors = &meshData.colors[4 * vertexIndex];
+    uint8_t *colors = &meshData.colors[4 * vertexIndex];*/
 
     switch (paint.getType()) {
     	case NSVG_PAINT_LINEAR_GRADIENT: {
-	 	   	float *vertex = vertices(vertexIndex, vertexCount);
+	 	   	auto vertex = vertices(vertexIndex, vertexCount);
 	 	   	for (int i = 0; i < vertexCount; i++) {
-	    		const float x = *vertex++;
-	    		const float y = *vertex++;
+	    		const float x = vertex->x;
+	    		const float y = vertex->y;
 
 				const int color = paint.getLinearGradientColor(x, y);
+				uint8_t *colors = vertex.attr();
 				*colors++ = (color >> 0) & 0xff;
 				*colors++ = (color >> 8) & 0xff;
 				*colors++ = (color >> 16) & 0xff;
 				*colors++ = (color >> 24) & 0xff;
+
+				vertex++;
 			}
 		} break;
 
 		case NSVG_PAINT_RADIAL_GRADIENT: {
-	 	   	float *vertex = vertices(vertexIndex, vertexCount);
+	 	   	auto vertex = vertices(vertexIndex, vertexCount);
 	 	   	for (int i = 0; i < vertexCount; i++) {
-	    		const float x = *vertex++;
-	    		const float y = *vertex++;
+	    		const float x = vertex->x;
+	    		const float y = vertex->y;
 
 				const int color = paint.getRadialGradientColor(x, y);
+				uint8_t *colors = vertex.attr();
 				*colors++ = (color >> 0) & 0xff;
 				*colors++ = (color >> 8) & 0xff;
 				*colors++ = (color >> 16) & 0xff;
 				*colors++ = (color >> 24) & 0xff;
+
+				vertex++;
 			}
 		} break;
 
@@ -410,12 +395,15 @@ void ColorMesh::addColor(
 		    const int b = (color >> 16) & 0xff;
 		    const int a = (color >> 24) & 0xff;
 
-	 	   	float *vertex = vertices(vertexIndex, vertexCount);
+			auto vertex = vertices(vertexIndex, vertexCount);
 	 	   	for (int i = 0; i < vertexCount; i++) {
+				uint8_t *colors = vertex.attr();
 				*colors++ = r;
 				*colors++ = g;
 				*colors++ = b;
 				*colors++ = a;
+
+				vertex++;
 		    }
  		} break;
     }

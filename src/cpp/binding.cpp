@@ -386,7 +386,7 @@ void SubpathMakeFlat(ToveSubpathRef trajectory, int k, int dir) {
 }
 
 void SubpathMakeSmooth(ToveSubpathRef trajectory, int k, int dir, float a) {
-	deref(trajectory)->makeSmooth(k - 1, dir, a);	
+	deref(trajectory)->makeSmooth(k - 1, dir, a);
 }
 
 void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y) {
@@ -614,12 +614,8 @@ int MeshGetVertexCount(ToveMeshRef mesh) {
 	return deref(mesh)->getVertexCount();
 }
 
-void MeshCopyPositions(ToveMeshRef mesh, void *buffer, uint32_t size) {
-	deref(mesh)->copyPositions(buffer, size);
-}
-
-void MeshCopyPositionsAndColors(ToveMeshRef mesh, void *buffer, uint32_t size) {
-	deref(mesh)->copyPositionsAndColors(buffer, size);
+void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, uint32_t size) {
+	deref(mesh)->copyVertexData(buffer, size);
 }
 
 ToveTriangles MeshGetTriangles(ToveMeshRef mesh) {

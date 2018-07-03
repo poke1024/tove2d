@@ -53,7 +53,7 @@ public:
 		return parts.empty();
 	}
 
-	bool check(const float *vertices) {
+	bool check(const Vertices &vertices) {
 		const int nparts = parts.size();
 
 		if (nparts == 0) {
@@ -71,15 +71,15 @@ public:
 
 			do {
 				assert(i >= 0 && i < n);
-				const float *p0 = &vertices[outline[i] * 2];
+				const auto &p0 = vertices[outline[i]];
 
 				int i1 = find_unequal_forward(vertices, outline.data(), i, n);
-				const float *p1 = &vertices[outline[i1] * 2];
+				const auto &p1 = vertices[outline[i1]];
 
 				int i2 = find_unequal_forward(vertices, outline.data(), i1, n);
-				const float *p2 = &vertices[outline[i2] * 2];
+				const auto &p2 = vertices[outline[i2]];
 
-				float area = cross(p0[0], p0[1], p1[0], p1[1], p2[0], p2[1]);
+				float area = cross(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
 
 				const float eps = 0.1;
 				if (area > eps) {

@@ -82,7 +82,7 @@ ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
 	}
 
 	Tesselation t;
-	tess(shape, t);
+	tess(path, t);
 
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		MeshPaint paint;
@@ -160,7 +160,7 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 
 		for (int i = 0; i < n; i++) {
 			int k = flattener.flatten(
-				&path->getSubpath(i)->nsvg, fill, index0 + index);
+				path->getSubpath(i), fill, index0 + index);
 
 			if (hasStroke) {
 				const bool closed = path->getSubpath(i)->isClosed();
@@ -171,11 +171,11 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 				// needs to be second here; otherwise the vertices ptr
 				// might get invalidated by a realloc in line->vertices.
 
-				float *vertex = line->vertices(
+				auto vertex = line->vertices(
 					index0 + linebase + index * verticesPerSegment,
 					k * verticesPerSegment);
 
-				const float *vertices = fill->vertices(index0 + index, k);
+				const auto vertices = fill->vertices(index0 + index, k);
 
 				int previous = find_unequal_backward(vertices, k, k);
 				int next = find_unequal_forward(vertices, 0, k);
@@ -186,14 +186,14 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 						next = find_unequal_forward(vertices, j, k);
 					}
 
-					const float x0 = vertices[previous * 2 + 0];
-					const float y0 = vertices[previous * 2 + 1];
+					const float x0 = vertices[previous].x;
+					const float y0 = vertices[previous].y;
 
-					const float x1 = vertices[j * 2 + 0];
-					const float y1 = vertices[j * 2 + 1];
+					const float x1 = vertices[j].x;
+					const float y1 = vertices[j].y;
 
-					const float x2 = vertices[next * 2 + 0];
-					const float y2 = vertices[next * 2 + 1];
+					const float x2 = vertices[next].x;
+					const float y2 = vertices[next].y;
 
 					float dx21 = x2 - x1;
 					float dy21 = y2 - y1;
@@ -225,36 +225,41 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 						if ((mx * mx + my * my) * miterLimitSquared < 1.0f) {
 							// use bevel
 							if (wind < 0.0f) {
-								*vertex++ = x1 - ox;
-								*vertex++ = y1 - oy;
+								vertex->x = x1 - ox;
+								vertex->y = y1 - oy;
 							} else {
-								*vertex++ = x1 + ox;
-								*vertex++ = y1 + oy;
+								vertex->x = x1 + ox;
+								vertex->y = y1 + oy;
 							}
 						} else {
 							float l = lineOffset / (mx * n10x + my * n10y);
 							l = l * (wind < 0.0f ? -1.0f : 1.0f);
 
-							*vertex++ = x1 + l * mx;
-							*vertex++ = y1 + l * my;
+							vertex->x = x1 + l * mx;
+							vertex->y = y1 + l * my;
 						}
+						vertex++;
 					}
 
 					// outer
-					*vertex++ = x1 - ox;
-					*vertex++ = y1 - oy;
+					vertex->x = x1 - ox;
+					vertex->y = y1 - oy;
+					vertex++;
 
 					// inner
-					*vertex++ = x1 + ox;
-					*vertex++ = y1 + oy;
+					vertex->x = x1 + ox;
+					vertex->y = y1 + oy;
+					vertex++;
 
 					// outer
-					*vertex++ = x2 - ox;
-					*vertex++ = y2 - oy;
+					vertex->x = x2 - ox;
+					vertex->y = y2 - oy;
+					vertex++;
 
 					// inner
-					*vertex++ = x2 + ox;
-					*vertex++ = y2 + oy;
+					vertex->x = x2 + ox;
+					vertex->y = y2 + oy;
+					vertex++;
 				}
 			}
 

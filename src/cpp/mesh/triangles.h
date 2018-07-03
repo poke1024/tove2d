@@ -13,7 +13,6 @@
 #define __TOVE_MESH_TRIANGLES 1
 
 #include "partition.h"
-#include "flatten.h"
 #include "../interface.h"
 #include "../utils.h"
 #include "../../thirdparty/polypartition.h"
@@ -213,7 +212,7 @@ public:
 		}
 	}
 
-	bool check(const float *vertices, bool &triangleCacheFlag) {
+	bool check(const Vertices &vertices, bool &triangleCacheFlag) {
 		const int n = triangulations.size();
 		if (n == 0) {
 			return false;

@@ -33,7 +33,7 @@ function PositionMesh:updateVertices()
 	local mesh = self._mesh
 	if mesh ~= nil then
 		local vdata = self._vdata
-		lib.MeshCopyPositions(
+		lib.MeshCopyVertexData(
 			self._cmesh, vdata:getPointer(), vdata:getSize())
 		mesh:setVertices(vdata)
 	end
@@ -112,7 +112,7 @@ function ColorMesh:updateVertices()
 	local mesh = self._mesh
 	if mesh ~= nil then
 		local vdata = self._vdata
-		lib.MeshCopyPositionsAndColors(
+		lib.MeshCopyVertexData(
 			self._cmesh, vdata:getPointer(), vdata:getSize())
 		mesh:setVertices(vdata)
 	end
