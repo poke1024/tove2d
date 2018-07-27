@@ -9,21 +9,19 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local function newGradientData(gradient)
+local function fillGradientData(gradient)
 	local n = gradient.numColors
 
-	local data = ffi.new("ToveShaderGradientData")
-	gradient.data = data
-
 	local matrixData = love.data.newByteData(env.mat3.size)
-	data.matrix = matrixData:getPointer()
+	gradient.matrix = matrixData:getPointer()
+	gradient.arguments = nil
 
 	local imageData = love.image.newImageData(1, n, "rgba8")
-	data.colorsTexture = imageData:getPointer()
-	data.colorsTextureRowBytes = imageData:getSize() / n
+	gradient.colorsTexture = imageData:getPointer()
+	gradient.colorsTextureRowBytes = imageData:getSize() / n
 
 	local s = 0.5 / n
-	return {numColors = n, data = data, matrixData = matrixData,
+	return {numColors = n, matrixData = matrixData,
 		imageData = imageData, texture = nil, cscale = {s, 1 - 2 * s}}
 end
 
@@ -62,8 +60,8 @@ function NullColorFeed:update(chg1, path)
 end
 
 
-local ColorFeed = {}
-ColorFeed.__index = ColorFeed
+local ColorSend = {}
+ColorSend.__index = ColorSend
 
 local _flags = {
 	fill = lib.CHANGED_FILL_STYLE,
@@ -80,22 +78,22 @@ for _, name in ipairs({"color", "colors", "matrix", "cscale"}) do
 	_uniforms.line[name] = "line" .. name
 end
 
-local function newColorFeed(shader, type, colorData)
+local function newColorSend(shader, type, colorData)
 	if shader == nil then
 		return setmetatable({}, NullColorFeed)
 	end
 	return setmetatable({shader = shader, colorData = colorData,
-		uniforms = _uniforms[type], flag = _flags[type]}, ColorFeed)
+		uniforms = _uniforms[type], flag = _flags[type]}, ColorSend)
 end
 
-function ColorFeed:beginInit()
+function ColorSend:beginInit()
 	local colorData = self.colorData
 	if colorData.style >= 2 then
-		self.gradientData = newGradientData(colorData.gradient)
+		self.gradientData = fillGradientData(colorData.gradient)
 	end
 end
 
-function ColorFeed:endInit(path)
+function ColorSend:endInit(path)
 	local gradientData = self.gradientData
 
 	if gradientData ~= nil then
@@ -115,7 +113,7 @@ function ColorFeed:endInit(path)
 	end
 end
 
-function ColorFeed:update(chg1, path)
+function ColorSend:updateUniforms(chg1, path)
 	if bit.band(chg1, self.flag) ~= 0 then
 		local shader = self.shader
 		local uniforms = self.uniforms
@@ -132,10 +130,10 @@ function ColorFeed:update(chg1, path)
 end
 
 
-local GeometryFeed = {}
-GeometryFeed.__index = GeometryFeed
+local GeometrySend = {}
+GeometrySend.__index = GeometrySend
 
-local function newGeometryFeed(fillShader, lineShader, data)
+local function newGeometrySend(fillShader, lineShader, data)
 	return setmetatable({
 		fillShader = fillShader,
 		lineShader = lineShader,
@@ -144,10 +142,10 @@ local function newGeometryFeed(fillShader, lineShader, data)
 		listsImageData = nil,
 		curvesImageData = nil,
 		lookupTableByteData = nil,
-		lookupTableMetaByteData = nil}, GeometryFeed)
+		lookupTableMetaByteData = nil}, GeometrySend)
 end
 
-function GeometryFeed:beginInit()
+function GeometrySend:beginInit()
 	local data = self.data
 
 	-- note: everything we store as pointers into "data" (or some sub structure of
@@ -181,7 +179,7 @@ function GeometryFeed:beginInit()
 	data.lookupTableMeta = self.lookupTableMetaByteData:getPointer()
 end
 
-function GeometryFeed:endInit(lineStyle)
+function GeometrySend:endInit(lineStyle)
 	local listsTexture = love.graphics.newImage(self.listsImageData)
 	local curvesTexture = love.graphics.newImage(self.curvesImageData)
 	listsTexture:setFilter("nearest", "nearest")
@@ -224,7 +222,7 @@ function GeometryFeed:endInit(lineStyle)
 	end
 end
 
-function GeometryFeed:update(flags)
+function GeometrySend:updateUniforms(flags)
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local fillShader = self.fillShader
 		local lineShader = self.lineShader
@@ -246,6 +244,6 @@ function GeometryFeed:update(flags)
 end
 
 return {
-	newColorFeed = newColorFeed,
-	newGeometryFeed = newGeometryFeed
+	newColorSend = newColorSend,
+	newGeometrySend = newGeometrySend
 }

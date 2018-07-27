@@ -14,6 +14,8 @@
 
 #include "common.h"
 
+#define NSVG_CLIP_PATHS 1
+
 namespace nsvg {
 
 uint32_t makeColor(float r, float g, float b, float a);
@@ -84,6 +86,8 @@ public:
 	}
 };
 
+NSVGlineJoin nsvgLineJoin(ToveLineJoin join);
+ToveLineJoin toveLineJoin(NSVGlineJoin join);
 
 }
 

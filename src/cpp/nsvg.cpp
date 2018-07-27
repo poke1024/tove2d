@@ -257,4 +257,27 @@ float Transform::getScale() const {
 	return std::sqrt(x * x + y * y);
 }
 
+NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
+	switch (join) {
+		case LINEJOIN_MITER:
+			return NSVG_JOIN_MITER;
+		case LINEJOIN_ROUND:
+			return NSVG_JOIN_ROUND;
+		case LINEJOIN_BEVEL:
+			return NSVG_JOIN_BEVEL;
+	}
+	return NSVG_JOIN_MITER;
+}
+
+ToveLineJoin toveLineJoin(NSVGlineJoin join) {
+	switch (join) {
+		case NSVG_JOIN_MITER:
+			return LINEJOIN_MITER;
+		case NSVG_JOIN_ROUND:
+			return LINEJOIN_ROUND;
+		case NSVG_JOIN_BEVEL:
+			return LINEJOIN_BEVEL;
+	}
+	return LINEJOIN_MITER;
+}
 } // namespace nsvg

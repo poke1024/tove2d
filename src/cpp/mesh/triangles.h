@@ -17,23 +17,28 @@
 #include "../utils.h"
 #include "../../thirdparty/polypartition.h"
 
+inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
+	// convert to 1-based indices for LÖVE's Mesh:setVertexMap()
+	return i + 1;
+}
+
 class TriangleStore {
 private:
 	int size;
-	uint16_t *triangles;
+	ToveVertexIndex *triangles;
 
 public:
 	const ToveTrianglesMode mode;
 
-	uint16_t *allocate(int n, bool exact = false) {
+	ToveVertexIndex *allocate(int n, bool isFinalSize = false) {
 		const int offset = size;
 
 		const int k = (mode == TRIANGLES_LIST) ? 3 : 1;
 	    size += n * k;
 
-		const int count = exact ? size : nextpow2(size);
-	    triangles = static_cast<uint16_t*>(realloc(
-	    	triangles, count * sizeof(uint16_t)));
+		const int count = isFinalSize ? size : nextpow2(size);
+	    triangles = static_cast<ToveVertexIndex*>(realloc(
+	    	triangles, count * sizeof(ToveVertexIndex)));
 
 	    if (!triangles) {
 			TOVE_BAD_ALLOC();
@@ -44,15 +49,31 @@ public:
 	}
 
 private:
-	void _add(const std::list<TPPLPoly> &triangles, bool exact) {
-	    uint16_t *indices = allocate(triangles.size(), exact);
+	void _add(
+		const std::list<TPPLPoly> &triangles,
+		bool isFinalSize) {
+
+		ToveVertexIndex *indices = allocate(triangles.size(), isFinalSize);
 	    for (auto i = triangles.begin(); i != triangles.end(); i++) {
 			const TPPLPoly &poly = *i;
 	    	for (int j = 0; j < 3; j++) {
-				// use 1-based indices for Tove's Mesh:setVertexMap()
-	    		*indices++ = poly[j].id + 1;
+	    		*indices++ = ToLoveVertexMapIndex(poly[j].id);
 	    	}
 	    }
+	}
+
+	void _add(
+		const std::vector<ToveVertexIndex> &triangles,
+		const ToveVertexIndex i0,
+		bool isFinalSize) {
+
+		const int n = triangles.size();
+		assert(n % 3 == 0);
+	    ToveVertexIndex *indices = allocate(n / 3, isFinalSize);
+		const ToveVertexIndex *input = triangles.data();
+		for (int i = 0; i < n; i++) {
+			*indices++ = i0 + ToLoveVertexMapIndex(*input++);
+		}
 	}
 
 public:
@@ -75,6 +96,11 @@ public:
 	void add(const std::list<TPPLPoly> &triangles) {
 		assert(mode == TRIANGLES_LIST);
 		_add(triangles, false);
+	}
+
+	void add(const std::vector<ToveVertexIndex> &triangles, ToveVertexIndex i0) {
+		assert(mode == TRIANGLES_LIST);
+		_add(triangles, i0, false);
 	}
 
 	void clear() {
@@ -138,8 +164,15 @@ private:
 		}
 	}
 
+	inline Triangulation *currentTriangulation() const {
+		assert(current < triangulations.size());
+		return triangulations[current];
+	}
+
 public:
-	TriangleCache(int cacheSize = 8) : current(0), cacheSize(cacheSize) {
+	TriangleCache(int cacheSize = 2) :
+		current(0), cacheSize(cacheSize) {
+		assert(cacheSize >= 2);
 	}
 
 	~TriangleCache() {
@@ -164,8 +197,7 @@ public:
 		if (triangulations.size() == 0) {
 			return;
 		}
-		assert(current < triangulations.size());
-		triangulations[current]->keyframe = keyframe;
+		currentTriangulation()->keyframe = keyframe;
 	}
 
 	bool hasMode(ToveTrianglesMode mode) {
@@ -176,22 +208,28 @@ public:
 		}
 	}
 
-	uint16_t *allocate(ToveTrianglesMode mode, int n) {
+	ToveVertexIndex *allocate(ToveTrianglesMode mode, int n) {
 		if (triangulations.empty()) {
 			triangulations.push_back(new Triangulation(mode));
 		} else {
 			assert(triangulations[current]->getMode() == mode);
 		}
-		assert(current < triangulations.size());
-		return triangulations[current]->triangles.allocate(n);
+		return currentTriangulation()->triangles.allocate(n);
 	}
 
 	void add(const std::list<TPPLPoly> &triangles) {
 		if (triangulations.empty()) {
 			triangulations.push_back(new Triangulation(TRIANGLES_LIST));
 		}
-		assert(current < triangulations.size());
-		triangulations[current]->triangles.add(triangles);
+		currentTriangulation()->triangles.add(triangles);
+	}
+
+	void add(const std::vector<ToveVertexIndex> &triangles,
+		ToveVertexIndex i0) {
+		if (triangulations.empty()) {
+			triangulations.push_back(new Triangulation(TRIANGLES_LIST));
+		}
+		currentTriangulation()->triangles.add(triangles, i0);
 	}
 
 	void clear() {
@@ -212,7 +250,7 @@ public:
 		}
 	}
 
-	bool check(const Vertices &vertices, bool &triangleCacheFlag) {
+	bool check(const Vertices &vertices, bool &trianglesChanged) {
 		const int n = triangulations.size();
 		if (n == 0) {
 			return false;
@@ -227,23 +265,27 @@ public:
 		const int k = std::max(current, n - current);
 		for (int i = 1; i <= k; i++) {
 			if (current + i < n) {
-				int forward = (current + i) % n;
+				const int forward = (current + i) % n;
 				if (triangulations[forward]->partition.check(vertices)) {
-					std::swap(triangulations[(current + 1) % n], triangulations[forward]);
+					std::swap(
+						triangulations[(current + 1) % n],
+						triangulations[forward]);
 					current = (current + 1) % n;
 					triangulations[current]->useCount++;
-					triangleCacheFlag = true;
+					trianglesChanged = true;
 					return true;
 				}
 			}
 
 			if (current - i >= 0) {
-				int backward = (current + n - i) % n;
+				const int backward = (current + n - i) % n;
 				if (triangulations[backward]->partition.check(vertices)) {
-					std::swap(triangulations[(current + n - 1) % n], triangulations[backward]);
+					std::swap(
+						triangulations[(current + n - 1) % n],
+						triangulations[backward]);
 					current = (current + n - 1) % n;
 					triangulations[current]->useCount++;
-					triangleCacheFlag = true;
+					trianglesChanged = true;
 					return true;
 				}
 			}

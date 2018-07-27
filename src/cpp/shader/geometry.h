@@ -14,13 +14,16 @@
 #include "data.h"
 #include "lookup.h"
 
-class GeometryShaderLinkImpl {
+class GeometryFeedImpl {
 private:
+	const PathRef path;
+	bool initialUpdate;
+
 	const int maxCurves;
 	const int maxSubPaths;
 
 	ToveShaderGeometryData &geometryData;
-	const ToveShaderColorData &lineColorData;
+	const TovePaintData &lineColorData;
 	ToveShaderGeometryData strokeShaderData;
 
     std::vector<Event> fillEvents;
@@ -38,12 +41,12 @@ private:
 	void dumpCurveData();
 
 public:
-	GeometryShaderLinkImpl(
-		ToveShaderGeometryData &data,
-		const ToveShaderColorData &lineColorData,
+	GeometryFeedImpl(
 		const PathRef &path,
+		ToveShaderGeometryData &data,
+		const TovePaintData &lineColorData,
 		bool enableFragmentShaderStrokes);
 
-	ToveChangeFlags beginUpdate(const PathRef &path, bool initial);
-    int endUpdate(const PathRef &path, bool initial);
+	ToveChangeFlags beginUpdate();
+    ToveChangeFlags endUpdate();
 };

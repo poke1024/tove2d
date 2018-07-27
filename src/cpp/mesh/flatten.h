@@ -27,6 +27,7 @@ private:
 	float angleEpsilon;
 	float angleTolerance;
 	float cuspLimit;
+	float arcTolerance;
 	int recursionLimit;
 
 	double distanceToleranceSquare;

@@ -88,7 +88,6 @@ Subpath.insertCurveAt = lib.SubpathInsertCurveAt
 Subpath.removeCurve = lib.SubpathRemoveCurve
 Subpath.mould = lib.SubpathMould
 Subpath.move = lib.SubpathMove
-Subpath.setPoints = lib.SubpathSetPoints
 Subpath.commit = lib.SubpathCommit
 Subpath.moveTo = lib.SubpathMoveTo
 Subpath.lineTo = lib.SubpathLineTo
@@ -125,10 +124,68 @@ function Subpath:makeSmooth(k, a, dir)
 	return lib.SubpathMakeSmooth(self, k, dir or 0, a or 0.5)
 end
 
+function Subpath:set(arg)
+	if getmetatable(arg) == tove.Transform then
+		lib.SubpathSet(
+			self,
+			arg.s,
+			unpack(arg.args))
+	else
+		lib.SubpathSet(
+			self,
+			arg,
+			1, 0, 0, 0, 1, 0)
+	end
+end
+
+function Subpath:transform(t)
+	self:set(tove.transformed(self, t))
+end
+
+function Subpath:invert()
+	lib.SubpathInvert(self)
+end
+
+function Subpath:setPoints(...)
+	local p = {...}
+	local n = #p
+	local f = ffi.new("float[?]", n)
+	for i = 1, n do
+		f[i - 1] = p[i]
+	end
+	lib.SubpathSetPoints(self, f, n / 2)
+end
+
 ffi.metatype("ToveSubpathRef", Subpath)
 
-tove.newSubpath = function()
-	return ffi.gc(lib.NewSubpath(), lib.ReleaseSubpath)
+tove.newSubpath = function(data)
+	local self = ffi.gc(lib.NewSubpath(), lib.ReleaseSubpath)
+	if data then
+		if data[1] then
+			self:setPoints(unpack(data))
+		else
+			self.isClosed = data.closed
+			self:setPoints(unpack(data.points))
+		end
+	end
+	return self
+end
+
+function Subpath:clone()
+	return lib.CloneSubpath(self)
+end
+
+function Subpath:serialize()
+	local n = lib.SubpathGetNumPoints(self)
+	local p = lib.SubpathGetPointsPtr(self)
+	local q = {}
+	for i = 1, n * 2 do
+		q[i] = p[i - 1]
+	end
+	return {
+		points = q,
+		closed = self.isClosed
+	}
 end
 
 return Subpath

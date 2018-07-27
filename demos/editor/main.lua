@@ -1,7 +1,7 @@
 -- TÖVE Editor.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+tove = require "tove"
 
 local Object = require "object"
 
@@ -33,7 +33,7 @@ somegraphics:stroke()
 editor:addObject(Object.new(screenwidth / 2, screenheight / 2, somegraphics))
 
 function love.load()
-	editor:load()
+	editor:startup()
 end
 
 function love.draw()
@@ -48,7 +48,7 @@ function love.update(dt)
 end
 
 function love.mousepressed(x, y, button, isTouch, clickCount)
-	app.module:mousedown(x, y, button, clickCount)
+	app.module:mousepressed(x, y, button, clickCount)
 end
 
 function love.mousereleased(x, y, button)

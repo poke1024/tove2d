@@ -1,7 +1,7 @@
 -- TÖVE Demo: Zoom.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+local tove = require "tove"
 require "assets/tovedemo"
 
 local rabbit = love.filesystem.read("assets/rabbit.svg")

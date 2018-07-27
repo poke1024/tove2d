@@ -14,9 +14,39 @@
 
 #include "path.h"
 
-class Graphics {
+class AbstractMeshifier;
+
+#ifdef NSVG_CLIP_PATHS
+class Clip;
+typedef std::shared_ptr<Clip> ClipRef;
+
+class Clip : public PathOwner {
+public:
+	Clip(NSVGclipPath *path);
+
+	void set(const ClipRef &source, const nsvg::Transform &transform);
+
+	inline void setNext(ClipRef clip) {
+		nsvg.next = &clip->nsvg;
+	}
+
+	virtual void changed(ToveChangeFlags flags) {
+	}
+
+	void compute(const AbstractMeshifier &meshifier);
+
+	NSVGclipPath nsvg;
+	std::vector<PathRef> paths;
+	ClipperLib::Paths computed;
+};
+#endif
+
+class Graphics : public PathOwner {
 private:
 	std::vector<PathRef> paths;
+#ifdef NSVG_CLIP_PATHS
+	std::vector<ClipRef> clips;
+#endif
 	bool newPath;
 
 	float bounds[4];
@@ -84,6 +114,8 @@ public:
 		fillColor = color;
 	}
 
+	bool areColorsSolid() const;
+
 	void setLineDash(const float *dashes, int count);
 
 	inline void setLineDashOffset(float offset) {
@@ -93,6 +125,9 @@ public:
 	inline void setLineWidth(float strokeWidth) {
  		this->strokeWidth = strokeWidth;
 	}
+
+	ToveLineJoin getLineJoin() const;
+	void setLineJoin(ToveLineJoin join);
 
 	inline void setMiterLimit(float limit) {
 		this->miterLimit = limit;
@@ -123,6 +158,8 @@ public:
 		return paths.at(i);
 	}
 
+	PathRef getPathByName(const char *name) const;
+
 	NSVGimage *getImage();
 
 	const float *getBounds();
@@ -135,7 +172,7 @@ public:
 
 	void set(const GraphicsRef &source, const nsvg::Transform &transform);
 
-	inline void changed(ToveChangeFlags flags) {
+	virtual void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
 			flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 		}
@@ -143,8 +180,17 @@ public:
 	}
 
 	ToveChangeFlags fetchChanges(ToveChangeFlags flags, bool clearAll = false);
+	void clearChanges(ToveChangeFlags flags);
 
 	void animate(const GraphicsRef &a, const GraphicsRef &b, float t);
+
+	void computeClipPaths(const AbstractMeshifier &meshifier);
+
+#ifdef NSVG_CLIP_PATHS
+	inline ClipRef getClipAtIndex(int index) const {
+		return clips.at(index);
+	}
+#endif
 };
 
 #endif // __TOVE_GRAPHICS

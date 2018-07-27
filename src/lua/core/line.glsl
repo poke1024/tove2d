@@ -9,6 +9,9 @@
 // All rights reserved.
 // *****************************************************************
 
+// This is TÖVE's vertex line shader, which works by drawing instances
+// of line segments as meshes.
+
 uniform sampler2D curves;
 uniform int max_curves;
 uniform int num_curves;
@@ -44,9 +47,9 @@ vec2 normal(vec4 bx, vec4 by, float t) {
 }
 
 vec2 drawjoin(mat4 transform_projection, vec4 mesh_position) {
-    int curve0 = love_InstanceID + curve_index;
+    int curve0 = love_InstanceID;
     int curve1 = (curve0 + 1) % num_curves;
-    vec2 ty = vec2(curve0, curve1) / vec2(max_curves);
+    vec2 ty = (vec2(curve0, curve1) + vec2(curve_index)) / vec2(max_curves);
 
     vec4 bx0 = Texel(curves,
         vec2(0.0f / float(CURVE_DATA_SIZE), ty.x));

@@ -13,12 +13,29 @@
 #include "path.h"
 #include <algorithm>
 
+void copyColor(RGBA &rgba, uint32_t color, float opacity) {
+	uint32_t c;
+	if (opacity < 1.0f) {
+		c = nsvg::applyOpacity(color, opacity);
+	} else {
+		c = color;
+	}
+	rgba.r = (c & 0xff) / 255.0;
+	rgba.g = ((c >> 8) & 0xff) / 255.0;
+	rgba.b = ((c >> 16) & 0xff) / 255.0;
+	rgba.a = ((c >> 24) & 0xff) / 255.0;
+}
+
+
 void AbstractPaint::changed() {
 	if (claimer) {
 		claimer->colorChanged(this);
 	}
 }
 
+
+void Color::getGradientParameters(ToveGradientParameters &p) {
+}
 
 void Color::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
 	if (target && target->getType() == PAINT_SOLID) {
@@ -127,19 +144,6 @@ void AbstractGradient::set(const AbstractGradient *source) {
 	std::memcpy(nsvg, source->nsvg, size);
 	sorted = source->sorted;
 
-	if (source->nsvgInverse) {
-		nsvgInverse = static_cast<NSVGgradient*>(realloc(nsvg, size));
-		if (!nsvgInverse) {
-			TOVE_BAD_ALLOC();
-			return;
-		}
-		std::memcpy(nsvgInverse, source->nsvgInverse, size);
-	} else {
-		if (nsvgInverse) {
-			free(nsvgInverse);
-			nsvgInverse = nullptr;
-		}
-	}
 	std::memcpy(xformInverse, source->xformInverse, 6 * sizeof(float));
 
 	changed();
@@ -165,6 +169,14 @@ LinearGradient::LinearGradient(float x1, float y1, float x2, float y2) :
 	nsvg::xformInverse(xformInverse, xform);
 }
 
+void LinearGradient::getGradientParameters(ToveGradientParameters &p) {
+	const float *xform = nsvg->xform;
+	p.values[0] = xform[4];
+	p.values[1] = xform[5];
+	p.values[2] = xform[4] + xform[2];
+	p.values[3] = xform[5] + xform[3];
+}
+
 void LinearGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
 	if (target && target->getType() == PAINT_LINEAR_GRADIENT) {
 		static_cast<LinearGradient*>(target.get())->set(this);
@@ -186,6 +198,15 @@ RadialGradient::RadialGradient(float cx, float cy, float fx, float fy, float r) 
 	nsvg->fx = fx / r;
 	nsvg->fy = fy / r;
 	nsvg::xformInverse(xformInverse, xform);
+}
+
+void RadialGradient::getGradientParameters(ToveGradientParameters &p) {
+	const float *xform = nsvg->xform;
+	p.values[0] = xform[4];
+	p.values[1] = xform[5];
+	p.values[2] = nsvg->fx * xform[0];
+	p.values[3] = nsvg->fy * xform[0];
+	p.values[4] = xform[0];
 }
 
 void RadialGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform) {

@@ -33,7 +33,8 @@ tove.quasifixed = function(depth)
 		colinearityEpsilon = 0,
 		angleTolerance = 0,
 		angleEpsilon = 0,
-		cuspLimit = 0
+		cuspLimit = 0,
+		arcTolerance = 1
 	}
 end
 
@@ -44,13 +45,15 @@ local function setAdaptiveQuality(record, quality)
 
 	-- tricky stuff: some configurations make higher qualities produce
 	-- less triangles due to colinearityEpsilon being too high.
-
 	adaptive.distanceTolerance = 100 * 1000.0 / quality
 	adaptive.colinearityEpsilon = 100 * 1000.0 / (quality * quality * 10)
 	adaptive.angleTolerance = math.pi / (2 + math.min(1, quality) * 16)
 
 	adaptive.angleEpsilon = 0.0
 	adaptive.cuspLimit = 0.0
+
+	-- arc tolerance for rounded line joins (used inside ClipperLib).
+	adaptive.arcTolerance = 20.0 / quality
 end
 
 return function (quality, usage)

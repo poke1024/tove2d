@@ -6,32 +6,33 @@ local Object = require "object"
 local newTransformWidget = require "tools/transform"
 local newCurvesWidget = require "tools/curves"
 local newPenWidget = require "tools/pen"
+local newGradientTool = require "tools/gradient"
+local newRectangleTool = require "tools/rectangle"
 local newEllipseTool = require "tools/ellipse"
 
 local newTransform = require "transform"
 
-local VBox = require "ui/vbox"
-local HBox = require "ui/hbox"
-local Panel = require "ui/panel"
-local Label = require "ui/label"
-local Slider = require "ui/slider"
-local Checkbox = require "ui/checkbox"
 local ColorDabs = require "ui/colordabs"
 local ColorWheel = require "ui/colorwheel"
-local RadioGroup = require "ui/radiogroup"
 local Toolbar = require "ui/toolbar"
-local ImageButton = require "ui/imagebutton"
+
+local boxy = require "boxy"
+local utils = require "ui.utils"
 
 
 local Selection = {}
 Selection.__index = Selection
 
 function Selection:objects()
-	return pairs(self._objects)
+	return ipairs(self._ordered)
 end
 
 function Selection:first()
-	return next(self._objects)
+	return self._n > 0 and self._ordered[1]
+end
+
+function Selection:size()
+	return self._n
 end
 
 function Selection:empty()
@@ -43,6 +44,7 @@ function Selection:clear()
 		o.selected = false
 	end
 	self._objects = {}
+	self._ordered = {}
 	self._n = 0
 	self:_changed()
 end
@@ -52,6 +54,7 @@ function Selection:add(object)
 		self._objects[object] = true
 		object.selected = true
 		self._n = self._n + 1
+		table.insert(self._ordered, object)
 		self:_changed()
 	end
 end
@@ -61,6 +64,12 @@ function Selection:remove(object)
 		self._objects[object] = nil
 		object.selected = false
 		self._n = self._n - 1
+		for i, o in ipairs(self._ordered) do
+			if o == object then
+				table.remove(self._ordered, i)
+				break
+			end
+		end
 		self:_changed()
 	end
 end
@@ -157,6 +166,7 @@ function newSelection()
 	return setmetatable({
 		_n = 0,
 		_objects = {},
+		_ordered = {},
 		_aabb = nil,
 		_transforms = nil
 	}, Selection)
@@ -187,7 +197,104 @@ function Editor:transformChanged()
 	self.scale = math.sqrt((x - nx) * (x - nx) + (y - ny) * (y - ny))
 end
 
-function Editor:load()
+function Editor:boolean(type)
+	local objects = {}
+	local editObject, editPath
+
+	for i, object in self.selection:objects() do
+		if i == 1 then
+			table.insert(objects, object)
+			editObject = object
+			editPath = object.graphics.paths[1]
+		else
+			local transform = editObject.transform:get("full"):
+				inverse():apply(object.transform:get("full"))
+
+			for j = 1, object.graphics.paths.count do
+				local path = object.graphics.paths[j]
+				for k = 1, path.subpaths.count do
+					local subpath = path.subpaths[k]:clone()
+					subpath:transform(transform)
+					if type == "subtract" then
+						subpath:invert()
+					end
+					editPath:addSubpath(subpath)
+				end
+			end
+		end
+	end
+
+	if editObject == nil then
+		return
+	end
+
+	editObject:refresh()
+
+	for i, o in ipairs(self.objects) do
+		if not self.selection:contains(o) then
+			table.insert(objects, o)
+		end
+	end
+
+	self.objects = objects
+	self.selection:clear()
+	self.selection:add(editObject)
+	self:selectionChanged()
+end
+
+local function isArray(t)
+	-- see https://stackoverflow.com/questions/7526223/how-do-i-know-if-a-table-is-an-array
+	local i = 0
+	for _ in pairs(t) do
+		i = i + 1
+		if t[i] == nil then return false end
+	end
+	return true
+end
+
+function toLuaCode(t)
+	if type(t) == "table" then
+		local entries = {}
+		if isArray(t) then
+			for _, v in pairs(t) do
+				table.insert(entries, toLuaCode(v))
+			end
+		else
+			for k, v in pairs(t) do
+				table.insert(entries, k .. " = " .. toLuaCode(v))
+			end
+		end
+		return "{" .. table.concat(entries, ", ") .. "}"
+	elseif type(t) == "string" then
+		return "\"" .. t .. "\""
+	else
+		return tostring(t)
+	end
+end
+
+function Editor:save()
+	if #self.objects < 1 then
+		return
+	end
+
+	local g = tove.newGraphics()
+	local proto = self.objects[1].scaledGraphics
+	g:setDisplay(proto)
+	g:setUsage(proto)
+
+	for i, object in ipairs(self.objects) do
+		for i, path in tove.ipairs(object.scaledGraphics.paths) do
+			path = path:clone()
+			path:transform(object.transform:get("draw"))
+			g:addPath(path)
+		end
+	end
+
+	local s = g:serialize()
+	love.system.setClipboardText(toLuaCode(s))
+end
+
+function Editor:startup()
 	local editor = self
 
 	self.transform = love.math.newTransform()
@@ -195,149 +302,221 @@ function Editor:load()
 
 	self.font = love.graphics.newFont(11)
 
-	local updateColor = function(what, ...)
-		for object in self.selection:objects() do
-			for i = 1, object.graphics.paths.count do
-				local path = object.graphics.paths[i]
-				if what == "fill" then
-					path:setFillColor(...)
-				else
-					path:setLineColor(...)
+	local colorPicked = function(what, type, ...)
+		if self.widget and self.widget.colorPicked then
+			self.widget:colorPicked(what, type, ...)
+		elseif type == "solid" or type == "none" then
+			for _, object in self.selection:objects() do
+				for i = 1, object.graphics.paths.count do
+					local path = object.graphics.paths[i]
+					if what == "fill" then
+						path:setFillColor(...)
+					else
+						path:setLineColor(...)
+					end
 				end
+				object:refresh()
 			end
-			object:refresh()
 		end
 	end
 
-	self.colorWheel = ColorWheel.new()
-	self.colorDabs = ColorDabs.new(updateColor, self.colorWheel)
-	self.lineWidthSlider = Slider.new(function(value)
-		for object in self.selection:objects() do
+	self.opacitySlider = boxy.Slider(0, 1)
+	self.colorWheel = ColorWheel(self.opacitySlider)
+	self.colorDabs = ColorDabs(colorPicked, self.colorWheel)
+
+	self.lineWidthSlider = boxy.Slider(0, 20)
+	self.lineWidthSlider.valueChanged:connect(function(value)
+		for _, object in self.selection:objects() do
 			for i = 1, object.graphics.paths.count do
 				local path = object.graphics.paths[i]
 				path:setLineWidth(value)
 			end
 			object:refresh()
 		end
-	end, 0, 20)
-	self.miterLimitSlider = Slider.new(function(value)
-		for object in self.selection:objects() do
+	end)
+	self.miterLimitSlider = boxy.Slider(0, 20)
+	self.miterLimitSlider.valueChanged:connect(function(value)
+		for _, object in self.selection:objects() do
 			for i = 1, object.graphics.paths.count do
 				local path = object.graphics.paths[i]
 				path:setMiterLimit(value)
 			end
 			object:refresh()
 		end
-	end, 0, 20)
+	end)
 
-	self.toolbar = Toolbar.new(function(button)
+	self.toolbar = Toolbar()
+	self.toolbar:setGeometry(
+		0, 0, 32, love.graphics.getHeight())
+	boxy.add(self.toolbar)
+	self.toolbar.tool:connect(function()
 		self:updateWidget()
 	end)
-	self.toolbar:setBounds(
-		0,
-		0,
-		32,
-		love.graphics.getHeight())
-
-	self.rpanel = Panel.new()
-	self.rpanel:add(Label.new(self.font, "Color"))
-	self.rpanel:add(self.colorDabs)
-	self.rpanel:add(self.colorWheel)
-	self.rpanel:add(Label.new(self.font, "Line Width"))
-	self.rpanel:add(self.lineWidthSlider)
-	self.rpanel:add(Label.new(self.font, "Miter Limit"))
-	self.rpanel:add(self.miterLimitSlider)
-
-	self.rpanel:add(Label.new(self.font, "Renderer"))
-
-	do
-		local hbox = HBox.new()
-		local buttons = ImageButton.group(
-			hbox, "texture", "mesh", "shader")
-	    self.radios = RadioGroup.new(unpack(buttons))
-		self.rpanel:add(hbox)
-	end
-
-	self.displaycontrol = VBox.new()
-	self.displaycontrol.xpad = 0
-	self.displaycontrol.ypad = 0
-	function updateDisplayUI(mode, quality, usage)
-		self.displaycontrol:empty()
-		if mode == "mesh" then
-			self.displaycontrol:add(Label.new(self.font, "Settings"))
-			local vbox = VBox.new()
-			vbox.frame = true
-
-			local dynamic = Checkbox.new(
-				self.font, "animated properties", function(value)
-					self:setUsage("points", value and "dynamic" or "static")
-				end)
-			vbox:add(dynamic)
-			dynamic:setChecked(usage.points == "dynamic")
-
-			vbox:add(Label.new(
-				self.font, "tesselation quality"))
-			local slider = Slider.new(function(value)
-				self:setDisplay("mesh", value)
-			end, 0, 1)
-			vbox:add(slider)
-			slider:setValue(quality)
-
-			self.displaycontrol:add(vbox)
-		elseif mode == "shader" then
-			self.displaycontrol:add(Label.new(self.font, "Settings"))
-			local vbox = VBox.new()
-			vbox.frame = true
-
-			local checkbox = Checkbox.new(
-				self.font, "vertex shader lines", function(value)
-					local mode, quality = self:getDisplay()
-					self:setDisplay("shader",
-						{line = {
-							type = value and "vertex" or "fragment",
-							quality = quality.line.quality
-						}})
-				end)
-			checkbox:setChecked(quality.line.type == "vertex")
-			vbox:add(checkbox)
-			vbox:add(Label.new(
-				self.font, "line quality"))
-			local slider = Slider.new(function(value)
-				local mode, quality = self:getDisplay()
-				self:setDisplay("shader",
-					{line = {
-						type = quality.line.type,
-						quality = value
-					}})
-				local _, qq = self:getDisplay()
-			end, 0, 1)
-			slider:setValue(quality.line.quality)
-			vbox:add(slider)
-
-			self.displaycontrol:add(vbox)
+	self.toolbar.operation:connect(function(name)
+		if name == "add" or name == "subtract" then
+			self:boolean(name)
+		elseif name == "file" then
+			self:save()
 		end
-	end
-	self.rpanel:add(self.displaycontrol)
-	self.radios:setCallback(function(button)
-		local newmode = button.name
-		local mode, quality = self:getDisplay()
-		if mode ~= newmode then
-			if newmode == "shader" then
-				quality = {line = {type = "vertex", quality = 1.0}}
-			else
-				quality = 0.5
-			end
-			self:setDisplay(newmode, quality)
-			mode = newmode
-		end
-		updateDisplayUI(mode, quality, self:getUsage())
 	end)
 
-	self.rpanel:setBounds(
-		love.graphics.getWidth() - 180,
-		0,
-		180,
-		love.graphics.getHeight())
+	self.displaycontrol = boxy.VBox():setMargins(11, 0, 11, 11)
+
+	self.rendererButtons = {}
+	local rendererButtons = utils.makeButtons(
+		{"texture", "mesh", "shader"},
+		"monochrome",
+		function(name, button)
+			button:setMode("radio")
+			self.rendererButtons[name] = button
+	        button:onChecked(function()
+				self:setDisplayMode(name)
+	        end)
+    	end)
+	self.rendererBox = boxy.GroupBox()
+	self.rendererBox:add(
+		boxy.VBox {
+			boxy.HBox(rendererButtons),
+			self.displaycontrol
+		}:removeMargins())
+
+	self.lineJoinButtons = {}
+	local lineJoinButtons = utils.makeButtons(
+		{"round", "bevel", "miter"},
+		"monochrome",
+		function(name, button)
+			button:setMode("radio")
+			self.lineJoinButtons[name] = button
+	        button:onChecked(function()
+				for _, object in self.selection:objects() do
+					for i = 1, object.graphics.paths.count do
+						local path = object.graphics.paths[i]
+						path:setLineJoin(name)
+					end
+					object:refresh()
+				end
+	        end)
+    	end)
+	self.lineJoinBox = boxy.GroupBox()
+	self.lineJoinBox:add(
+		boxy.HBox(lineJoinButtons))
+
+	self.rpanel = boxy.Panel()
+	self.rpanel:setLayout(boxy.VBox {
+		boxy.Label("Color"),
+		self.colorDabs,
+		self.colorWheel,
+		self.colorDabs.gradientBox,
+		boxy.Label("Opacity"),
+		self.opacitySlider,
+		boxy.Label("Line Width"),
+		self.lineWidthSlider,
+		boxy.Label("Line Join"),
+		self.lineJoinBox,
+		boxy.Label("Miter Limit"),
+		self.miterLimitSlider,
+		boxy.Label("Renderer Settings"),
+		self.rendererBox,
+		boxy.Spacer(1)
+	})
+
+	rendererButtons[1]:setChecked(true)
+
+	self.rpanel:setGeometry(
+		love.graphics.getWidth() - 180, 0,
+		180, love.graphics.getHeight())
+	boxy.add(self.rpanel)
+end
+
+function Editor:setDisplayMode(newmode)
+	local mode, quality = self:getDisplay()
+	if mode ~= newmode then
+		if newmode == "shader" then
+			quality = {line = {type = "vertex", quality = 1.0}}
+		else
+			quality = 0.5
+		end
+		self:setDisplay(newmode, quality)
+		mode = newmode
+	end
+	self:updateDisplayUI()
+end
+
+function Editor:updateLineUI()
+	local mode, quality = self:getDisplay()
+
+	for _, button in pairs(self.lineJoinButtons) do
+		button:setEnabled(true)
+	end
+
+	self.miterLimitSlider:setEnabled(true)
+
+	if mode == "shader" then
+		if quality.line.type == "vertex" then
+			self.lineJoinButtons["round"]:setEnabled(false)
+		else
+			for _, button in pairs(self.lineJoinButtons) do
+				button:setEnabled(false)
+			end
+			self.miterLimitSlider:setEnabled(false)
+		end
+	end
+end
+
+function Editor:updateDisplayUI()
+	local mode, quality = self:getDisplay()
+	local usage = self:getUsage()
+
+	self.displaycontrol:clear()
+	if mode == "mesh" then
+		local animatedCheckBox = boxy.CheckBox("For Animation")
+		animatedCheckBox.valueChanged:connect(function(value)
+			self:setUsage("points", value and "dynamic" or "static")
+		end)
+		animatedCheckBox:setChecked(usage.points == "dynamic")
+
+		local qualitySlider = boxy.Slider(0, 1)
+		qualitySlider.valueChanged:connect(function(value)
+			self:setDisplay("mesh", value)
+		end)
+		qualitySlider:setValue(quality)
+
+		self.displaycontrol:add(
+			boxy.Label("Tesselation Quality"),
+			qualitySlider,
+			animatedCheckBox)
+	elseif mode == "shader" then
+		local vslCheckBox = boxy.CheckBox("Mesh Lines")
+		vslCheckBox.valueChanged:connect(function(value)
+			local mode, quality = self:getDisplay()
+			self:setDisplay("shader",
+				{line = {
+					type = value and "vertex" or "fragment",
+					quality = quality.line.quality
+				}})
+			self:updateLineUI()
+		end)
+		vslCheckBox:setChecked(quality.line.type == "vertex")
+
+		local lineQualitySlider = boxy.Slider(0, 1)
+		lineQualitySlider.valueChanged:connect(function(value)
+			local mode, quality = self:getDisplay()
+			self:setDisplay("shader",
+				{line = {
+					type = quality.line.type,
+					quality = value
+				}})
+			local _, qq = self:getDisplay()
+		end)
+		lineQualitySlider:setValue(quality.line.quality)
+
+		self.displaycontrol:add(
+			vslCheckBox,
+			boxy.Label("Line Quality"),
+			lineQualitySlider)
+	end
+
+	self:updateLineUI()
 end
 
 function Editor:draw()
@@ -355,9 +534,12 @@ function Editor:draw()
 
 	if self.widget ~= nil then
 		self.widget:draw(self.transform)
-		self.rpanel:draw()
+		self.rpanel.visible = true
+	else
+		self.rpanel.visible = false
 	end
-	self.toolbar:draw()
+
+	boxy.draw()
 end
 
 function Editor:startdrag(transform, x, y, button, func, drawfunc)
@@ -403,6 +585,12 @@ function Editor:updateWidget()
 		end
 	elseif tool == "pencil" then
 		self.widget = newPenWidget(self)
+	elseif tool == "gradient" then
+		local object = self.selection:first()
+		self.widget = newGradientTool(
+			self, self.colorDabs, self.handles, object)
+	elseif tool == "rectangle" then
+		self.widget = newRectangleTool(self)
 	elseif tool == "circle" then
 		self.widget = newEllipseTool(self)
 	else
@@ -423,7 +611,8 @@ function Editor:selectionChanged()
 	self.lineWidthSlider:setValue(path:getLineWidth())
 	self.miterLimitSlider:setValue(path:getMiterLimit())
 	local mode, quality = object:getDisplay()
-	self.radios:select(mode)
+	self.rendererButtons[mode]:setChecked(true)
+	self.lineJoinButtons[path:getLineJoin()]:setChecked(true)
 	self.widgetDirty = true
 end
 
@@ -488,8 +677,9 @@ function Editor:mouseselect(x, y, button, clickCount)
 					if clickCount == 2 then
 						self.toolbar:select("location")
 					end
+					local tool = self.toolbar:current()
 
-					if clickCount == 1 then
+					if clickCount == 1 and tool ~= "gradient" then
 						self:startdrag(self.transform, x, y, button,
 							makeDragSelectionFunc(self.selection, x, y))
 					else
@@ -507,23 +697,16 @@ function Editor:mouseselect(x, y, button, clickCount)
 	return false
 end
 
-function Editor:mousedown(gx, gy, button, clickCount)
+function Editor:mousepressed(gx, gy, button, clickCount)
+	if boxy.mousepressed(gx, gy, button, clickCount) then
+		self.clicked = nil
+		return
+	end
+
 	local x, y = self.transform:inverseTransformPoint(gx, gy)
 
 	if button == 1 then
 		self.clicked = nil
-
-		if self:startdrag(nil, gx, gy, button,
-			self.toolbar:click(gx, gy)) then
-			return
-		end
-
-		if not self.selection:empty() then
-			if self:startdrag(nil, gx, gy, button,
-				self.rpanel:click(gx, gy)) then
-				return
-			end
-		end
 
 		if self.widget ~= nil then
 			if self:startdrag(self.transform, x, y, button,
@@ -573,9 +756,13 @@ function Editor:mousedown(gx, gy, button, clickCount)
 end
 
 function Editor:mousereleased(x, y, button, clickCount)
+	if boxy.mousereleased(x, y, button, clickCount) then
+		--return
+	end
+
 	if button == 1 then
 		local tool = self.toolbar:current()
-		if self.clicked ~= nil and tool == "cursor"
+		if self.clicked ~= nil and (tool == "cursor" or tool == "gradient")
 			and (self.drag == nil or not self.drag.active)
 			and not isShiftDown() then
 			self:deselect()
@@ -632,6 +819,8 @@ function Editor:keypressed(key, scancode, isrepeat)
 end
 
 function Editor:update(dt)
+	boxy.update()
+
     local drag = self.drag
 	if drag ~= nil then
         local x = love.mouse.getX()
@@ -667,7 +856,7 @@ function Editor:removeObject(object)
 end
 
 function Editor:setDisplay(...)
-	for o in self.selection:objects() do
+	for _, o in self.selection:objects() do
 		o:setDisplay(...)
 	end
 end
@@ -679,7 +868,7 @@ function Editor:getDisplay()
 end
 
 function Editor:setUsage(what, value)
-	for o in self.selection:objects() do
+	for _, o in self.selection:objects() do
 		o:setUsage(what, value)
 	end
 end
@@ -729,6 +918,7 @@ function Editor:newObjectWithPath(mode)
 
 	self.selection:clear()
 	self.selection:add(object)
+	self:selectionChanged()
 
 	return object
 end
@@ -745,10 +935,15 @@ end
 
 function Editor:loadfile(file)
 	file:open("r")
-	local svg = file:read()
+	local data = file:read()
 	file:close()
 
-	local graphics = tove.newGraphics(svg, 512)
+	if string.sub(data, 1, 1) == "{" then -- lua code?
+		local load = loadstring("return " .. data)
+		data = load()
+	end
+
+	local graphics = tove.newGraphics(data, 512)
 	graphics:clean()
 
 	self.transform = love.math.newTransform()

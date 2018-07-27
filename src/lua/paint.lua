@@ -72,12 +72,64 @@ function Paint:set(r, g, b, a)
 	lib.ColorSet(self._ref, r, g, b, a or 1)
 end
 
+local paintTypes = {
+	none = lib.PAINT_NONE,
+	solid = lib.PAINT_SOLID,
+	linear = lib.PAINT_LINEAR_GRADIENT,
+	radial = lib.PAINT_RADIAL_GRADIENT
+}
+
+function Paint:getType()
+	local t = lib.PaintGetType(self._ref)
+	for name, enum in pairs(paintTypes) do
+		if t == enum then
+			return name
+		end
+	end
+end
+
+function Paint:getNumColors()
+	return lib.PaintGetNumColors(self._ref)
+end
+
+function Paint:getColor(i, opacity)
+	return lib.PaintGetColor(self._ref, i - 1, opacity or 1)
+end
+
+function Paint:getGradientParameters()
+	local t = lib.PaintGetType(self._ref)
+	local v = lib.GradientGetParameters(self._ref).values
+	if t == lib.PAINT_LINEAR_GRADIENT then
+		return v[0], v[1], v[2], v[3]
+	elseif t == lib.PAINT_RADIAL_GRADIENT then
+		return v[0], v[1], v[2], v[3], v[4]
+	end
+end
+
 function Paint:addColorStop(offset, r, g, b, a)
 	lib.GradientAddColorStop(self._ref, offset, r, g, b, a or 1)
 end
 
 function Paint:clone()
 	return lib.ClonePaint(self._ref)
+end
+
+function Paint:serialize()
+	local t = lib.PaintGetType(self._ref)
+	if t == lib.PAINT_SOLID then
+		return {type = "solid", color = {self:get()}}
+	elseif t == lib.PAINT_LINEAR_GRADIENT then
+		local n = self:getNumColors()
+		local x0, y0, x1, y1 = self:getGradientParameters()
+		return {type = "linear", x0 = x0, y0 = y0, x1 = x1, y1 = y1, colors = {}}
+	end
+	return nil
+end
+
+tove.newPaint = function(p)
+	if p.type == "solid" then
+		return newColor(unpack(p.color))
+	end
 end
 
 Paint._wrap = function(r, g, b, a)

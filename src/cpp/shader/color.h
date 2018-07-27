@@ -9,15 +9,16 @@
  * All rights reserved.
  */
 
+#include <functional>
+
 #define SPECIAL_CASE_2 true
 
-class ColorShaderLinkImpl {
+class AbstractPaintFeed {
 protected:
+	TovePaintData &paintData;
 	const float scale;
 
 protected:
-	ToveShaderColorData &shaderData;
-
 	static TovePaintType getStyle(const PaintRef &paint) {
 		if (paint.get() == nullptr) {
 			return PAINT_NONE;
@@ -36,41 +37,73 @@ protected:
 		}
 	}
 
-	void beginUpdateGradient(const PaintRef &paint, float opacity) {
-		const TovePaintType style = (TovePaintType)shaderData.style;
-		ToveShaderGradient &gradient = shaderData.gradient;
+	int determineNumColors(const PaintRef &paint) const {
+		const TovePaintType style = (TovePaintType)paintData.style;
+		ToveGradientData &gradient = paintData.gradient;
 
 		if (style < PAINT_LINEAR_GRADIENT) {
-			gradient.numColors = 0;
-			if (style == PAINT_SOLID) {
-				paint->getRGBA(&shaderData.rgba, opacity);
-			}
+			return style == PAINT_SOLID ? 1 : 0;
 		} else {
 			NSVGgradient *g = paint->getNSVGgradient();
 			assert(g && g->nstops >= 1);
 	    	if (SPECIAL_CASE_2 && g->nstops == 2 &&
 				g->stops[0].offset == 0.0 &&
 				g->stops[1].offset == 1.0) {
-	    		gradient.numColors = 2;
+	    		return 2;
 	    	} else {
-	    		gradient.numColors = 256;
+	    		return 256;
 	    	}
 		}
 	}
 
-	void endUpdateGradient(const PaintRef &paint, float opacity) {
-		const TovePaintType style = (TovePaintType)shaderData.style;
+	bool update(const PaintRef &paint, float opacity) {
+		const TovePaintType style = (TovePaintType)paintData.style;
+		ToveGradientData &gradient = paintData.gradient;
 
 		if (style < PAINT_LINEAR_GRADIENT) {
-			return;
+			if (style == PAINT_SOLID) {
+				//RGBA old = paintData.rgba;
+				paint->getRGBA(paintData.rgba, opacity);
+
+				if (gradient.arguments) {
+					if (gradient.matrix) {
+						float *m = &gradient.matrix[0][0];
+
+						m[0] = 1;
+						m[1] = 0;
+						m[2] = 0;
+
+						m[3] = 0;
+						m[4] = 1;
+						m[5] = 0;
+
+						m[6] = 0;
+						m[7] = 0;
+						m[8] = 1;
+					}
+
+					if (gradient.arguments) {
+						gradient.arguments->x = 0;
+						gradient.arguments->y = 0;
+						gradient.arguments->z = 0;
+						gradient.arguments->w = 0;
+					}
+
+					*(uint32_t*)gradient.colorsTexture = nsvg::makeColor(
+						paintData.rgba.r,
+						paintData.rgba.g,
+						paintData.rgba.b,
+						paintData.rgba.a
+					);
+				}
+			}
+
+			return true;
 		}
 
-		ToveShaderGradient &gradient = shaderData.gradient;
-
-		assert(gradient.data);
-		assert(gradient.data->colorsTexture);
-		uint8_t *texture = gradient.data->colorsTexture;
-		const int textureRowBytes = gradient.data->colorsTextureRowBytes;
+		assert(gradient.colorsTexture);
+		uint8_t *texture = gradient.colorsTexture;
+		const int textureRowBytes = gradient.colorsTextureRowBytes;
 
 		NSVGgradient *g = paint->getNSVGgradient();
 		assert(g);
@@ -93,97 +126,128 @@ protected:
 			cached.init(nsvgPaint, opacity);
 		}
 
-		assert(gradient.data->matrix != nullptr);
-		paint->getGradientMatrix(*gradient.data->matrix, scale);
+		assert(gradient.matrix != nullptr);
+		paint->getGradientMatrix(*gradient.matrix, scale);
+
+		if (gradient.arguments) {
+			float s = 0.5f / gradient.colorTextureHeight;
+
+			gradient.arguments->x =
+				(style == PAINT_RADIAL_GRADIENT) ? 1.0f : 0.0f;
+			gradient.arguments->y = 1.0f;
+			gradient.arguments->z = s;
+			gradient.arguments->w = 1.0f - 2.0f * s;
+		}
+
+		return true;
 	}
 
 public:
-	ColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
-		shaderData(data), scale(scale) {
-		shaderData.style = PAINT_UNDEFINED;
+	AbstractPaintFeed(TovePaintData &data, float scale) :
+		paintData(data), scale(scale) {
+
+		paintData.style = PAINT_UNDEFINED;
 	}
 };
 
-class LineColorShaderLinkImpl : public ColorShaderLinkImpl {
-public:
-	ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {
-    	ToveChangeFlags changes = path->fetchChanges(CHANGED_LINE_STYLE);
+class PaintFeedBase : public AbstractPaintFeed {
+protected:
+	const ToveChangeFlags CHANGED_STYLE;
+	const PathRef path;
 
-    	if (shaderData.style == PAINT_UNDEFINED) {
-    		changes |= CHANGED_LINE_STYLE;
-    	}
+	const PaintRef &getColor() const {
+		static const PaintRef none;
 
-    	if (changes == 0) {
-    		return 0; // done
-    	}
-
-		const PaintRef &lineColor = path->getLineColor();
-
-        const bool hasStroke = path->getLineWidth() > 0 && lineColor.get() != nullptr;
-
-        TovePaintType lineStyle = getStyle(hasStroke ? lineColor : PaintRef());
-        if (shaderData.style != PAINT_UNDEFINED && shaderData.style != lineStyle) {
-        	return CHANGED_RECREATE;
-        }
-        shaderData.style = lineStyle;
-
-		if (changes & CHANGED_LINE_STYLE) {
-			beginUpdateGradient(lineColor, path->getOpacity());
+		switch (CHANGED_STYLE) {
+			case CHANGED_LINE_STYLE:
+				return path->getLineWidth() >= 0.0f ?
+					path->getLineColor() : none;
+			case CHANGED_FILL_STYLE:
+				return path->getFillColor();
+			default:
+				assert(false);
 		}
+	}
 
-		return changes;
+public:
+	PaintFeedBase(
+		const PathRef &path,
+		TovePaintData &data,
+		float scale,
+		ToveChangeFlags CHANGED_STYLE) :
+
+		AbstractPaintFeed(data, scale),
+		path(path),
+		CHANGED_STYLE(CHANGED_STYLE) {
+
+		std::memset(&paintData, 0, sizeof(paintData));
+
+		const PaintRef &color = getColor();
+        const TovePaintType style = getStyle(color);
+		paintData.style = style;
+		paintData.gradient.numColors = determineNumColors(color);
+	}
+
+	int getNumColors() const {
+		return paintData.gradient.numColors;
+	}
+
+	void bind(const ToveGradientData &data, int i) {
+		paintData.gradient.matrix = &data.matrix[i];
+		paintData.gradient.arguments = &data.arguments[i];
+		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;
+		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;
+		paintData.gradient.colorTextureHeight = data.colorTextureHeight;
+
+		update(getColor(), path->getOpacity());
+	}
+
+	inline ToveChangeFlags beginUpdate() {
+		if (path->fetchChanges(CHANGED_STYLE)) {
+			const PaintRef &color = getColor();
+	        const TovePaintType style = getStyle(color);
+
+	        if (paintData.style != style ||
+				determineNumColors(color) != paintData.gradient.numColors) {
+
+ 				return CHANGED_RECREATE;
+			}
+
+			return CHANGED_STYLE;
+		} else {
+			return 0;
+		}
     }
 
-    int endUpdate(const PathRef &path, bool initial) {
-    	// (1) compute gradient colors
-
-    	endUpdateGradient(path->getLineColor(), path->getOpacity());
-
-    	return 0;
+	inline ToveChangeFlags endUpdate() {
+    	return update(getColor(), path->getOpacity()) ? CHANGED_STYLE : 0;
     }
+};
 
-	LineColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
-		ColorShaderLinkImpl(data, scale) {
+class PaintFeed : public PaintFeedBase {
+private:
+	TovePaintData _data;
+
+public:
+	PaintFeed(const PaintFeed &feed) :
+		PaintFeedBase(feed.path, _data, feed.scale, feed.CHANGED_STYLE) {
+	}
+
+	PaintFeed(const PathRef &path, float scale, ToveChangeFlags changed) :
+		PaintFeedBase(path, _data, scale, changed) {
 	}
 };
 
-class FillColorShaderLinkImpl : public ColorShaderLinkImpl {
+class LinePaintFeed : public PaintFeedBase {
 public:
-	ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {
-    	ToveChangeFlags changes = path->fetchChanges(CHANGED_FILL_STYLE);
-
-    	if (shaderData.style == PAINT_UNDEFINED) {
-    		changes |= CHANGED_FILL_STYLE;
-    	}
-
-    	if (changes == 0) {
-    		return 0; // done
-    	}
-
-		const PaintRef &fillColor = path->getFillColor();
-
-        const TovePaintType style = getStyle(fillColor);
-        if (shaderData.style != PAINT_UNDEFINED && shaderData.style != style) {
-        	return CHANGED_RECREATE;
-        }
-        shaderData.style = style;
-
-		if (changes & CHANGED_FILL_STYLE) {
-			beginUpdateGradient(fillColor, path->getOpacity());
-		}
-
-		return changes;
+	LinePaintFeed(const PathRef &path, TovePaintData &data, float scale) :
+		PaintFeedBase(path, data, scale, CHANGED_LINE_STYLE) {
 	}
+};
 
-    int endUpdate(const PathRef &path, bool initial) {
-    	// (1) compute gradient colors
-
-    	endUpdateGradient(path->getFillColor(), path->getOpacity());
-
-    	return 0;
-    }
-
-	FillColorShaderLinkImpl(ToveShaderColorData &data, float scale) :
-		ColorShaderLinkImpl(data, scale) {
+class FillPaintFeed : public PaintFeedBase {
+public:
+	FillPaintFeed(const PathRef &path, TovePaintData &data, float scale) :
+		PaintFeedBase(path, data, scale, CHANGED_FILL_STYLE) {
 	}
 };

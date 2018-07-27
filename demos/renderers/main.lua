@@ -1,35 +1,27 @@
 -- TÖVE Demo: renderers.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+local tove = require "tove"
 require "assets/tovedemo"
 
-local rabbit = love.filesystem.read("assets/rabbit.svg")
+local flow
 
-local function newRabbit()
-	-- make a new rabbit graphics, prescaled to 200 px
-	local graphics = tove.newGraphics(rabbit, 200)
-	return graphics
+local function load(svg)
+	-- makes a new graphics, prescaled to 200 px
+	local function newGraphics()
+		return tove.newGraphics(svg, 200)
+	end
+
+	-- just some glue code for presentation.
+	flow = tovedemo.newCoverFlow()
+	for _, mode in ipairs {"texture", "mesh", "shader"} do
+		local graphics = newGraphics()
+		graphics:setDisplay(mode)
+		flow:add(mode, graphics)
+	end
 end
 
-local textureRabbit = newRabbit()
-textureRabbit:setDisplay("texture")
-
-local meshRabbit = newRabbit()
-meshRabbit:setDisplay("mesh")
-
-local flatmeshRabbit = newRabbit()
-flatmeshRabbit:setDisplay("flatmesh")
-
-local shaderRabbit = newRabbit()
-shaderRabbit:setDisplay("shader")
-
--- just some glue code for presentation.
-local flow = tovedemo.newCoverFlow()
-flow:add("texture", textureRabbit)
-flow:add("mesh", meshRabbit)
-flow:add("flatmesh", flatmeshRabbit)
-flow:add("shader", shaderRabbit)
+load(love.filesystem.read("assets/rabbit.svg"))
 
 function love.draw()
 	tovedemo.draw("Renderers.")
@@ -38,4 +30,11 @@ end
 
 function love.update(dt)
 	flow:update(dt)
+end
+
+function love.filedropped(file)
+	file:open("r")
+	local svg = file:read()
+	file:close()
+	load(svg)
 end

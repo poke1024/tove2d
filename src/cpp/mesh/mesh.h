@@ -15,21 +15,29 @@
 #include "triangles.h"
 #include "paint.h"
 #include "utils.h"
+#include <map>
 
 class FixedFlattener;
+
+typedef uint32_t SubmeshId;
+
+class Submesh;
 
 class AbstractMesh {
 protected:
 	void *mVertices;
 	uint32_t mVertexCount;
 	const uint16_t mStride;
-	TriangleCache mTriangles;
+	std::map<SubmeshId, Submesh*> mSubmeshes;
+	mutable std::vector<ToveVertexIndex> mCoalescedTriangles;
 
 	void reserve(uint32_t n);
 
 public:
 	AbstractMesh(uint16_t stride);
-	~AbstractMesh();
+	virtual ~AbstractMesh();
+
+	ToveTriangles getTriangles() const;
 
 	inline Vertices vertices(int from, int n) {
 		if (from + n > mVertexCount) {
@@ -40,25 +48,12 @@ public:
 
 	void cache(bool keyframe);
 	void clear();
-
-	void triangulate(const ClipperPaths &paths, float scale, ToveHoles holes);
-	void addTriangles(const std::list<TPPLPoly> &triangles);
 	void clearTriangles();
-	void triangulateFill(const int vertexIndex0,
-		const PathRef &path, const FixedFlattener &flattener, ToveHoles holes);
-	void triangulateLine(int v0, bool miter,
-		const PathRef &path, const FixedFlattener &flattener);
 
-	virtual void initializePaint(MeshPaint &paint,
-		const NSVGpaint &nsvg,
-		float opacity,
-		float scale) = 0;
-	virtual void addColor(int vertexIndex, int vertexCount,
-		const MeshPaint &paint) = 0;
-	void add(const ClipperPaths &paths, float scale,
-		const MeshPaint &paint, const ToveHoles holes);
-
-	ToveTriangles getTriangles() const;
+	virtual void setLineColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
+	virtual void setFillColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
 
 	inline int getVertexCount() const {
 		return mVertexCount;
@@ -70,24 +65,83 @@ public:
 		std::memcpy(buffer, mVertices, size);
 	}
 
-	inline bool checkTriangles(bool &triangleCacheFlag) {
+	Submesh *submesh(const PathRef &path, int line);
+};
+
+class Submesh {
+private:
+	TriangleCache mTriangles;
+	AbstractMesh * const mMesh;
+
+public:
+	inline Submesh(AbstractMesh *mesh) : mMesh(mesh) {
+	}
+
+	ToveTriangles getTriangles() const;
+
+	void cache(bool keyframe);
+	void clearTriangles();
+
+	inline Vertices vertices(int from, int n) {
+		return mMesh->vertices(from, n);
+	}
+
+	// used by adaptive flattener.
+	void addClipperPaths(
+		const ClipperPaths &paths,
+		float scale,
+		ToveHoles holes);
+
+	// used by fixed flattener.
+	void triangulateFixedFill(
+		const int vertexIndex0,
+		const PathRef &path,
+		const FixedFlattener &flattener,
+		ToveHoles holes);
+	void triangulateFixedLine(
+		int v0,
+		bool miter,
+		const PathRef &path,
+		const FixedFlattener &flattener);
+
+	inline bool checkTriangles(bool &trianglesChanged) {
 		return mTriangles.check(
-			Vertices(mVertices, mStride), triangleCacheFlag);
+			vertices(0, mMesh->getVertexCount()),
+			trianglesChanged);
 	}
 };
 
 class Mesh : public AbstractMesh {
 public:
 	Mesh();
-	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale);
-	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint);
 };
 
 class ColorMesh : public AbstractMesh {
+protected:
+	void setColor(int vertexIndex, int vertexCount,
+		const MeshPaint &paint);
+
 public:
 	ColorMesh();
-	virtual void initializePaint(MeshPaint &paint, const NSVGpaint &nsvg, float opacity, float scale);
-	virtual void addColor(int vertexIndex, int vertexCount, const MeshPaint &paint);
+
+	virtual void setLineColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
+	virtual void setFillColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
+};
+
+class PaintMesh : public AbstractMesh {
+protected:
+	void setPaintIndex(
+		int paintIndex, int vertexIndex, int vertexCount);
+
+public:
+	PaintMesh();
+
+	virtual void setLineColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
+	virtual void setFillColor(
+		const PathRef &path, int vertexIndex, int vertexCount);
 };
 
 #endif // __TOVE_MESH

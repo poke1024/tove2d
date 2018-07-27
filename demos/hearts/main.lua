@@ -1,7 +1,7 @@
 -- TÖVE Demo: Procedural form and color animation.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+local tove = require "tove"
 require "assets/tovedemo"
 
 local function newHeart()
@@ -11,7 +11,7 @@ local function newHeart()
 	g:moveTo(75, 40)
 	g:curveTo(75, 37, 70, 25, 50, 25)
 	g:curveTo(20, 25, 20, 62.5, 20, 62.5)
-	animatedCurve = g:curveTo(20, 80, 40, 102, 75, 120) -- pick this curve for animation
+	local animatedCurve = g:curveTo(20, 80, 40, 102, 75, 120) -- pick this curve for animation
 	g:curveTo(110, 102, 130, 80, 130, 62.5)
 	g:curveTo(130, 62.5, 130, 25, 100, 25)
 	g:curveTo(85, 25, 75, 37, 75, 40)
@@ -30,16 +30,19 @@ local function newLinearGradient(r)
 end
 
 local hearts = {}
-local modes = {"texture", "flatmesh", "mesh", "shader"}
+local modes = {"texture", "mesh", "mesh", "shader"}
 local names = {}
 
-local function createHearts(stroke)
+local function createHearts(stroke, filled)
 	for i = 1, 4 do
 		local heart, curve = newHeart()
 
 		if filled then
-			gradient = newLinearGradient(0)
-			heart:setFillColor(gradient)
+			if i == 2 then
+				heart:setFillColor(0.859, 0.424, 0.631)
+			else
+				heart:setFillColor(newLinearGradient(0))
+			end
 			heart:fill()
 		end
 
@@ -55,7 +58,7 @@ local function createHearts(stroke)
 		heart:setUsage("colors", "dynamic")
 
 		names[i] = modes[i]
-		hearts[i] = {graphics = heart, animatedCurve = animatedCurve}
+		hearts[i] = {graphics = heart, animatedCurve = curve}
 	end
 end
 
@@ -109,7 +112,7 @@ function love.draw()
 		h.animatedCurve.y = cy0 + (0.25 + math.sin(t * 1.2 + 0.3)) * 20
 
 		-- change fill color.
-		if filled then
+		if filled and i ~= 2 then
 			h.graphics.paths[1]:setFillColor(newLinearGradient(t))
 		end
 

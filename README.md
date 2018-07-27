@@ -1,22 +1,42 @@
-# TÖVE <img align="right" src="https://github.com/poke1024/tove2d/blob/master/docs/images/tovelogo.jpg" height="200">
+# TÖVE <img align="right" src="https://github.com/poke1024/tove2d/blob/master/docs/images/tovelogo.png" height="200">
 Animated vector graphics for [LÖVE](https://love2d.org/).
 
 ## Description
-TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  Haxe's `Graphics`. Which you can animate. Efficiently.
+TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL's `Graphics`. Which you can animate. Efficiently.
 
 ## Features
 * brings crisp vector graphics and SVGs to LÖVE
-* built for for real-time animation of forms and colors
-* configurable renderers, including a unique GPU renderer
+* offers a substantial subset of SVG
+* built for realtime animation
 * uses OpenGL ES 
-* less than 512K in binary size
+* about 512K in binary size
 
-## Status
-TÖVE is experimental and alpha. Things are missing, things might change.
+## Capabilities
+Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games. Here's what you can expect from TÖVE's different renderers:
 
-Do not expect TÖVE to produce print quality vector renderings. It's a simplified vector graphics library for games, and it has its limits. For example, support for line dashes and line caps is patchy.
+|                     | texture            | mesh (1)           | mesh (2)               | shader                  |
+|---------------------|--------------------|--------------------|------------------------|-------------------------|
+| Holes Support       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: (4) | :heavy_check_mark:      |
+| Non-Zero Fill Rule  | :heavy_check_mark: | :heavy_check_mark: | :x:				     | :heavy_check_mark:      |
+| Even-Odd Fill Rule  | :heavy_check_mark: | :heavy_check_mark: | :x:    				 | :heavy_check_mark:      |
+| Clip Paths          | :heavy_check_mark: | :heavy_check_mark: | :x:                    | :x:                     |
+| Solid Colors        | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Linear Gradients    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Radial Gradients    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Thick Lines         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Miter Joins         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Bevel Joins         | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:     | :heavy_check_mark:      |
+| Round Joins         | :heavy_check_mark: | :heavy_check_mark: | :x:                    | (3)  				   |
+| Line Dashes         | :heavy_check_mark: | :heavy_check_mark: | :x:                    | :x:                     |
+| Line Caps           | :heavy_check_mark: | :heavy_check_mark: | :x:                    | :x:                     |
+| GL Draw Calls       | 1 per SVG          | 1 per SVG          | 1 per SVG              | >= 1 per path           |
 
-An experimental build is available for macOS, Linux and Windows: https://github.com/poke1024/tove2d/releases.
+* (1) if used as static mesh, i.e. building it once and not animating its shape.
+* (2) if used as animated mesh, i.e. when calling `setUsage` on "points" with "dynamic".
+* (3) for some shapes, by using the fragment shader lines option.
+* (4) for some shapes, hole polygons must not intersect non-hole polygons.
+
+Releases are available for macOS, Linux and Windows: https://github.com/poke1024/tove2d/releases.
 
 ## Getting Started
 I've written up the essential stuff in these four sections:

@@ -17,19 +17,28 @@
 #include "claimable.h"
 #include "mesh/flatten.h"
 
-class Path : public Claimable<Graphics> {
+class PathOwner {
+public:
+	virtual void changed(ToveChangeFlags flags) = 0;
+};
+
+class Path : public Claimable<PathOwner> {
 private:
 	bool newSubpath;
-	std::vector<SubpathRef> trajectories;
+	std::vector<SubpathRef> subpaths;
+#ifdef NSVG_CLIP_PATHS
+	std::vector<NSVGclipPathIndex> clipIndices;
+#endif
 
 	PaintRef fillColor;
 	PaintRef lineColor;
 
+	int16_t pathIndex;
 	uint8_t changes;
 	float exactBounds[4];
 
 	inline const SubpathRef &current() const {
-		return trajectories[trajectories.size() - 1];
+		return subpaths[subpaths.size() - 1];
 	}
 
 	void setSubpathCount(int n);
@@ -44,8 +53,8 @@ public:
 	NSVGshape nsvg;
 
 	Path();
-	Path(Graphics *graphics);
-	Path(Graphics *graphics, const NSVGshape *shape);
+	Path(PathOwner *owner);
+	Path(PathOwner *owner, const NSVGshape *shape);
 	Path(const char *d);
 	Path(const Path *path);
 
@@ -75,6 +84,8 @@ public:
 		return fillColor;
 	}
 
+	bool areColorsSolid() const;
+
 	void setLineDash(const float *dashes, int count);
 	void setLineDashOffset(float offset);
 
@@ -95,11 +106,11 @@ public:
 	void set(const PathRef &path, const nsvg::Transform &transform);
 
 	inline int getNumSubpaths() const {
-		return trajectories.size();
+		return subpaths.size();
 	}
 
 	inline SubpathRef getSubpath(int i) const {
-		return trajectories.at(i);
+		return subpaths.at(i);
 	}
 
 	int getNumCurves() const;
@@ -166,12 +177,30 @@ public:
 	void changed(ToveChangeFlags flags);
 
 	inline int getSubpathSize(int i, const FixedFlattener &flattener) const {
-		return flattener.size(trajectories[i]);
+		return flattener.size(subpaths[i]);
 	}
+
+	int getFlattenedSize(const FixedFlattener &flattener) const;
 
 	inline bool hasStroke() const {
 		return nsvg.stroke.type > 0 && nsvg.strokeWidth > 0.0f;
 	}
+
+	inline int getIndex() const {
+		return pathIndex;
+	}
+
+	inline void setIndex(int index) {
+		pathIndex = index;
+	}
+
+#ifdef NSVG_CLIP_PATHS
+	const std::vector<NSVGclipPathIndex> &getClipIndices() {
+		return clipIndices;
+	}
+#endif
+
+	ClipperLib::PolyFillType getClipperFillType() const;
 };
 
 #endif // __TOVE_PATH

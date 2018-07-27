@@ -11,13 +11,14 @@
 
 --!! include "license.lua"
 
+local basepath = (...) .. "/"
 local ffi = require 'ffi'
 
 ffi.cdef [[
 --!! include "../cpp/_interface.h"
 ]]
 
-tove = {}
+local tove = {}
 
 tove.init = function(path)
 	local libName = {
@@ -25,9 +26,6 @@ tove.init = function(path)
 		["Windows"] = "libTove.dll",
 		["Linux"] = "libTove.so"
 	}
-
-	-- https://stackoverflow.com/questions/6380820/get-containing-path-of-lua-file
-	local basepath = debug.getinfo(2, "S").source:sub(2):match("(.*/)")
 
 	local lib = ffi.load(basepath .. libName[love.system.getOS()])
 	tove.lib = lib
@@ -133,7 +131,54 @@ tove.init = function(path)
 
 	tove.Transform = {}
 
+	tove.transformed = function(source, ...)
+		local args = {...}
+		local t
+		if type(args[1]) == "number" then
+			t = love.math.newTransform(...)
+		else
+			t = args[1]
+		end
+		local a, b, _, c, d, e, _, f = t:getMatrix()
+		return setmetatable({
+			s = source, args = {a, b, c, d, e, f}}, tove.Transform)
+	end
+
+	tove.ipairs = function(a)
+		local i = 1
+		local n = a.count
+		return function()
+			local j = i
+			if j <= n then
+				i = i + 1
+				return j, a[j]
+			else
+				return nil
+			end
+		end
+	end
+
 	local bit = require("bit")
+
+	tove.lineJoins = {
+		miter = lib.LINEJOIN_MITER,
+		round = lib.LINEJOIN_ROUND,
+		bevel = lib.LINEJOIN_BEVEL
+	}
+
+	tove.fillRules = {
+		nonzero = lib.FILLRULE_NON_ZERO,
+		evenodd = lib.FILLRULE_EVEN_ODD
+	}
+
+	local function findEnum(enums, value)
+		for k, v in pairs(enums) do
+			if v == value then
+				return k
+			end
+		end
+		error("illegal enum value")
+	end
 
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand
@@ -149,3 +194,5 @@ tove.init = function(path)
 end
 
 tove.init()
+
+return tove

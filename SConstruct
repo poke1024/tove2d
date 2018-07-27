@@ -46,7 +46,7 @@ else:
 
 	env["CCFLAGS"] = CCFLAGS
 
-lib = env.SharedLibrary(target='lib/libTove', source=sources)
+lib = env.SharedLibrary(target='tove/libTove', source=sources)
 
 # prepare git hash based version string.
 
@@ -113,7 +113,7 @@ def minify_lua(target, source, env):
 				f.write("".join(lua_import(s.abspath)))
 
 env.Append(BUILDERS={'MinifyLua':Builder(action=minify_lua)})
-env.MinifyLua('lib/tove.lua',
+env.MinifyLua('tove/init.lua',
 	Glob("src/cpp/_interface.h") +
 	Glob("src/lua/*.lua") +
 	Glob("src/lua/core/*.lua") +

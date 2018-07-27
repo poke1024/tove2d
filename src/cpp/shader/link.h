@@ -15,77 +15,101 @@
 #include "color.h"
 #include "geometry.h"
 
-class AbstractShaderLink {
+class AbstractFeed {
 public:
-	virtual ~AbstractShaderLink() {
+	virtual ~AbstractFeed() {
 	}
 
-	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) = 0;
-	virtual ToveChangeFlags endUpdate(const PathRef &path, bool initial) = 0;
+	virtual ToveChangeFlags beginUpdate() = 0;
+	virtual ToveChangeFlags endUpdate() = 0;
 
     virtual ToveShaderData *getData() {
     	return nullptr;
     }
 
-    virtual ToveShaderLineFillColorData *getColorData() {
-    	return nullptr;
-    }
-};
-
-class ColorShaderLink : public AbstractShaderLink {
-private:
-	const float scale;
-	ToveShaderLineFillColorData data;
-	LineColorShaderLinkImpl lineColor;
-	FillColorShaderLinkImpl fillColor;
-
-public:
-	ColorShaderLink(float scale) :
-		scale(scale),
-		lineColor(data.line, scale),
-		fillColor(data.fill, scale) {
+	virtual TovePaintColorAllocation getColorAllocation() const {
+		return TovePaintColorAllocation{0, 0};
 	}
 
-	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {
-		ToveChangeFlags changes = lineColor.beginUpdate(path, initial) |
-			fillColor.beginUpdate(path, initial);
+	virtual void bind(const ToveGradientData &data) {
+	}
+};
+
+class ColorFeed : public AbstractFeed {
+private:
+	const float scale;
+	std::vector<PaintFeed> feeds;
+
+public:
+	ColorFeed(const GraphicsRef &graphics, float scale) :
+		scale(scale) {
+
+		const int n = graphics->getNumPaths();
+		for (int i = 0; i < n; i++) {
+			const PathRef &path = graphics->getPath(i);
+			feeds.emplace_back(path, scale, CHANGED_LINE_STYLE);
+			feeds.emplace_back(path, scale, CHANGED_FILL_STYLE);
+		}
+	}
+
+	TovePaintColorAllocation getColorAllocation() const {
+		int numColors = 1;
+		for (const auto &feed : feeds) {
+			numColors = std::max(numColors, feed.getNumColors());
+		}
+		return TovePaintColorAllocation{
+			int16_t(feeds.size()),
+			int16_t(numColors)};
+	}
+
+	void bind(const ToveGradientData &data) {
+		const int n = feeds.size();
+		for (int i = 0; i < n; i++) {
+			feeds[i].bind(data, i);
+		}
+	}
+
+	virtual ToveChangeFlags beginUpdate() {
+		ToveChangeFlags changes = 0;
+		for (auto &feed : feeds) {
+			changes |= feed.beginUpdate();
+		}
 		return changes;
 	}
 
-    virtual ToveChangeFlags endUpdate(const PathRef &path, bool initial) {
-		return lineColor.endUpdate(path, initial) |
-			fillColor.endUpdate(path, initial);
-    }
-
-    virtual ToveShaderLineFillColorData *getColorData() {
-    	return &data;
+    virtual ToveChangeFlags endUpdate() {
+		ToveChangeFlags changes = 0;
+		for (auto &feed : feeds) {
+			changes |= feed.endUpdate();
+		}
+		return changes;
     }
 };
 
-class GeometryShaderLink : public AbstractShaderLink {
+class GeometryFeed : public AbstractFeed {
 private:
 	ToveShaderData data;
-	LineColorShaderLinkImpl lineColor;
-	FillColorShaderLinkImpl fillColor;
-	GeometryShaderLinkImpl geometry;
+	LinePaintFeed lineColor;
+	FillPaintFeed fillColor;
+	GeometryFeedImpl geometry;
 
 public:
-	GeometryShaderLink(const PathRef &path, bool enableFragmentShaderStrokes) :
-		lineColor(data.color.line, 1),
-		fillColor(data.color.fill, 1),
-		geometry(data.geometry, data.color.line, path, enableFragmentShaderStrokes) {
+	GeometryFeed(const PathRef &path, bool enableFragmentShaderStrokes) :
+		lineColor(path, data.color.line, 1),
+		fillColor(path, data.color.fill, 1),
+		geometry(path, data.geometry, data.color.line, enableFragmentShaderStrokes) {
 	}
 
-	virtual ToveChangeFlags beginUpdate(const PathRef &path, bool initial) {
-		return lineColor.beginUpdate(path, initial) |
-			fillColor.beginUpdate(path, initial) |
-			geometry.beginUpdate(path, initial);
+	virtual ToveChangeFlags beginUpdate() {
+		return lineColor.beginUpdate() |
+			fillColor.beginUpdate() |
+			geometry.beginUpdate();
 	}
 
-    virtual ToveChangeFlags endUpdate(const PathRef &path, bool initial) {
-		return lineColor.endUpdate(path, initial) |
-			fillColor.endUpdate(path, initial) |
-			geometry.endUpdate(path, initial);
+    virtual ToveChangeFlags endUpdate() {
+		return lineColor.endUpdate() |
+			fillColor.endUpdate() |
+			geometry.endUpdate();
     }
 
     virtual ToveShaderData *getData() {

@@ -79,7 +79,6 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 ]],
 	vertexGlue = [[
 varying vec2 raw_vertex_pos;
-
 vec4 position(mat4 transform_projection, vec4 vertex_pos) {
 	raw_vertex_pos = vertex_pos.xy;
 	return transform_projection * vertex_pos;
@@ -96,7 +95,50 @@ vec4 position(mat4 transform_projection, vec4 vertex_pos) {
 ]],
 	fragment = [[
 --!! include "tove.glsl"
-]]
+]],
+	paintVertex = [[
+attribute float VertexPaint;
+uniform ]] .. env.mat3.glsl .. [[ matrix[NUM_PAINTS];
+uniform vec4 arguments[NUM_PAINTS];
+
+varying vec2 gradient_pos;
+varying vec3 gradient_scale;
+varying vec2 texture_pos;
+
+vec4 position(mat4 transform_projection, vec4 vertex_pos) {
+	int i = int(VertexPaint);
+	vec4 vertex_arg = arguments[i];
+	gradient_pos = (matrix[i] * vec3(vertex_pos.xy, 1)).xy;
+	gradient_scale = vertex_arg.zwx;
+
+	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
+	y = gradient_scale.x + gradient_scale.y * y;
+
+	texture_pos = vec2((i + 0.5) / NUM_PAINTS, y);
+	return transform_projection * vertex_pos;
+}
+]],
+	paintFragment = [[
+uniform sampler2D colors;
+varying vec2 gradient_pos;
+varying vec3 gradient_scale;
+varying vec2 texture_pos;
+
+vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
+	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
+	y = gradient_scale.x + gradient_scale.y * y;
+
+	vec2 texture_pos_exact = vec2(texture_pos.x, y);
+	]] ..
+	-- ensure texture prefetch via texture_pos; for solid colors and
+	-- many linear gradients, texture_pos == texture_pos_exact.
+	[[
+	vec4 c = Texel(colors, texture_pos);
+
+	return texture_pos_exact == texture_pos ?
+		c : Texel(colors, texture_pos_exact);
+}
+]],
 }
 
 local max = math.max
@@ -206,127 +248,139 @@ local function newFillShader(data)
 		shaders.prolog .. shaders.vertexGlue)
 end
 
+local function newPaintShader(numPaints)
+	local fragmentCode = {
+		shaders.prolog,
+		string.format("#define NUM_PAINTS %d", numPaints),
+		shaders.paintFragment
+	}
+	local vertexCode = {
+		shaders.prolog,
+		string.format("#define NUM_PAINTS %d", numPaints),
+		shaders.paintVertex
+	}
+	return lg.newShader(
+		table.concat(fragmentCode, "\n"),
+		table.concat(vertexCode, "\n"))
+end
+
 --!! import "feed.lua" as feed
 
 local MeshShader = {}
 MeshShader.__index = MeshShader
 
-local function newMeshShaderLinkData(name, path, tess, usage, resolution)
-	local fillMesh = tove.newPositionMesh(name, usage)
-	local lineMesh = tove.newPositionMesh(name, usage)
-
-	tess(path, fillMesh._cmesh, lineMesh._cmesh, lib.UPDATE_MESH_EVERYTHING)
+local function newMeshFeedData(name, graphics, tess, usage, resolution)
+	local mesh = tove.newPaintMesh(name, usage)
+	tess(mesh._tovemesh, lib.UPDATE_MESH_EVERYTHING)
 
 	local link = ffi.gc(
-		lib.NewColorShaderLink(resolution), lib.ReleaseShaderLink)
-	local data = lib.ShaderLinkGetColorData(link)
-	lib.ShaderLinkBeginUpdate(link, path, true)
+		lib.NewColorFeed(graphics._ref, resolution), lib.ReleaseFeed)
 
-	local lineShader = newLineShader(data.line)
-	local fillShader = newFillShader(data.fill)
+	local alloc = lib.FeedGetColorAllocation(link)
+	local matrixData = love.data.newByteData(
+		alloc.numPaints * env.mat3.size)
+	local imageData = love.image.newImageData(
+		alloc.numPaints, alloc.numColors, "rgba8")
+	local colorsTexture = lg.newImage(imageData)
+	local argumentsData = love.data.newByteData(
+		alloc.numPaints * ffi.sizeof("ToveVec4"))
+	local gradientData = ffi.new("ToveGradientData")
+	gradientData.matrix = matrixData:getPointer()
+	gradientData.arguments = argumentsData:getPointer()
+	gradientData.colorsTexture = imageData:getPointer()
+	gradientData.colorsTextureRowBytes = imageData:getSize() / alloc.numColors
+	gradientData.colorTextureHeight = imageData:getHeight()
+	lib.FeedBind(link, gradientData)
+	local paintShader = newPaintShader(alloc.numPaints)
+	colorsTexture:setFilter("nearest", "linear")
+	colorsTexture:setWrap("clamp", "clamp")
 
-	local lineColorFeed = feed.newColorFeed(lineShader, "line", data.line)
-	lineColorFeed:beginInit()
-	local fillColorFeed = feed.newColorFeed(fillShader, "fill", data.fill)
-	fillColorFeed:beginInit()
+	lib.FeedEndUpdate(link)
 
-	lib.ShaderLinkEndUpdate(link, path, true)
-	lineColorFeed:endInit(path)
-	fillColorFeed:endInit(path)
+	colorsTexture:replacePixels(imageData)
+	paintShader:send("matrix", matrixData)
+	paintShader:send("arguments", argumentsData)
+	paintShader:send("colors", colorsTexture)
 
-	path:clearChanges()
+	lib.GraphicsClearChanges(graphics._ref)
 
 	return {
 		link = link,
-		data = data,
-		lineShader = lineShader,
-		fillShader = fillShader,
-		lineColorFeed = lineColorFeed,
-		fillColorFeed = fillColorFeed,
-		lineMesh = lineMesh,
-		fillMesh = fillMesh
+		mesh = mesh,
+		shader = paintShader,
+
+		matrixData = matrixData,
+		argumentsData = argumentsData,
+		imageData = imageData,
+		colorsTexture = colorsTexture
 	}
 end
 
-local newMeshShader = function(name, path, tess, usage, resolution)
+local newMeshShader = function(name, graphics, tess, usage, resolution)
 	return setmetatable({
-		path = path, tess = tess, usage = usage, _name = name,
+		graphics = graphics, tess = tess, usage = usage, _name = name,
 		resolution = resolution,
-		linkdata = newMeshShaderLinkData(
-			name, path, tess, usage, resolution)}, MeshShader)
+		linkdata = newMeshFeedData(
+			name, graphics, tess, usage, resolution)}, MeshShader)
+end
+
+function MeshShader:getMesh()
+	return self.linkdata.mesh
 end
 
 function MeshShader:update()
 	local linkdata = self.linkdata
-	local path = self.path
+	local graphics = self.graphics
 
-	local flags = path:fetchChanges(lib.CHANGED_POINTS)
-
+	local flags = graphics:fetchChanges(lib.CHANGED_POINTS)
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		if self.usage["points"] ~= "dynamic" then
 			tove.slow("static mesh points changed in " .. self._name)
-			self.linkdata = newMeshShaderLinkData(
-				self.name, self.path, self.tess, self.usage, self.resolution)
+			self.linkdata = newMeshFeedData(
+				self.name, self.graphics, self.tess, self.usage, self.resolution)
 			return
 		end
 
 		local tessFlags = lib.UPDATE_MESH_VERTICES
-
 		if self.usage["triangles"] == "dynamic" then
 			tessFlags = bit.bor(tessFlags, lib.UPDATE_MESH_AUTO_TRIANGLES)
 		end
-
-		local updated = self.tess(self.path, linkdata.fillMesh._cmesh,
-			linkdata.lineMesh._cmesh, tessFlags)
+		local updated = self.tess(linkdata.mesh._tovemesh, tessFlags)
 
 		if bit.band(updated, lib.UPDATE_MESH_TRIANGLES) ~= 0 then
-			linkdata.fillMesh:updateTriangles()
+			linkdata.mesh:updateTriangles()
 		end
-
-		if linkdata.fillShader ~= nil then
-			linkdata.fillMesh:updateVertices()
-		end
-		if linkdata.lineShader ~= nil then
-			linkdata.lineMesh:updateVertices()
-		end
+		linkdata.mesh:updateVertices()
 	end
 
 	local link = linkdata.link
-	local chg1 = lib.ShaderLinkBeginUpdate(link, path, false)
+	local chg1 = lib.FeedBeginUpdate(link)
 
-	if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
-		tove.warn("mesh recreation triggered in " .. self._name)
-		self.linkdata = newMeshShaderLinkData(
-			self.name, self.path, self.tess, self.usage)
-		return
+	if chg1 ~= 0 then
+		if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
+			tove.warn("mesh recreation triggered in " .. self._name)
+			self.linkdata = newMeshFeedData(
+				self.name, self.graphics, self.tess, self.usage)
+			return
+		end
+
+		lib.FeedEndUpdate(link)
+		linkdata.colorsTexture:replacePixels(linkdata.imageData)
+		local shader = linkdata.shader
+		shader:send("matrix", linkdata.matrixData)
+		shader:send("arguments", linkdata.argumentsData)
 	end
-
-	linkdata.lineColorFeed:update(chg1, path)
-	linkdata.fillColorFeed:update(chg1, path)
-
-	lib.ShaderLinkEndUpdate(link, path, false)
 end
 
 function MeshShader:draw(...)
 	local linkdata = self.linkdata
 
-	local fillShader = linkdata.fillShader
-	if fillShader ~= nil then
-		lg.setShader(fillShader)
-		local mesh = linkdata.fillMesh:getMesh()
-		if mesh ~= nil then
-			lg.draw(mesh, ...)
-		end
+	lg.setShader(linkdata.shader)
+	local mesh = linkdata.mesh:getMesh()
+	if mesh ~= nil then
+		lg.draw(mesh, ...)
 	end
-
-	local lineShader = linkdata.lineShader
-	if lineShader ~= nil then
-		lg.setShader(lineShader)
-		local mesh = linkdata.lineMesh:getMesh()
-		if mesh ~= nil then
-			lg.draw(mesh, ...)
-		end
-	end
+	lg.setShader(nil)
 end
 
 
@@ -343,8 +397,8 @@ local function setLineQuality(linkData, lineQuality)
 	end
 end
 
-local PathShader = {}
-PathShader.__index = PathShader
+local ComputeShader = {}
+ComputeShader.__index = ComputeShader
 
 local function parseQuality(q)
 	local lineType = "fragment"
@@ -365,15 +419,15 @@ local function parseQuality(q)
 	return lineType, lineQuality
 end
 
-local function newPathShaderLinkData(path, quality)
+local function newComputeFeedData(path, quality)
 	local lineType, lineQuality = parseQuality(quality)
 	local fragLine = (lineType == "fragment")
 
 	local link = ffi.gc(
-		lib.NewGeometryShaderLink(path, fragLine), lib.ReleaseShaderLink)
-	local data = lib.ShaderLinkGetData(link)
+		lib.NewGeometryFeed(path, fragLine), lib.ReleaseFeed)
+	local data = lib.FeedGetData(link)
 
-	lib.ShaderLinkBeginUpdate(link, path, true)
+	lib.FeedBeginUpdate(link)
 	local fillShader = newGeometryFillShader(data, fragLine)
 	local lineShader
 	if fragLine then
@@ -382,21 +436,21 @@ local function newPathShaderLinkData(path, quality)
 		lineShader = newGeometryLineShader(data)
 	end
 
-	local lineColorFeed = feed.newColorFeed(
+	local lineColorSend = feed.newColorSend(
 		lineShader, "line", data.color.line)
-	lineColorFeed:beginInit()
-	local fillColorFeed = feed.newColorFeed(
+	lineColorSend:beginInit()
+	local fillColorSend = feed.newColorSend(
 		fillShader, "fill", data.color.fill)
-	fillColorFeed:beginInit()
+	fillColorSend:beginInit()
 
-	local geometryFeed = feed.newGeometryFeed(
+	local geometryFeed = feed.newGeometrySend(
 		fillShader, lineShader, data.geometry)
 	geometryFeed:beginInit()
 
-	lib.ShaderLinkEndUpdate(link, path, true)
+	lib.FeedEndUpdate(link)
 
-	lineColorFeed:endInit(path)
-	fillColorFeed:endInit(path)
+	lineColorSend:endInit(path)
+	fillColorSend:endInit(path)
 	geometryFeed:endInit(data.color.line.style)
 
 	path:clearChanges()
@@ -409,41 +463,40 @@ local function newPathShaderLinkData(path, quality)
 		lineType = lineType,
 		lineQuality = lineQuality,
 		geometryFeed = geometryFeed,
-		lineColorFeed = lineColorFeed,
-		fillColorFeed = fillColorFeed
+		lineColorSend = lineColorSend,
+		fillColorSend = fillColorSend
 	}
 	setLineQuality(linkData, lineQuality)
 	return linkData
 end
 
-local newPathShader = function(path, quality)
+local newComputeShader = function(path, quality)
 	return setmetatable({
 		path = path,
-		linkdata = newPathShaderLinkData(path, quality)
-	}, PathShader)
+		linkdata = newComputeFeedData(path, quality)
+	}, ComputeShader)
 end
 
-function PathShader:update()
+function ComputeShader:update()
 	local path = self.path
 	local linkdata = self.linkdata
 	local link = linkdata.link
 
-	local chg1 = lib.ShaderLinkBeginUpdate(link, path, false)
+	local chg1 = lib.FeedBeginUpdate(link)
 
 	if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
-		self.linkdata = newPathShaderLinkData(path)
+		self.linkdata = newComputeFeedData(path)
 		return
 	end
 
-	linkdata.lineColorFeed:update(chg1, path)
-	linkdata.fillColorFeed:update(chg1, path)
+	linkdata.lineColorSend:updateUniforms(chg1, path)
+	linkdata.fillColorSend:updateUniforms(chg1, path)
 
-	local chg2 = lib.ShaderLinkEndUpdate(link, path, false)
-
-	linkdata.geometryFeed:update(chg2)
+	local chg2 = lib.FeedEndUpdate(link)
+	linkdata.geometryFeed:updateUniforms(chg2)
 end
 
-function PathShader:updateQuality(quality)
+function ComputeShader:updateQuality(quality)
 	local linkdata = self.linkdata
 	local lineType, lineQuality = parseQuality(quality)
 	if lineType == linkdata.lineType then
@@ -454,7 +507,7 @@ function PathShader:updateQuality(quality)
 	end
 end
 
-function PathShader:draw(...)
+function ComputeShader:draw(...)
 	local linkdata = self.linkdata
 
 	local fillShader = linkdata.fillShader
@@ -496,5 +549,5 @@ end
 
 return {
 	newMeshShader = newMeshShader,
-	newPathShader = newPathShader
+	newComputeShader = newComputeShader
 }

@@ -29,6 +29,7 @@ AdaptiveFlattener::AdaptiveFlattener(
 		angleEpsilon = quality->adaptive.angleEpsilon;
 		angleTolerance = quality->adaptive.angleTolerance;
     	cuspLimit = quality->adaptive.cuspLimit;
+		arcTolerance = quality->adaptive.arcTolerance;
 		recursionLimit = std::min(
 			MAX_FLATTEN_RECURSIONS, quality->recursionLimit);
 	} else {
@@ -37,6 +38,7 @@ AdaptiveFlattener::AdaptiveFlattener(
 		angleEpsilon = 0.01;
 		angleTolerance = 0.0;
 		cuspLimit = 0.0;
+		arcTolerance = 1.0;
 		recursionLimit = 8;
 	}
 
@@ -268,6 +270,10 @@ ClipperPath AdaptiveFlattener::flatten(const SubpathRef &subpath) const {
 	NSVGpath *path = &subpath->nsvg;
 	ClipperPath result;
 
+	if (path->npts < 1) {
+		return result;
+	}
+
 	const ClipperPoint p0 = ClipperPoint(
 		path->pts[0] * scale, path->pts[1] * scale);
 	result.push_back(p0);
@@ -354,19 +360,7 @@ void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation
 	}
 
 	NSVGshape * const shape = &path->nsvg;
-
-	ClipperLib::PolyFillType fillType;
-	switch (shape->fillRule) {
-		case NSVG_FILLRULE_NONZERO: {
-			fillType = ClipperLib::pftNonZero;
-		} break;
-		case NSVG_FILLRULE_EVENODD: {
-			fillType = ClipperLib::pftEvenOdd;
-		} break;
-		default: {
-			return;
-		} break;
-	}
+	const ClipperLib::PolyFillType fillType = path->getClipperFillType();
 
 	const bool hasStroke = shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0f;
 
@@ -386,14 +380,15 @@ void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation
 			TOVE_WARN("Ignoring line width < 2. Please use setResolution().");
 		}
 
-		ClipperLib::ClipperOffset offset(shape->miterLimit);
+		ClipperLib::ClipperOffset offset(shape->miterLimit, arcTolerance);
 		offset.AddPaths(lines,
 			joinType(shape->strokeLineJoin),
 			endType(shape->strokeLineCap, closed && shape->strokeDashCount == 0));
 		offset.Execute(tesselation.stroke, lineOffset);
 
 		ClipperPaths stroke;
-		ClipperLib::PolyTreeToPaths(tesselation.stroke, stroke);
+		ClipperLib::ClosedPathsFromPolyTree(tesselation.stroke, stroke);
+
 		ClipperLib::Clipper clipper;
 		clipper.AddPaths(tesselation.fill, ClipperLib::ptSubject, true);
 		clipper.AddPaths(stroke, ClipperLib::ptClip, true);
@@ -463,6 +458,10 @@ int FixedFlattener::flatten(
 	NSVGpath *path = &subpath->nsvg;
 	const int npts = path->npts;
 	const int n = ncurves(npts);
+
+	if (npts < 1) {
+		return 0;
+	}
 
 	const int verticesPerCurve = (1 << _depth);
 	const int nvertices = 1 + n * verticesPerCurve;

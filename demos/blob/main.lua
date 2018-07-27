@@ -1,7 +1,7 @@
 -- TÖVE Demo: Flipbooks and animations.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+local tove = require "tove"
 require "assets/tovedemo"
 
 local svg1 = love.filesystem.read("gradient-circle_00001.svg")

@@ -64,8 +64,8 @@ inline const PaintRef &deref(const TovePaintRef &ref) {
 	return *static_cast<const PaintRef*>(ref.ptr);
 }
 
-inline const ShaderLinkRef &deref(const ToveShaderLinkRef &ref) {
-	DEREF(ShaderLinkRef)
+inline const FeedRef &deref(const ToveFeedRef &ref) {
+	DEREF(FeedRef)
 }
 
 inline const MeshRef &deref(const ToveMeshRef &ref) {
@@ -78,5 +78,5 @@ References<Graphics, ToveGraphicsRef> shapes;
 References<Path, TovePathRef> paths;
 References<Subpath, ToveSubpathRef> trajectories;
 References<AbstractPaint, TovePaintRef> paints;
-References<AbstractShaderLink, ToveShaderLinkRef> shaderLinks;
+References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;

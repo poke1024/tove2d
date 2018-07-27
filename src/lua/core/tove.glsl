@@ -9,9 +9,9 @@
 // All rights reserved.
 // *****************************************************************
 //
-// shader implementation for tove2d vector graphics rendering.
-// supports cubic bezier curves and fill rules.
-// stroke rendering is supported but inefficient.
+// This is TÖVE's fragment curve shader, which computes cubic bezier
+// curves' interior through root solving. It can optionally also draw
+// lines through an iterative solver (not efficient).
 //
 // Credits:
 //
@@ -112,18 +112,21 @@ float curveLineDistanceSquared(vec2 pos, vec4 bx, vec4 by, vec2 tr, float tolera
 			vec4(state.xyw, s1 * 0.5);
 	}
 
-	if (min(
-		distanceSquared(eval0(bx, by), curvePoint),
-		distanceSquared(eval1(bx, by), curvePoint)) <
-			LINE_OFFSET * LINE_OFFSET) {
-		return distanceSquared(pos, curvePoint);
-	} else {
-		vec2 w = normalize(curveTangent(bx, by, state.x)) * LINE_OFFSET * 0.5;
-		return segmentPointDistanceSquared(curvePoint - w, curvePoint + w, pos);
-	}
+	float d_start_end = min(
+		distanceSquared(eval0(bx, by), pos),
+		distanceSquared(eval1(bx, by), pos));
+
+	vec2 w = normalize(
+		curveTangent(bx, by, state.x)) * LINE_OFFSET * 0.5;
+	return min(d_start_end, segmentPointDistanceSquared(
+		curvePoint - w, curvePoint + w, pos));
 }
 
 bool onCurveLine(vec2 pos, vec4 bx, vec4 by, vec4 roots, float tolerance) {
+	if (max(dot(bx, bx), dot(by, by)) < 1e-2) {
+		return false; // guard against empty curves (e.g. on blob demo).
+	}
+
 	float t0 = 0.0;
 	do {
 		float t1 = roots.x;

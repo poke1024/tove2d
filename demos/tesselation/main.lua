@@ -1,30 +1,33 @@
 -- TÖVE Demo: tesselation.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-require "lib/tove"
+local tove = require "tove"
 require "assets/tovedemo"
 
-local rabbit = love.filesystem.read("assets/rabbit.svg")
-
-local function newRabbit()
-	-- make a new rabbit graphics, prescaled to 200 px
-	local graphics = tove.newGraphics(rabbit, 200)
-	graphics:setUsage("gradients", "fast")
-	return graphics
-end
-
-local function newInfoText(rabbit, quality)
+local function newInfoText(graphics, quality)
 	return "quality " .. string.format("%.3f", quality) .. "\n" ..
-		tostring(rabbit:getNumTriangles()) .. " triangles"
+		tostring(graphics:getNumTriangles()) .. " triangles"
 end
 
-local flow = tovedemo.newCoverFlow()
-local qualities = {0.01, 0.25, 1}
-for i = 1, 3 do
-	local rabbit = newRabbit()
-	rabbit:setDisplay("mesh", qualities[i])
-	flow:add(newInfoText(rabbit, qualities[i]), rabbit)
+local flow
+
+local function load(svg)
+	-- makes a new graphics, prescaled to 200 px
+	local function newGraphics()
+		return tove.newGraphics(svg, 200)
+	end
+
+	-- just some glue code for presentation.
+	flow = tovedemo.newCoverFlow()
+	local qualities = {0.01, 0.25, 1}
+	for i = 1, 3 do
+		local graphics = newGraphics()
+		graphics:setDisplay("mesh", qualities[i])
+		flow:add(newInfoText(graphics, qualities[i]), graphics)
+	end
 end
+
+load(love.filesystem.read("assets/rabbit.svg"))
 
 function love.draw()
 	tovedemo.draw("Tesselation.")
@@ -49,4 +52,11 @@ function love.update(dt)
 			flow:setName(focus, newInfoText(rabbit, qualities[focus]))
 		end
 	end
+end
+
+function love.filedropped(file)
+	file:open("r")
+	local svg = file:read()
+	file:close()
+	load(svg)
 end

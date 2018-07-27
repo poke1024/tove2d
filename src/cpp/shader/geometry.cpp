@@ -70,7 +70,7 @@ static void queryLUT(
 	}
 }
 
-int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
+int GeometryFeedImpl::buildLUT(int dim, const int ncurves) {
 	const bool hasFragLine = geometryData.fragmentShaderStrokes;
 	const float lineWidth = geometryData.strokeWidth;
 
@@ -220,7 +220,7 @@ int GeometryShaderLinkImpl::buildLUT(int dim, const int ncurves) {
 	return numFillEvents;
 }
 
-void GeometryShaderLinkImpl::dumpCurveData() {
+void GeometryFeedImpl::dumpCurveData() {
 #if 0
 	const int w = geometryData.curvesTextureSize[0];
 	const int h = geometryData.curvesTextureSize[1];
@@ -237,12 +237,13 @@ void GeometryShaderLinkImpl::dumpCurveData() {
 #endif
 }
 
-GeometryShaderLinkImpl::GeometryShaderLinkImpl(
-	ToveShaderGeometryData &data,
-	const ToveShaderColorData &lineColorData,
+GeometryFeedImpl::GeometryFeedImpl(
 	const PathRef &path,
+	ToveShaderGeometryData &data,
+	const TovePaintData &lineColorData,
 	bool enableFragmentShaderStrokes) :
 
+	path(path),
 	maxCurves(path->getNumCurves()),
 	maxSubPaths(path->getNumSubpaths()),
 	geometryData(data),
@@ -266,10 +267,11 @@ GeometryShaderLinkImpl::GeometryShaderLinkImpl(
 	strokeEvents.resize(2 * maxCurves);
 	strokeCurves.reserve(maxCurves);
 	extended.resize(maxCurves);
+	initialUpdate = true;
 }
 
-ToveChangeFlags GeometryShaderLinkImpl::beginUpdate(const PathRef &path, bool initial) {
-	if (!initial && path->fetchChanges(CHANGED_GEOMETRY)) {
+ToveChangeFlags GeometryFeedImpl::beginUpdate() {
+	if (!initialUpdate && path->fetchChanges(CHANGED_GEOMETRY)) {
 		return CHANGED_RECREATE;
 	}
 
@@ -281,17 +283,26 @@ ToveChangeFlags GeometryShaderLinkImpl::beginUpdate(const PathRef &path, bool in
 	const float lineWidth = lineColorData.style > 0 ?
 		std::max(path->getLineWidth(), 1.0f) : 0.0f;
 	geometryData.strokeWidth = lineWidth;
-	geometryData.miterLimit = path->getMiterLimit();
+
+	switch (path->getLineJoin()) {
+		case LINEJOIN_BEVEL:
+		case LINEJOIN_ROUND: // not supported.
+			geometryData.miterLimit = 0;
+			break;
+		case LINEJOIN_MITER:
+			geometryData.miterLimit = path->getMiterLimit();
+			break;
+	}
 
 	geometryData.fillRule = path->getFillRule();
 
 	return 0;
 }
 
-int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
+ToveChangeFlags GeometryFeedImpl::endUpdate() {
 	const ToveChangeFlags changes = path->fetchChanges(
 		CHANGED_POINTS | CHANGED_LINE_ARGS);
-	if (changes == 0 && !initial) {
+	if (changes == 0 && !initialUpdate) {
 		return 0;
 	}
 
@@ -328,7 +339,7 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 			lineRuns++;
 		}
 
-		if (initial || t->fetchChanges() != 0) {
+		if (initialUpdate || t->fetchChanges() != 0) {
 			for (int j = 0; j < n; j++) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCurveData(
@@ -379,6 +390,8 @@ int GeometryShaderLinkImpl::endUpdate(const PathRef &path, bool initial) {
 	}
 
 	updateLookupTableMeta(geometryData.lookupTableMeta);
+
+	initialUpdate = false;
 
 	if ((changes & CHANGED_LINE_ARGS) && !path->hasStroke()) {
 		return changes & ~CHANGED_LINE_ARGS;

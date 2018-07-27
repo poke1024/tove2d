@@ -65,8 +65,8 @@ typedef std::shared_ptr<Path> PathRef;
 class AbstractMesh;
 typedef std::shared_ptr<AbstractMesh> MeshRef;
 
-class AbstractShaderLink;
-typedef std::shared_ptr<AbstractShaderLink> ShaderLinkRef;
+class AbstractFeed;
+typedef std::shared_ptr<AbstractFeed> FeedRef;
 
 inline int nextpow2(uint32_t v) {
 	// see https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

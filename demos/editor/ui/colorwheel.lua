@@ -1,12 +1,11 @@
 -- TÖVE Editor.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
-local Control = require "ui/control"
-local stripedCircle = require "ui/striped"
+local boxy = require "boxy"
+local class = require "boxy.class"
+local stripedCircle = require "ui.striped"
 
-local ColorWheel = {}
-ColorWheel.__index = ColorWheel
-setmetatable(ColorWheel, {__index = Control})
+local ColorWheel = class("ColorWheel", boxy.Widget)
 
 local pi2 = 2 * math.pi
 local nopaintRadius = 8
@@ -73,17 +72,21 @@ function ColorWheel:computeTriangleVertices()
 
 	local radius = self.radius
 
-	return {
+	self.triangleVertices = {
 		{ radius * math.cos(phi), radius * math.sin(phi), hsv2rgb(phi / pi2, 1, 1) },
 		{ radius * math.cos(phi1), radius * math.sin(phi1), 1, 1, 1 },
 		{ radius * math.cos(phi2), radius * math.sin(phi2), 0, 0, 0 }
 	}
+	if self.triangle then
+		self.triangle:setVertices(self.triangleVertices)
+	end
 end
 
-function ColorWheel:setRGBColor(r, g, b)
+function ColorWheel:setRGBColor(r, g, b, a)
 	h, s, v = rgb2hsv(r, g, b)
 	self.currentHue = h * pi2
 	self:computeTriangleVertices()
+
 	local triangleSpot = self.triangleSpot
 
 	local c = v * s
@@ -93,10 +96,14 @@ function ColorWheel:setRGBColor(r, g, b)
 	triangleSpot[2] = m
 	triangleSpot[3] = 1 - c - m
 	self.empty = false
+
+	self.opacitySlider:setValue(a)
+	self.opacitySlider:setVisible(true)
 end
 
 function ColorWheel:setEmpty()
 	self.empty = true
+	self.opacitySlider:setVisible(false)
 end
 
 function ColorWheel:colorChanged()
@@ -114,6 +121,7 @@ function ColorWheel:colorChanged()
 			end
 			color[j] = v
 		end
+		color[4] = self.opacitySlider:getValue()
 
 		self.callback(unpack(color))
 	end
@@ -150,8 +158,7 @@ function ColorWheel:updateHue(mx, my)
 	local dy = my - y
 	self.currentHue = math.atan2(dy, dx)
 	self.empty = false
-	self.triangleVertices = self:computeTriangleVertices()
-	self.triangle:setVertices(self.triangleVertices)
+	self:computeTriangleVertices()
 	self:colorChanged()
 end
 
@@ -188,7 +195,7 @@ local function distance(x, y, mx, my)
 	return math.sqrt(dx * dx + dy * dy)
 end
 
-function ColorWheel:click(mx, my)
+function ColorWheel:mousepressed(mx, my)
 	local x, y = self:center()
 	local d = distance(x, y, mx, my)
 	local r = self.radius
@@ -229,7 +236,13 @@ function ColorWheel:setCallback(callback)
 	self.callback = callback
 end
 
-ColorWheel.new = function()
+function ColorWheel:getDesiredSize()
+	return 2 * self.halfsize, 2 * self.halfsize
+end
+
+function ColorWheel:__init(opacitySlider)
+	boxy.Widget.__init(self)
+
 	local oversample = 1
 
 	local code = [[
@@ -300,34 +313,39 @@ ColorWheel.new = function()
 	circle:setLineWidth(0.9)
 	circle:stroke()
 
-	local cw = Control.init(setmetatable({
-		radius = radius,
-		thickness = thickness,
+	self.radius = radius
+	self.thickness = thickness
 
-		halfsize = halfsize,
-		scale = 1 / oversample,
+	self.halfsize = halfsize
+	self.scale = 1 / oversample
 
-		canvas = canvas,
-		circle = circle,
+	self.canvas = canvas
+	self.circle = circle
 
-		currentHue = 0,
-		triangleVertices = nil,
-		triangleSpot = {1, 0, 0},
-		triangle = nil,
+	self.currentHue = 0
+	self.triangleVertices = nil
+	self.triangleSpot = {1, 0, 0}
+	self.triangle = nil
 
-		callback = function() end,
-		empty = false
-	}, ColorWheel))
+	self.callback = function() end
+	self.empty = false
+
+	self.opacitySlider = opacitySlider
+	self.opacitySlider.valueChanged:connect(function(value)
+		self.opacity = value
+		self:colorChanged()
+	end)
 
 	do
-		local attributes = {{"VertexPosition", "float", 2}, {"VertexColor", "float", 3}}
-		cw.triangleVertices = cw:computeTriangleVertices()
-		cw.triangle = love.graphics.newMesh(attributes, cw.triangleVertices, "fan", "dynamic")
+		local attributes = {
+			{"VertexPosition", "float", 2},
+			{"VertexColor", "float", 3}}
+		self:computeTriangleVertices()
+		self.triangle = love.graphics.newMesh(
+			attributes, self.triangleVertices, "fan", "dynamic")
 	end
 
-	cw:colorChanged()
-
-	return cw
+	self:colorChanged()
 end
 
 return ColorWheel

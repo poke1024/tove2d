@@ -61,8 +61,18 @@ void ColorSet(TovePaintRef color, float r, float g, float b, float a) {
 
 RGBA ColorGet(TovePaintRef color, float opacity) {
 	RGBA rgba;
-	deref(color)->getRGBA(&rgba, opacity);
+	deref(color)->getRGBA(rgba, opacity);
 	return rgba;
+}
+
+int PaintGetNumColors(TovePaintRef paint) {
+	return deref(paint)->getNumColorStops();
+}
+
+ToveColorStop PaintGetColor(TovePaintRef paint, int i, float opacity) {
+	ToveColorStop stop;
+	stop.offset = deref(paint)->getColorStop(i, stop.rgba, opacity);
+	return stop;
 }
 
 TovePaintRef NewLinearGradient(float x1, float y1, float x2, float y2) {
@@ -71,6 +81,12 @@ TovePaintRef NewLinearGradient(float x1, float y1, float x2, float y2) {
 
 TovePaintRef NewRadialGradient(float cx, float cy, float fx, float fy, float r) {
 	return paints.publish(std::make_shared<RadialGradient>(cx, cy, fx, fy, r));
+}
+
+ToveGradientParameters GradientGetParameters(TovePaintRef gradient) {
+	ToveGradientParameters parameters;
+	deref(gradient)->getGradientParameters(parameters);
+	return parameters;
 }
 
 void GradientAddColorStop(TovePaintRef gradient, float offset, float r, float g, float b, float a) {
@@ -197,16 +213,27 @@ ToveMeshResult PathTesselate(
 
 	return exception_safe([path, fillMesh, lineMesh, scale, quality, holes, flags] () {
 		ToveMeshUpdateFlags updated;
+		int fillIndex = 0;
+		int lineIndex = 0;
+
+		const PathRef p = deref(path);
+		Graphics *g = dynamic_cast<Graphics*>(p->getClaimer());
+		assert(g);
 
 		if (quality && !quality->adaptive.valid) {
 			FixedMeshifier meshifier(scale, quality, holes, flags);
-			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
+			updated = meshifier.pathToMesh(
+				g,
+				p,
+				deref(fillMesh), deref(lineMesh),
+				fillIndex, lineIndex);
 		} else {
-			deref(fillMesh)->clear();
-			deref(lineMesh)->clear();
-
 			AdaptiveMeshifier meshifier(scale, quality);
-			updated = meshifier(deref(path), deref(fillMesh), deref(lineMesh));
+			updated = meshifier.pathToMesh(
+				g,
+				p,
+				deref(fillMesh), deref(lineMesh),
+				fillIndex, lineIndex);
 		}
 		return updated;
 	});
@@ -242,6 +269,18 @@ void PathSet(
 	deref(path)->set(deref(source), transform);
 }
 
+ToveLineJoin PathGetLineJoin(TovePathRef path) {
+	return deref(path)->getLineJoin();
+}
+
+void PathSetLineJoin(TovePathRef path, ToveLineJoin join) {
+	deref(path)->setLineJoin(join);
+}
+
+const char *PathGetId(TovePathRef path) {
+	return deref(path)->nsvg.id;
+}
+
 void ReleasePath(TovePathRef path) {
 	paths.release(path);
 }
@@ -251,146 +290,153 @@ ToveSubpathRef NewSubpath() {
 	return trajectories.make();
 }
 
-ToveSubpathRef CloneSubpath(ToveSubpathRef trajectory) {
-	return trajectories.make(deref(trajectory));
+ToveSubpathRef CloneSubpath(ToveSubpathRef subpath) {
+	return trajectories.make(deref(subpath));
 }
 
-EXPORT void SubpathCommit(ToveSubpathRef trajectory) {
-	deref(trajectory)->commit();
+EXPORT void SubpathCommit(ToveSubpathRef subpath) {
+	deref(subpath)->commit();
 }
 
-void ReleaseSubpath(ToveSubpathRef trajectory) {
-	trajectories.release(trajectory);
+void ReleaseSubpath(ToveSubpathRef subpath) {
+	trajectories.release(subpath);
 }
 
-int SubpathGetNumCurves(ToveSubpathRef trajectory) {
-	return deref(trajectory)->getNumCurves();
+int SubpathGetNumCurves(ToveSubpathRef subpath) {
+	return deref(subpath)->getNumCurves();
 }
 
-int SubpathGetNumPoints(ToveSubpathRef trajectory) {
-	return deref(trajectory)->getLoveNumPoints();
+int SubpathGetNumPoints(ToveSubpathRef subpath) {
+	return deref(subpath)->getLoveNumPoints();
 }
 
-bool SubpathIsClosed(ToveSubpathRef trajectory) {
-	return deref(trajectory)->isClosed();
+bool SubpathIsClosed(ToveSubpathRef subpath) {
+	return deref(subpath)->isClosed();
 }
 
-void SubpathSetIsClosed(ToveSubpathRef trajectory, bool closed) {
-	deref(trajectory)->setIsClosed(closed);
+void SubpathSetIsClosed(ToveSubpathRef subpath, bool closed) {
+	deref(subpath)->setIsClosed(closed);
 }
 
-const float *SubpathGetPoints(ToveSubpathRef trajectory) {
-	return deref(trajectory)->getPoints();
+const float *SubpathGetPointsPtr(ToveSubpathRef subpath) {
+	return deref(subpath)->getPoints();
 }
 
-/*void SubpathSetPoint(ToveSubpathRef trajectory, int index, float x, float y) {
-	deref(trajectory)->setPoint(index, x, y);
+/*void SubpathSetPoint(ToveSubpathRef subpath, int index, float x, float y) {
+	deref(subpath)->setPoint(index, x, y);
 }*/
 
-void SubpathSetPoints(ToveSubpathRef trajectory, const float *pts, int npts) {
-	deref(trajectory)->setLovePoints(pts, npts);
+void SubpathSetPoints(ToveSubpathRef subpath, const float *pts, int npts) {
+	deref(subpath)->setLovePoints(pts, npts);
 }
 
-float SubpathGetCurveValue(ToveSubpathRef trajectory, int curve, int index) {
-	return deref(trajectory)->getCurveValue(curve, index);
+float SubpathGetCurveValue(ToveSubpathRef subpath, int curve, int index) {
+	return deref(subpath)->getCurveValue(curve, index);
 }
 
-void SubpathSetCurveValue(ToveSubpathRef trajectory, int curve, int index, float value) {
-	deref(trajectory)->setCurveValue(curve, index, value);
+void SubpathSetCurveValue(ToveSubpathRef subpath, int curve, int index, float value) {
+	deref(subpath)->setCurveValue(curve, index, value);
 }
 
-float SubpathGetPtValue(ToveSubpathRef trajectory, int index, int dim) {
-	return deref(trajectory)->getLovePointValue(index, dim);
+float SubpathGetPtValue(ToveSubpathRef subpath, int index, int dim) {
+	return deref(subpath)->getLovePointValue(index, dim);
 }
 
-void SubpathSetPtValue(ToveSubpathRef trajectory, int index, int dim, float value) {
-	deref(trajectory)->setLovePointValue(index, dim, value);
+void SubpathSetPtValue(ToveSubpathRef subpath, int index, int dim, float value) {
+	deref(subpath)->setLovePointValue(index, dim, value);
 }
 
-void SubpathInvert(ToveSubpathRef trajectory) {
-	deref(trajectory)->invert();
+void SubpathInvert(ToveSubpathRef subpath) {
+	deref(subpath)->invert();
 }
 
-void SubpathClean(ToveSubpathRef trajectory, float eps) {
-	deref(trajectory)->clean(eps);
+void SubpathClean(ToveSubpathRef subpath, float eps) {
+	deref(subpath)->clean(eps);
 }
 
-void SubpathSetOrientation(ToveSubpathRef trajectory, ToveOrientation orientation) {
-	deref(trajectory)->setOrientation(orientation);
+void SubpathSetOrientation(ToveSubpathRef subpath, ToveOrientation orientation) {
+	deref(subpath)->setOrientation(orientation);
 }
 
-int SubpathMoveTo(ToveSubpathRef trajectory, float x, float y) {
-	return deref(trajectory)->moveTo(x, y);
+int SubpathMoveTo(ToveSubpathRef subpath, float x, float y) {
+	return deref(subpath)->moveTo(x, y);
 }
 
-int SubpathLineTo(ToveSubpathRef trajectory, float x, float y) {
-	return deref(trajectory)->lineTo(x, y);
+int SubpathLineTo(ToveSubpathRef subpath, float x, float y) {
+	return deref(subpath)->lineTo(x, y);
 }
 
-int SubpathCurveTo(ToveSubpathRef trajectory, float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
-	return deref(trajectory)->curveTo(cpx1, cpy1, cpx2, cpy2, x, y);
+int SubpathCurveTo(ToveSubpathRef subpath, float cpx1, float cpy1, float cpx2, float cpy2, float x, float y) {
+	return deref(subpath)->curveTo(cpx1, cpy1, cpx2, cpy2, x, y);
 }
 
-int SubpathArc(ToveSubpathRef trajectory, float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
-	return deref(trajectory)->arc(x, y, r, startAngle, endAngle, counterclockwise);
+int SubpathArc(ToveSubpathRef subpath, float x, float y, float r, float startAngle, float endAngle, bool counterclockwise) {
+	return deref(subpath)->arc(x, y, r, startAngle, endAngle, counterclockwise);
 }
 
-int SubpathDrawRect(ToveSubpathRef trajectory, float x, float y, float w, float h, float rx, float ry) {
-	return deref(trajectory)->drawRect(x, y, w, h, rx, ry);
+int SubpathDrawRect(ToveSubpathRef subpath, float x, float y, float w, float h, float rx, float ry) {
+	return deref(subpath)->drawRect(x, y, w, h, rx, ry);
 }
 
-int SubpathDrawEllipse(ToveSubpathRef trajectory, float x, float y, float rx, float ry) {
-	return deref(trajectory)->drawEllipse(x, y, rx, ry);
+int SubpathDrawEllipse(ToveSubpathRef subpath, float x, float y, float rx, float ry) {
+	return deref(subpath)->drawEllipse(x, y, rx, ry);
 }
 
-float SubpathGetCommandValue(ToveSubpathRef trajectory, int command, int property) {
-	return deref(trajectory)->getCommandValue(command, property);
+float SubpathGetCommandValue(ToveSubpathRef subpath, int command, int property) {
+	return deref(subpath)->getCommandValue(command, property);
 }
 
-void SubpathSetCommandValue(ToveSubpathRef trajectory,
+void SubpathSetCommandValue(ToveSubpathRef subpath,
 	int command, int property, float value) {
-	deref(trajectory)->setCommandValue(command, property, value);
+	deref(subpath)->setCommandValue(command, property, value);
 }
 
-ToveVec2 SubpathGetPosition(ToveSubpathRef trajectory, float t) {
-	return deref(trajectory)->getPosition(t);
+ToveVec2 SubpathGetPosition(ToveSubpathRef subpath, float t) {
+	return deref(subpath)->getPosition(t);
 }
 
-ToveVec2 SubpathGetNormal(ToveSubpathRef trajectory, float t) {
-	return deref(trajectory)->getNormal(t);
+ToveVec2 SubpathGetNormal(ToveSubpathRef subpath, float t) {
+	return deref(subpath)->getNormal(t);
 }
 
-ToveNearest SubpathNearest(ToveSubpathRef trajectory,
+ToveNearest SubpathNearest(ToveSubpathRef subpath,
 	float x, float y, float dmin, float dmax) {
-	return deref(trajectory)->nearest(x, y, dmin, dmax);
+	return deref(subpath)->nearest(x, y, dmin, dmax);
 }
 
-int SubpathInsertCurveAt(ToveSubpathRef trajectory, float t) {
-	return deref(trajectory)->insertCurveAt(t);
+int SubpathInsertCurveAt(ToveSubpathRef subpath, float t) {
+	return deref(subpath)->insertCurveAt(t);
 }
 
-void SubpathRemoveCurve(ToveSubpathRef trajectory, int curve) {
-	deref(trajectory)->removeCurve(curve);
+void SubpathRemoveCurve(ToveSubpathRef subpath, int curve) {
+	deref(subpath)->removeCurve(curve);
 }
 
-int SubpathMould(ToveSubpathRef trajectory, float t, float x, float y) {
-	return deref(trajectory)->mould(t, x, y);
+int SubpathMould(ToveSubpathRef subpath, float t, float x, float y) {
+	return deref(subpath)->mould(t, x, y);
 }
 
-bool SubpathIsLineAt(ToveSubpathRef trajectory, int k, int dir) {
-	return deref(trajectory)->isLineAt(k - 1, dir);
+bool SubpathIsLineAt(ToveSubpathRef subpath, int k, int dir) {
+	return deref(subpath)->isLineAt(k - 1, dir);
 }
 
-void SubpathMakeFlat(ToveSubpathRef trajectory, int k, int dir) {
-	deref(trajectory)->makeFlat(k - 1, dir);
+void SubpathMakeFlat(ToveSubpathRef subpath, int k, int dir) {
+	deref(subpath)->makeFlat(k - 1, dir);
 }
 
-void SubpathMakeSmooth(ToveSubpathRef trajectory, int k, int dir, float a) {
-	deref(trajectory)->makeSmooth(k - 1, dir, a);
+void SubpathMakeSmooth(ToveSubpathRef subpath, int k, int dir, float a) {
+	deref(subpath)->makeSmooth(k - 1, dir, a);
 }
 
-void SubpathMove(ToveSubpathRef trajectory, int k, float x, float y) {
-	return deref(trajectory)->move(k - 1, x, y);
+void SubpathMove(ToveSubpathRef subpath, int k, float x, float y) {
+	return deref(subpath)->move(k - 1, x, y);
+}
+
+void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
+	float a, float b, float c, float d, float e, float f) {
+
+	nsvg::Transform transform(a, b, c, d, e, f);
+	deref(subpath)->set(deref(source), transform);
 }
 
 
@@ -445,6 +491,11 @@ TovePathRef GraphicsGetPath(ToveGraphicsRef shape, int i) {
 	} else {
 		return paths.publishEmpty();
 	}
+}
+
+EXPORT TovePathRef GraphicsGetPathByName(ToveGraphicsRef shape, const char *name) {
+	const PathRef p = deref(shape)->getPathByName(name);
+	return p ? paths.publish(p) : paths.publishEmpty();
 }
 
 ToveChangeFlags GraphicsFetchChanges(ToveGraphicsRef shape, ToveChangeFlags flags) {
@@ -513,25 +564,30 @@ void GraphicsSet(
 }
 
 ToveMeshResult GraphicsTesselate(
-	ToveGraphicsRef shape,
+	ToveGraphicsRef graphicsRef,
 	ToveMeshRef mesh,
 	float scale,
 	const ToveTesselationQuality *quality,
 	ToveHoles holes,
 	ToveMeshUpdateFlags flags) {
 
-	return exception_safe([shape, mesh, scale, quality, holes, flags] () {
-		const GraphicsRef graphics = deref(shape);
+	return exception_safe([graphicsRef, mesh, scale, quality, holes, flags] () {
+		const GraphicsRef graphics = deref(graphicsRef);
 		const int n = graphics->getNumPaths();
 
 		ToveMeshUpdateFlags updated;
 		if (quality && !quality->adaptive.valid) {
 			FixedMeshifier meshifier(scale, quality, holes, flags);
-			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
+			updated = meshifier.graphicsToMesh(
+				graphics, deref(mesh), deref(mesh));
 		} else {
-			deref(mesh)->clear();
 			AdaptiveMeshifier meshifier(scale, quality);
-			updated = meshifier.graphics(graphics, deref(mesh), deref(mesh));
+
+			// note: only this case supports clip paths.
+			graphics->computeClipPaths(meshifier);
+
+			updated = meshifier.graphicsToMesh(
+				graphics, deref(mesh), deref(mesh));
 		}
 		return updated;
 	});
@@ -547,57 +603,83 @@ ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height,
 	return image;
 }
 
-void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t) {
-	deref(shape)->animate(deref(a), deref(b), t);
+void GraphicsAnimate(
+	ToveGraphicsRef graphics,
+	ToveGraphicsRef a,
+	ToveGraphicsRef b,
+	float t) {
+	deref(graphics)->animate(deref(a), deref(b), t);
 }
 
-void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation) {
-	deref(shape)->setOrientation(orientation);
+void GraphicsSetOrientation(
+	ToveGraphicsRef graphics,
+	ToveOrientation orientation) {
+	deref(graphics)->setOrientation(orientation);
 }
 
-void GraphicsClean(ToveGraphicsRef shape, float eps) {
-	deref(shape)->clean(eps);
+void GraphicsClean(ToveGraphicsRef graphics, float eps) {
+	deref(graphics)->clean(eps);
 }
 
 TovePathRef GraphicsHit(ToveGraphicsRef graphics, float x, float y) {
 	return paths.publishOrNil(deref(graphics)->hit(x, y));
 }
 
-EXPORT void GraphicsClear(ToveGraphicsRef graphics) {
+void GraphicsClear(ToveGraphicsRef graphics) {
 	deref(graphics)->clear();
 }
 
-void ReleaseGraphics(ToveGraphicsRef shape) {
-	shapes.release(shape);
+bool GraphicsAreColorsSolid(ToveGraphicsRef graphics) {
+	return deref(graphics)->areColorsSolid();
+}
+
+void GraphicsClearChanges(ToveGraphicsRef graphics) {
+	deref(graphics)->clearChanges(-1);
+}
+
+ToveLineJoin GraphicsGetLineJoin(ToveGraphicsRef graphics) {
+	return deref(graphics)->getLineJoin();
+}
+
+void GraphicsSetLineJoin(ToveGraphicsRef graphics, ToveLineJoin join) {
+	deref(graphics)->setLineJoin(join);
+}
+
+void ReleaseGraphics(ToveGraphicsRef graphics) {
+	shapes.release(graphics);
 }
 
 
-ToveShaderLinkRef NewColorShaderLink(float scale) {
-	return shaderLinks.publish(std::make_shared<ColorShaderLink>(scale));
+ToveFeedRef NewColorFeed(ToveGraphicsRef graphics, float scale) {
+	return shaderLinks.publish(std::make_shared<ColorFeed>(deref(graphics), scale));
 }
 
-ToveShaderLinkRef NewGeometryShaderLink(TovePathRef path, bool enableFragmentShaderStrokes) {
-	return shaderLinks.publish(std::make_shared<GeometryShaderLink>(
+ToveFeedRef NewGeometryFeed(TovePathRef path, bool enableFragmentShaderStrokes) {
+	return shaderLinks.publish(std::make_shared<GeometryFeed>(
 		deref(path), enableFragmentShaderStrokes));
 }
 
-ToveChangeFlags ShaderLinkBeginUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial) {
-	return deref(link)->beginUpdate(deref(path), initial);
+ToveChangeFlags FeedBeginUpdate(ToveFeedRef link) {
+	return deref(link)->beginUpdate();
 }
 
-ToveChangeFlags ShaderLinkEndUpdate(ToveShaderLinkRef link, TovePathRef path, bool initial) {
-	return deref(link)->endUpdate(deref(path), initial);
+ToveChangeFlags FeedEndUpdate(ToveFeedRef link) {
+	return deref(link)->endUpdate();
 }
 
-ToveShaderData *ShaderLinkGetData(ToveShaderLinkRef link) {
+ToveShaderData *FeedGetData(ToveFeedRef link) {
 	return deref(link)->getData();
 }
 
-ToveShaderLineFillColorData *ShaderLinkGetColorData(ToveShaderLinkRef link) {
-	return deref(link)->getColorData();
+TovePaintColorAllocation FeedGetColorAllocation(ToveFeedRef link) {
+	return deref(link)->getColorAllocation();
 }
 
-void ReleaseShaderLink(ToveShaderLinkRef link) {
+void FeedBind(ToveFeedRef link, const ToveGradientData *data) {
+	deref(link)->bind(*data);
+}
+
+void ReleaseFeed(ToveFeedRef link) {
 	shaderLinks.release(link);
 }
 
@@ -608,6 +690,10 @@ ToveMeshRef NewMesh() {
 
 ToveMeshRef NewColorMesh() {
 	return meshes.publish(std::make_shared<ColorMesh>());
+}
+
+ToveMeshRef NewPaintMesh() {
+	return meshes.publish(std::make_shared<PaintMesh>());
 }
 
 int MeshGetVertexCount(ToveMeshRef mesh) {

@@ -13,6 +13,33 @@
 #include "mesh.h"
 #include "../path.h"
 
+// purely for debugging purposes, DEBUG_EARCUT enables mapbox's
+// earcut triangulator; this is much slower than the default and
+// does not support caching triangulations.
+#define DEBUG_EARCUT 0
+
+#if DEBUG_EARCUT
+#include <array>
+#include "../../thirdparty/earcut/earcut.hpp"
+#endif
+
+static void dumpPolygons(const std::list<TPPLPoly> &polys) {
+	for (auto p = polys.begin(); p != polys.end(); p++) {
+		printf("poly:\n");
+		for (int i = 0; i < p->GetNumPoints(); i++) {
+			printf("%f %f\n", (*p)[i].x, (*p)[i].y);
+		}
+	}
+}
+
+inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
+#if 0
+	printf("triangulation failed:\n");
+	dumpPolygons(polys);
+#endif
+	TOVE_WARN("Triangulation failed.");
+}
+
 static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
 	switch (mode) {
 		case HOLES_NONE:
@@ -43,10 +70,50 @@ AbstractMesh::~AbstractMesh() {
 	if (mVertices) {
 		free(mVertices);
 	}
+	for (auto i : mSubmeshes) {
+		delete i.second;
+	}
 }
 
 ToveTriangles AbstractMesh::getTriangles() const {
-	return mTriangles.get();
+	const int n = mSubmeshes.size();
+	if (n < 1) {
+		return ToveTriangles {
+			TRIANGLES_LIST,
+			nullptr,
+			0
+		};
+	} else if (n == 1) {
+		return mSubmeshes.begin()->second->getTriangles();
+	} else {
+		// subtle point: mSubmeshes needs to be ordered (e.g.
+		// a map here) otherwise our triangle order would be
+		// messed up, resulting in wrong visuals.
+
+		size_t k = 0;
+		for (auto submesh : mSubmeshes) {
+			k += submesh.second->getTriangles().size;
+		}
+		mCoalescedTriangles.resize(k);
+
+		size_t offset = 0;
+		for (auto submesh : mSubmeshes) {
+			const ToveTriangles t =
+				submesh.second->getTriangles();
+			assert(t.mode == TRIANGLES_LIST);
+			std::memcpy(
+				&mCoalescedTriangles[offset],
+				t.array,
+				t.size * sizeof(ToveVertexIndex));
+			offset += t.size;
+		}
+
+		return ToveTriangles {
+			TRIANGLES_LIST,
+			mCoalescedTriangles.data(),
+			int(mCoalescedTriangles.size())
+		};
+	}
 }
 
 void AbstractMesh::reserve(uint32_t n) {
@@ -59,27 +126,78 @@ void AbstractMesh::reserve(uint32_t n) {
 }
 
 void AbstractMesh::cache(bool keyframe) {
-	mTriangles.cache(keyframe);
+	for (auto submesh : mSubmeshes) {
+		submesh.second->cache(keyframe);
+	}
 }
 
 void AbstractMesh::clear() {
-	mTriangles.clear();
 	mVertexCount = 0;
+	for (auto submesh : mSubmeshes) {
+		delete submesh.second;
+	}
+	mSubmeshes.clear();
 }
 
-void AbstractMesh::triangulate(
-	const ClipperPaths &paths, float scale, ToveHoles holes) {
+void AbstractMesh::clearTriangles() {
+	for (auto submesh : mSubmeshes) {
+		submesh.second->clearTriangles();
+	}
+}
 
+ToveTriangles Submesh::getTriangles() const {
+	return mTriangles.get();
+}
+
+void Submesh::cache(bool keyframe) {
+	mTriangles.cache(keyframe);
+}
+
+void Submesh::addClipperPaths(
+	const ClipperPaths &paths,
+	float scale,
+	ToveHoles holes) {
+
+#if DEBUG_EARCUT
+	using Point = std::array<float, 2>;
+	std::vector<std::vector<Point>> polygon;
+	polygon.reserve(paths.size());
+
+	const ToveVertexIndex i0 = mMesh->getVertexCount();
+	for (const ClipperPath &path : paths) {
+		const int n = path.size();
+ 	   	auto v = vertices(mMesh->getVertexCount(), n);
+		std::vector<Point> subpath;
+		subpath.reserve(n);
+
+		for (int j = 0; j < n; j++) {
+			const ClipperPoint &p = path[j];
+
+			const float x = p.X / scale;
+			const float y = p.Y / scale;
+
+			v->x = x;
+			v->y = y;
+			v++;
+			subpath.push_back({x, y});
+		}
+
+		polygon.push_back(std::move(subpath));
+	}
+	const std::vector<ToveVertexIndex> indices =
+		mapbox::earcut<ToveVertexIndex>(polygon);
+	mTriangles.add(indices, i0);
+#else
 	std::list<TPPLPoly> polys;
-	for (int i = 0; i < paths.size(); i++) {
-		const int n = paths[i].size();
+	for (const ClipperPath &path : paths) {
+		const int n = path.size();
 		TPPLPoly poly;
 		poly.Init(n);
-		int index = mVertexCount;
+		int index = mMesh->getVertexCount();
  	   	auto v = vertices(index, n);
 
 		for (int j = 0; j < n; j++) {
-			const ClipperPoint &p = paths[i][j];
+			const ClipperPoint &p = path[j];
 
 			const float x = p.X / scale;
 			const float y = p.Y / scale;
@@ -101,19 +219,16 @@ void AbstractMesh::triangulate(
 	std::list<TPPLPoly> triangles;
 	if (partition.Triangulate_MONO(&polys, &triangles) == 0) {
 		if (partition.Triangulate_EC(&polys, &triangles) == 0) {
-			TOVE_WARN("Triangulation failed.");
+			triangulationFailed(polys);
 			return;
 		}
 	}
-	addTriangles(triangles);
+
+	mTriangles.add(triangles);
+#endif
 }
 
-
-void AbstractMesh::addTriangles(const std::list<TPPLPoly> &tris) {
-	mTriangles.add(tris);
-}
-
-void AbstractMesh::clearTriangles() {
+void Submesh::clearTriangles() {
 	mTriangles.clear();
 }
 
@@ -142,8 +257,7 @@ static void stripToList(
 	}
 }
 
-
-void AbstractMesh::triangulateLine(
+void Submesh::triangulateFixedLine(
 	int v0,
 	bool miter,
 	const PathRef &path,
@@ -167,7 +281,7 @@ void AbstractMesh::triangulateLine(
 		const int numIndices = num0 + (closed ? 2 + (miter ? 1 : 0) : 0);
 		std::vector<uint16_t> tempIndices;
 
-		if (mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
+		if (true) { //mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
 			// this only happens for compound (flat) meshes and
 			// multiple subpaths (we don't want them connected).
 			tempIndices.resize(numIndices);
@@ -202,18 +316,54 @@ void AbstractMesh::triangulateLine(
 	}
 }
 
-void AbstractMesh::triangulateFill(
+void Submesh::triangulateFixedFill(
 	const int vertexIndex0,
 	const PathRef &path,
 	const FixedFlattener &flattener,
 	const ToveHoles holes) {
 
-	std::list<TPPLPoly> polys;
-	//polys.reserve(paths.size());
-
-   	int vertexIndex = vertexIndex0;
-
 	const int numSubpaths = path->getNumSubpaths();
+
+#if DEBUG_EARCUT
+	using Point = std::array<float, 2>;
+	std::vector<std::vector<Point>> polygon;
+	polygon.reserve(numSubpaths);
+	int vertexIndex = vertexIndex0;
+
+	for (int i = 0; i < numSubpaths; i++) {
+		const int n = path->getSubpathSize(i, flattener);
+		const auto vertex = vertices(vertexIndex, n);
+		vertexIndex += n;
+
+		std::vector<Point> subpath;
+		subpath.reserve(n);
+		for (int j = 0; j < n; j++) {
+			subpath.push_back({vertex[j].x, vertex[j].y});
+		}
+		polygon.push_back(std::move(subpath));
+	}
+
+	if (numSubpaths == 1) {
+		// since we cannot store arbitrary indices, we can only
+		// remove duplicates points that are strictly at the end.
+		auto &p = polygon[0];
+		while (p.size() > 3) {
+			const int n = p.size() - 1;
+			if (unequal(
+				p[0][0], p[0][1],
+				p[n][0], p[n][1])) {
+				break;
+			}
+			p.erase(p.end() - 1);
+		}
+	}
+
+	const std::vector<ToveVertexIndex> indices =
+		mapbox::earcut<ToveVertexIndex>(polygon);
+	mTriangles.add(indices, vertexIndex0);
+#else
+	std::list<TPPLPoly> polys;
+   	int vertexIndex = vertexIndex0;
 
 	for (int i = 0; i < numSubpaths; i++) {
 		const int n = path->getSubpathSize(i, flattener);
@@ -226,27 +376,31 @@ void AbstractMesh::triangulateFill(
 		TPPLPoly poly;
 		poly.Init(n);
 
-		int next = 0;
 		int written = 0;
-
-		for (int j = 0; j < n; j++) {
-			// duplicated points are a very common issue that breaks the
+		for (int j = 0; j < n; ) {
+			// duplicate points are a very common issue that breaks the
 			// complete triangulation, that's why we special case here.
-			if (j == next) {
-				poly[written].x = vertex[j].x;
-				poly[written].y = vertex[j].y;
-				poly[written].id = vertexIndex;
-				written++;
+			poly[written].x = vertex[j].x;
+			poly[written].y = vertex[j].y;
+			poly[written].id = vertexIndex + j;
+			written++;
+
+			const int next = find_unequal_forward(vertex, j, n);
+			if (next < j) {
+				break;
 			}
+			j = next;
 
-			vertexIndex++;
-
-			if (j == next) {
-				next = find_unequal_forward(vertex, j, n);
+			if (j == n - 1 && !unequal(
+				vertex[0].x, vertex[0].y,
+				vertex[j].x, vertex[j].y)) {
+				break;
 			}
 		}
+		vertexIndex += n;
 
 		if (written < n) {
+			// there were indeed duplicate points. we need to copy, alas.
 			TPPLPoly poly2;
 			poly2.Init(written);
 			for (int j = 0; j < written; j++) {
@@ -263,30 +417,19 @@ void AbstractMesh::triangulateFill(
 
 	std::list<TPPLPoly> convex;
 	if (partition.ConvexPartition_HM(&polys, &convex) == 0) {
-		TOVE_WARN("Convex partition failed.");
+		TOVE_WARN("ConvexPartition_HM failed.");
 		return;
 	}
 
 	Triangulation *triangulation = new Triangulation(convex);
-
 	for (auto i = convex.begin(); i != convex.end(); i++) {
 		std::list<TPPLPoly> triangles;
 		TPPLPoly &p = *i;
 
 		if (partition.Triangulate_MONO(&p, &triangles) == 0) {
 			if (partition.Triangulate_EC(&p, &triangles) == 0) {
-#if 0
-				printf("failure:\n");
-				for (auto p = polys.begin(); p != polys.end(); p++) {
-					printf("poly:\n");
-					for (int i = 0; i < p->GetNumPoints(); i++) {
-						printf("%f %f\n", p->GetPoint(i).x, p->GetPoint(i).y);
-					}
-				}
-#endif
-
-				TOVE_WARN("Triangulation failed.");
-				return;
+				triangulationFailed(polys);
+				continue;
 			}
 		}
 
@@ -294,63 +437,55 @@ void AbstractMesh::triangulateFill(
 	}
 
 	mTriangles.add(triangulation);
+#endif
 }
 
-void AbstractMesh::add(
-	const ClipperPaths &paths,
-	float scale,
-	const MeshPaint &paint,
-	const ToveHoles holes) {
+void AbstractMesh::setLineColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+}
 
-	const int vertexIndex = mVertexCount;
-	triangulate(paths, scale, holes);
-	const int vertexCount = mVertexCount - vertexIndex;
-	addColor(vertexIndex, vertexCount, paint);
+void AbstractMesh::setFillColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+}
+
+Submesh *AbstractMesh::submesh(const PathRef &path, int line) {
+	const SubmeshId id = path->getIndex() * 2 + line;
+	const auto i = mSubmeshes.find(id);
+	if (i != mSubmeshes.end()) {
+		return i->second;
+	} else {
+		Submesh *submesh = new Submesh(this);
+		mSubmeshes[id] = submesh;
+		return submesh;
+	}
 }
 
 
 Mesh::Mesh() : AbstractMesh(sizeof(float) * 2) {
 }
 
-void Mesh::initializePaint(
-	MeshPaint &paint,
-	const NSVGpaint &nsvg,
-	float opacity,
-	float scale) {
-}
-
-void Mesh::addColor(
-	int vertexIndex,
-	int vertexCount,
-	const MeshPaint &paint) {
-}
-
 
 ColorMesh::ColorMesh() : AbstractMesh(sizeof(float) * 2 + 4) {
 }
 
-void ColorMesh::initializePaint(
-	MeshPaint &paint,
-	const NSVGpaint &nsvg,
-	float opacity,
-	float scale) {
-
-	paint.initialize(nsvg, opacity, scale);
+void ColorMesh::setLineColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+	MeshPaint paint;
+	NSVGshape *shape = path->getNSVG();
+	paint.initialize(shape->stroke, shape->opacity, 1.0f);
+	setColor(vertexIndex, vertexCount, paint);
 }
 
-void ColorMesh::addColor(
+void ColorMesh::setFillColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+	MeshPaint paint;
+	NSVGshape *shape = path->getNSVG();
+	paint.initialize(shape->fill, shape->opacity, 1.0f);
+	setColor(vertexIndex, vertexCount, paint);
+}
+
+void ColorMesh::setColor(
 	int vertexIndex, int vertexCount, const MeshPaint &paint) {
-
-    /*meshData.colors = static_cast<uint8_t*>(realloc(
-    	meshData.colors,
-		nextpow2(vertexIndex + vertexCount) * 4 * sizeof(uint8_t)));
-
-    if (!meshData.colors) {
-		TOVE_BAD_ALLOC();
-		return;
-    }
-
-    uint8_t *colors = &meshData.colors[4 * vertexIndex];*/
 
     switch (paint.getType()) {
     	case NSVG_PAINT_LINEAR_GRADIENT: {
@@ -407,4 +542,33 @@ void ColorMesh::addColor(
 		    }
  		} break;
     }
+}
+
+
+PaintMesh::PaintMesh() : AbstractMesh(sizeof(float) * 3) {
+}
+
+void PaintMesh::setLineColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+
+	setPaintIndex(2 * path->getIndex() + 0, vertexIndex, vertexCount);
+}
+
+void PaintMesh::setFillColor(
+	const PathRef &path, int vertexIndex, int vertexCount) {
+
+	setPaintIndex(2 * path->getIndex() + 1, vertexIndex, vertexCount);
+}
+
+void PaintMesh::setPaintIndex(
+	int paintIndex, int vertexIndex, int vertexCount) {
+
+	auto vertex = vertices(vertexIndex, vertexCount);
+	const float value = paintIndex;
+
+	for (int i = 0; i < vertexCount; i++) {
+		float *p = reinterpret_cast<float*>(vertex.attr());
+		*p = value;
+		vertex++;
+	}
 }

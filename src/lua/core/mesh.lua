@@ -17,32 +17,31 @@ local function getTrianglesMode(cmesh)
 end
 
 
-local PositionMesh = {}
-PositionMesh.__index = PositionMesh
+local AbstractMesh = {}
+AbstractMesh.__index = AbstractMesh
 
-tove.newPositionMesh = function(name, usage)
-	return setmetatable({_cmesh = ffi.gc(lib.NewMesh(), lib.ReleaseMesh),
-		_mesh = nil, _usage = usage or {}, _vdata = nil}, PositionMesh)
+function AbstractMesh:getVertexMap()
+	return self._mesh:getVertexMap()
 end
 
-function PositionMesh:getUsage(what)
+function AbstractMesh:getUsage(what)
 	return self._usage[what]
 end
 
-function PositionMesh:updateVertices()
+function AbstractMesh:updateVertices()
 	local mesh = self._mesh
 	if mesh ~= nil then
 		local vdata = self._vdata
 		lib.MeshCopyVertexData(
-			self._cmesh, vdata:getPointer(), vdata:getSize())
+			self._tovemesh, vdata:getPointer(), vdata:getSize())
 		mesh:setVertices(vdata)
 	end
 end
 
-function PositionMesh:updateTriangles()
+function AbstractMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
-		ctriangles = lib.MeshGetTriangles(self._cmesh)
+		local ctriangles = lib.MeshGetTriangles(self._tovemesh)
 		local indices = totable(ctriangles.array, ctriangles.size)
 		mesh:setVertexMap(indices)
 	else
@@ -50,26 +49,25 @@ function PositionMesh:updateTriangles()
 	end
 end
 
-function PositionMesh:getMesh()
+function AbstractMesh:cache(mode)
+	lib.MeshCache(self._tovemesh, mode == "keyframe")
+end
+
+function AbstractMesh:getMesh()
 	if self._mesh ~= nil then
 		return self._mesh
 	end
 
-	local usage = "static"
-	if self._usage["points"] == "dynamic" then
-		usage = "dynamic"
-	end
-
-	local attributes = {{"VertexPosition", "float", 2}}
-	local n = lib.MeshGetVertexCount(self._cmesh)
+	local n = lib.MeshGetVertexCount(self._tovemesh)
 	if n < 1 then
 		return nil
 	end
 
+	local usage = self._dynamic and "dynamic" or "static"
 	local mesh = love.graphics.newMesh(
-		attributes, n, getTrianglesMode(self._cmesh), usage)
+		self._attributes, n, getTrianglesMode(self._tovemesh), usage)
 	self._mesh = mesh
-	self._vdata = love.data.newByteData(n * 2 * floatSize)
+	self._vdata = love.data.newByteData(n * self._vertexByteSize)
 
 	self:updateTriangles()
 	self:updateVertices()
@@ -77,85 +75,78 @@ function PositionMesh:getMesh()
 	return mesh
 end
 
-function PositionMesh:cache(mode)
-	lib.MeshCache(self._cmesh, mode == "keyframe")
+
+local PositionMesh = {}
+PositionMesh.__index = PositionMesh
+setmetatable(PositionMesh, {__index = AbstractMesh})
+PositionMesh._attributes = {{"VertexPosition", "float", 2}}
+PositionMesh._vertexByteSize = 2 * floatSize
+
+tove.newPositionMesh = function(name, usage)
+	return setmetatable({
+		_name = name,
+		_tovemesh = ffi.gc(lib.NewMesh(), lib.ReleaseMesh),
+		_mesh = nil,
+		_usage = usage or {},
+		_dynamic = usage["points"] == "dynamic",
+		_vdata = nil}, PositionMesh)
+end
+
+
+local PaintMesh = {}
+PaintMesh.__index = PaintMesh
+setmetatable(PaintMesh, {__index = AbstractMesh})
+PaintMesh._attributes = {
+	{"VertexPosition", "float", 2},
+	{"VertexPaint", "float", 1}}
+PaintMesh._vertexByteSize = 3 * floatSize
+
+tove.newPaintMesh = function(name, usage)
+	return setmetatable({
+		_name = name,
+		_tovemesh = ffi.gc(lib.NewPaintMesh(), lib.ReleaseMesh),
+		_mesh = nil,
+		_usage = usage or {},
+		_dynamic = usage["points"] == "dynamic",
+		_vdata = nil}, PaintMesh)
 end
 
 
 local ColorMesh = {}
 ColorMesh.__index = ColorMesh
+setmetatable(ColorMesh, {__index = AbstractMesh})
+ColorMesh._attributes = {
+	{"VertexPosition", "float", 2},
+	{"VertexColor", "byte", 4}}
+ColorMesh._vertexByteSize = 2 * floatSize + 4
 
 tove.newColorMesh = function(name, usage, tess)
 	local cmesh = ffi.gc(lib.NewColorMesh(), lib.ReleaseMesh)
 	tess(cmesh, -1)
-	return setmetatable({_name = name, _cmesh = cmesh, _mesh = nil,
-		_tess = tess, _usage = usage or {}, _vdata = nil}, ColorMesh)
-end
-
-function ColorMesh:getVertexMap()
-	return self._mesh:getVertexMap()
-end
-
-function ColorMesh:getUsage(what)
-	return self._usage[what]
+	return setmetatable({
+		_name = name, _tovemesh = cmesh, _mesh = nil,
+		_tess = tess, _usage = usage,
+		_dynamic = usage["points"] == "dynamic" or usage["colors"] == "dynamic",
+		_vdata = nil}, ColorMesh)
 end
 
 function ColorMesh:retesselate(flags)
-	local updated = self._tess(self._cmesh, flags)
-	self:updateVertices()
+	local updated = self._tess(self._tovemesh, flags)
+	if bit.band(updated, lib.UPDATE_MESH_GEOMETRY) ~= 0 then
+		-- we have a change of vertex count, i.e. the mesh must be
+		-- recreated. happens if we're using adapative tesselation.
+		self._mesh = nil
+		return true  -- the underlying mesh changed
+	end
+
+	if bit.band(updated,
+		lib.UPDATE_MESH_VERTICES +
+		lib.UPDATE_MESH_COLORS) ~= 0 then
+		self:updateVertices()
+	end
 	if bit.band(updated, lib.UPDATE_MESH_TRIANGLES) ~= 0 then
 		self:updateTriangles()
 	end
-end
 
-function ColorMesh:updateVertices()
-	local mesh = self._mesh
-	if mesh ~= nil then
-		local vdata = self._vdata
-		lib.MeshCopyVertexData(
-			self._cmesh, vdata:getPointer(), vdata:getSize())
-		mesh:setVertices(vdata)
-	end
-end
-
-function ColorMesh:updateTriangles()
-	local mesh = self._mesh
-	if mesh ~= nil then
-		local ctriangles = lib.MeshGetTriangles(self._cmesh)
-		local indices = totable(ctriangles.array, ctriangles.size)
-		mesh:setVertexMap(indices)
-	else
-		self:getMesh()
-	end
-end
-
-function ColorMesh:getMesh()
-	if self._mesh ~= nil then
-		return self._mesh
-	end
-	local attributes = {{"VertexPosition", "float", 2},
-		{"VertexColor", "byte", 4}}
-
-	local usage = "static"
-	if self._usage["points"] == "dynamic" or
-		self._usage["colors"] == "dynamic" then
-		usage = "dynamic"
-	end
-
-	local n = lib.MeshGetVertexCount(self._cmesh)
-	if n < 1 then
-		return nil
-	end
-
-	local mesh = love.graphics.newMesh(
-		attributes, n, getTrianglesMode(self._cmesh), usage)
-	self._mesh = mesh
-	self._vdata = love.data.newByteData(n * (2 * floatSize + 4))
-	self:updateTriangles()
-	self:updateVertices()
-	return mesh
-end
-
-function ColorMesh:cache(mode)
-	lib.MeshCache(self._cmesh, mode == "lock")
+	return false
 end

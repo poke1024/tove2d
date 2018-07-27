@@ -73,10 +73,12 @@ public:
 				assert(i >= 0 && i < n);
 				const auto &p0 = vertices[outline[i]];
 
-				int i1 = find_unequal_forward(vertices, outline.data(), i, n);
+				const int i1 = find_unequal_forward(
+					vertices, outline.data(), i, n);
 				const auto &p1 = vertices[outline[i1]];
 
-				int i2 = find_unequal_forward(vertices, outline.data(), i1, n);
+				const int i2 = find_unequal_forward(
+					vertices, outline.data(), i1, n);
 				const auto &p2 = vertices[outline[i2]];
 
 				float area = cross(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
@@ -86,8 +88,7 @@ public:
 					part.fail = i;
 
 					if (j != 0) {
-						std::swap(parts[j].outline, parts[0].outline);
-						std::swap(parts[j].fail, parts[0].fail);
+						std::swap(parts[j], parts[0]);
 					}
 					return false;
 				}

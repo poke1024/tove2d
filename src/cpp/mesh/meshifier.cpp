@@ -13,35 +13,82 @@
 #include "meshifier.h"
 #include "mesh.h"
 
-ToveMeshUpdateFlags AbstractMeshifier::graphics(const GraphicsRef &graphics,
-	const MeshRef &fill, const MeshRef &line) {
-
-	fill->clear();
-	line->clear();
+ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
+	const GraphicsRef &graphics,
+	const MeshRef &fill,
+	const MeshRef &line) {
 
 	const int n = graphics->getNumPaths();
 	ToveMeshUpdateFlags updated = 0;
-	for (int i = 0; i < n; i++) {
-		updated |= (*this)(graphics->getPath(i), fill, line, true);
+
+	if (!hasFixedSize()) {
+		fill->clear();
+		line->clear();
 	}
+
+	int fillIndex = 0;
+	int lineIndex = 0;
+
+	for (int i = 0; i < n; i++) {
+		updated |= pathToMesh(
+			graphics.get(),
+			graphics->getPath(i),
+			fill, line,
+			fillIndex, lineIndex);
+	}
+
 	return updated;
 }
 
 
+static void clip(
+	Graphics *graphics,
+	const PathRef &path,
+	ClipperPaths &subject) {
+
+#ifdef NSVG_CLIP_PATHS
+	const std::vector<NSVGclipPathIndex> &clipIndices =
+		path->getClipIndices();
+
+	if (!clipIndices.empty()) {
+		for (NSVGclipPathIndex i : clipIndices) {
+			ClipperLib::Clipper c;
+			c.AddPaths(
+				subject,
+				ClipperLib::ptSubject,
+				true);
+			c.AddPaths(
+				graphics->getClipAtIndex(i)->computed,
+				ClipperLib::ptClip,
+				true);
+			c.Execute(
+				ClipperLib::ctIntersection,
+				subject);
+		}
+	}
+#endif
+}
+
 AdaptiveMeshifier::AdaptiveMeshifier(
 	float scale, const ToveTesselationQuality *quality) :
-	tess(scale, quality) {
+	flattener(scale, quality) {
+}
+
+bool AdaptiveMeshifier::hasFixedSize() const {
+	return false;
 }
 
 void AdaptiveMeshifier::renderStrokes(
-	NSVGshape *shape,
+	Graphics *graphics,
+	const PathRef &path,
 	const ClipperLib::PolyNode *node,
 	ClipperPaths &holes,
-	const MeshPaint &paint,
-	const MeshRef &mesh) {
+	Submesh *submesh) {
+
+	const NSVGshape *shape = path->getNSVG();
 
 	for (int i = 0; i < node->ChildCount(); i++) {
-		renderStrokes(shape, node->Childs[i], holes, paint, mesh);
+		renderStrokes(graphics, path, node->Childs[i], holes, submesh);
 	}
 
 	if (node->IsHole()) {
@@ -49,57 +96,86 @@ void AdaptiveMeshifier::renderStrokes(
 			holes.push_back(node->Contour);
 		}
 	} else {
-		if (!node->Contour.empty()) {
+		if (!node->Contour.empty() && shape->stroke.type == NSVG_PAINT_COLOR) {
 			ClipperPaths paths;
 			paths.push_back(node->Contour);
 			paths.insert(paths.end(), holes.begin(), holes.end());
-
-			if (shape->stroke.type == NSVG_PAINT_COLOR) {
-				mesh->add(paths, tess.scale, paint, HOLES_CW);
-			}
+			clip(graphics, path, paths);
+			submesh->addClipperPaths(paths, flattener.scale, HOLES_CW);
 		}
 		holes.clear();
 	}
 }
 
-ToveMeshUpdateFlags AdaptiveMeshifier::operator()(
-	const PathRef &path, const MeshRef &fill, const MeshRef &line, bool append) {
+ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
+	Graphics *graphics,
+	const PathRef &path,
+	const MeshRef &fill,
+	const MeshRef &line,
+	int &fillIndex,
+	int &lineIndex) {
 
-	if (!append) {
-		fill->clear();
-		line->clear();
-	}
+	assert(fillIndex == fill->getVertexCount());
+	assert(lineIndex == line->getVertexCount());
 
-	NSVGshape *shape = path->getNSVG();
+	const NSVGshape *shape = path->getNSVG();
 
 	if ((shape->flags & NSVG_FLAGS_VISIBLE) == 0) {
-		return 0;
+		return UPDATE_MESH_EVERYTHING;
 	}
 
 	if (shape->fill.type == NSVG_PAINT_NONE &&
 		shape->stroke.type == NSVG_PAINT_NONE) {
-		return 0;
+		return UPDATE_MESH_EVERYTHING;
 	}
 
 	Tesselation t;
-	tess(path, t);
+	flattener(path, t);
+	// ClosedPathsFromPolyTree
 
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
-		MeshPaint paint;
-		fill->initializePaint(paint, shape->fill, shape->opacity, 1.0f);
+		clip(graphics, path, t.fill);
+		const int index0 = fill->getVertexCount();
  		// ClipperLib always gives us HOLES_CW.
- 		fill->add(t.fill, tess.scale, paint, HOLES_CW);
+ 		fill->submesh(path, 0)->addClipperPaths(t.fill, flattener.scale, HOLES_CW);
+		fill->setFillColor(path, index0, fill->getVertexCount() - index0);
 	}
 
 	if (t.stroke.ChildCount() > 0 &&
 		shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
-		MeshPaint paint;
-		line->initializePaint(paint, shape->stroke, shape->opacity, 1.0f);
+		const int index0 = line->getVertexCount();
 		ClipperPaths holes;
-		renderStrokes(shape, &t.stroke, holes, paint, line);
+		renderStrokes(graphics, path, &t.stroke, holes, line->submesh(path, 1));
+		line->setLineColor(path, index0, line->getVertexCount() - index0);
 	}
 
-	return 0;
+	fillIndex = fill->getVertexCount();
+	lineIndex = line->getVertexCount();
+
+	return UPDATE_MESH_EVERYTHING;
+}
+
+ClipperLib::Paths AdaptiveMeshifier::toClipPath(
+	const std::vector<PathRef> &paths) const {
+
+	ClipperLib::Paths flattened;
+
+	for (const PathRef &path : paths) {
+		Tesselation t;
+		flattener(path, t);
+		ClipperLib::SimplifyPolygons(
+			t.fill, path->getClipperFillType());
+
+		if (paths.size() == 1) {
+			return std::move(t.fill);
+		}
+
+		flattened.insert(
+			flattened.end(),
+			std::make_move_iterator(t.fill.begin()),
+			std::make_move_iterator(t.fill.end()));
+	}
+	return std::move(flattened);
 }
 
 FixedMeshifier::FixedMeshifier(
@@ -113,11 +189,13 @@ FixedMeshifier::FixedMeshifier(
 	assert(scale == 1.0f);
 }
 
-ToveMeshUpdateFlags FixedMeshifier::operator()(
+ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
+	Graphics *graphics,
 	const PathRef &path,
 	const MeshRef &fill,
 	const MeshRef &line,
-	bool append) {
+	int &fillIndex,
+	int &lineIndex) {
 
 	NSVGshape *shape = path->getNSVG();
 
@@ -130,21 +208,26 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 		return _update;
 	}
 
-	const bool hasStroke = path->hasStroke();
-
 	FixedFlattener flattener(depth, 0.0);
 
+	const bool hasStroke = path->hasStroke();
 	const int n = path->getNumSubpaths();
 	const bool compound = (&fill == &line);
-	const int index0 = compound && append ? fill->getVertexCount() : 0;
+	assert(!compound || fillIndex == lineIndex);
+	const int fillIndex0 = fillIndex;
+	const int lineIndex0 = lineIndex;
 	int index = 0;
-	int linebase = 0;
+	int lineBase = 0;
+
+	Submesh *fillSubmesh = fill->submesh(path, 0);
+	Submesh *lineSubmesh = line->submesh(path, 1);
 
 	ToveMeshUpdateFlags update = _update;
-	bool triangleCacheFlag = false;
+	bool trianglesChanged = false;
 
-	float miterLimit = path->getMiterLimit();
-	bool miter = path->getLineJoin() == LINEJOIN_MITER && miterLimit > 0.0f;
+	const float miterLimit = path->getMiterLimit();
+	const bool miter = path->getLineJoin() == LINEJOIN_MITER &&
+		miterLimit > 0.0f;
 
 	// in case of stroke-only paths, we still produce the fill vertices for
 	// computing the stroke vertices, but then skip fill triangulation.
@@ -153,14 +236,16 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 		const float lineOffset = shape->strokeWidth * 0.5f;
 
 		if (compound) {
-			for (int i = 0; i < n; i++) {
-				linebase += path->getSubpathSize(i, flattener);
-			}
+			lineBase += path->getFlattenedSize(flattener);
 		}
 
 		for (int i = 0; i < n; i++) {
 			int k = flattener.flatten(
-				path->getSubpath(i), fill, index0 + index);
+				path->getSubpath(i), fill, fillIndex0 + index);
+
+			if (k == 0) {
+				continue;
+			}
 
 			if (hasStroke) {
 				const bool closed = path->getSubpath(i)->isClosed();
@@ -172,10 +257,11 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 				// might get invalidated by a realloc in line->vertices.
 
 				auto vertex = line->vertices(
-					index0 + linebase + index * verticesPerSegment,
+					lineIndex0 + lineBase + index * verticesPerSegment,
 					k * verticesPerSegment);
 
-				const auto vertices = fill->vertices(index0 + index, k);
+				const auto vertices = fill->vertices(
+					fillIndex0 + index, k);
 
 				int previous = find_unequal_backward(vertices, k, k);
 				int next = find_unequal_forward(vertices, 0, k);
@@ -268,47 +354,57 @@ ToveMeshUpdateFlags FixedMeshifier::operator()(
 
 		if ((update & UPDATE_MESH_TRIANGLES) == 0 &&
 			(update & UPDATE_MESH_AUTO_TRIANGLES)) {
-			if (!fill->checkTriangles(triangleCacheFlag)) {
+			if (!fillSubmesh->checkTriangles(trianglesChanged)) {
 				update |= UPDATE_MESH_TRIANGLES;
 			}
 		}
 	} else {
-		for (int i = 0; i < n; i++) {
-			index += path->getSubpathSize(i, flattener);
-		}
+		index += path->getFlattenedSize(flattener);
 		if (compound) {
-			linebase = index;
+			lineBase = index;
 		}
 	}
 
 	if (shape->fill.type != NSVG_PAINT_NONE) {
 		if (update & UPDATE_MESH_TRIANGLES) {
-			fill->triangulateFill(index0, path, flattener, holes);
+			fillSubmesh->triangulateFixedFill(
+				fillIndex0, path, flattener, holes);
 		}
-		if (update & UPDATE_MESH_COLORS) {
-			MeshPaint paint;
-			fill->initializePaint(paint, shape->fill, shape->opacity, 1.0f);
-			fill->addColor(index0, index, paint);
+		if (update & (UPDATE_MESH_COLORS | UPDATE_MESH_VERTICES)) {
+			fill->setFillColor(path, fillIndex0, index);
 		}
 	}
+
+	const int verticesPerSegment = miter ? 5 : 4;
 
 	if (hasStroke) {
-		const int v0 = index0 + linebase;
-		const int verticesPerSegment = miter ? 5 : 4;
+		const int v0 = lineIndex0 + lineBase;
 
 		if (update & UPDATE_MESH_TRIANGLES) {
-			line->triangulateLine(v0, miter, path, flattener);
+			lineSubmesh->triangulateFixedLine(
+				v0, miter, path, flattener);
 		}
-		if (update & UPDATE_MESH_COLORS) {
-			MeshPaint paint;
-			line->initializePaint(paint, shape->stroke, shape->opacity, 1.0f);
-			line->addColor(v0, index * verticesPerSegment, paint);
+		if (update & (UPDATE_MESH_COLORS | UPDATE_MESH_VERTICES)) {
+			line->setLineColor(path, v0, index * verticesPerSegment);
 		}
 	}
 
-	if (triangleCacheFlag) {
+	if (trianglesChanged) {
 		update |= UPDATE_MESH_TRIANGLES;
 	}
 
+	lineIndex = lineIndex0 + lineBase + index * verticesPerSegment;
+	fillIndex = compound ? lineIndex : fillIndex0 + index;
+
 	return update;
+}
+
+ClipperLib::Paths FixedMeshifier::toClipPath(
+	const std::vector<PathRef> &paths) const {
+
+	return ClipperPaths();
+}
+
+bool FixedMeshifier::hasFixedSize() const {
+	return true;
 }

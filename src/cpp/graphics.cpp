@@ -21,6 +21,51 @@
  // 		NSVG image -> Graphics
 
 #include "graphics.h"
+#include "mesh/meshifier.h"
+#include "nsvg.h"
+
+static void copyFromNSVG(
+    PathOwner *owner,
+    NSVGshape **anchor,
+    std::vector<PathRef> &paths,
+    const NSVGshape *shapes) {
+
+    const NSVGshape *shape = shapes;
+    int index = 0;
+	while (shape) {
+		PathRef path = std::make_shared<Path>(owner, shape);
+        path->setIndex(index++);
+		if (paths.empty()) {
+			*anchor = &path->nsvg;
+		} else {
+			paths[paths.size() - 1]->setNext(path);
+		}
+		path->claim(owner);
+		paths.push_back(path);
+		shape = shape->next;
+	}
+}
+
+#ifdef NSVG_CLIP_PATHS
+Clip::Clip(NSVGclipPath *clipPath) {
+    std::memset(&nsvg, 0, sizeof(nsvg));
+    copyFromNSVG(this, &nsvg.shapes, paths, clipPath->shapes);
+    nsvg.index = clipPath->index;
+}
+
+void Clip::set(const ClipRef &source, const nsvg::Transform &transform) {
+	const int numPaths = source->paths.size();
+    assert(numPaths == paths.size());
+    //setNumPaths(numPaths);
+	for (int i = 0; i < numPaths; i++) {
+		paths[i]->set(source->paths[i], transform);
+	}
+}
+
+void Clip::compute(const AbstractMeshifier &meshifier) {
+    computed = meshifier.toClipPath(paths);
+}
+#endif
 
 void Graphics::setNumPaths(int n) {
  	// close all
@@ -40,6 +85,7 @@ void Graphics::_appendPath(const PathRef &path) {
 	} else {
 		current()->setNext(path);
 	}
+    path->setIndex(paths.size());
 	path->clearNext();
 	path->claim(this);
 	paths.push_back(path);
@@ -118,19 +164,21 @@ Graphics::Graphics(const NSVGimage *image) :
     changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
     initialize(image->width, image->height);
+    copyFromNSVG(this, &nsvg.shapes, paths, image->shapes);
 
-	NSVGshape *shape = image->shapes;
-	while (shape) {
-		PathRef path = std::make_shared<Path>(this, shape);
-		if (paths.empty()) {
-			nsvg.shapes = &path->nsvg;
-		} else {
-			paths[paths.size() - 1]->setNext(path);
-		}
-		path->claim(this);
-		paths.push_back(path);
-		shape = shape->next;
-	}
+#ifdef NSVG_CLIP_PATHS
+    NSVGclipPath *clipPath = image->clipPaths;
+    while (clipPath) {
+        ClipRef clip = std::make_shared<Clip>(clipPath);
+        if (clips.empty()) {
+            nsvg.clipPaths = &clip->nsvg;
+        } else {
+            clips[clips.size() - 1]->setNext(clip);
+        }
+        clips.push_back(clip);
+        clipPath = clipPath->next;
+    }
+#endif
 }
 
 Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
@@ -193,6 +241,24 @@ void Graphics::setLineDash(const float *dashes, int count) {
 	}
 }
 
+ToveLineJoin Graphics::getLineJoin() const {
+	return nsvg::toveLineJoin(
+		static_cast<NSVGlineJoin>(strokeLineJoin));
+}
+
+void Graphics::setLineJoin(ToveLineJoin join) {
+	strokeLineJoin = nsvg::nsvgLineJoin(join);
+}
+
+bool Graphics::areColorsSolid() const {
+    for (const auto &path : paths) {
+        if (!path->areColorsSolid()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void Graphics::fill() {
 	if (!paths.empty()) {
 		current()->setFillColor(fillColor);
@@ -224,6 +290,15 @@ void Graphics::addPath(const PathRef &path) {
 		newPath = true;
 		changed(CHANGED_GEOMETRY);
 	}
+}
+
+PathRef Graphics::getPathByName(const char *name) const {
+    for (const PathRef &p : paths) {
+        if (strcmp(p->nsvg.id, name) == 0) {
+            return p;
+        }
+    }
+    return PathRef();
 }
 
 NSVGimage *Graphics::getImage() {
@@ -284,12 +359,19 @@ void Graphics::setOrientation(ToveOrientation orientation) {
 }
 
 void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) {
-	const int n = source->paths.size();
-	setNumPaths(n);
-
-	for (int i = 0; i < n; i++) {
+	const int numPaths = source->paths.size();
+	setNumPaths(numPaths);
+	for (int i = 0; i < numPaths; i++) {
 		paths[i]->set(source->paths[i], transform);
 	}
+
+#ifdef NSVG_CLIP_PATHS
+    const int numClips = source->clips.size();
+    assert(numClips == clips.size());
+    for (int i = 0; i < numClips; i++) {
+		clips[i]->set(source->clips[i], transform);
+	}
+#endif
 }
 
 ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags, bool clearAll) {
@@ -317,5 +399,21 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	}
 	for (int i = 0; i < n; i++) {
 		paths[i]->animate(a->paths[i], b->paths[i], t);
+	}
+}
+
+void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) {
+#ifdef NSVG_CLIP_PATHS
+    for (const ClipRef &clip : clips) {
+        clip->compute(meshifier);
+    }
+#endif
+}
+
+void Graphics::clearChanges(ToveChangeFlags flags) {
+	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
+	changes &= ~flags;
+	for (const auto &p : paths) {
+		p->clearChanges(flags);
 	}
 }

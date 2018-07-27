@@ -4,4 +4,6 @@
 .sconsign.dblite
 /src/cpp/version.cpp
 /lib
+/tove
+.vscode
 

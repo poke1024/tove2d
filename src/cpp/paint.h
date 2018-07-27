@@ -16,6 +16,8 @@
 #include "claimable.h"
 #include "nsvg.h"
 
+void copyColor(RGBA &rgba, uint32_t color, float opacity);
+
 class AbstractPaint : public Claimable<Path> {
 protected:
 	void changed();
@@ -24,6 +26,7 @@ public:
 	virtual ~AbstractPaint() {
 	}
 
+	virtual void getGradientParameters(ToveGradientParameters &p) = 0;
 	virtual PaintRef clone() const = 0;
 	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform) = 0;
 	virtual TovePaintType getType() const = 0;
@@ -34,21 +37,21 @@ public:
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) = 0;
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) = 0;
-	virtual int getNumStops() const = 0;
+	virtual float getColorStop(int i, RGBA &rgba, float opacity) = 0;
+	virtual int getNumColorStops() const = 0;
 	virtual NSVGgradient *getNSVGgradient() const = 0;
 	virtual void getGradientMatrix(ToveMatrix3x3 &m, float scale) const = 0;
 
 	virtual void setRGBA(float r, float g, float b, float a) {
 	}
-	virtual void getRGBA(RGBA *rgba, float opacity) const {
-		rgba->r = 0.0;
-		rgba->g = 0.0;
-		rgba->b = 0.0;
-		rgba->a = 0.0;
+	virtual void getRGBA(RGBA &rgba, float opacity) const {
+		rgba.r = 0.0;
+		rgba.g = 0.0;
+		rgba.b = 0.0;
+		rgba.a = 0.0;
 	}
 
 	virtual void animate(const PaintRef &a, const PaintRef &b, float t) {
-
 	}
 };
 
@@ -63,9 +66,11 @@ public:
 
 	virtual PaintRef clone() const {
 		RGBA rgba;
-		getRGBA(&rgba, 1.0);
+		getRGBA(rgba, 1.0);
 		return std::make_shared<Color>(rgba.r, rgba.g, rgba.b, rgba.a);
 	}
+
+	virtual void getGradientParameters(ToveGradientParameters &p);
 
 	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);
 
@@ -83,8 +88,13 @@ public:
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) {
 	}
 
-	virtual int getNumStops() const {
-		return 0;
+	virtual float getColorStop(int i, RGBA &rgba, float opacity) {
+		getRGBA(rgba, opacity);
+		return 0.0f;
+	}
+
+	virtual int getNumColorStops() const {
+		return 1;
 	}
 
 	virtual NSVGgradient *getNSVGgradient() const {
@@ -101,17 +111,8 @@ public:
 
 	virtual void store(NSVGpaint &paint);
 
-	virtual void getRGBA(RGBA *rgba, float opacity) const {
-		uint32_t c;
-		if (opacity < 1.0) {
-			c = nsvg::applyOpacity(color, opacity);
-		} else {
-			c = color;
-		}
-		rgba->r = (c & 0xff) / 255.0;
-		rgba->g = ((c >> 8) & 0xff) / 255.0;
-		rgba->b = ((c >> 16) & 0xff) / 255.0;
-		rgba->a = ((c >> 24) & 0xff) / 255.0;
+	virtual void getRGBA(RGBA &rgba, float opacity) const {
+		copyColor(rgba, color, opacity);
 	}
 };
 
@@ -167,6 +168,15 @@ public:
 		sorted = false;
 	}
 
+	virtual float getColorStop(int i, RGBA &rgba, float opacity) {
+		if (i >= 0 && i < nsvg->nstops) {
+			copyColor(rgba, nsvg->stops[i].color, opacity);
+			return nsvg->stops[i].offset;
+		} else {
+			return 0.0f;
+		}
+	}
+
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) {
 		if (i >= 0 && i < nsvg->nstops) {
 			nsvg->stops[i].color = nsvg::makeColor(r, g, b, a);
@@ -176,7 +186,7 @@ public:
 		}
 	}
 
-	virtual int getNumStops() const {
+	virtual int getNumColorStops() const {
 		return nsvg->nstops;
 	}
 
@@ -215,6 +225,8 @@ public:
 	inline LinearGradient(const LinearGradient &gradient) : AbstractGradient(gradient) {
 	}
 
+	virtual void getGradientParameters(ToveGradientParameters &p);
+
 	virtual PaintRef clone() const {
 		return std::make_shared<LinearGradient>(*this);
 	}
@@ -244,6 +256,8 @@ public:
 
 	inline RadialGradient(const RadialGradient &gradient) : AbstractGradient(gradient) {
 	}
+
+	virtual void getGradientParameters(ToveGradientParameters &p);
 
 	virtual PaintRef clone() const {
 		return std::make_shared<RadialGradient>(*this);

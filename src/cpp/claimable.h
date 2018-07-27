@@ -21,6 +21,10 @@ public:
 	inline Claimable() : claimer(nullptr) {
 	}
 
+	inline T *getClaimer() const {
+		return claimer;
+	}
+
 	inline void claim(T *claimer) {
 		this->claimer = claimer;
 	}

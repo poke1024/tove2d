@@ -18,28 +18,51 @@
 
 class AbstractMeshifier {
 public:
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
-		const MeshRef &fill, const MeshRef &line, bool append = false) = 0;
+	virtual ToveMeshUpdateFlags pathToMesh(
+		Graphics *graphics,
+		const PathRef &path,
+		const MeshRef &fill,
+		const MeshRef &line,
+		int &fillIndex,
+		int &lineIndex) = 0;
 
-	virtual ToveMeshUpdateFlags graphics(const GraphicsRef &graphics,
-		const MeshRef &fill, const MeshRef &line);
+	virtual ToveMeshUpdateFlags graphicsToMesh(
+		const GraphicsRef &graphics,
+		const MeshRef &fill,
+		const MeshRef &line);
+
+	virtual ClipperLib::Paths toClipPath(
+		const std::vector<PathRef> &paths) const = 0;
+
+	virtual bool hasFixedSize() const = 0;
 };
 
 class AdaptiveMeshifier : public AbstractMeshifier {
 private:
-	void renderStrokes(NSVGshape *shape, const ClipperLib::PolyNode *node,
-		ClipperPaths &holes, const MeshPaint &paint, const MeshRef &mesh);
+	void renderStrokes(
+		Graphics *graphics,
+		const PathRef &path,
+		const ClipperLib::PolyNode *node,
+		ClipperPaths &holes,
+		Submesh *submesh);
 
-	AdaptiveFlattener tess;
-
-protected:
-	void mesh(const std::list<TPPLPoly> &triangles, const MeshPaint &paint);
+	AdaptiveFlattener flattener;
 
 public:
 	AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality);
 
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
-		const MeshRef &fill, const MeshRef &line, bool append = false);
+	virtual ToveMeshUpdateFlags pathToMesh(
+		Graphics *graphics,
+		const PathRef &path,
+		const MeshRef &fill,
+		const MeshRef &line,
+		int &fillIndex,
+		int &lineIndex);
+
+	virtual ClipperLib::Paths toClipPath(
+		const std::vector<PathRef> &paths) const;
+
+	virtual bool hasFixedSize() const;
 };
 
 class FixedMeshifier : public AbstractMeshifier {
@@ -53,8 +76,18 @@ public:
 	FixedMeshifier(float scale, const ToveTesselationQuality *quality,
 		ToveHoles holes, ToveMeshUpdateFlags update);
 
-	virtual ToveMeshUpdateFlags operator()(const PathRef &path,
-		const MeshRef &fill, const MeshRef &line, bool append = false);
+	virtual ToveMeshUpdateFlags pathToMesh(
+		Graphics *graphics,
+		const PathRef &path,
+		const MeshRef &fill,
+		const MeshRef &line,
+		int &fillIndex,
+		int &lineIndex);
+
+	virtual ClipperLib::Paths toClipPath(
+		const std::vector<PathRef> &paths) const;
+
+	virtual bool hasFixedSize() const;
 };
 
 #endif // __TOVE_MESH_MESHIFIER

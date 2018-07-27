@@ -223,7 +223,7 @@ public:
 
 	inline int fetchChanges() {
 		// always emits a change; could be optimized. currently
-		// only used in the curves renderer GeometryShaderLinkImpl.
+		// only used in the curves renderer GeometryFeedImpl.
 		return CHANGED_POINTS;
 	}
 

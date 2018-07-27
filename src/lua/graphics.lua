@@ -11,12 +11,21 @@
 
 --!! import "core/cquality.lua" as cquality
 
+local function gcpath(p)
+	return p and ffi.gc(p, lib.ReleasePath)
+end
+
 local Paths = {}
 Paths.__index = function (self, i)
 	if i == "count" then
 		return lib.GraphicsGetNumPaths(self._ref)
 	else
-		return ffi.gc(lib.GraphicsGetPath(self._ref, i), lib.ReleasePath)
+		local t = type(i)
+		if t == "number" then
+			return gcpath(lib.GraphicsGetPath(self._ref, i))
+		elseif t == "string" then
+			return gcpath(lib.GraphicsGetPathByName(self._ref, i))
+		end
 	end
 end
 
@@ -34,7 +43,11 @@ local function newUsage()
 	return {points = "static", colors = "static"}
 end
 
-tove.newGraphics = function(svg, size)
+tove.newGraphics = function(data, size)
+	local svg = nil
+	if type(data) == "string" then
+		svg = data
+	end
 	local name = "unnamed"
 	if tove._debug then
 		name = "Graphics originally created at " .. debug.traceback()
@@ -48,7 +61,16 @@ tove.newGraphics = function(svg, size)
 		_usage = newUsage(),
 		_name = name,
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
-	if svg ~= nil then
+	if type(data) == "table" then
+		for _, p in ipairs(data.paths) do
+			graphics:addPath(tove.newPath(p))
+		end
+		graphics:setDisplay(unpack(data.display))
+		for k, v in pairs(data.usage) do
+			graphics:setUsage(k, v)
+		end
+	end
+	if data then
 		if type(size) == "number" then
 			graphics:rescale(size)
 		elseif size == nil then -- auto
@@ -87,6 +109,7 @@ function Graphics:clone()
 		_display = makeDisplay(d.mode, d.quality, self._usage),
 		_resolution = self._resolution,
 		_usage = newUsage(),
+		_name = self._name,
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	for k, v in pairs(self._usage) do
 		g._usage[k] = v
@@ -101,7 +124,7 @@ bind("closeSubpath", "GraphicsCloseSubpath")
 bind("invertSubpath", "GraphicsInvertSubpath")
 
 function Graphics:getCurrentPath()
-	return ffi.gc(lib.GraphicsGetCurrentPath(self._ref), lib.ReleasePath)
+	return gcpath(lib.GraphicsGetCurrentPath(self._ref))
 end
 
 bind("addPath", "GraphicsAddPath")
@@ -176,16 +199,27 @@ function Graphics:computeAABB(mode)
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 
+function Graphics:getWidth(mode)
+	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
+	return bounds.x1 - bounds.x0
+end
+
+function Graphics:getHeight(mode)
+	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
+	return bounds.y1 - bounds.y0
+end
+
 function Graphics:setDisplay(mode, quality)
+	if mode.__index == Graphics then
+		local g = mode
+		mode = g._display.mode
+		quality = g._display.quality
+	end
 	if self._cache ~= nil and mode == self._display.mode then
 		if self._cache.updateQuality(quality) then
 			self._display = makeDisplay(mode, quality, self._usage)
 			return
 		end
-	end
-	if mode == "flatmesh" then
-		mode = "mesh"
-		self._usage["gradients"] = "fast"
 	end
 	self._cache = nil
 	self._display = makeDisplay(mode, quality, self._usage)
@@ -212,6 +246,11 @@ function Graphics:setResolution(resolution)
 end
 
 function Graphics:setUsage(what, usage)
+	if what.__index == Graphics then
+		for k, v in pairs(what._usage) do
+			self:setUsage(k, v)
+		end
+	end
 	if usage ~= self._usage[what] then
 		self._cache = nil
 		self._usage[what] = usage
@@ -232,21 +271,6 @@ function Graphics:cache(...)
 	self._cache.cache(self._cache, ...)
 end
 
-
-tove.transformed = function(source, ...)
-	local args = {...}
-	local t
-	if type(args[1]) == "number" then
-		t = love.math.newTransform(...)
-	else
-		t = args[1]
-	end
-	local a, b, _, c, d, e, _, f = t:getMatrix()
-	return setmetatable({
-		s = source, args = {a, b, c, d, e, f}}, tove.Transform)
-end
-
-
 function Graphics:set(arg, swl)
 	if getmetatable(arg) == tove.Transform then
 		lib.GraphicsSet(
@@ -260,6 +284,10 @@ function Graphics:set(arg, swl)
 			arg._ref,
 			false, 1, 0, 0, 0, 1, 0)
 	end
+end
+
+function Graphics:transform(t)
+	self:set(tove.transformed(self, t))
 end
 
 function Graphics:rescale(size, center)
@@ -290,6 +318,27 @@ function Graphics:draw(x, y, r, sx, sy)
 end
 
 function Graphics:rasterize(width, height, tx, ty, scale, quality)
+	if width == "default" then
+		local resolution = self._resolution * tove._highdpi
+		local x0, y0, x1, y1 = self:computeAABB("exact")
+
+		x0 = math.floor(x0)
+		y0 = math.floor(y0)
+		x1 = math.ceil(x1)
+		y1 = math.ceil(y1)
+
+		if x1 - x0 < 1 or y1 - y0 < 1 then
+			return nil
+		end
+
+ 		return self:rasterize(
+			resolution * (x1 - x0),
+			resolution * (y1 - y0),
+			-x0 * resolution,
+			-y0 * resolution,
+			resolution), x0, y0, x1, y1, resolution
+	end
+
 	width = math.ceil(width)
 	height = math.ceil(height)
 	local data = lib.GraphicsRasterize(
@@ -323,7 +372,7 @@ end
 function Graphics:hit(x, y)
 	local path = lib.GraphicsHit(self._ref, x, y)
 	if path.ptr ~= nil then
-		return ffi.gc(path, lib.ReleasePath)
+		return gcpath(path)
 	else
 		return nil
 	end
@@ -350,6 +399,28 @@ function Graphics:setMonochrome(r, g, b)
         end
         p:setLineColor(r, g, b)
     end
+end
+
+function Graphics:setAnchor(dx, dy, mode)
+	dx = dx or 0
+	dy = dy or 0
+	local x0, y0, x1, y1 = self:computeAABB(mode)
+	local ox = ((dx <= 0 and x0 or x1) + (dx < 0 and x0 or x1)) / 2
+	local oy = ((dy <= 0 and y0 or y1) + (dy < 0 and y0 or y1)) / 2
+	self:set(tove.transformed(self, -ox, -oy))
+end
+
+function Graphics:serialize()
+	local paths = self.paths
+	local p = {}
+	for i = 1, paths.count do
+		p[i] = paths[i]:serialize()
+	end
+	local d = self._display
+	return {version = 1,
+		paths = p,
+		display = {d.mode, d.quality},
+		usage = self._usage}
 end
 
 --!! import "core/create.lua" as create

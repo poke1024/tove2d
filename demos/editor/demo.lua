@@ -73,7 +73,7 @@ function Demo:update(dt)
     end
 end
 
-function Demo:mousedown(x, y, button, clickCount)
+function Demo:mousepressed(x, y, button, clickCount)
 end
 
 function Demo:mousereleased(x, y, button)

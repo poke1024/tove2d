@@ -39,15 +39,18 @@ local function _updateBitmap(graphics)
 	return graphics:fetchChanges(lib.CHANGED_ANYTHING) ~= 0
 end
 
+local function _makeDrawFlatMesh(mesh)
+	return createDrawMesh(mesh:getMesh(), 0, 0, 1)
+end
+
 local function _updateFlatMesh(graphics)
 	local flags = graphics:fetchChanges(lib.CHANGED_ANYTHING)
 	if flags >= lib.CHANGED_GEOMETRY then
 		return true -- recreate from scratch
 	end
 
-	local update = 0
 	if bit.band(flags, lib.CHANGED_FILL_STYLE + lib.CHANGED_LINE_STYLE) ~= 0 then
-		update = bit.bor(update, lib.UPDATE_MESH_COLORS)
+		return true -- recreate from scratch (might no longer be flat)
 	end
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
@@ -55,12 +58,15 @@ local function _updateFlatMesh(graphics)
 		if mesh:getUsage("points") ~= "dynamic" then
 			tove.slow("static mesh points changed in " .. graphics._name)
 		end
-		update = bit.bor(update, lib.UPDATE_MESH_VERTICES)
-	end
-
-	if update ~= 0 then
-		local mesh = graphics._cache.mesh
-		mesh:retesselate(update)
+		local tessFlags = lib.UPDATE_MESH_VERTICES
+		if graphics._usage["triangles"] == "dynamic" then
+			tessFlags = bit.bor(tessFlags, lib.UPDATE_MESH_AUTO_TRIANGLES)
+		end
+		if mesh:retesselate(tessFlags) then
+			-- retesselate indicated that the underlying mesh change. we need
+			-- to update the draw function that is bound to the love mesh.
+			graphics._cache.draw = _makeDrawFlatMesh(mesh)
+		end
 	end
 
 	return false
@@ -83,15 +89,10 @@ local function _noCache()
 end
 
 create.texture = function(self)
-	local resolution = self._resolution * tove._highdpi
-	local x0, y0, x1, y1 = self:computeAABB("exact")
+	local imageData, x0, y0, x1, y1, resolution =
+		self:rasterize("default")
 
-	x0 = math.floor(x0)
-	y0 = math.floor(y0)
-	x1 = math.ceil(x1)
-	y1 = math.ceil(y1)
-
-	if x1 - x0 < 1 or y1 - y0 < 1 then
+	if imageData == nil then
 		return {
 			draw = function() end,
 			update = _updateBitmap,
@@ -99,12 +100,9 @@ create.texture = function(self)
 		}
 	end
 
-	local imageData = self:rasterize(
-		resolution * (x1 - x0),
-		resolution * (y1 - y0), -x0 * resolution, -y0 * resolution,
-		resolution)
 	local image = love.graphics.newImage(imageData)
 	image:setFilter("linear", "linear")
+
 	return {
 		mesh = image,
 		draw = createDrawMesh(image, x0, y0, 1 / resolution),
@@ -114,14 +112,8 @@ create.texture = function(self)
 	}
 end
 
-local function _cacheFlatMesh(data, ...)
+local function _cacheMesh(data, ...)
 	data.mesh:cache(...)
-end
-
-local function _cacheShadedMesh(data, ...)
-	for _, s in ipairs(data.shaders) do
-		s.linkdata.fillMesh:cache(...)
-	end
 end
 
 create.mesh = function(self)
@@ -138,37 +130,36 @@ create.mesh = function(self)
 		resolution = self._resolution * 1024
 	end
 
-	if usage["gradients"] == "fast" then
-		local gref = self._ref
-		local mesh = tove.newColorMesh(name, usage, function (cmesh, flags)
-			local res = lib.GraphicsTesselate(
-				gref, cmesh, resolution, cquality, holes, flags)
-			return res.update
-		end)
+	local gref = self._ref
+
+	local tess = function(cmesh, flags)
+		local res = lib.GraphicsTesselate(
+			gref, cmesh, resolution, cquality, holes, flags)
+		return res.update
+	end
+
+	if lib.GraphicsAreColorsSolid(self._ref) and
+		usage["shaders"] ~= "prefer" then
+
+		local mesh = tove.newColorMesh(name, usage, tess)
 		local x0, y0, x1, y1 = self:computeAABB()
 		return {
 			mesh = mesh,
-			draw = createDrawMesh(
-				mesh:getMesh(), 0, 0, 1),
+			draw = _makeDrawFlatMesh(mesh),
 			update = _updateFlatMesh,
-			cache = _cacheFlatMesh
+			updateQuality = function() return false end,
+			cache = _cacheMesh
 		}
 	else
-		local tess = function(path, fill, line, flags)
-			local res = lib.PathTesselate(
-				path, fill, line, resolution, cquality, holes, flags)
-			return res.update
-		end
-		local shaders = self:shaders(function (path)
-			return _shaders.newMeshShader(
-				name, path, tess, usage, 1)
-		end)
+		local shader = _shaders.newMeshShader(
+			name, self, tess, usage, 1)
+
 		return {
-			shaders = shaders,
-			draw = createDrawShaders(shaders),
-			update = _updateShaders,
+			mesh = shader:getMesh(),
+			draw = function(...) shader:draw(...) end,
+			update = function() shader:update() end,
 			updateQuality = function() return false end,
-			cache = _cacheShadedMesh
+			cache = _cacheMesh
 		}
 	end
 end
@@ -176,7 +167,7 @@ end
 create.shader = function(self)
 	local quality = self._display.quality
 	local shaders = self:shaders(function(path)
-		return _shaders.newPathShader(path, quality)
+		return _shaders.newComputeShader(path, quality)
 	end)
 	return {
 		shaders = shaders,
