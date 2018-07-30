@@ -56,7 +56,7 @@ function NullColorFeed:beginInit()
 end
 function NullColorFeed:endInit(path)
 end
-function NullColorFeed:update(chg1, path)
+function NullColorFeed:updateUniforms(chg1, path)
 end
 
 
