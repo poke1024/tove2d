@@ -63,9 +63,13 @@ tove.newRadialGradient = function(cx, cy, fx, fy, r)
 	return fromRef(lib.NewRadialGradient(cx, cy, fx, fy, r))
 end
 
-function Paint:get(opacity)
-	local rgba = lib.ColorGet(self._ref, opacity or 1)
+local function unpackRGBA(rgba)
 	return rgba.r, rgba.g, rgba.b, rgba.a
+end
+
+
+function Paint:get(opacity)
+	return unpackRGBA(lib.ColorGet(self._ref, opacity or 1))
 end
 
 function Paint:set(r, g, b, a)
@@ -92,8 +96,8 @@ function Paint:getNumColors()
 	return lib.PaintGetNumColors(self._ref)
 end
 
-function Paint:getColor(i, opacity)
-	return lib.PaintGetColor(self._ref, i - 1, opacity or 1)
+function Paint:getColorStop(i, opacity)
+	return lib.PaintGetColorStop(self._ref, i - 1, opacity or 1)
 end
 
 function Paint:getGradientParameters()
@@ -114,14 +118,36 @@ function Paint:clone()
 	return lib.ClonePaint(self._ref)
 end
 
+local function exportGradientColors(paint)
+	local n = paint:getNumColors()
+	local colors = {}
+	for i = 1, n do
+		local stop = paint:getColorStop(i)
+		table.insert(colors, {stop.offset, unpackRGBA(stop.rgba)})
+	end
+	return colors
+end
+
+local function importGradientColors(g, colors)
+	for _, c in ipairs(colors) do
+		g:addColorStop(unpack(c))
+	end
+end
+
 function Paint:serialize()
 	local t = lib.PaintGetType(self._ref)
 	if t == lib.PAINT_SOLID then
 		return {type = "solid", color = {self:get()}}
 	elseif t == lib.PAINT_LINEAR_GRADIENT then
-		local n = self:getNumColors()
 		local x0, y0, x1, y1 = self:getGradientParameters()
-		return {type = "linear", x0 = x0, y0 = y0, x1 = x1, y1 = y1, colors = {}}
+		return {type = "linear",
+			x0 = x0, y0 = y0, x1 = x1, y1 = y1,
+			colors = exportGradientColors(self)}
+	elseif t == lib.PAINT_RADIAL_GRADIENT then
+		local cx, cy, fx, fy, r = self:getGradientParameters()
+		return {type = "radial",
+			cx = cx, cy = cy, fx = fx, fy = fy, r = r,
+			colors = exportGradientColors(self)}
 	end
 	return nil
 end
@@ -129,6 +155,14 @@ end
 tove.newPaint = function(p)
 	if p.type == "solid" then
 		return newColor(unpack(p.color))
+	elseif p.type == "linear" then
+		local g = tove.newLinearGradient(p.x0, p.y0, p.x1, p.y1)
+		importGradientColors(g, p.colors)
+		return g
+	elseif p.type == "radial" then
+		local g = tove.newRadialGradient(p.cx, p.cy, p.fx, p.fy, p.r)
+		importGradientColors(g, p.colors)
+		return g
 	end
 end
 

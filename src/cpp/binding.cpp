@@ -69,7 +69,7 @@ int PaintGetNumColors(TovePaintRef paint) {
 	return deref(paint)->getNumColorStops();
 }
 
-ToveColorStop PaintGetColor(TovePaintRef paint, int i, float opacity) {
+ToveColorStop PaintGetColorStop(TovePaintRef paint, int i, float opacity) {
 	ToveColorStop stop;
 	stop.offset = deref(paint)->getColorStop(i, stop.rgba, opacity);
 	return stop;

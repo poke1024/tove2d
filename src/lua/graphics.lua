@@ -71,9 +71,11 @@ tove.newGraphics = function(data, size)
 		end
 	end
 	if data then
-		if type(size) == "number" then
+		if size == "none" then
+			-- nothing
+		elseif type(size) == "number" then
 			graphics:rescale(size)
-		elseif size == nil then -- auto
+		elseif size == nil or size == "auto" then
 			local x0, y0, x1, y1 = graphics:computeAABB()
 			graphics:rescale(math.min(1024, math.max(x1 - x0, y1 - y0)))
 		end

@@ -273,7 +273,7 @@ return function(editor, dabs, handles, object)
 
         n = paint:getNumColors()
         for i = 1, n do
-            local c = paint:getColor(i)
+            local c = paint:getColorStop(i)
             table.insert(colors, {
                 offset = c.offset,
                 color = {c.rgba.r, c.rgba.g, c.rgba.b, c.rgba.a}

@@ -161,7 +161,26 @@ function Transform:compose(t)
 	self:setMatrix(a, b, c, d, e, f, t)
 end
 
-local function newTransform(tx, ty)
+function Transform:serialize()
+	return {
+		tx = self.tx, ty = self.ty,
+		r = self.r,
+		sx = self.sx, sy = self.sy,
+		ox = self.ox, oy = self.oy,
+		rest = {self._transform.rest:getMatrix()}}
+end
+
+local function newTransform(arg1, arg2)
+	local tx, ty
+
+	if type(arg1) == "table" then
+		tx = 0
+		ty = 0
+	else
+		tx = arg1
+		ty = arg2
+	end
+
 	local t = setmetatable({
 		tx = tx,
 		ty = ty,
@@ -177,6 +196,18 @@ local function newTransform(tx, ty)
 			stretch = love.math.newTransform()
 		}
 	}, Transform)
+
+	if type(arg1) == "table" then
+		t.tx = arg1.tx
+		t.ty = arg1.ty
+		t.r = arg1.r
+		t.sx = arg1.sx
+		t.sy = arg1.sy
+		t.ox = arg1.ox
+		t.oy = arg1.oy
+		t._transform.rest:setMatrix(unpack(arg1.rest))
+	end
+
 	t:update()
 	return t
 end

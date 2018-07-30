@@ -36,7 +36,12 @@ function Toolbar:__init()
             "subtract"
         },
         {
-            "thirdparty/file"
+            "thirdparty/up_arrow",
+            "thirdparty/down_arrow"
+        },
+        {
+            "thirdparty/eye",
+            "thirdparty/download"
         }
     }
 

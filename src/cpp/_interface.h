@@ -244,7 +244,7 @@ EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);
 EXPORT TovePaintRef NewEmptyPaint();
 EXPORT int PaintGetNumColors(TovePaintRef color);
-EXPORT ToveColorStop PaintGetColor(TovePaintRef color, int i, float opacity);
+EXPORT ToveColorStop PaintGetColorStop(TovePaintRef color, int i, float opacity);
 EXPORT TovePaintRef NewColor(float r, float g, float b, float a);
 EXPORT void ColorSet(TovePaintRef color, float r, float g, float b, float a);
 EXPORT RGBA ColorGet(TovePaintRef color, float opacity);

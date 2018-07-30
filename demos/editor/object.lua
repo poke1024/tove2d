@@ -110,11 +110,16 @@ function Object:getUsage()
 	return self.scaledGraphics:getUsage()
 end
 
-Object.new = function(tx, ty, graphics)
-	graphics:setDisplay("mesh", 0.5)
+function Object:serialize()
+	return {
+		graphics = self.graphics:serialize(),
+		transform = self.transform:serialize()
+	}
+end
 
+local function newObject(graphics, transform)
 	local scaledGraphics = tove.newGraphics()
-	scaledGraphics:setDisplay("mesh", 0.5)
+	scaledGraphics:setUsage(graphics)
 
 	local overlayline = tove.newGraphics()
 	overlayline:setDisplay("mesh")
@@ -125,14 +130,25 @@ Object.new = function(tx, ty, graphics)
 		scaledGraphics = scaledGraphics,
 		aaabGraphics = tove.newGraphics(),
 		_aabb = nil,
-		transform = newTransform(tx, ty),
+		transform = transform,
 		overlayline = overlayline,
 		selected = false
 	}, Object)
 
 	object:refresh()
-
 	return object
+end
+
+Object.deserialize = function(t)
+	return newObject(
+		tove.newGraphics(t.graphics, "none"),
+		newTransform(t.transform))
+end
+
+Object.new = function(tx, ty, graphics)
+	return newObject(
+		graphics,
+		newTransform(tx, ty))
 end
 
 return Object

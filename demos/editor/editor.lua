@@ -242,6 +242,19 @@ function Editor:boolean(type)
 	self:selectionChanged()
 end
 
+function Editor:moveUpDown(d)
+	for _, s in self.selection:objects() do
+		for i, o in ipairs(self.objects) do
+			if o == s then
+				table.remove(self.objects, i)
+				table.insert(self.objects,
+					math.min(math.max(1, i + d), #self.objects + 1), o)
+				break
+			end
+		end
+	end
+end
+
 local function isArray(t)
 	-- see https://stackoverflow.com/questions/7526223/how-do-i-know-if-a-table-is-an-array
 	local i = 0
@@ -273,6 +286,17 @@ function toLuaCode(t)
 end
 
 function Editor:save()
+	local objects = {}
+	for i, object in ipairs(self.objects) do
+		table.insert(objects, object:serialize())
+	end
+	local data = toLuaCode({version = 1, objects = objects})
+	love.system.setClipboardText(data)
+	love.filesystem.setIdentity("miniedit")
+	love.filesystem.write("save.lua", "return " .. data)
+end
+
+function Editor:export()
 	if #self.objects < 1 then
 		return
 	end
@@ -355,8 +379,14 @@ function Editor:startup()
 	self.toolbar.operation:connect(function(name)
 		if name == "add" or name == "subtract" then
 			self:boolean(name)
-		elseif name == "file" then
-			self:save()
+		elseif name == "up_arrow" then
+			self:moveUpDown(1)
+		elseif name == "down_arrow" then
+			self:moveUpDown(-1)
+		elseif name == "eye" then
+			enterDemoMode()
+		elseif name == "download" then
+			self:export()
 		end
 	end)
 
@@ -426,6 +456,12 @@ function Editor:startup()
 		love.graphics.getWidth() - 180, 0,
 		180, love.graphics.getHeight())
 	boxy.add(self.rpanel)
+
+	love.filesystem.setIdentity("miniedit")
+	chunk = love.filesystem.load("save.lua")
+	if chunk then
+		self:restore(chunk)
+	end
 end
 
 function Editor:setDisplayMode(newmode)
@@ -933,7 +969,25 @@ function Editor:wheelmoved(wx, wy)
 	self:transformChanged()
 end
 
+function Editor:clear()
+	self.transform = love.math.newTransform()
+	self:transformChanged()
+	self.objects = {}
+	self.selection:clear()
+	self:selectionChanged()
+end
+
+function Editor:restore(chunk)
+	self:clear()
+	local data = chunk()
+	for _, object in ipairs(data.objects) do
+		table.insert(self.objects, Object.deserialize(object))
+	end
+end
+
 function Editor:loadfile(file)
+	self:clear()
+
 	file:open("r")
 	local data = file:read()
 	file:close()
@@ -941,16 +995,14 @@ function Editor:loadfile(file)
 	if string.sub(data, 1, 1) == "{" then -- lua code?
 		local load = loadstring("return " .. data)
 		data = load()
+		if data.objects then
+			self:restore(data)
+			return
+		end
 	end
 
 	local graphics = tove.newGraphics(data, 512)
 	graphics:clean()
-
-	self.transform = love.math.newTransform()
-	self:transformChanged()
-	self.objects = {}
-	self.selection:clear()
-	self:selectionChanged()
 
 	local screenwidth = love.graphics.getWidth()
 	local screenheight = love.graphics.getHeight()
