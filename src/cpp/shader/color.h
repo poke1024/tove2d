@@ -67,7 +67,7 @@ protected:
 
 				if (gradient.arguments) {
 					if (gradient.matrix) {
-						float *m = &gradient.matrix[0][0];
+						float *m = gradient.matrix;
 
 						m[0] = 1;
 						m[1] = 0;
@@ -80,6 +80,12 @@ protected:
 						m[6] = 0;
 						m[7] = 0;
 						m[8] = 1;
+
+						if (gradient.matrixType == MATRIX_MAT3x4) {
+							m[9] = 0;
+							m[10] = 0;
+							m[11] = 0;
+						}
 					}
 
 					if (gradient.arguments) {
@@ -127,7 +133,7 @@ protected:
 		}
 
 		assert(gradient.matrix != nullptr);
-		paint->getGradientMatrix(*gradient.matrix, scale);
+		paint->getGradientMatrix(*(ToveMatrix3x3*)gradient.matrix, scale);
 
 		if (gradient.arguments) {
 			float s = 0.5f / gradient.colorTextureHeight;
@@ -193,7 +199,19 @@ public:
 	}
 
 	void bind(const ToveGradientData &data, int i) {
-		paintData.gradient.matrix = &data.matrix[i];
+		int size;
+		switch (data.matrixType) {
+			case MATRIX_MAT3x3:
+				size = 3 * 3;
+				break;
+			case MATRIX_MAT3x4:
+				size = 3 * 4;
+				break;
+			default:
+				assert(false);
+		}
+
+		paintData.gradient.matrix = data.matrix + i * size;
 		paintData.gradient.arguments = &data.arguments[i];
 		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;
 		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;

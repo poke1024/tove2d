@@ -286,6 +286,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 		alloc.numPaints * ffi.sizeof("ToveVec4"))
 	local gradientData = ffi.new("ToveGradientData")
 	gradientData.matrix = matrixData:getPointer()
+	gradientData.matrixType = env.mat3.type
 	gradientData.arguments = argumentsData:getPointer()
 	gradientData.colorsTexture = imageData:getPointer()
 	gradientData.colorsTextureRowBytes = imageData:getSize() / alloc.numColors

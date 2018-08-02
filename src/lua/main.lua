@@ -71,9 +71,20 @@ tove.init = function(path)
 		rgba16f = love.graphics.getCanvasFormats()["rgba16f"],
 		mat3 = {
 			glsl = "mat3",
-			size = ffi.sizeof("ToveMatrix3x3")
+			size = ffi.sizeof("ToveMatrix3x3"),
+			type = lib.MATRIX_MAT3x3
 		}
 	}
+
+	-- work around crashing Parallels drivers with mat3
+	do
+		local _, _, _, device = love.graphics.getRendererInfo()
+		if string.find(device, "Parallels") ~= nil then
+			env.mat3.glsl = "mat3x4"
+			env.mat3.size = ffi.sizeof("float[?]", 12)
+			env.mat3.type = lib.MATRIX_MAT3x4
+		end
+	end
 
 	-- deepcopy: taken from http://lua-users.org/wiki/CopyTable
 	function deepcopy(orig)
@@ -89,15 +100,6 @@ tove.init = function(path)
 	        copy = orig
 	    end
 	    return copy
-	end
-
-	-- work around crashing Parallels drivers with mat3
-	do
-		local _, _, _, device = love.graphics.getRendererInfo()
-		if string.find(device, "Parallels") ~= nil then
-			env.mat3.glsl = "mat3x4"
-			env.mat3.size = ffi.sizeof("float[?]", 12)
-		end
 	end
 
 	-- common attributes used by Command and Curve.

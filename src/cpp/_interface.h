@@ -161,9 +161,15 @@ typedef struct {
 	int16_t numColors;
 } TovePaintColorAllocation;
 
+typedef enum {
+	MATRIX_MAT3x3,
+	MATRIX_MAT3x4,
+} ToveMatrixType;
+
 typedef struct {
 	int16_t numColors; // to be removed
-	ToveMatrix3x3 *matrix;
+	float *matrix;
+	ToveMatrixType matrixType;
 	ToveVec4 *arguments;
 	uint8_t *colorsTexture;
 	int16_t colorsTextureRowBytes;
