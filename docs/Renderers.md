@@ -2,11 +2,11 @@
 This section should give you some idea of why there are three different renderers in TÖVE, what they do, and when you want to change things.
 
 ##  The renderers
-TÖVE provides three renderers to bring vector graphics to the screen: `bitmap`, `mesh` and `curves`:
+TÖVE provides three renderers to bring vector graphics to the screen: `texture`, `mesh` and `shader`:
 
-* `bitmap` is the default renderer. It gives high quality and high performance for static images that don't need animation or scaling. Internally, this is NanoSVG rendering to a texture.
+* `texture` is the default renderer. It gives high quality and high performance for static images that don't need animation or scaling. Internally, this is NanoSVG rendering to a texture.
 *  `mesh` uses a triangle mesh to produce a tessellated version of the graphics, which is then drawn using a LÖVE Mesh. Scaling will not produce pixelation, but crisp straight edges. Using this renderer,  curves and colors can be animated efficiently.
-* `curves` is a purely shader-based renderer that gives high quality at different resolutions. It's a very complex shader and highly experimental. It allows for efficient animation of curves and colors.
+* `shader` is a purely shader-based renderer that gives high quality at different resolutions. It's a very complex shader and highly experimental. It allows for efficient animation of curves and colors.
 
 You can tell TÖVE which renderer to use by calling `Graphics:setDisplay(mode, quality)` on your `Graphics` instance, e.g. `myDrawing:setDisplay("mesh")`. The next call to `Graphics:draw()` will then honor that setting. The optional `quality` parameter is a render-dependent number that allows you to configure the level of detail for some renderers.
 
@@ -35,11 +35,11 @@ One of the strengths of TÖVE is that choosing the display renderer is independe
 ##  Which renderer is right for me?
 Here are some hints:
 
-`bitmap` gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using `Graphics:setResolution` (this won't affect the display size, but you'll see that a resolution of `2` will allow you to scale the image by a factor of 2 without seeing pixelation).
+`texture` gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using `Graphics:setResolution` (this won't affect the display size, but you'll see that a resolution of `2` will allow you to scale the image by a factor of 2 without seeing pixelation).
 
 `mesh` is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a LÖVE Mesh, which is efficient to draw, scale and animate.
 
-`curves` can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).
+`shader` can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).
 
 ## Setting the mesh renderer quality
 The quality setting in `Graphics:setDisplay`  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are `static` or `dynamic` (see the section on Animating Things).
@@ -50,13 +50,5 @@ The quality setting in `Graphics:setDisplay`  lets you change the level of the d
 
 The second factor to mention here is the value set via `Graphics:setResolution`. TÖVE internally scales meshes before applying the quality settings. That means that setting a higher resolution will yield a higher quality with the same quality number. Imagine rendering the same image at a higher resolution and then scaling it down again for display. This is the effect you get by calling `setResolution` on meshes.
 
-## Tweaking the mesh renderer
-The mesh renderer actually offers two internal implementations. If you draw shapes that have no gradients (i.e. only flat colors), you might want to try out
-
-```
-myGraphics:setUsage("gradients", "fast")
-```
-
-This tells TÖVE to produce one flat mesh, which can be rendered faster. On the other hand, the default mesh renderer needs one shader context swap per path (!), which can get expensive, if your `Graphics` instance has many paths.
-
-Another shortcut for enabling flat meshs is calling `Graphics:setDisplay("flatmesh")`.
+## The mesh renderer and gradients
+The mesh renderer automatically detects if you are using gradients or not. If not, it internally uses a flat mesh of vertices and colors. If you use gradients, it will use a shader implementation for the coloring.
