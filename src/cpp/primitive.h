@@ -108,9 +108,9 @@ public:
 			case RECT_EMPTY:
 				return 0;
 			case RECT_SHARP:
-				return 10;
+				return 1 + 12;
 			case RECT_ROUND:
-				return 25;
+				return 1 + 4 * 6;
 		}
 		assert(false);
 	}
@@ -124,6 +124,7 @@ public:
 				p = lineTo(p, x + w, y);
 				p = lineTo(p, x + w, y + h);
 				p = lineTo(p, x, y + h);
+				p = lineTo(p, x, y);
 			} break;
 			case RECT_ROUND: {
 				*p++ = x+rx; *p++ = y;

@@ -23,11 +23,13 @@ function RectangleTool:mousedown(gx, gy, gs, button)
 
     local subpath = self._subpath
     local x0, y0 = gx, gy
-    self._rectangle = subpath:drawRect(0, 0, 0, 0)
+    self._rectangle = subpath:drawRect(0, 0, 1, 1)
+    self._rectangle.w = 0
+    self._rectangle.h = 0
 
     local modify = function(rx, ry)
-        self._rectangle.w = rx
-        self._rectangle.h = ry
+        self._rectangle.w = rx * 2
+        self._rectangle.h = ry * 2
         self._rectangle:commit()
     end
 
@@ -52,7 +54,7 @@ end
 
 function RectangleTool:mousereleased()
     local rectangle = self._rectangle
-    if rectangle ~= nil and rectangle.rx == 0 and rectangle.ry == 0 then
+    if rectangle ~= nil and rectangle.w == 0 and rectangle.h == 0 then
         self.editor:removeObject(self._object)
     end
 end
