@@ -11,6 +11,8 @@
 
 #include "../common.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class Segment {
 private:
 	ClipperPoint _begin;
@@ -166,3 +168,5 @@ public:
 		}
 	}
 };
+
+END_TOVE_NAMESPACE

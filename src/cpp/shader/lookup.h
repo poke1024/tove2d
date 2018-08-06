@@ -17,6 +17,8 @@
 
 #include "curvedata.h"
 
+BEGIN_TOVE_NAMESPACE
+
 enum EventType {
     EVENT_ENTER,
     EVENT_EXIT,
@@ -171,5 +173,7 @@ public:
         	});
     }
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_SHADER_LOOKUP

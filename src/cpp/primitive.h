@@ -15,6 +15,8 @@
 #include "common.h"
 #include <cmath>
 
+BEGIN_TOVE_NAMESPACE
+
 #define TOVE_KAPPA90 (0.5522847493f) // taken from nsvg.
 
 inline void polarToCartesian(float cx, float cy, float r, float angleInDegrees, float *x, float *y) {
@@ -163,5 +165,7 @@ public:
 		*p++ = cx+rx*TOVE_KAPPA90; *p++ = cy-ry; *p++ = cx+rx; *p++ = cy-ry*TOVE_KAPPA90; *p++ = cx+rx; *p++ = cy;
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_PRIMITIVE

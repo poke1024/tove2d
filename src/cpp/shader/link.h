@@ -15,6 +15,8 @@
 #include "color.h"
 #include "geometry.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class AbstractFeed {
 public:
 	virtual ~AbstractFeed() {
@@ -116,5 +118,7 @@ public:
     	return &data;
     }
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_SHADER_LINK

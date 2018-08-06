@@ -20,6 +20,8 @@
 #include "utils.h"
 #include "intersect.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class Subpath : public Claimable<Path>, public std::enable_shared_from_this<Subpath> {
 private:
 	struct Command {
@@ -246,5 +248,7 @@ public:
 
     ToveNearest nearest(float x, float y, float dmin, float dmax) const;
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_TRAJECTORY

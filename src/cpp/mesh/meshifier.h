@@ -16,6 +16,8 @@
 #include "paint.h"
 #include "../../thirdparty/polypartition.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class AbstractMeshifier {
 public:
 	virtual ToveMeshUpdateFlags pathToMesh(
@@ -89,5 +91,7 @@ public:
 
 	virtual bool hasFixedSize() const;
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_MESHIFIER

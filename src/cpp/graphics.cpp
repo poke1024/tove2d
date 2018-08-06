@@ -24,6 +24,8 @@
 #include "mesh/meshifier.h"
 #include "nsvg.h"
 
+BEGIN_TOVE_NAMESPACE
+
 static void copyFromNSVG(
     PathOwner *owner,
     NSVGshape **anchor,
@@ -417,3 +419,5 @@ void Graphics::clearChanges(ToveChangeFlags flags) {
 		p->clearChanges(flags);
 	}
 }
+
+END_TOVE_NAMESPACE

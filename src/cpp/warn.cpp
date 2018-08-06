@@ -15,6 +15,8 @@
 #include <sstream>
 #include <iostream>
 
+BEGIN_TOVE_NAMESPACE
+
 ToveWarningFunction tove_warn_func = nullptr;
 
 void tove_warn(const char *file, int line, const char *s) {
@@ -27,3 +29,5 @@ void tove_warn(const char *file, int line, const char *s) {
         std::cerr << "TÖVE: " << output << std::endl;
     }
 }
+
+END_TOVE_NAMESPACE

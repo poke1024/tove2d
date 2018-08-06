@@ -11,6 +11,8 @@
 
 #include <functional>
 
+BEGIN_TOVE_NAMESPACE
+
 #define SPECIAL_CASE_2 true
 
 class AbstractPaintFeed {
@@ -269,3 +271,5 @@ public:
 		PaintFeedBase(path, data, scale, CHANGED_FILL_STYLE) {
 	}
 };
+
+END_TOVE_NAMESPACE

@@ -14,6 +14,8 @@
 
 #include "path.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class AbstractMeshifier;
 
 #ifdef NSVG_CLIP_PATHS
@@ -192,5 +194,7 @@ public:
 	}
 #endif
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_GRAPHICS

@@ -15,6 +15,8 @@
 #include "intersect.h"
 #include "nsvg.h"
 
+BEGIN_TOVE_NAMESPACE
+
 void Path::setSubpathCount(int n) {
 	if (subpaths.size() != n) {
 		clear();
@@ -685,3 +687,5 @@ ClipperLib::PolyFillType Path::getClipperFillType() const {
 		} break;
 	}
 }
+
+END_TOVE_NAMESPACE

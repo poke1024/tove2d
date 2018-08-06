@@ -15,6 +15,8 @@
 #include "common.h"
 #include <cmath>
 
+BEGIN_TOVE_NAMESPACE
+
 inline float clamp(float x, float v0, float v1) {
 	return std::max(std::min(x, v1), v0);
 }
@@ -50,5 +52,7 @@ template<typename T> int sgn(T val) {
 inline float wrapAngle(float phi) {
 	return phi - 360 * std::floor(phi / 360.0);
 }
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_UTILS

@@ -13,6 +13,8 @@
 #include "mesh.h"
 #include "../path.h"
 
+BEGIN_TOVE_NAMESPACE
+
 // purely for debugging purposes, DEBUG_EARCUT enables mapbox's
 // earcut triangulator; this is much slower than the default and
 // does not support caching triangulations.
@@ -572,3 +574,5 @@ void PaintMesh::setPaintIndex(
 		vertex++;
 	}
 }
+
+END_TOVE_NAMESPACE

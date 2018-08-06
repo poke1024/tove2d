@@ -12,7 +12,10 @@
 #ifndef __TOVE_SHADER_DATA
 #define __TOVE_SHADER_DATA 1
 
+#include "../common.h"
 #include "../interface.h"
+
+BEGIN_TOVE_NAMESPACE
 
 class AllocateGeometryData {
 protected:
@@ -35,5 +38,7 @@ struct AllocateGeometryNoLinkData : public AllocateGeometryData {
 		ToveShaderGeometryData &data);
 	~AllocateGeometryNoLinkData();
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_SHADER_DATA

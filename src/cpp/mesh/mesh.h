@@ -17,6 +17,8 @@
 #include "utils.h"
 #include <map>
 
+BEGIN_TOVE_NAMESPACE
+
 class FixedFlattener;
 
 typedef uint32_t SubmeshId;
@@ -143,5 +145,7 @@ public:
 	virtual void setFillColor(
 		const PathRef &path, int vertexIndex, int vertexCount);
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH

@@ -18,6 +18,8 @@
 #include "../path.h"
 #include "../subpath.h"
 
+BEGIN_TOVE_NAMESPACE
+
 AdaptiveFlattener::AdaptiveFlattener(
 	float scale, const ToveTesselationQuality *quality) : scale(scale) {
 
@@ -484,3 +486,5 @@ int FixedFlattener::flatten(
 	assert(v == nvertices);
 	return nvertices;
 }
+
+END_TOVE_NAMESPACE

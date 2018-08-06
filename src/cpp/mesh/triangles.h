@@ -17,6 +17,8 @@
 #include "../utils.h"
 #include "../../thirdparty/polypartition.h"
 
+BEGIN_TOVE_NAMESPACE
+
 inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
 	// convert to 1-based indices for LÖVE's Mesh:setVertexMap()
 	return i + 1;
@@ -294,5 +296,7 @@ public:
 		return false;
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_TRIANGLES

@@ -15,6 +15,8 @@
 #include "utils.h"
 #include "../../thirdparty/polypartition.h"
 
+BEGIN_TOVE_NAMESPACE
+
 struct vec2 {
 	float x;
 	float y;
@@ -139,5 +141,7 @@ inline int find_unequal_forward(
 	}
 	return (start + 1) % n;
 }
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_UTILS

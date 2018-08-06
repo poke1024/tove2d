@@ -15,6 +15,8 @@
 #include "../nsvg.h"
 #include "../utils.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class MeshPaint {
 private:
 	nsvg::CachedPaint cache;
@@ -54,5 +56,7 @@ public:
 		return cache.colors[(int)clamp(gd * 255.0f, 0, 255.0f)];
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_PAINT

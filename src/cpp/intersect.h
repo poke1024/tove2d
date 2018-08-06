@@ -12,6 +12,8 @@
 #ifndef __TOVE_INTERSECT
 #define __TOVE_INTERSECT 1
 
+BEGIN_TOVE_NAMESPACE
+
 class AbstractRay {
 public:
 	virtual void computeP(double *P, const coeff *bx, const coeff *by) const = 0;
@@ -261,5 +263,7 @@ public:
 		return votes >= 2;
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_INTERSECT

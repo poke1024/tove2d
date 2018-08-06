@@ -12,12 +12,20 @@
 #ifndef __TOVE_COMMON
 #define __TOVE_COMMON 1
 
+#define BEGIN_TOVE_NAMESPACE namespace tove {
+#define END_TOVE_NAMESPACE }
+
 #include "interface.h"
 #include "warn.h"
 
 #include <memory>
 #include <limits>
 #include <assert.h>
+
+#include "../thirdparty/nanosvg.h"
+#include "../thirdparty/nanosvgrast.h"
+
+#include "../thirdparty/clipper.hpp"
 
 #if _MSC_VER
 #define M_PI 3.1415926535897932384626433832795
@@ -40,10 +48,8 @@ inline void store_fp16(uint16_t &p, float x) {
 }
 #endif
 
-#include "../thirdparty/nanosvg.h"
-#include "../thirdparty/nanosvgrast.h"
+BEGIN_TOVE_NAMESPACE
 
-#include "../thirdparty/clipper.hpp"
 typedef ClipperLib::Path ClipperPath;
 typedef ClipperLib::Paths ClipperPaths;
 typedef ClipperLib::IntPoint ClipperPoint;
@@ -85,4 +91,6 @@ inline int nextpow2(uint32_t v) {
 
 typedef float coeff;
 
-#endif
+END_TOVE_NAMESPACE
+
+#endif // TOVE_COMMON

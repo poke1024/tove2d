@@ -15,6 +15,8 @@
 #include "../utils.h"
 #include <memory.h>
 
+BEGIN_TOVE_NAMESPACE
+
 AllocateGeometryData::AllocateGeometryData(
 	int maxCurves,
 	int maxSubPaths,
@@ -115,3 +117,5 @@ AllocateGeometryNoLinkData::~AllocateGeometryNoLinkData() {
 	delete[] data.lookupTable;
 	delete data.lookupTableMeta;
 }
+
+END_TOVE_NAMESPACE

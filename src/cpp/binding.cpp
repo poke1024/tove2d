@@ -17,8 +17,10 @@
 #include "mesh/meshifier.h"
 #include "shader/link.h"
 
+using namespace tove;
+
 template<typename F>
-ToveMeshResult exception_safe(const F &f) {
+static ToveMeshResult exception_safe(const F &f) {
 	try {
 		return ToveMeshResult{f()};
 	} catch (const std::bad_alloc &e) {
@@ -35,7 +37,7 @@ ToveMeshResult exception_safe(const F &f) {
 extern "C" {
 
 void SetWarningFunction(ToveWarningFunction f) {
-	tove_warn_func = f;
+	tove::tove_warn_func = f;
 }
 
 

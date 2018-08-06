@@ -15,6 +15,8 @@
 #include "../common.h"
 #include "mesh.h"
 
+BEGIN_TOVE_NAMESPACE
+
 struct Tesselation {
 	ClipperLib::Paths fill;
 	ClipperLib::PolyTree stroke;
@@ -78,5 +80,7 @@ public:
 	int size(const SubpathRef &subpath) const;
 	int flatten(const SubpathRef &subpath, const MeshRef &mesh, int index) const;
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_FLATTEN

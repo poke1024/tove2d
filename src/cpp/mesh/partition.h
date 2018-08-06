@@ -16,6 +16,8 @@
 #include "../../thirdparty/polypartition.h"
 #include "utils.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class Partition {
 private:
 	typedef std::vector<uint16_t> Indices;
@@ -106,5 +108,7 @@ public:
 		return true;
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_MESH_PARTITION

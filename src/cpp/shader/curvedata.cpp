@@ -13,6 +13,8 @@
 #include "curvedata.h"
 #include <algorithm>
 
+BEGIN_TOVE_NAMESPACE
+
 void CurveData::storeRoots(uint16_t *out) const {
 	for (int i = 0; i < 4; i++) {
 		float t = bounds.sroots[i];
@@ -95,3 +97,5 @@ void CurveBounds::update(const float *curve, float *bx, float *by) {
 		sroots[i] = 1.0f;
 	}
 }
+
+END_TOVE_NAMESPACE

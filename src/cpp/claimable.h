@@ -12,6 +12,8 @@
 #ifndef __TOVE_CLAIMABLE
 #define __TOVE_CLAIMABLE 1
 
+BEGIN_TOVE_NAMESPACE
+
 template<typename T>
 class Claimable {
 protected:
@@ -39,5 +41,7 @@ public:
 		return claimer;
 	}
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_CLAIMABLE

@@ -17,6 +17,8 @@
 #include "claimable.h"
 #include "mesh/flatten.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class PathOwner {
 public:
 	virtual void changed(ToveChangeFlags flags) = 0;
@@ -202,5 +204,7 @@ public:
 
 	ClipperLib::PolyFillType getClipperFillType() const;
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_PATH

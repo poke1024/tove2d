@@ -9,6 +9,8 @@
  * All rights reserved.
  */
 
+BEGIN_TOVE_NAMESPACE
+
 template<typename T, typename ToveType>
 struct References {
 public:
@@ -80,3 +82,5 @@ References<Subpath, ToveSubpathRef> trajectories;
 References<AbstractPaint, TovePaintRef> paints;
 References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;
+
+END_TOVE_NAMESPACE

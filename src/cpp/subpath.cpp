@@ -14,6 +14,8 @@
 #include "path.h"
 #include "intersect.h"
 
+BEGIN_TOVE_NAMESPACE
+
 inline float length(float x, float y) {
 	return std::sqrt(x * x + y * y);
 }
@@ -1360,3 +1362,5 @@ ToveNearest Subpath::nearest(
 		return nearest;
 	}
 }
+
+END_TOVE_NAMESPACE

@@ -16,6 +16,8 @@
 #include "../path.h"
 #include <algorithm>
 
+BEGIN_TOVE_NAMESPACE
+
 typedef LookupTable::CurveSet CurveSet;
 
 inline void updateLookupTableMeta(ToveLookupTableMeta *meta) {
@@ -399,3 +401,5 @@ ToveChangeFlags GeometryFeedImpl::endUpdate() {
 		return changes;
 	}
 }
+
+END_TOVE_NAMESPACE

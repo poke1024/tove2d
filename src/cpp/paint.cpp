@@ -13,6 +13,8 @@
 #include "path.h"
 #include <algorithm>
 
+BEGIN_TOVE_NAMESPACE
+
 void copyColor(RGBA &rgba, uint32_t color, float opacity) {
 	uint32_t c;
 	if (opacity < 1.0f) {
@@ -241,3 +243,5 @@ PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 	TOVE_WARN("Invalid nsvg paint type.");
 	return PaintRef();
 }
+
+END_TOVE_NAMESPACE

@@ -13,6 +13,8 @@
 #include "meshifier.h"
 #include "mesh.h"
 
+BEGIN_TOVE_NAMESPACE
+
 ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
 	const GraphicsRef &graphics,
 	const MeshRef &fill,
@@ -408,3 +410,5 @@ ClipperLib::Paths FixedMeshifier::toClipPath(
 bool FixedMeshifier::hasFixedSize() const {
 	return true;
 }
+
+END_TOVE_NAMESPACE

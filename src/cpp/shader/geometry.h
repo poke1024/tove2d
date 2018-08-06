@@ -14,6 +14,8 @@
 #include "data.h"
 #include "lookup.h"
 
+BEGIN_TOVE_NAMESPACE
+
 class GeometryFeedImpl {
 private:
 	const PathRef path;
@@ -50,3 +52,5 @@ public:
 	ToveChangeFlags beginUpdate();
     ToveChangeFlags endUpdate();
 };
+
+END_TOVE_NAMESPACE

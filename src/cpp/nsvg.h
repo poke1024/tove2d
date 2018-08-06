@@ -14,6 +14,8 @@
 
 #include "common.h"
 
+BEGIN_TOVE_NAMESPACE
+
 #define NSVG_CLIP_PATHS 1
 
 namespace nsvg {
@@ -90,5 +92,7 @@ NSVGlineJoin nsvgLineJoin(ToveLineJoin join);
 ToveLineJoin toveLineJoin(NSVGlineJoin join);
 
 }
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_NSVG

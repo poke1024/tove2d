@@ -3,7 +3,13 @@
 AddOption(
 	'--tovedebug',
 	action='store_true',
-	help='debug build',
+	help='build for debugging',
+	default=False)
+
+AddOption(
+	'--static',
+	action='store_true',
+	help='build static library',
 	default=False)
 
 sources = [
@@ -46,7 +52,10 @@ else:
 
 	env["CCFLAGS"] = CCFLAGS
 
-lib = env.SharedLibrary(target='tove/libTove', source=sources)
+if not GetOption('static'):
+	lib = env.SharedLibrary(target='tove/libTove', source=sources)
+else:
+	lib = env.StaticLibrary(target="tove/libtove", source=sources)
 
 # prepare git hash based version string.
 

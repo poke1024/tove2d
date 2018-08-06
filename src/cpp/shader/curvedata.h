@@ -14,6 +14,8 @@
 
 #include <cmath>
 
+BEGIN_TOVE_NAMESPACE
+
 struct CurveBounds {
 	struct Roots {
 		int count;
@@ -73,5 +75,7 @@ struct ExCurveData {
 	EndPoints endpoints;
 	uint8_t ignore;
 };
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_CURVEDATA

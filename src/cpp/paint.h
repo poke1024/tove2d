@@ -16,6 +16,8 @@
 #include "claimable.h"
 #include "nsvg.h"
 
+BEGIN_TOVE_NAMESPACE
+
 void copyColor(RGBA &rgba, uint32_t color, float opacity);
 
 class AbstractPaint : public Claimable<Path> {
@@ -277,5 +279,7 @@ public:
 };
 
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint);
+
+END_TOVE_NAMESPACE
 
 #endif // __TOVE_PAINT

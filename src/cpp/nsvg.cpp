@@ -19,6 +19,8 @@
 #define NANOSVGRAST_IMPLEMENTATION
 #include "../thirdparty/nanosvgrast.h"
 
+BEGIN_TOVE_NAMESPACE
+
 namespace nsvg {
 
 thread_local NSVGparser *_parser = nullptr;
@@ -281,3 +283,5 @@ ToveLineJoin toveLineJoin(NSVGlineJoin join) {
 	return LINEJOIN_MITER;
 }
 } // namespace nsvg
+
+END_TOVE_NAMESPACE
