@@ -12,14 +12,14 @@
 #include "nsvg.h"
 #include "utils.h"
 
+BEGIN_TOVE_NAMESPACE
+
 #define NANOSVG_IMPLEMENTATION
 #define NANOSVG_ALL_COLOR_KEYWORDS
 #include "../thirdparty/nanosvg.h"
 
 #define NANOSVGRAST_IMPLEMENTATION
 #include "../thirdparty/nanosvgrast.h"
-
-BEGIN_TOVE_NAMESPACE
 
 namespace nsvg {
 
