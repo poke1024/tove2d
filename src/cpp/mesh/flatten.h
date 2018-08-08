@@ -22,44 +22,67 @@ struct Tesselation {
 	ClipperLib::PolyTree stroke;
 };
 
-class AdaptiveFlattener {
+class AntiGrainFlattener {
 private:
 	float colinearityEpsilon;
 	float distanceTolerance;
 	float angleEpsilon;
 	float angleTolerance;
 	float cuspLimit;
-	float arcTolerance;
 	int recursionLimit;
+	float distanceToleranceSquare;
 
-	double distanceToleranceSquare;
+public:
+	void initialize(
+		const ToveTesselationQuality &quality);
 
-	void flatten(
+	inline void flatten(
+		float x1, float y1, float x2, float y2,
+		float x3, float y3, float x4, float y4,
+		ClipperPath &points, int level) const;
+};
+
+class MaximumErrorFlattener {
+private:
+	int recursionLimit;
+	float tolerance;
+
+public:
+	void initialize(
+		float scale, const ToveTesselationQuality &quality);
+
+	inline void flatten(
+		float x1, float y1, float x2, float y2,
+		float x3, float y3, float x4, float y4,
+		ClipperPath &points, int level) const;
+};
+
+class AdaptiveFlattener {
+private:
+	const float scale;
+	const ToveTesselationQuality &quality;
+
+	AntiGrainFlattener antigrain;
+	MaximumErrorFlattener maxerr;
+
+	inline void flatten(
 		float x1, float y1, float x2, float y2,
 		float x3, float y3, float x4, float y4,
 		ClipperPath &points) const;
 
-	void recursive(
-		float x1, float y1, float x2, float y2,
-		float x3, float y3, float x4, float y4,
-		ClipperPath &points, int level) const;
-
 	ClipperPath flatten(const SubpathRef &subpath) const;
 
-	inline double squareDistance(double x1, double y1, double x2, double y2) const {
-        double dx = x2-x1;
-        double dy = y2-y1;
-        return dx * dx + dy * dy;
-    }
-
-	ClipperPaths computeDashes(const NSVGshape *shape, const ClipperPaths &lines) const;
+	ClipperPaths computeDashes(
+		const NSVGshape *shape, const ClipperPaths &lines) const;
 
 public:
-	const float scale;
-
-	AdaptiveFlattener(float scale, const ToveTesselationQuality *quality);
+	AdaptiveFlattener(float scale, const ToveTesselationQuality &quality);
 
 	void operator()(const PathRef &path, Tesselation &tesselation) const;
+
+	inline float getScale() const {
+		return scale;
+	}
 };
 
 class FixedFlattener {

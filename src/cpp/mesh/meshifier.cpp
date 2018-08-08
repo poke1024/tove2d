@@ -72,7 +72,7 @@ static void clip(
 }
 
 AdaptiveMeshifier::AdaptiveMeshifier(
-	float scale, const ToveTesselationQuality *quality) :
+	float scale, const ToveTesselationQuality &quality) :
 	flattener(scale, quality) {
 }
 
@@ -103,7 +103,7 @@ void AdaptiveMeshifier::renderStrokes(
 			paths.push_back(node->Contour);
 			paths.insert(paths.end(), holes.begin(), holes.end());
 			clip(graphics, path, paths);
-			submesh->addClipperPaths(paths, flattener.scale, HOLES_CW);
+			submesh->addClipperPaths(paths, flattener.getScale(), HOLES_CW);
 		}
 		holes.clear();
 	}
@@ -139,7 +139,8 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 		clip(graphics, path, t.fill);
 		const int index0 = fill->getVertexCount();
  		// ClipperLib always gives us HOLES_CW.
- 		fill->submesh(path, 0)->addClipperPaths(t.fill, flattener.scale, HOLES_CW);
+ 		fill->submesh(path, 0)->addClipperPaths(
+			t.fill, flattener.getScale(), HOLES_CW);
 		fill->setFillColor(path, index0, fill->getVertexCount() - index0);
 	}
 
@@ -182,10 +183,10 @@ ClipperLib::Paths AdaptiveMeshifier::toClipPath(
 
 FixedMeshifier::FixedMeshifier(
 	float scale,
-	const ToveTesselationQuality *quality,
+	int recursionLimit,
 	ToveHoles holes,
 	ToveMeshUpdateFlags update) :
-	depth(std::min(MAX_FLATTEN_RECURSIONS, quality->recursionLimit)),
+	depth(std::min(MAX_FLATTEN_RECURSIONS, recursionLimit)),
 	holes(holes),
 	_update(update) {
 	assert(scale == 1.0f);

@@ -41,9 +41,9 @@ NSVGrasterizer *getRasterizer(const ToveTesselationQuality *quality) {
 		defaultDistTol = rasterizer->distTol;
 	}
 
-	if (quality && quality->adaptive.valid) {
-		rasterizer->tessTol = quality->adaptive.angleTolerance;
-		rasterizer->distTol = quality->adaptive.distanceTolerance;
+	if (quality && quality->stopCriterion == TOVE_MAX_ERROR) {
+		rasterizer->tessTol = quality->maximumError;
+		rasterizer->distTol = quality->maximumError;
 	} else {
 		rasterizer->tessTol = defaultTessTol;
 		rasterizer->distTol = defaultDistTol;

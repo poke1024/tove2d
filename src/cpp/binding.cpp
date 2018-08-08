@@ -16,6 +16,7 @@
 #include "mesh/mesh.h"
 #include "mesh/meshifier.h"
 #include "shader/link.h"
+#include <sstream>
 
 using namespace tove;
 
@@ -32,6 +33,23 @@ static ToveMeshResult exception_safe(const F &f) {
 	} catch (...) {
 		return ToveMeshResult{0};
 	}
+}
+
+static const ToveTesselationQuality *getDefaultQuality() {
+	static ToveTesselationQuality defaultQuality;
+
+	defaultQuality.stopCriterion = TOVE_ANTIGRAIN;
+
+	defaultQuality.recursionLimit = 8;
+	defaultQuality.arcTolerance = 0.0;
+
+	defaultQuality.antigrain.distanceTolerance = 0.25;
+	defaultQuality.antigrain.colinearityEpsilon = 0.05;
+	defaultQuality.antigrain.angleEpsilon = 0.01;
+	defaultQuality.antigrain.angleTolerance = 0.0;
+	defaultQuality.antigrain.cuspLimit = 0.0;
+
+	return &defaultQuality;
 }
 
 extern "C" {
@@ -209,11 +227,13 @@ ToveMeshResult PathTesselate(
 	ToveMeshRef fillMesh,
 	ToveMeshRef lineMesh,
 	float scale,
-	const ToveTesselationQuality *quality,
+	const ToveTesselationQuality *quality0,
 	ToveHoles holes,
 	ToveMeshUpdateFlags flags) {
 
-	return exception_safe([path, fillMesh, lineMesh, scale, quality, holes, flags] () {
+	return exception_safe(
+		[path, fillMesh, lineMesh, scale, quality0, holes, flags] () {
+
 		ToveMeshUpdateFlags updated;
 		int fillIndex = 0;
 		int lineIndex = 0;
@@ -222,15 +242,19 @@ ToveMeshResult PathTesselate(
 		Graphics *g = dynamic_cast<Graphics*>(p->getClaimer());
 		assert(g);
 
-		if (quality && !quality->adaptive.valid) {
-			FixedMeshifier meshifier(scale, quality, holes, flags);
+		const ToveTesselationQuality *quality =
+			quality0 ? quality0 : getDefaultQuality();
+
+		if (quality->stopCriterion == TOVE_REC_DEPTH) {
+			FixedMeshifier meshifier(
+				scale, quality->recursionLimit, holes, flags);
 			updated = meshifier.pathToMesh(
 				g,
 				p,
 				deref(fillMesh), deref(lineMesh),
 				fillIndex, lineIndex);
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality);
+			AdaptiveMeshifier meshifier(scale, *quality);
 			updated = meshifier.pathToMesh(
 				g,
 				p,
@@ -569,21 +593,27 @@ ToveMeshResult GraphicsTesselate(
 	ToveGraphicsRef graphicsRef,
 	ToveMeshRef mesh,
 	float scale,
-	const ToveTesselationQuality *quality,
+	const ToveTesselationQuality *quality0,
 	ToveHoles holes,
 	ToveMeshUpdateFlags flags) {
 
-	return exception_safe([graphicsRef, mesh, scale, quality, holes, flags] () {
+	return exception_safe(
+		[graphicsRef, mesh, scale, quality0, holes, flags] () {
+
 		const GraphicsRef graphics = deref(graphicsRef);
 		const int n = graphics->getNumPaths();
 
+		const ToveTesselationQuality *quality =
+			quality0 ? quality0 : getDefaultQuality();
+
 		ToveMeshUpdateFlags updated;
-		if (quality && !quality->adaptive.valid) {
-			FixedMeshifier meshifier(scale, quality, holes, flags);
+		if (quality->stopCriterion == TOVE_REC_DEPTH) {
+			FixedMeshifier meshifier(
+				scale, quality->recursionLimit, holes, flags);
 			updated = meshifier.graphicsToMesh(
 				graphics, deref(mesh), deref(mesh));
 		} else {
-			AdaptiveMeshifier meshifier(scale, quality);
+			AdaptiveMeshifier meshifier(scale, *quality);
 
 			// note: only this case supports clip paths.
 			graphics->computeClipPaths(meshifier);
@@ -721,5 +751,6 @@ void ReleaseMesh(ToveMeshRef mesh) {
 void DeleteImage(ToveImageRecord image) {
 	free(image.pixels);
 }
+
 
 } // extern "C"

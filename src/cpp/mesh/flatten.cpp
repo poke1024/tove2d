@@ -20,44 +20,79 @@
 
 BEGIN_TOVE_NAMESPACE
 
-AdaptiveFlattener::AdaptiveFlattener(
-	float scale, const ToveTesselationQuality *quality) : scale(scale) {
+inline double squareDistance(double x1, double y1, double x2, double y2) {
+	double dx = x2 - x1;
+	double dy = y2 - y1;
+	return dx * dx + dy * dy;
+}
 
-	if (quality) {
-		assert(quality->adaptive.valid);
-		const float eps = std::numeric_limits<float>::epsilon();
-		distanceTolerance = quality->adaptive.distanceTolerance;
-		colinearityEpsilon = quality->adaptive.colinearityEpsilon;
-		angleEpsilon = quality->adaptive.angleEpsilon;
-		angleTolerance = quality->adaptive.angleTolerance;
-    	cuspLimit = quality->adaptive.cuspLimit;
-		arcTolerance = quality->adaptive.arcTolerance;
-		recursionLimit = std::min(
-			MAX_FLATTEN_RECURSIONS, quality->recursionLimit);
-	} else {
-		distanceTolerance = 0.5;
-		colinearityEpsilon = 0.5;
-		angleEpsilon = 0.01;
-		angleTolerance = 0.0;
-		cuspLimit = 0.0;
-		arcTolerance = 1.0;
-		recursionLimit = 8;
+void MaximumErrorFlattener::initialize(
+	float scale,
+	const ToveTesselationQuality &quality) {
+
+	assert(quality.stopCriterion == TOVE_MAX_ERROR);
+
+	recursionLimit = std::min(
+		MAX_FLATTEN_RECURSIONS, quality.recursionLimit);
+	float e = quality.maximumError * scale;
+	tolerance = e * e * 16.0;
+}
+
+void MaximumErrorFlattener::flatten(
+	float x1, float y1, float x2, float y2,
+	float x3, float y3, float x4, float y4,
+	ClipperPath &points, int level) const {
+
+	if (level > recursionLimit) {
+		points.push_back(ClipperPoint(x4, y4));
+		return;
 	}
+
+	float ax = 3.0 * x2 - 2.0 * x1 - x4;
+	float ay = 3.0 * y2 - 2.0 * y1 - y4;
+	float bx = 3.0 * x3 - x1 - 2.0 * x4;
+	float by = 3.0 * y3 - y1 - 2.0 * y4;
+	float error = std::max(ax * ax, bx * bx) + std::max(ay * ay, by * by);
+
+	if (error <= tolerance) {
+		points.push_back(ClipperPoint(x4, y4));
+		return;
+	}
+
+	float x12 = (x1 + x2) / 2;
+	float y12 = (y1 + y2) / 2;
+	float x23 = (x2 + x3) / 2;
+	float y23 = (y2 + y3) / 2;
+	float x34 = (x3 + x4) / 2;
+	float y34 = (y3 + y4) / 2;
+	float x123 = (x12 + x23) / 2;
+	float y123 = (y12 + y23) / 2;
+	float x234 = (x23 + x34) / 2;
+	float y234 = (y23 + y34) / 2;
+	float x1234 = (x123 + x234) / 2;
+	float y1234 = (y123 + y234) / 2;
+
+	flatten(x1, y1, x12, y12, x123, y123, x1234, y1234, points, level + 1);
+	flatten(x1234, y1234, x234, y234, x34, y34, x4, y4, points, level + 1);
+}
+
+void AntiGrainFlattener::initialize(
+	const ToveTesselationQuality &quality) {
+
+	assert(quality.stopCriterion == TOVE_ANTIGRAIN);
+
+	distanceTolerance = quality.antigrain.distanceTolerance;
+	colinearityEpsilon = quality.antigrain.colinearityEpsilon;
+	angleEpsilon = quality.antigrain.angleEpsilon;
+	angleTolerance = quality.antigrain.angleTolerance;
+	cuspLimit = quality.antigrain.cuspLimit;
+	recursionLimit = std::min(
+		MAX_FLATTEN_RECURSIONS, quality.recursionLimit);
 
 	distanceToleranceSquare = distanceTolerance * distanceTolerance;
 }
 
-void AdaptiveFlattener::flatten(
-	float x1, float y1, float x2, float y2,
-	float x3, float y3, float x4, float y4,
-	ClipperPath &points) const {
-
-	points.push_back(ClipperPoint(x1, y1));
-	recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, 0);
-	points.push_back(ClipperPoint(x4, y4));
-}
-
-void AdaptiveFlattener::recursive(
+void AntiGrainFlattener::flatten(
 	float x1, float y1, float x2, float y2,
 	float x3, float y3, float x4, float y4,
 	ClipperPath &points, int level) const {
@@ -264,8 +299,47 @@ void AdaptiveFlattener::recursive(
 		break;
 	}
 
-	recursive(x1, y1, x12, y12, x123, y123, x1234, y1234, points, level + 1);
-	recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, level + 1);
+	flatten(x1, y1, x12, y12, x123, y123, x1234, y1234, points, level + 1);
+	flatten(x1234, y1234, x234, y234, x34, y34, x4, y4, points, level + 1);
+}
+
+
+AdaptiveFlattener::AdaptiveFlattener(
+	float scale, const ToveTesselationQuality &quality) :
+
+	scale(scale), quality(quality) {
+
+	switch (quality.stopCriterion) {
+		case TOVE_ANTIGRAIN:
+			antigrain.initialize(quality);
+			break;
+		case TOVE_MAX_ERROR:
+			maxerr.initialize(scale, quality);
+			break;
+		default:
+			throw std::runtime_error("illegal adaptive stop criterion");
+	}
+}
+
+void AdaptiveFlattener::flatten(
+	float x1, float y1, float x2, float y2,
+	float x3, float y3, float x4, float y4,
+	ClipperPath &points) const {
+
+	points.push_back(ClipperPoint(x1, y1));
+
+	switch (quality.stopCriterion) {
+		case TOVE_ANTIGRAIN:
+			antigrain.flatten(x1, y1, x2, y2, x3, y3, x4, y4, points, 0);
+			break;
+		case TOVE_MAX_ERROR:
+			maxerr.flatten(x1, y1, x2, y2, x3, y3, x4, y4, points, 0);
+			break;
+		default:
+			throw std::runtime_error("illegal adaptive stop criterion");
+	}
+
+	points.push_back(ClipperPoint(x4, y4));
 }
 
 ClipperPath AdaptiveFlattener::flatten(const SubpathRef &subpath) const {
@@ -281,9 +355,14 @@ ClipperPath AdaptiveFlattener::flatten(const SubpathRef &subpath) const {
 	result.push_back(p0);
 
 	for (int i = 0; i * 2 + 7 < path->npts * 2; i += 3) {
-		const float* p = &path->pts[i * 2];
-		flatten(p[0] * scale,p[1] * scale, p[2] * scale,p[3] * scale,
-			p[4] * scale,p[5] * scale, p[6] * scale,p[7] * scale, result);
+		const float *p = &path->pts[i * 2];
+
+		flatten(
+			p[0] * scale, p[1] * scale,
+			p[2] * scale, p[3] * scale,
+			p[4] * scale, p[5] * scale,
+			p[6] * scale, p[7] * scale,
+			result);
 	}
 
 	if (path->closed) {
@@ -352,7 +431,10 @@ inline ClipperLib::EndType endType(int t, bool closed) {
 	}
 }
 
-void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation) const {
+void AdaptiveFlattener::operator()(
+	const PathRef &path,
+	Tesselation &tesselation) const {
+
 	const int n = path->getNumSubpaths();
 	bool closed = true;
 	for (int i = 0; i < n; i++) {
@@ -364,7 +446,8 @@ void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation
 	NSVGshape * const shape = &path->nsvg;
 	const ClipperLib::PolyFillType fillType = path->getClipperFillType();
 
-	const bool hasStroke = shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0f;
+	const bool hasStroke = shape->stroke.type != NSVG_PAINT_NONE &&
+		shape->strokeWidth > 0.0f;
 
 	ClipperPaths lines;
 	if (hasStroke) {
@@ -382,10 +465,12 @@ void AdaptiveFlattener::operator()(const PathRef &path, Tesselation &tesselation
 			TOVE_WARN("Ignoring line width < 2. Please use setResolution().");
 		}
 
-		ClipperLib::ClipperOffset offset(shape->miterLimit, arcTolerance);
+		ClipperLib::ClipperOffset offset(
+			shape->miterLimit, quality.arcTolerance);
 		offset.AddPaths(lines,
 			joinType(shape->strokeLineJoin),
-			endType(shape->strokeLineCap, closed && shape->strokeDashCount == 0));
+			endType(shape->strokeLineCap,
+				closed && shape->strokeDashCount == 0));
 		offset.Execute(tesselation.stroke, lineOffset);
 
 		ClipperPaths stroke;

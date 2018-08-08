@@ -51,7 +51,7 @@ private:
 	AdaptiveFlattener flattener;
 
 public:
-	AdaptiveMeshifier(float scale, const ToveTesselationQuality *quality);
+	AdaptiveMeshifier(float scale, const ToveTesselationQuality &quality);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
 		Graphics *graphics,
@@ -75,7 +75,7 @@ private:
 	const ToveHoles holes;
 
 public:
-	FixedMeshifier(float scale, const ToveTesselationQuality *quality,
+	FixedMeshifier(float scale, int recursionLimit,
 		ToveHoles holes, ToveMeshUpdateFlags update);
 
 	virtual ToveMeshUpdateFlags pathToMesh(

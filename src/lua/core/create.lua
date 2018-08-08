@@ -124,7 +124,7 @@ create.mesh = function(self)
 	local name = self._name or "unnamed"
 
 	local resolution
-	if not cquality.adaptive.valid then
+	if cquality.stopCriterion == lib.TOVE_REC_DEPTH then
 		resolution = 1
 	else
 		resolution = self._resolution * 1024
