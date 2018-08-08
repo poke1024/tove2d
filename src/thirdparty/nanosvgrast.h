@@ -25,8 +25,10 @@
 #ifndef NANOSVGRAST_H
 #define NANOSVGRAST_H
 
+#ifndef NANOSVG_CPLUSPLUS
 #ifdef __cplusplus
 extern "C" {
+#endif
 #endif
 
 typedef struct NSVGrasterizer NSVGrasterizer;
@@ -63,8 +65,10 @@ void nsvgRasterize(NSVGrasterizer* r,
 void nsvgDeleteRasterizer(NSVGrasterizer*);
 
 
+#ifndef NANOSVG_CPLUSPLUS
 #ifdef __cplusplus
 }
+#endif
 #endif
 
 #endif // NANOSVGRAST_H
