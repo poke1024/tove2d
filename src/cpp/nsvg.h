@@ -54,8 +54,9 @@ struct CachedPaint {
 bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
 	float scale, const ToveTesselationQuality *quality);
 
-uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
-	int width, int height, const ToveTesselationQuality *quality);
+void rasterize(NSVGimage *image, float tx, float ty, float scale,
+	uint8_t *pixels, int width, int height, int stride,
+	const ToveTesselationQuality *quality);
 
 class Transform {
 private:

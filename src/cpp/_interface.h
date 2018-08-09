@@ -21,12 +21,6 @@ typedef struct {
 	int size;
 } ToveTriangles;
 
-typedef struct {
-	uint8_t *pixels;
-} ToveImageRecord;
-
-EXPORT void DeleteImage(ToveImageRecord image);
-
 typedef enum {
 	PAINT_UNDEFINED = -1,
 	PAINT_NONE = 0,
@@ -372,8 +366,9 @@ EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
 EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh,
 	float scale, const ToveTesselationQuality *quality, ToveHoles holes,
 	ToveMeshUpdateFlags flags);
-EXPORT ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width,
-	int height, float tx, float ty, float scale, const ToveTesselationQuality *quality);
+EXPORT void GraphicsRasterize(ToveGraphicsRef shape, uint8_t *pixels,
+	int width, int height, int stride, float tx, float ty, float scale,
+	const ToveTesselationQuality *quality);
 EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t);
 EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation);
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);

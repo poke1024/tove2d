@@ -625,14 +625,13 @@ ToveMeshResult GraphicsTesselate(
 	});
 }
 
-ToveImageRecord GraphicsRasterize(ToveGraphicsRef shape, int width, int height,
+void GraphicsRasterize(
+	ToveGraphicsRef shape, uint8_t *pixels, int width, int height, int stride,
 	float tx, float ty, float scale, const ToveTesselationQuality *quality) {
-	ToveImageRecord image;
 
 	NSVGimage *nsvg = deref(shape)->getImage();
-	image.pixels = nsvg::rasterize(nsvg, tx, ty, scale, width, height, quality);
-
-	return image;
+	nsvg::rasterize(nsvg, tx, ty, scale,
+		pixels, width, height, stride, quality);
 }
 
 void GraphicsAnimate(
@@ -747,10 +746,5 @@ void MeshCache(ToveMeshRef mesh, bool keyframe) {
 void ReleaseMesh(ToveMeshRef mesh) {
 	meshes.release(mesh);
 }
-
-void DeleteImage(ToveImageRecord image) {
-	free(image.pixels);
-}
-
 
 } // extern "C"

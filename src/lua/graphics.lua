@@ -343,15 +343,14 @@ function Graphics:rasterize(width, height, tx, ty, scale, quality)
 
 	width = math.ceil(width)
 	height = math.ceil(height)
-	local data = lib.GraphicsRasterize(
-		self._ref, width, height, tx or 0, ty or 0, scale or 1, quality)
-	if data == nil then
-		error(string.format("could rasterize image %d x %d", width, height))
-	end
-	local loveImageData = love.image.newImageData(
-		width, height, "rgba8", ffi.string(data.pixels, width * height * 4))
-	lib.DeleteImage(data)
-	return loveImageData
+
+	local imageData = love.image.newImageData(width, height, "rgba8")
+	local stride = imageData:getSize() / height
+	lib.GraphicsRasterize(
+		self._ref, imageData:getPointer(), width, height, stride,
+		tx or 0, ty or 0, scale or 1, quality)
+
+	return imageData
 end
 
 function Graphics:animate(a, b, t)

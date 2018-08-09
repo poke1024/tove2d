@@ -189,18 +189,14 @@ bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
 	}
 }
 
-uint8_t *rasterize(NSVGimage *image, float tx, float ty, float scale,
-	int width, int height, const ToveTesselationQuality *quality) {
+void rasterize(NSVGimage *image, float tx, float ty, float scale,
+	uint8_t* pixels, int width, int height, int stride,
+	const ToveTesselationQuality *quality) {
 
 	NSVGrasterizer *rasterizer = getRasterizer(quality);
 
-	uint8_t *pixels = static_cast<uint8_t*>(malloc(width * height * 4));
-	if (pixels) {
-		nsvgRasterize(rasterizer, image, tx, ty, scale, pixels,
-			width, height, width * 4);
-	}
-
-	return pixels;
+	nsvgRasterize(rasterizer, image, tx, ty, scale,
+			pixels, width, height, stride);
 }
 
 Transform::Transform() {
