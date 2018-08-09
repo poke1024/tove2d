@@ -1,3 +1,4 @@
+w << R"GLSL(
 // *****************************************************************
 // TÖVE - Animated vector graphics for LÖVE.
 // https://github.com/poke1024/tove2d
@@ -21,7 +22,7 @@
 // segmentPointDistanceSquared() is adapted from:
 // https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 
-varying vec4 raw_vertex_pos;
+// varying vec4 raw_vertex_pos;
 
 #define T_EPS 0.0
 #define SENTINEL_END 1.0
@@ -348,7 +349,7 @@ vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
 	return rayOnX ? vec2(position.x, npos.y) : vec2(npos.x, position.y);
 }
 
-vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
+vec4 do_color() {
 	vec2 position = raw_vertex_pos.xy;
 	ivec2 at = search(position);
 
@@ -454,3 +455,4 @@ vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 	discard;
 #endif
 }
+)GLSL";

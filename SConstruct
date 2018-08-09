@@ -26,6 +26,7 @@ sources = [
 	"src/cpp/shader/curvedata.cpp",
 	"src/cpp/shader/data.cpp",
 	"src/cpp/shader/geometry.cpp",
+	"src/cpp/shader/gen.cpp",
 	"src/thirdparty/clipper.cpp",
 	"src/thirdparty/polypartition.cpp",
 	"src/cpp/warn.cpp"]

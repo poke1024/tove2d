@@ -86,6 +86,10 @@ tove.init = function(path)
 		end
 	end
 
+	lib.ConfigureShaderCode(
+		env.graphics.glsl3 and lib.TOVE_GLSL3 or lib.TOVE_GLSL2,
+		env.mat3.type == lib.MATRIX_MAT3x4)
+
 	-- deepcopy: taken from http://lua-users.org/wiki/CopyTable
 	function deepcopy(orig)
 	    local orig_type = type(orig)

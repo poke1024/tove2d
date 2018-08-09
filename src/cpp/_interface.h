@@ -13,6 +13,11 @@ typedef enum {
 	TRIANGLES_STRIP
 } ToveTrianglesMode;
 
+typedef enum {
+	TOVE_GLSL2,
+	TOVE_GLSL3
+} ToveShaderLanguage;
+
 typedef uint16_t ToveVertexIndex;
 
 typedef struct {
@@ -397,3 +402,8 @@ EXPORT void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, uint32_t size);
 EXPORT ToveTriangles MeshGetTriangles(ToveMeshRef mesh);
 EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
+
+EXPORT void ConfigureShaderCode(ToveShaderLanguage language, bool avoidMat3);
+EXPORT const char *GetPaintShaderCode(int numPaints);
+EXPORT const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool lines);
+EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);
