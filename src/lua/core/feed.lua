@@ -12,7 +12,7 @@
 local function fillGradientData(gradient)
 	local n = gradient.numColors
 
-	local matrixData = love.data.newByteData(env.mat3.size)
+	local matrixData = love.data.newByteData(env.matsize)
 	gradient.matrix = matrixData:getPointer()
 	gradient.arguments = nil
 

@@ -54,7 +54,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 
 	local alloc = lib.FeedGetColorAllocation(link)
 	local matrixData = love.data.newByteData(
-		alloc.numPaints * env.mat3.size)
+		alloc.numPaints * env.matsize)
 	local imageData = love.image.newImageData(
 		alloc.numPaints, alloc.numColors, "rgba8")
 	local colorsTexture = lg.newImage(imageData)
@@ -62,7 +62,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 		alloc.numPaints * ffi.sizeof("ToveVec4"))
 	local gradientData = ffi.new("ToveGradientData")
 	gradientData.matrix = matrixData:getPointer()
-	gradientData.matrixType = env.mat3.type
+	gradientData.matrixRows = env.matrows
 	gradientData.arguments = argumentsData:getPointer()
 	gradientData.colorsTexture = imageData:getPointer()
 	gradientData.colorsTextureRowBytes = imageData:getSize() / alloc.numColors

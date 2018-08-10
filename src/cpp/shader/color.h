@@ -10,6 +10,7 @@
  */
 
 #include <functional>
+#include "gen.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -79,14 +80,17 @@ protected:
 						m[4] = 1;
 						m[5] = 0;
 
-						m[6] = 0;
-						m[7] = 0;
-						m[8] = 1;
+						const int rows = ShaderWriter::getMatrixRows();
+						if (rows >= 3) { // i.e. mat3x3
+							m[6] = 0;
+							m[7] = 0;
+							m[8] = 1;
 
-						if (gradient.matrixType == MATRIX_MAT3x4) {
-							m[9] = 0;
-							m[10] = 0;
-							m[11] = 0;
+							if (rows == 4) { // i.e. mat3x4
+								m[9] = 0;
+								m[10] = 0;
+								m[11] = 0;
+							}
 						}
 					}
 
@@ -135,7 +139,7 @@ protected:
 		}
 
 		assert(gradient.matrix != nullptr);
-		paint->getGradientMatrix(*(ToveMatrix3x3*)gradient.matrix, scale);
+		paint->getGradientMatrix(gradient.matrix, scale);
 
 		if (gradient.arguments) {
 			float s = 0.5f / gradient.colorTextureHeight;
@@ -201,18 +205,7 @@ public:
 	}
 
 	void bind(const ToveGradientData &data, int i) {
-		int size;
-		switch (data.matrixType) {
-			case MATRIX_MAT3x3:
-				size = 3 * 3;
-				break;
-			case MATRIX_MAT3x4:
-				size = 3 * 4;
-				break;
-			default:
-				assert(false);
-		}
-
+		const int size = 3 * ShaderWriter::getMatrixRows();
 		paintData.gradient.matrix = data.matrix + i * size;
 		paintData.gradient.arguments = &data.arguments[i];
 		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;

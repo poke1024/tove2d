@@ -160,22 +160,15 @@ typedef struct {
 	float distanceSquared;
 } ToveNearest;
 
-typedef float ToveMatrix3x3[3 * 3];
-
 typedef struct {
 	int16_t numPaints;
 	int16_t numColors;
 } TovePaintColorAllocation;
 
-typedef enum {
-	MATRIX_MAT3x3,
-	MATRIX_MAT3x4,
-} ToveMatrixType;
-
 typedef struct {
 	int16_t numColors; // to be removed
+	int8_t matrixRows;
 	float *matrix;
-	ToveMatrixType matrixType;
 	ToveVec4 *arguments;
 	uint8_t *colorsTexture;
 	int16_t colorsTextureRowBytes;
@@ -403,7 +396,7 @@ EXPORT ToveTriangles MeshGetTriangles(ToveMeshRef mesh);
 EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
 
-EXPORT void ConfigureShaderCode(ToveShaderLanguage language, bool avoidMat3);
+EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
 EXPORT const char *GetPaintShaderCode(int numPaints);
 EXPORT const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool lines);
 EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);

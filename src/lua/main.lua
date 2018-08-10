@@ -69,26 +69,22 @@ tove.init = function(path)
 	local env = {
 		graphics = love.graphics.getSupported(),
 		rgba16f = love.graphics.getCanvasFormats()["rgba16f"],
-		mat3 = {
-			glsl = "mat3",
-			size = ffi.sizeof("ToveMatrix3x3"),
-			type = lib.MATRIX_MAT3x3
-		}
+		matrows = 2 -- number of mat3x2 rows
 	}
 
 	-- work around crashing Parallels drivers with mat3
 	do
 		local _, _, _, device = love.graphics.getRendererInfo()
 		if string.find(device, "Parallels") ~= nil then
-			env.mat3.glsl = "mat3x4"
-			env.mat3.size = ffi.sizeof("float[?]", 12)
-			env.mat3.type = lib.MATRIX_MAT3x4
+			env.matrows = 4
 		end
 	end
 
+	env.matsize = ffi.sizeof("float[?]", 3 * env.matrows)
+
 	lib.ConfigureShaderCode(
 		env.graphics.glsl3 and lib.TOVE_GLSL3 or lib.TOVE_GLSL2,
-		env.mat3.type == lib.MATRIX_MAT3x4)
+		env.matrows)
 
 	-- deepcopy: taken from http://lua-users.org/wiki/CopyTable
 	function deepcopy(orig)

@@ -42,7 +42,7 @@ public:
 	virtual float getColorStop(int i, RGBA &rgba, float opacity) = 0;
 	virtual int getNumColorStops() const = 0;
 	virtual NSVGgradient *getNSVGgradient() const = 0;
-	virtual void getGradientMatrix(ToveMatrix3x3 &m, float scale) const = 0;
+	virtual void getGradientMatrix(float *m, float scale) const = 0;
 
 	virtual void setRGBA(float r, float g, float b, float a) {
 	}
@@ -103,7 +103,7 @@ public:
 		return nullptr;
 	}
 
-	virtual void getGradientMatrix(ToveMatrix3x3 &m, float scale) const {
+	virtual void getGradientMatrix(float *m, float scale) const {
 	}
 
 	virtual void setRGBA(float r, float g, float b, float a = 1) {
@@ -197,7 +197,7 @@ public:
 		return nsvg;
 	}
 
-	virtual void getGradientMatrix(ToveMatrix3x3 &m, float scale) const {
+	virtual void getGradientMatrix(float *m, float scale) const {
 		const float *xform = xformInverse;
 
 		m[0] = xform[0] / scale;
@@ -207,10 +207,6 @@ public:
 		m[3] = xform[1] / scale;
 		m[4] = xform[3] / scale;
 		m[5] = xform[5];
-
-		m[6] = 0;
-		m[7] = 0;
-		m[8] = 1;
 	}
 };
 

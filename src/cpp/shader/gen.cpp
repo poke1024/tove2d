@@ -10,8 +10,7 @@
  */
 
 #include "../common.h"
-#include <sstream>
-#include <map>
+#include "gen.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -24,53 +23,14 @@ BEGIN_TOVE_NAMESPACE
 #define TOVE_TARGET TOVE_TARGET_LOVE2D
 #endif
 
-class ShaderWriter {
-private:
-	std::ostringstream out;
-	std::map<std::string, std::string> defines;
-
-	static thread_local std::string sSource;
-
-	static ToveShaderLanguage sLanguage;
-	static bool sAvoidMat3;
-
-public:
-	static void configure(ToveShaderLanguage language, bool useMat3x4);
-
-	ShaderWriter();
-
-	void beginVertexShader();
-	void endVertexShader();
-
-	void beginFragmentShader();
-	void endFragmentShader();
-
-	void computeLineColor(int lineStyle);
-	void computeFillColor(int fillStyle);
-
-	void define(const std::string &key, const std::string &value);
-	void define(const std::string &key, int value);
-
-	ShaderWriter &operator<<(int i) {
-		out << i;
-		return *this;
-	}
-
-	ShaderWriter &operator<<(const char *s) {
-		out << s;
-		return *this;
-	}
-
-	const char *getSourcePtr();
-};
 
 thread_local std::string ShaderWriter::sSource;
 ToveShaderLanguage ShaderWriter::sLanguage = TOVE_GLSL2;
-bool ShaderWriter::sAvoidMat3 = false;
+int ShaderWriter::sMatrixRows = 2;
 
-void ShaderWriter::configure(ToveShaderLanguage language, bool avoidMat3) {
+void ShaderWriter::configure(ToveShaderLanguage language, int matrixRows) {
 	sLanguage = language;
-	sAvoidMat3 = avoidMat3;
+	sMatrixRows = matrixRows;
 }
 
 void ShaderWriter::define(const std::string &key, const std::string &value) {
@@ -93,7 +53,17 @@ render_mode skip_vertex_transform;
 )GLSL";
 #endif
 
-	define("MAT3", sAvoidMat3 ? "mat3x4" : "mat3");
+	switch (sMatrixRows) {
+		case 2:
+			define("MATRIX", "mat3x2");
+			break;
+		case 3:
+			define("MATRIX", "mat3");
+			break;
+		case 4:
+			define("MATRIX", "mat3x4");
+			break;
+	}
 
 #if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	define("TEXEL", "Texel");
@@ -155,7 +125,7 @@ void ShaderWriter::computeLineColor(int lineStyle) {
 uniform vec4 linecolor;
 #elif LINE_STYLE >= 2
 uniform sampler2D linecolors;
-uniform MAT3 linematrix;
+uniform MATRIX linematrix;
 uniform vec2 linecscale;
 #endif
 
@@ -184,7 +154,7 @@ void ShaderWriter::computeFillColor(int fillStyle) {
 uniform vec4 fillcolor;
 #elif FILL_STYLE >= 2
 uniform sampler2D fillcolors;
-uniform MAT3 fillmatrix;
+uniform MATRIX fillmatrix;
 uniform vec2 fillcscale;
 #endif
 
@@ -225,8 +195,8 @@ const char *ShaderWriter::getSourcePtr() {
 
 END_TOVE_NAMESPACE
 
-void ConfigureShaderCode(ToveShaderLanguage language, bool avoidMat3) {
-	tove::ShaderWriter::configure(language, avoidMat3);
+void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows) {
+	tove::ShaderWriter::configure(language, matrixRows);
 }
 
 const char *GetPaintShaderCode(int numPaints) {
@@ -249,7 +219,7 @@ varying vec2 texture_pos;
 #endif
 
 	w << R"GLSL(
-uniform MAT3 matrix[NUM_PAINTS];
+uniform MATRIX matrix[NUM_PAINTS];
 uniform vec4 arguments[NUM_PAINTS];
 
 vec4 do_vertex(vec4 vertex_pos) {
