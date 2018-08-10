@@ -11,17 +11,24 @@
 
 #include "../common.h"
 #include <sstream>
+#include <map>
 
 BEGIN_TOVE_NAMESPACE
 
-#define TOVE_LOVE2D 1
-#define TOVE_GODOT 2
+#define TOVE_TARGET_LOVE2D 1
+#define TOVE_TARGET_GODOT 2
 
-#define TOVE_TARGET TOVE_LOVE2D
+#ifdef TOVE_GODOT
+#define TOVE_TARGET TOVE_TARGET_GODOT
+#else
+#define TOVE_TARGET TOVE_TARGET_LOVE2D
+#endif
 
 class ShaderWriter {
 private:
 	std::ostringstream out;
+	std::map<std::string, std::string> defines;
+
 	static thread_local std::string sSource;
 
 	static ToveShaderLanguage sLanguage;
@@ -30,7 +37,7 @@ private:
 public:
 	static void configure(ToveShaderLanguage language, bool useMat3x4);
 
-	void prolog();
+	ShaderWriter();
 
 	void beginVertexShader();
 	void endVertexShader();
@@ -40,6 +47,9 @@ public:
 
 	void computeLineColor(int lineStyle);
 	void computeFillColor(int fillStyle);
+
+	void define(const std::string &key, const std::string &value);
+	void define(const std::string &key, int value);
 
 	ShaderWriter &operator<<(int i) {
 		out << i;
@@ -63,26 +73,37 @@ void ShaderWriter::configure(ToveShaderLanguage language, bool avoidMat3) {
 	sAvoidMat3 = avoidMat3;
 }
 
-void ShaderWriter::prolog() {
-#if TOVE_TARGET == TOVE_LOVE2D
+void ShaderWriter::define(const std::string &key, const std::string &value) {
+	defines[key] = value;
+}
+
+void ShaderWriter::define(const std::string &key, int value) {
+	define(key, std::to_string(value));
+}
+
+ShaderWriter::ShaderWriter() {
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	if (sLanguage == TOVE_GLSL3) {
 		out << "#pragma language glsl3\n#define GLSL3 1\n";
 	}
 #else
-	out << "shader_type canvas_item;\nrender_mode skip_vertex_transform\n";
+	out << R"GLSL(
+shader_type canvas_item;
+render_mode skip_vertex_transform;
+)GLSL";
 #endif
 
-	out << "#define MAT3 " << (sAvoidMat3 ? "mat3x4" : "mat3") << "\n";
+	define("MAT3", sAvoidMat3 ? "mat3x4" : "mat3");
 
-#if TOVE_TARGET == TOVE_LOVE2D
-	out << "#define TEXEL Texel\n";
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
+	define("TEXEL", "Texel");
 #else
-	out << "#define TEXEL texture\n";
+	define("TEXEL", "texture");
 #endif
 }
 
 void ShaderWriter::beginVertexShader() {
-#if TOVE_TARGET == TOVE_LOVE2D
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	out << R"GLSL(
 #ifdef VERTEX
 )GLSL";
@@ -90,26 +111,26 @@ void ShaderWriter::beginVertexShader() {
 }
 
 void ShaderWriter::endVertexShader() {
-#if TOVE_TARGET == TOVE_LOVE2D
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	out << R"GLSL(
 vec4 position(mat4 transform_projection, vec4 vertex_pos) {
 	return transform_projection * do_vertex(vertex_pos);
 }
 #endif // VERTEX
-	)GLSL";
-#elif TOVE_TARGET == TOVE_GODOT
+)GLSL";
+#elif TOVE_TARGET == TOVE_TARGET_GODOT
 	out << R"GLSL(
 void vertex() {
 	vec4 v = vec4(VERTEX, 0.0, 1.0);
 	v = do_vertex(v);
 	VERTEX = (EXTRA_MATRIX * (WORLD_MATRIX * v)).xy;
 }
-	)GLSL";
+)GLSL";
 #endif
 }
 
 void ShaderWriter::beginFragmentShader() {
-#if TOVE_TARGET == TOVE_LOVE2D
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	out << R"GLSL(
 #ifdef PIXEL
 )GLSL";
@@ -117,7 +138,7 @@ void ShaderWriter::beginFragmentShader() {
 }
 
 void ShaderWriter::endFragmentShader() {
-#if TOVE_TARGET == TOVE_LOVE2D
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	out << R"GLSL(
 vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
 	return do_color();
@@ -186,8 +207,19 @@ vec4 computeFillColor(vec2 pos) {
 }
 
 const char *ShaderWriter::getSourcePtr() {
-	sSource = out.str();
-	//fprintf(stderr, "%s", sSource.c_str());
+	std::string source = out.str();
+
+	for (auto i : defines) {
+		size_t pos = 0;
+	    while ((pos = source.find(i.first, pos)) != std::string::npos) {
+	         source.replace(pos, i.first.length(), i.second);
+	         pos += i.second.length();
+	    }
+	}
+
+	//fprintf(stderr, "%s", source.c_str());
+
+	sSource = source;
 	return sSource.c_str();
 }
 
@@ -200,9 +232,7 @@ void ConfigureShaderCode(ToveShaderLanguage language, bool avoidMat3) {
 const char *GetPaintShaderCode(int numPaints) {
 	tove::ShaderWriter w;
 
-	w.prolog();
-
-	w << "#define NUM_PAINTS " << numPaints << "\n";
+	w.define("NUM_PAINTS", numPaints);
 
 	w << R"GLSL(
 varying vec2 gradient_pos;
@@ -212,9 +242,13 @@ varying vec2 texture_pos;
 
 	w.beginVertexShader();
 
-	w << R"GLSL(
-attribute float VertexPaint;
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
+	w << "attribute float VertexPaint;\n";
+#elif TOVE_TARGET == TOVE_TARGET_GODOT
+	w.define("VertexPaint", "UV.x");
+#endif
 
+	w << R"GLSL(
 uniform MAT3 matrix[NUM_PAINTS];
 uniform vec4 arguments[NUM_PAINTS];
 
@@ -261,8 +295,6 @@ vec4 do_color() {
 const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool lines) {
 	tove::ShaderWriter w;
 
-	w.prolog();
-
 	w << R"GLSL(
 varying vec4 raw_vertex_pos;
 )GLSL";
@@ -300,8 +332,6 @@ vec4 do_vertex(vec4 vertex_pos) {
 
 const char *GetImplicitLineShaderCode(const ToveShaderData *data) {
 	tove::ShaderWriter w;
-
-	w.prolog();
 
 	w << R"GLSL(
 varying vec2 raw_vertex_pos;
