@@ -11,6 +11,8 @@
 
 BEGIN_TOVE_NAMESPACE
 
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
+
 template<typename T, typename ToveType>
 struct References {
 public:
@@ -82,5 +84,7 @@ References<Subpath, ToveSubpathRef> trajectories;
 References<AbstractPaint, TovePaintRef> paints;
 References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;
+
+#endif // TOVE_TARGET_LOVE2D
 
 END_TOVE_NAMESPACE

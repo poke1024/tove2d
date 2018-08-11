@@ -26,6 +26,62 @@
 
 BEGIN_TOVE_NAMESPACE
 
+GraphicsRef Graphics::createFromSVG(
+	const char *svg, const char *units, float dpi) {
+
+	GraphicsRef graphics;
+	if (svg) {
+		char *mutableSVG = strdup(svg);
+		NSVGimage *image = nsvgParse(mutableSVG, units, dpi);
+		free(mutableSVG);
+
+		graphics = std::make_shared<Graphics>(image);
+		nsvgDelete(image);
+	} else {
+		graphics = std::make_shared<Graphics>();
+	}
+	return graphics;
+}
+
+ToveMeshUpdateFlags Graphics::tesselate(
+	MeshRef mesh,
+	float scale,
+	const ToveTesselationQuality &quality,
+	ToveHoles holes,
+	ToveMeshUpdateFlags flags) const {
+
+	const int n = getNumPaths();
+	ToveMeshUpdateFlags updated;
+
+	if (quality.stopCriterion == TOVE_REC_DEPTH) {
+		FixedMeshifier meshifier(
+			scale, quality.recursionLimit, holes, flags);
+
+		updated = meshifier.graphicsToMesh(
+			this, mesh, mesh);
+	} else {
+		AdaptiveMeshifier meshifier(scale, quality);
+
+		// note: only this case supports clip paths.
+		computeClipPaths(meshifier);
+
+		updated = meshifier.graphicsToMesh(
+			this, mesh, mesh);
+	}
+
+	return updated;
+}
+
+void Graphics::rasterize(
+	uint8_t *pixels,
+	int width, int height, int stride,
+	float tx, float ty, float scale,
+	const ToveTesselationQuality *quality) {
+
+	nsvg::rasterize(getImage(), tx, ty, scale,
+		pixels, width, height, stride, quality);
+}
+
 static void copyFromNSVG(
     PathOwner *owner,
     NSVGshape **anchor,
@@ -404,7 +460,7 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	}
 }
 
-void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) {
+void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) const {
 #ifdef NSVG_CLIP_PATHS
     for (const ClipRef &clip : clips) {
         clip->compute(meshifier);

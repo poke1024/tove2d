@@ -9,14 +9,16 @@
  * All rights reserved.
  */
 
-#include "common.h"
-#include "references.h"
-#include "path.h"
-#include "graphics.h"
-#include "mesh/mesh.h"
-#include "mesh/meshifier.h"
-#include "shader/link.h"
+#include "../common.h"
+#include "../references.h"
+#include "../path.h"
+#include "../graphics.h"
+#include "../mesh/mesh.h"
+#include "../mesh/meshifier.h"
+#include "../shader/link.h"
 #include <sstream>
+
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
 
 using namespace tove;
 
@@ -38,16 +40,11 @@ static ToveMeshResult exception_safe(const F &f) {
 static const ToveTesselationQuality *getDefaultQuality() {
 	static ToveTesselationQuality defaultQuality;
 
-	defaultQuality.stopCriterion = TOVE_ANTIGRAIN;
+	defaultQuality.stopCriterion = TOVE_MAX_ERROR;
 
 	defaultQuality.recursionLimit = 8;
 	defaultQuality.arcTolerance = 0.0;
-
-	defaultQuality.antigrain.distanceTolerance = 0.25;
-	defaultQuality.antigrain.colinearityEpsilon = 0.05;
-	defaultQuality.antigrain.angleEpsilon = 0.01;
-	defaultQuality.antigrain.angleTolerance = 0.0;
-	defaultQuality.antigrain.cuspLimit = 0.0;
+	defaultQuality.maximumError = 0.5;
 
 	return &defaultQuality;
 }
@@ -467,20 +464,8 @@ void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 
 
 ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
-	GraphicsRef shape;
 
-	if (svg) {
-		char *mutableSVG = strdup(svg);
-		NSVGimage *image = nsvgParse(mutableSVG, units, dpi);
-		free(mutableSVG);
-
-		shape = std::make_shared<Graphics>(image);
-		nsvgDelete(image);
-	} else {
-		shape = std::make_shared<Graphics>();
-	}
-
-	return shapes.publish(shape);
+	return shapes.publish(Graphics::createFromSVG(svg, units, dpi));
 }
 
 ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics) {
@@ -590,38 +575,20 @@ void GraphicsSet(
 }
 
 ToveMeshResult GraphicsTesselate(
-	ToveGraphicsRef graphicsRef,
+	ToveGraphicsRef graphics,
 	ToveMeshRef mesh,
 	float scale,
-	const ToveTesselationQuality *quality0,
+	const ToveTesselationQuality *quality,
 	ToveHoles holes,
 	ToveMeshUpdateFlags flags) {
 
 	return exception_safe(
-		[graphicsRef, mesh, scale, quality0, holes, flags] () {
+		[graphics, mesh, scale, quality, holes, flags] () {
 
-		const GraphicsRef graphics = deref(graphicsRef);
-		const int n = graphics->getNumPaths();
-
-		const ToveTesselationQuality *quality =
-			quality0 ? quality0 : getDefaultQuality();
-
-		ToveMeshUpdateFlags updated;
-		if (quality->stopCriterion == TOVE_REC_DEPTH) {
-			FixedMeshifier meshifier(
-				scale, quality->recursionLimit, holes, flags);
-			updated = meshifier.graphicsToMesh(
-				graphics, deref(mesh), deref(mesh));
-		} else {
-			AdaptiveMeshifier meshifier(scale, *quality);
-
-			// note: only this case supports clip paths.
-			graphics->computeClipPaths(meshifier);
-
-			updated = meshifier.graphicsToMesh(
-				graphics, deref(mesh), deref(mesh));
-		}
-		return updated;
+		return deref(graphics)->tesselate(
+			deref(mesh), scale,
+			*(quality ? quality : getDefaultQuality()),
+			holes, flags);
 	});
 }
 
@@ -629,9 +596,8 @@ void GraphicsRasterize(
 	ToveGraphicsRef shape, uint8_t *pixels, int width, int height, int stride,
 	float tx, float ty, float scale, const ToveTesselationQuality *quality) {
 
-	NSVGimage *nsvg = deref(shape)->getImage();
-	nsvg::rasterize(nsvg, tx, ty, scale,
-		pixels, width, height, stride, quality);
+	deref(shape)->rasterize(
+		pixels, width, height, stride, tx, ty, scale, quality);
 }
 
 void GraphicsAnimate(
@@ -748,3 +714,5 @@ void ReleaseMesh(ToveMeshRef mesh) {
 }
 
 } // extern "C"
+
+#endif // TOVE_TARGET_LOVE2D

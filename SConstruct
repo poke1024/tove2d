@@ -14,7 +14,7 @@ AddOption(
 
 sources = [
 	"src/cpp/version.cpp",
-	"src/cpp/binding.cpp",
+	"src/cpp/interface/api.cpp",
 	"src/cpp/graphics.cpp",
 	"src/cpp/nsvg.cpp",
 	"src/cpp/paint.cpp",
@@ -122,7 +122,8 @@ def minify_lua(target, source, env):
 
 env.Append(BUILDERS={'MinifyLua':Builder(action=minify_lua)})
 env.MinifyLua('tove/init.lua',
-	Glob("src/cpp/_interface.h") +
+	Glob("src/cpp/interface/api.h") +
+	Glob("src/cpp/interface/types.h") +
 	Glob("src/lua/*.lua") +
 	Glob("src/lua/core/*.lua") +
 	Glob("src/lua/core/*.glsl"))

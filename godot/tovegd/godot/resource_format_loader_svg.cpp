@@ -3,14 +3,14 @@
 /*************************************************************************/
 
 #include "resource_format_loader_svg.h"
-#include "tove_graphics.h"
+#include "vector_graphics.h"
 
 RES ResourceFormatLoaderSVG::load(const String &p_path, const String &p_original_path, Error *r_error) {
 
 	if (r_error)
 		*r_error = ERR_FILE_CANT_OPEN;
 
-	Ref<ToveGraphics> graphics;
+	Ref<VectorGraphics> graphics;
 	graphics.instance();
 	Error err = graphics->load(p_path, "px", 96);
 	if (r_error)
@@ -33,6 +33,6 @@ String ResourceFormatLoaderSVG::get_resource_type(const String &p_path) const {
 
 	String el = p_path.get_extension().to_lower();
 	if (el == "svg")
-		return "ToveGraphics";
+		return "VectorGraphics";
 	return "";
 }

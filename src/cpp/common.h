@@ -15,6 +15,15 @@
 #define BEGIN_TOVE_NAMESPACE namespace tove {
 #define END_TOVE_NAMESPACE }
 
+#define TOVE_TARGET_LOVE2D 1
+#define TOVE_TARGET_GODOT 2
+
+#ifdef TOVE_GODOT
+#define TOVE_TARGET TOVE_TARGET_GODOT
+#else
+#define TOVE_TARGET TOVE_TARGET_LOVE2D
+#endif
+
 #include "interface.h"
 #include "warn.h"
 

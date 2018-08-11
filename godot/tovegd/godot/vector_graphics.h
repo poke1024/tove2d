@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  tove_graphics.h 	                                                 */
+/*  vector_graphics.h 	                                                 */
 /*************************************************************************/
 
 #ifndef TOVEGD_GRAPHICS_H
@@ -9,21 +9,24 @@
 #include "scene/2d/mesh_instance_2d.h"
 #include "core/image.h"
 
-class ToveGraphics : public Resource {
-	GDCLASS(ToveGraphics, Resource);
+class VectorGraphics : public Resource {
+	GDCLASS(VectorGraphics, Resource);
 
-	ToveGraphicsRef graphics;
+	tove::GraphicsRef graphics;
 	ToveDisplay display;
 	float quality;
+
+	void release_graphics();
 
 protected:
 	static void _bind_methods();
 
 public:
-	ToveGraphics();
-	virtual ~ToveGraphics();
+	VectorGraphics();
+	virtual ~VectorGraphics();
 
 	Error load(const String &p_path, const String &p_units, float p_dpi);
+	void load_default();
 
 	void update_mesh(MeshInstance2D *p_instance);
 
@@ -36,6 +39,8 @@ public:
 
 	void set_quality(float quality);
 	float get_quality();
+
+	const tove::GraphicsRef &get_tove_graphics() const;
 };
 
 #endif // TOVEGD_GRAPHICS_H

@@ -14,6 +14,10 @@
 
 #include <cstdint>
 
+#include "interface/types.h"
+
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
+
 #if _MSC_VER
 	#define EXPORT __declspec(dllexport)
 #else
@@ -21,7 +25,9 @@
 #endif
 
 extern "C" {
-#include "_interface.h"
+#include "interface/api.h"
 }
+
+#endif // TOVE_TARGET_LOVE2D
 
 #endif // __TOVE_INTERFACE

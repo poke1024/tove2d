@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  tove_instance.h 	                                                 */
+/*  node_vg.h 			                                                 */
 /*************************************************************************/
 
 #ifndef TOVEGD_INSTANCE_H
@@ -7,13 +7,13 @@
 
 #include "tove2d.h"
 #include "scene/2d/mesh_instance_2d.h"
-#include "tove_graphics.h"
+#include "vector_graphics.h"
 
-class ToveInstance : public MeshInstance2D {
-	GDCLASS(ToveInstance, MeshInstance2D);
+class NodeVG : public MeshInstance2D {
+	GDCLASS(NodeVG, MeshInstance2D);
 
     Ref<Resource> svg;
-	Ref<ToveGraphics> graphics;
+	Ref<VectorGraphics> graphics;
 
 	void update_mesh();
 
@@ -21,6 +21,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	const tove::GraphicsRef &get_tove_graphics() const;
+
 	Ref<Resource> get_svg() const;
 	void set_svg(const Ref<Resource> &p_svg);
 
@@ -30,7 +32,7 @@ public:
 	float get_quality();
 	void set_quality(float quality);
 
-	ToveInstance();
+	NodeVG();
 };
 
 #endif // TOVEGD_INSTANCE_H

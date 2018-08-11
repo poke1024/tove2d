@@ -16,7 +16,7 @@
 BEGIN_TOVE_NAMESPACE
 
 ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
-	const GraphicsRef &graphics,
+	const Graphics *graphics,
 	const MeshRef &fill,
 	const MeshRef &line) {
 
@@ -33,7 +33,7 @@ ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
 
 	for (int i = 0; i < n; i++) {
 		updated |= pathToMesh(
-			graphics.get(),
+			graphics,
 			graphics->getPath(i),
 			fill, line,
 			fillIndex, lineIndex);
@@ -44,7 +44,7 @@ ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
 
 
 static void clip(
-	Graphics *graphics,
+	const Graphics *graphics,
 	const PathRef &path,
 	ClipperPaths &subject) {
 
@@ -81,7 +81,7 @@ bool AdaptiveMeshifier::hasFixedSize() const {
 }
 
 void AdaptiveMeshifier::renderStrokes(
-	Graphics *graphics,
+	const Graphics *graphics,
 	const PathRef &path,
 	const ClipperLib::PolyNode *node,
 	ClipperPaths &holes,
@@ -110,7 +110,7 @@ void AdaptiveMeshifier::renderStrokes(
 }
 
 ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
-	Graphics *graphics,
+	const Graphics *graphics,
 	const PathRef &path,
 	const MeshRef &fill,
 	const MeshRef &line,
@@ -193,7 +193,7 @@ FixedMeshifier::FixedMeshifier(
 }
 
 ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
-	Graphics *graphics,
+	const Graphics *graphics,
 	const PathRef &path,
 	const MeshRef &fill,
 	const MeshRef &line,

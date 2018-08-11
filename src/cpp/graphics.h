@@ -99,6 +99,9 @@ private:
 public:
 	NSVGimage nsvg;
 
+	static GraphicsRef createFromSVG(
+		const char *svg, const char *units, float dpi);
+
 	Graphics();
 	Graphics(const NSVGimage *image);
 	Graphics(const GraphicsRef &graphics);
@@ -186,13 +189,26 @@ public:
 
 	void animate(const GraphicsRef &a, const GraphicsRef &b, float t);
 
-	void computeClipPaths(const AbstractMeshifier &meshifier);
+	void computeClipPaths(const AbstractMeshifier &meshifier) const;
 
 #ifdef NSVG_CLIP_PATHS
 	inline ClipRef getClipAtIndex(int index) const {
 		return clips.at(index);
 	}
 #endif
+
+	ToveMeshUpdateFlags tesselate(
+		MeshRef mesh,
+		float scale,
+		const ToveTesselationQuality &quality,
+		ToveHoles holes,
+		ToveMeshUpdateFlags flags) const;
+
+	void rasterize(
+		uint8_t *pixels,
+		int width, int height, int stride,
+		float tx, float ty, float scale,
+		const ToveTesselationQuality *quality);
 };
 
 END_TOVE_NAMESPACE

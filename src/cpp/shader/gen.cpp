@@ -14,16 +14,6 @@
 
 BEGIN_TOVE_NAMESPACE
 
-#define TOVE_TARGET_LOVE2D 1
-#define TOVE_TARGET_GODOT 2
-
-#ifdef TOVE_GODOT
-#define TOVE_TARGET TOVE_TARGET_GODOT
-#else
-#define TOVE_TARGET TOVE_TARGET_LOVE2D
-#endif
-
-
 thread_local std::string ShaderWriter::sSource;
 ToveShaderLanguage ShaderWriter::sLanguage = TOVE_GLSL2;
 int ShaderWriter::sMatrixRows = 2;

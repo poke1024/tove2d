@@ -21,7 +21,7 @@ BEGIN_TOVE_NAMESPACE
 class AbstractMeshifier {
 public:
 	virtual ToveMeshUpdateFlags pathToMesh(
-		Graphics *graphics,
+		const Graphics *graphics,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,
@@ -29,7 +29,7 @@ public:
 		int &lineIndex) = 0;
 
 	virtual ToveMeshUpdateFlags graphicsToMesh(
-		const GraphicsRef &graphics,
+		const Graphics *graphics,
 		const MeshRef &fill,
 		const MeshRef &line);
 
@@ -42,7 +42,7 @@ public:
 class AdaptiveMeshifier : public AbstractMeshifier {
 private:
 	void renderStrokes(
-		Graphics *graphics,
+		const Graphics *graphics,
 		const PathRef &path,
 		const ClipperLib::PolyNode *node,
 		ClipperPaths &holes,
@@ -54,7 +54,7 @@ public:
 	AdaptiveMeshifier(float scale, const ToveTesselationQuality &quality);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
-		Graphics *graphics,
+		const Graphics *graphics,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,
@@ -79,7 +79,7 @@ public:
 		ToveHoles holes, ToveMeshUpdateFlags update);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
-		Graphics *graphics,
+		const Graphics *graphics,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,

@@ -15,7 +15,8 @@ local basepath = (...) .. "/"
 local ffi = require 'ffi'
 
 ffi.cdef [[
---!! include "../cpp/_interface.h"
+--!! include "../cpp/interface/types.h"
+--!! include "../cpp/interface/api.h"
 ]]
 
 local tove = {}
