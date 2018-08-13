@@ -25,4 +25,9 @@ enum ToveDisplay {
 
 VARIANT_ENUM_CAST(ToveDisplay);
 
+#include "scene/2d/mesh_instance_2d.h"
+
+void graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality);
+void graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality);
+
 #endif // TOVEGD_TOVE2D_H

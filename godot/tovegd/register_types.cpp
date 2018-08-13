@@ -7,13 +7,13 @@
 #include "godot/vector_graphics.h"
 #include "godot/node_vg.h"
 
-#ifdef TOOLS_ENABLED && 0
+#ifdef TOOLS_ENABLED
 #include "godot/node_vg_editor_plugin.h"
 #endif
 
 static ResourceFormatLoaderSVG *svg_loader = NULL;
 
-#ifdef TOOLS_ENABLED && 0
+#ifdef TOOLS_ENABLED
 static void editor_init_callback() {
 	EditorNode *editor = EditorNode::get_singleton();
 	editor->add_editor_plugin(memnew(NodeVGEditorPlugin(editor)));

@@ -16,7 +16,8 @@ class VectorGraphics : public Resource {
 	ToveDisplay display;
 	float quality;
 
-	void release_graphics();
+	Ref<ArrayMesh> mesh;
+	Ref<ImageTexture> texture;
 
 protected:
 	static void _bind_methods();
@@ -28,7 +29,8 @@ public:
 	Error load(const String &p_path, const String &p_units, float p_dpi);
 	void load_default();
 
-	void update_mesh(MeshInstance2D *p_instance);
+	void update_mesh();
+	void update_instance(MeshInstance2D *p_instance);
 
 	Ref<Image> rasterize(
         int p_width, int p_height,
@@ -41,6 +43,10 @@ public:
 	float get_quality();
 
 	const tove::GraphicsRef &get_tove_graphics() const;
+
+	void set_points(int p_path, int p_subpath, Array p_points);
+	void insert_curve(int p_path, int p_subpath, float p_t);
+	void remove_curve(int p_path, int p_subpath, int p_curve);
 };
 
 #endif // TOVEGD_GRAPHICS_H

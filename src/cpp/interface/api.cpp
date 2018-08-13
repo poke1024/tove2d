@@ -350,7 +350,7 @@ const float *SubpathGetPointsPtr(ToveSubpathRef subpath) {
 }*/
 
 void SubpathSetPoints(ToveSubpathRef subpath, const float *pts, int npts) {
-	deref(subpath)->setLovePoints(pts, npts);
+	deref(subpath)->setPoints(pts, npts);
 }
 
 float SubpathGetCurveValue(ToveSubpathRef subpath, int curve, int index) {
@@ -362,11 +362,11 @@ void SubpathSetCurveValue(ToveSubpathRef subpath, int curve, int index, float va
 }
 
 float SubpathGetPtValue(ToveSubpathRef subpath, int index, int dim) {
-	return deref(subpath)->getLovePointValue(index, dim);
+	return deref(subpath)->getPointValue(index, dim);
 }
 
 void SubpathSetPtValue(ToveSubpathRef subpath, int index, int dim, float value) {
-	deref(subpath)->setLovePointValue(index, dim, value);
+	deref(subpath)->setPointValue(index, dim, value);
 }
 
 void SubpathInvert(ToveSubpathRef subpath) {

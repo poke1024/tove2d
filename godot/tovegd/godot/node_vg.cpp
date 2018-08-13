@@ -8,7 +8,7 @@ void NodeVG::update_mesh() {
 
 	if (graphics.is_valid()) {
 
-		graphics->update_mesh(this);
+		graphics->update_instance(this);
 		update();
 	}
 }
@@ -27,6 +27,10 @@ void NodeVG::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graphics", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_svg", "get_svg");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "display", PROPERTY_HINT_ENUM, "Texture,Mesh"), "set_display", "get_display");
 	ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
+
+	ClassDB::bind_method(D_METHOD("insert_curve", "path", "subpath", "t"), &NodeVG::insert_curve);
+	ClassDB::bind_method(D_METHOD("remove_curve", "path", "subpath", "curve"), &NodeVG::remove_curve);
+	ClassDB::bind_method(D_METHOD("set_points", "path", "subpath", "points"), &NodeVG::set_points);
 }
 
 Ref<Resource> NodeVG::get_svg() const {
@@ -71,12 +75,39 @@ float NodeVG::get_quality() {
 	return graphics.is_valid() ? graphics->get_quality() : 0.5f;
 }
 
+bool NodeVG::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
+	const tove::GraphicsRef &graphics = get_tove_graphics();
+	return graphics.get() ? graphics->hit(p_point.x, p_point.y).get() != NULL : false;
+}
+
+const Ref<VectorGraphics> &NodeVG::get_vector_graphics() const {
+	return graphics;
+}
+
 const tove::GraphicsRef &NodeVG::get_tove_graphics() const {
 	return graphics->get_tove_graphics();
+}
+
+void NodeVG::set_points(int p_path, int p_subpath, Array p_points) {
+	ERR_FAIL_COND(!graphics.is_valid());
+	graphics->set_points(p_path, p_subpath, p_points);
+	update_mesh();
+}
+
+void NodeVG::insert_curve(int p_path, int p_subpath, float p_t) {
+	ERR_FAIL_COND(!graphics.is_valid());
+	graphics->insert_curve(p_path, p_subpath, p_t);
+	update_mesh();
+}
+
+void NodeVG::remove_curve(int p_path, int p_subpath, int p_curve) {
+	ERR_FAIL_COND(!graphics.is_valid());
+	graphics->remove_curve(p_path, p_subpath, p_curve);
+	update_mesh();
 }
 
 NodeVG::NodeVG() {
 	graphics.instance();
 	graphics->load_default();
-	graphics->update_mesh(this);
+	graphics->update_instance(this);
 }

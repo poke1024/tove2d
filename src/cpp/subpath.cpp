@@ -706,8 +706,8 @@ void Subpath::move(int k, float x, float y) {
 	changed(CHANGED_POINTS);
 }
 
-void Subpath::setLovePoints(const float *pts, int npts) {
-	bool loop = isClosed() && npts > 0;
+void Subpath::setPoints(const float *pts, int npts, bool add_loop) {
+	const bool loop = add_loop && isClosed() && npts > 0;
 	const int n1 = npts + (loop ? 1 : 0);
 	setNumPoints(n1);
 	std::memcpy(nsvg.pts, pts, npts * sizeof(float) * 2);
@@ -1136,7 +1136,7 @@ void Subpath::setOrientation(ToveOrientation orientation) {
 	}
 }
 
-float Subpath::getLovePointValue(int index, int dim) {
+float Subpath::getPointValue(int index, int dim) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;
@@ -1150,7 +1150,7 @@ float Subpath::getLovePointValue(int index, int dim) {
 	}
 }
 
-void Subpath::setLovePointValue(int index, int dim, float value) {
+void Subpath::setPointValue(int index, int dim, float value) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;

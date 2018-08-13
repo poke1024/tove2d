@@ -158,10 +158,10 @@ public:
         return isClosed() && n > 0 ? n - 1 : n;
     }
 
-    float getLovePointValue(int index, int dim);
-    void setLovePointValue(int index, int dim, float value);
+    float getPointValue(int index, int dim);
+    void setPointValue(int index, int dim, float value);
 
-	void setLovePoints(const float *pts, int npts);
+	void setPoints(const float *pts, int npts, bool add_loop = true);
 
     bool isCollinear(int u, int v, int w) const;
     bool isLineAt(int k, int dir) const;

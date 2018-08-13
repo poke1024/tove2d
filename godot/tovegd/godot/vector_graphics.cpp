@@ -9,6 +9,7 @@
 VectorGraphics::VectorGraphics() {
     display = TOVE_DISPLAY_MESH;
 	quality = 0.5f;
+    mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
 }
 
 VectorGraphics::~VectorGraphics() {
@@ -49,97 +50,37 @@ void VectorGraphics::load_default() {
 	graphics->stroke();
 }
 
-void VectorGraphics::update_mesh(MeshInstance2D *p_instance) {
+void VectorGraphics::update_mesh() {
 
     ERR_FAIL_COND(!graphics.get());
 
-	const float *bounds = graphics->getExactBounds();
-    const float resolution = quality;
-
-    const float w = bounds[2] - bounds[0];
-    const float h = bounds[3] - bounds[1];
-
     if (display == TOVE_DISPLAY_MESH) {
-
-    	ToveTesselationQuality tquality;
-    	tquality.stopCriterion = TOVE_MAX_ERROR;
-    	tquality.recursionLimit = 8;
-    	tquality.maximumError = 1.0 / (quality * 2);
-    	tquality.arcTolerance = 1.0 / (quality * 2);
-
-    	tove::MeshRef toveMesh = std::make_shared<tove::ColorMesh>();
-    	graphics->tesselate(toveMesh, 1024, tquality, HOLES_CW, 0);
-
-    	const int n = toveMesh->getVertexCount();
-    	int stride = sizeof(float) * 2 + 4;
-    	int size = n * stride;
-    	uint8_t *vertices = new uint8_t[size];
-		toveMesh->copyVertexData(vertices, size);
-
-    	ToveTriangles triangles = toveMesh->getTriangles();
-
-    	PoolVector<int> iarr;
-    	iarr.resize(triangles.size);
-    	{
-    		PoolVector<int>::Write w = iarr.write();
-    		for (int i = 0; i < triangles.size; i++) {
-    			w[i] = triangles.array[i] - 1; // 1-based
-    		}
-    	}
-
-        const float cx = w / 2;
-        const float cy = h / 2;
-
-    	PoolVector<Vector3> varr;
-    	varr.resize(n);
-
-    	{
-    		PoolVector<Vector3>::Write w = varr.write();
-    		for (int i = 0; i < n; i++) {
-    			float *p = (float*)(vertices + i * stride);
-    			w[i] = Vector3(p[0] - cx, p[1] - cy, 0);
-    		}
-    	}
-
-    	PoolVector<Color> carr;
-    	carr.resize(n);
-
-    	{
-    		PoolVector<Color>::Write w = carr.write();
-    		for (int i = 0; i < n; i++) {
-    			uint8_t *p = vertices + i * stride + 2 * sizeof(float);
-    			w[i] = Color(p[0] / 255.0, p[1] / 255.0, p[2] / 255.0, p[3] / 255.0);
-    		}
-    	}
-
-    	delete[] vertices;
-
-    	Ref<ArrayMesh> mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
-
-    	Array arr;
-    	arr.resize(Mesh::ARRAY_MAX);
-    	arr[Mesh::ARRAY_VERTEX] = varr;
-    	arr[Mesh::ARRAY_INDEX] = iarr;
-    	arr[Mesh::ARRAY_COLOR] = carr;
-
-    	mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
-    	p_instance->set_mesh(mesh);
-        p_instance->set_texture(Ref<Texture>());
+		graphics_to_mesh(mesh, graphics, quality);
+		texture = Ref<ImageTexture>();
     } else if (display == TOVE_DISPLAY_TEXTURE) {
+		graphics_to_texture(mesh, graphics, quality);
 
-        Ref<QuadMesh> quad_mesh;
-        quad_mesh.instance();
-        quad_mesh->set_size(Size2(w, -h));
-        p_instance->set_mesh(quad_mesh);
+		const float resolution = quality;
+		const float *bounds = graphics->getExactBounds();
+		const float w = bounds[2] - bounds[0];
+		const float h = bounds[3] - bounds[1];
 
-        Ref<ImageTexture> texture;
-        texture.instance();
-        texture->create_from_image(rasterize(
-            w * resolution, h * resolution,
-            -bounds[0], bounds[1],
-            resolution), ImageTexture::FLAG_FILTER);
-        p_instance->set_texture(texture);
-    }
+		texture.instance();
+		texture->create_from_image(rasterize(
+			w * resolution, h * resolution,
+			-bounds[0] * resolution, -bounds[1] * resolution,
+			resolution), ImageTexture::FLAG_FILTER);
+	}
+}
+
+void VectorGraphics::update_instance(MeshInstance2D *p_instance) {
+
+    ERR_FAIL_COND(!graphics.get());
+
+	update_mesh();
+
+	p_instance->set_mesh(mesh);
+	p_instance->set_texture(texture);
 }
 
 Ref<Image> VectorGraphics::rasterize(int p_width, int p_height, float p_tx, float p_ty, float p_scale) const {
@@ -180,6 +121,10 @@ void VectorGraphics::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "display", PROPERTY_HINT_ENUM, "Texture,Mesh"), "set_display", "get_display");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality"), "set_quality", "get_quality");
+
+	ClassDB::bind_method(D_METHOD("insert_curve", "path", "subpath", "t"), &VectorGraphics::insert_curve);
+	ClassDB::bind_method(D_METHOD("remove_curve", "path", "subpath", "curve"), &VectorGraphics::remove_curve);
+	ClassDB::bind_method(D_METHOD("set_points", "path", "subpath", "points"), &VectorGraphics::set_points);
 }
 
 void VectorGraphics::set_display(ToveDisplay p_display) {
@@ -200,4 +145,41 @@ float VectorGraphics::get_quality() {
 
 const tove::GraphicsRef &VectorGraphics::get_tove_graphics() const {
 	return graphics;
+}
+
+void VectorGraphics::set_points(int p_path, int p_subpath, Array p_points) {
+	ERR_FAIL_INDEX(p_path, graphics->getNumPaths());
+	tove::PathRef path = graphics->getPath(p_path);
+	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
+	tove::SubpathRef subpath = path->getSubpath(p_subpath);
+	const int n = p_points.size();
+	float *p = new float[2 * n];
+	for (int i = 0; i < n; i++) {
+		const Vector2 q = p_points[i];
+		p[2 * i + 0] = q.x;
+		p[2 * i + 1] = q.y;
+	}
+	try {
+		subpath->setPoints(p, n, false);
+	} catch(...) {
+		delete[] p;
+		throw;	
+	}
+	delete[] p;
+}
+
+void VectorGraphics::insert_curve(int p_path, int p_subpath, float p_t) {
+	ERR_FAIL_INDEX(p_path, graphics->getNumPaths());
+	tove::PathRef path = graphics->getPath(p_path);
+	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
+	tove::SubpathRef subpath = path->getSubpath(p_subpath);
+	subpath->insertCurveAt(p_t);
+}
+
+void VectorGraphics::remove_curve(int p_path, int p_subpath, int p_curve) {
+	ERR_FAIL_INDEX(p_path, graphics->getNumPaths());
+	tove::PathRef path = graphics->getPath(p_path);
+	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
+	tove::SubpathRef subpath = path->getSubpath(p_subpath);
+	subpath->removeCurve(p_curve);
 }

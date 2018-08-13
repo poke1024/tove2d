@@ -15,13 +15,16 @@ class NodeVG : public MeshInstance2D {
     Ref<Resource> svg;
 	Ref<VectorGraphics> graphics;
 
-	void update_mesh();
-
 protected:
 	static void _bind_methods();
 
 public:
+	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
+
 	const tove::GraphicsRef &get_tove_graphics() const;
+	const Ref<VectorGraphics> &get_vector_graphics() const;
+
+	void update_mesh();
 
 	Ref<Resource> get_svg() const;
 	void set_svg(const Ref<Resource> &p_svg);
@@ -31,6 +34,10 @@ public:
 
 	float get_quality();
 	void set_quality(float quality);
+
+	void set_points(int p_path, int p_subpath, Array p_points);
+	void insert_curve(int p_path, int p_subpath, float p_t);
+	void remove_curve(int p_path, int p_subpath, int p_curve);
 
 	NodeVG();
 };
