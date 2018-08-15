@@ -62,11 +62,15 @@ import subprocess
 import datetime
 import re
 import os
+import sys
 
 def get_version_string():
 	os.chdir(Dir('.').abspath)
 	args = ['git', 'describe', '--tags', '--long']
-	return subprocess.check_output(args).strip()
+	res = subprocess.check_output(args).strip()
+	if sys.version_info >= (3, 0):
+		res = res.decode("utf8")
+	return res
 
 with open("src/cpp/version.in.cpp", "r") as v_in:
 	with open("src/cpp/version.cpp", "w") as v_out:
