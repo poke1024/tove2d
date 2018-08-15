@@ -150,4 +150,5 @@ void NodeVG::remove_curve(int p_path, int p_subpath, int p_curve) {
 NodeVG::NodeVG() {
 	vg.instance();
 	vg->load_default();
+	vg->add_change_receptor(this);		
 }
