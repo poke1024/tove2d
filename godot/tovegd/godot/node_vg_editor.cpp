@@ -27,6 +27,22 @@ Array NodeVGEditor::_get_points(const SubpathId &p_id) {
 	return subpath_points_array(path->getSubpath(p_id.subpath));
 }
 
+void NodeVGEditor::_set_active_path(int p_active_path) {
+	if (active_path != p_active_path) {
+		active_path = p_active_path;
+		_update_overlay(true);
+		canvas_item_editor->get_viewport_control()->update();
+
+		if (p_active_path >= 0) {
+			tove::PathRef path = node_vg->get_tove_graphics()->getPath(p_active_path);
+			line_width_slider->set_value(path->getLineWidth());
+			line_width_slider->show();
+		} else {
+			line_width_slider->hide();
+		}
+	}
+}
+
 Node2D *NodeVGEditor::_get_node() const {
     return node_vg;
 }
@@ -280,9 +296,7 @@ bool NodeVGEditor::forward_gui_input(const Ref<InputEvent> &p_event) {
 
 						int n_active_path = find_path_at_point(gpoint);
 						if (n_active_path != active_path) {
-							active_path = n_active_path;
-							_update_overlay(true);
-							canvas_item_editor->get_viewport_control()->update();
+							_set_active_path(n_active_path);
 							return true;
 						}
 						return false;
@@ -633,8 +647,8 @@ void NodeVGEditor::edit(Node *p_node_vg) {
 		hover_point = Vertex();
 		selected_point = Vertex();
 
-		active_path = 0;
-		_update_overlay(true);
+		active_path = -1;
+		_set_active_path(0);
 
 	} else {
 
@@ -656,6 +670,7 @@ void NodeVGEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_menu_option"), &NodeVGEditor::_menu_option);
 	ClassDB::bind_method(D_METHOD("_create_mesh_node"), &NodeVGEditor::_create_mesh_node);
 	ClassDB::bind_method(D_METHOD("_create_resource"), &NodeVGEditor::_create_resource);
+	ClassDB::bind_method(D_METHOD("_line_width_changed"), &NodeVGEditor::_line_width_changed);
 }
 
 void NodeVGEditor::remove_point(const Vertex &p_vertex) {
@@ -872,6 +887,15 @@ void NodeVGEditor::_changed_callback(Object *p_changed, const char *p_prop) {
 	}	
 }
 
+void NodeVGEditor::_line_width_changed(double p_value) {
+	if (active_path >= 0) {
+		tove::PathRef path = node_vg->get_tove_graphics()->getPath(active_path);
+		path->setLineWidth(p_value);
+		node_vg->get_vector_graphics()->set_dirty();
+		canvas_item_editor->get_viewport_control()->update();		
+	}
+}
+
 NodeVGEditor::NodeVGEditor(EditorNode *p_editor) {
 
     node_vg = NULL;
@@ -907,6 +931,18 @@ NodeVGEditor::NodeVGEditor(EditorNode *p_editor) {
 	button_delete->connect("pressed", this, "_menu_option", varray(MODE_DELETE));
 	button_delete->set_toggle_mode(true);
 	button_delete->set_tooltip(TTR("Delete points"));
+
+	add_child(memnew(VSeparator));
+	add_child(memnew(Label(TTR("Line Width:"))));
+	line_width_slider = memnew(HSlider);
+	line_width_slider->set_step(0.01);
+	line_width_slider->set_min(0.0);
+	line_width_slider->set_max(10.0);
+	line_width_slider->set_value(1.0);
+	line_width_slider->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
+	line_width_slider->set_v_size_flags(SIZE_SHRINK_CENTER);
+	add_child(line_width_slider);
+	line_width_slider->connect("value_changed", this, "_line_width_changed");
 
 	VSeparator *sep = memnew(VSeparator);
 	sep->set_h_size_flags(SIZE_EXPAND_FILL);

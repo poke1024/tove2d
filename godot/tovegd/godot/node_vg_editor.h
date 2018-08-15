@@ -28,6 +28,7 @@ class NodeVGEditor : public HBoxContainer {
 	ToolButton *button_edit;
 	ToolButton *button_delete;
 	ToolButton *button_bake;
+	Slider *line_width_slider;
 
 	struct SubpathId {
 		SubpathId();
@@ -176,6 +177,8 @@ protected:
 	Array _get_points(const SubpathId &p_id);
 	void _update_overlay(bool p_always_update = false);
 	virtual void _changed_callback(Object *p_changed, const char *p_prop);
+	void _line_width_changed(double p_value);
+	void _set_active_path(int p_active_path);
 
 protected:
 	virtual Node2D *_get_node() const;
