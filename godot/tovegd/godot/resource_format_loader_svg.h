@@ -2,6 +2,12 @@
 /*  resource_format_loader_svg.h 	                                     */
 /*************************************************************************/
 
+// disabled, as it conflicts with the current SVG bitmap importer currently.
+// you can still assign imported SVGs to a VectorGraphics resource though.
+#define GDTOVE_SVG_RFL 0
+
+#if GDTOVE_SVG_RFL
+
 #ifndef TOVEGD_RESOURCE_FORMAT_LOADER_SVG
 #define TOVEGD_RESOURCE_FORMAT_LOADER_SVG
 
@@ -16,3 +22,5 @@ public:
 };
 
 #endif // TOVEGD_RESOURCE_FORMAT_LOADER_SVG
+
+#endif // GDTOVE_SVG_RFL

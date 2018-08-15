@@ -5,6 +5,7 @@
 #include "resource_format_loader_svg.h"
 #include "vector_graphics.h"
 
+#if GDTOVE_SVG_RFL
 RES ResourceFormatLoaderSVG::load(const String &p_path, const String &p_original_path, Error *r_error) {
 
 	if (r_error)
@@ -36,3 +37,4 @@ String ResourceFormatLoaderSVG::get_resource_type(const String &p_path) const {
 		return "VectorGraphics";
 	return "";
 }
+#endif // GDTOVE_SVG_RFL

@@ -11,7 +11,9 @@
 #include "godot/node_vg_editor_plugin.h"
 #endif
 
+#if GDTOVE_SVG_RFL
 static ResourceFormatLoaderSVG *svg_loader = NULL;
+#endif
 
 #ifdef TOOLS_ENABLED
 static void editor_init_callback() {
@@ -21,8 +23,10 @@ static void editor_init_callback() {
 #endif
 
 void register_tovegd_types() {
+#if GDTOVE_SVG_RFL
 	svg_loader = memnew(ResourceFormatLoaderSVG);
 	ResourceLoader::add_resource_format_loader(svg_loader);
+#endif
 
 	ClassDB::register_class<VectorGraphics>();
 	ClassDB::register_class<NodeVG>();

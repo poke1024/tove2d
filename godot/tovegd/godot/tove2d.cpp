@@ -4,16 +4,18 @@
 
 #include "tove2d.h"
 
-void graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
+void tove_graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
+
+    const float quality_scale = 10.0;
 
     ToveTesselationQuality t_quality;
     t_quality.stopCriterion = TOVE_MAX_ERROR;
     t_quality.recursionLimit = 8;
-    t_quality.maximumError = 1.0 / (quality * 2);
-    t_quality.arcTolerance = 1.0 / (quality * 2);
+    t_quality.maximumError = 1.0 / (quality * quality_scale);
+    t_quality.arcTolerance = 1.0 / (quality * quality_scale);
 
     tove::MeshRef tove_mesh = std::make_shared<tove::ColorMesh>();
-    graphics->tesselate(tove_mesh, 1024, t_quality, HOLES_CW, 0);
+    graphics->tesselate(tove_mesh, 1024, t_quality, TOVE_HOLES_CW, 0);
 
     const int n = tove_mesh->getVertexCount();
     int stride = sizeof(float) * 2 + 4;
@@ -69,7 +71,7 @@ void graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, f
     mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
 }
 
-void graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
+void tove_graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
 
     const float resolution = quality;
 

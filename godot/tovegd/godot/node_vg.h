@@ -9,28 +9,28 @@
 #include "scene/2d/mesh_instance_2d.h"
 #include "vector_graphics.h"
 
-class NodeVG : public MeshInstance2D {
-	GDCLASS(NodeVG, MeshInstance2D);
+class NodeVG : public Node2D {
+	GDCLASS(NodeVG, Node2D);
 
-    Ref<Resource> svg;
-	Ref<VectorGraphics> graphics;
+	Ref<VectorGraphics> vg;
 
 protected:
+	void _notification(int p_what);
 	static void _bind_methods();
 
 public:
+	virtual Rect2 _edit_get_rect() const;
 	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
+	virtual void _changed_callback(Object *p_changed, const char *p_prop);
 
-	const tove::GraphicsRef &get_tove_graphics() const;
-	const Ref<VectorGraphics> &get_vector_graphics() const;
+	tove::GraphicsRef get_tove_graphics() const;
+	Ref<VectorGraphics> get_vector_graphics() const;
 
-	void update_mesh();
+	Ref<Resource> get_graphics() const;
+	void set_graphics(const Ref<Resource> &p_graphics);
 
-	Ref<Resource> get_svg() const;
-	void set_svg(const Ref<Resource> &p_svg);
-
-    void set_display(ToveDisplay p_display);
-	ToveDisplay get_display();
+    void set_backend(ToveBackend p_backend);
+	ToveBackend get_backend();
 
 	float get_quality();
 	void set_quality(float quality);

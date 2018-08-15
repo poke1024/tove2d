@@ -17,15 +17,32 @@ class NodeVGEditor : public HBoxContainer {
 	GDCLASS(NodeVGEditor, HBoxContainer);
 
     NodeVG *node_vg;
+
 	int active_path;
+
 	Ref<ArrayMesh> overlay;
-	Transform2D overlay_xform;
+	Transform2D overlay_full_xform;
+	Transform2D overlay_draw_xform;
 
 	ToolButton *button_create;
 	ToolButton *button_edit;
 	ToolButton *button_delete;
+	ToolButton *button_bake;
 
-	struct Vertex {
+	struct SubpathId {
+		SubpathId();
+		SubpathId(int p_path, int p_subpath);
+
+		bool operator==(const SubpathId &p_id) const;
+		bool operator!=(const SubpathId &p_id) const;
+
+		bool valid() const;
+
+		int path;
+		int subpath;
+	};
+
+	struct Vertex : public SubpathId {
 		Vertex();
 		Vertex(int p_pt);
 		Vertex(int p_path, int p_subpath, int p_pt);
@@ -35,8 +52,6 @@ class NodeVGEditor : public HBoxContainer {
 
 		bool valid() const;
 
-		int path;
-		int subpath;
 		int pt;
 	};
 
@@ -48,14 +63,12 @@ class NodeVGEditor : public HBoxContainer {
 		Vector2 pos;
 	};
 
-	struct SubpathPos {
+	struct SubpathPos : public SubpathId {
 		SubpathPos();
 		SubpathPos(int p_path, int p_subpath, float p_t);
 
 		bool valid() const;
 
-		int path;
-		int subpath;
 		float t;
 	};
 
@@ -115,10 +128,15 @@ class NodeVGEditor : public HBoxContainer {
 	};
 
 	PosVertex edited_point;
+	SubpathId edited_path;
 	Vertex hover_point; // point under mouse cursor
 	Vertex selected_point; // currently selected
 
 	Array pre_move_edit;
+
+	uint64_t mb_down_time;
+	Vector2 mb_down_where;
+	SubpathPos mb_down_at;
 
 	CanvasItemEditor *canvas_item_editor;
 	EditorNode *editor;
@@ -140,8 +158,7 @@ protected:
 	UndoRedo *undo_redo;
 
 	virtual void _menu_option(int p_option);
-	void _wip_close();
-	bool _delete_point(const Vector2 &p_gpoint);
+	void _create_mesh_node();
 
 	void _notification(int p_what);
 	void _node_removed(Node *p_node);
@@ -156,9 +173,9 @@ protected:
 	bool _is_empty() const;
 	void _commit_action();
 
-	Array _get_points(const Vertex &p_vertex);
-	Array _get_points(const SubpathPos &p_pos);
+	Array _get_points(const SubpathId &p_id);
 	void _update_overlay(bool p_always_update = false);
+	virtual void _changed_callback(Object *p_changed, const char *p_prop);
 
 protected:
 	virtual Node2D *_get_node() const;
@@ -172,6 +189,7 @@ public:
 	void forward_draw_over_viewport(Control *p_overlay);
 
 	void edit(Node *p_node_vg);
+
 	NodeVGEditor(EditorNode *p_editor);
 };
 
