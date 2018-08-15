@@ -164,14 +164,14 @@ tove.init = function(path)
 	local bit = require("bit")
 
 	tove.lineJoins = {
-		miter = lib.LINEJOIN_MITER,
-		round = lib.LINEJOIN_ROUND,
-		bevel = lib.LINEJOIN_BEVEL
+		miter = lib.TOVE_LINEJOIN_MITER,
+		round = lib.TOVE_LINEJOIN_ROUND,
+		bevel = lib.TOVE_LINEJOIN_BEVEL
 	}
 
 	tove.fillRules = {
-		nonzero = lib.FILLRULE_NON_ZERO,
-		evenodd = lib.FILLRULE_EVEN_ODD
+		nonzero = lib.TOVE_FILLRULE_NON_ZERO,
+		evenodd = lib.TOVE_FILLRULE_EVEN_ODD
 	}
 
 	local function findEnum(enums, value)

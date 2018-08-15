@@ -95,6 +95,8 @@ void Path::set(const NSVGshape *shape) {
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	strcpy(nsvg.id, shape->id);
+	name = nsvg.id;
+
 	_setLineColor(NSVGpaintToPaint(shape->stroke));
 	_setFillColor(NSVGpaintToPaint(shape->fill));
 	nsvg.opacity = shape->opacity;
@@ -209,6 +211,8 @@ Path::Path(const Path *path) :
 	memset(&nsvg, 0, sizeof(nsvg));
 
 	strcpy(nsvg.id, path->nsvg.id);
+	name = path->name;
+
 	_setFillColor(path->fillColor ? path->fillColor->clone() : PaintRef());
 	_setLineColor(path->lineColor ? path->lineColor->clone() : PaintRef());
 
@@ -354,6 +358,10 @@ const float *Path::getExactBounds() {
 void Path::addSubpath(const SubpathRef &t) {
 	closeSubpath();
 	_append(t);
+}
+
+void Path::setName(const char *name) {
+	this->name = name;
 }
 
 void Path::setLineDash(const float *dashes, int count) {
@@ -513,20 +521,20 @@ void Path::setMiterLimit(float limit) {
 ToveFillRule Path::getFillRule() const {
 	switch (static_cast<NSVGfillRule>(nsvg.fillRule)) {
 		case NSVG_FILLRULE_NONZERO:
-			return FILLRULE_NON_ZERO;
+			return TOVE_FILLRULE_NON_ZERO;
 		case NSVG_FILLRULE_EVENODD:
-			return FILLRULE_EVEN_ODD;
+			return TOVE_FILLRULE_EVEN_ODD;
 		default:
-			return FILLRULE_NON_ZERO;
+			return TOVE_FILLRULE_NON_ZERO;
 	}
 }
 
 void Path::setFillRule(ToveFillRule rule) {
 	NSVGfillRule nsvgRule = NSVG_FILLRULE_NONZERO;
 
-	if (rule == FILLRULE_NON_ZERO) {
+	if (rule == TOVE_FILLRULE_NON_ZERO) {
 		nsvgRule = NSVG_FILLRULE_EVENODD;
-	} else if (rule == FILLRULE_EVEN_ODD) {
+	} else if (rule == TOVE_FILLRULE_EVEN_ODD) {
 		nsvgRule = NSVG_FILLRULE_NONZERO;
 	}
 
@@ -590,7 +598,7 @@ bool Path::isInside(float x, float y) {
 	}
 
 	switch (getFillRule()) {
-		case FILLRULE_NON_ZERO: {
+		case TOVE_FILLRULE_NON_ZERO: {
 			NonZeroInsideTest test;
 			for (const auto &t : subpaths) {
 				if (t->isClosed()) {
@@ -599,7 +607,7 @@ bool Path::isInside(float x, float y) {
 			}
 			return test.get();
 		} break;
-		case FILLRULE_EVEN_ODD: {
+		case TOVE_FILLRULE_EVEN_ODD: {
 			EvenOddInsideTest test;
 			for (const auto &t : subpaths) {
 				if (t->isClosed()) {

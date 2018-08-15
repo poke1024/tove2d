@@ -257,11 +257,11 @@ float Transform::getScale() const {
 
 NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 	switch (join) {
-		case LINEJOIN_MITER:
+		case TOVE_LINEJOIN_MITER:
 			return NSVG_JOIN_MITER;
-		case LINEJOIN_ROUND:
+		case TOVE_LINEJOIN_ROUND:
 			return NSVG_JOIN_ROUND;
-		case LINEJOIN_BEVEL:
+		case TOVE_LINEJOIN_BEVEL:
 			return NSVG_JOIN_BEVEL;
 	}
 	return NSVG_JOIN_MITER;
@@ -270,13 +270,13 @@ NSVGlineJoin nsvgLineJoin(ToveLineJoin join) {
 ToveLineJoin toveLineJoin(NSVGlineJoin join) {
 	switch (join) {
 		case NSVG_JOIN_MITER:
-			return LINEJOIN_MITER;
+			return TOVE_LINEJOIN_MITER;
 		case NSVG_JOIN_ROUND:
-			return LINEJOIN_ROUND;
+			return TOVE_LINEJOIN_ROUND;
 		case NSVG_JOIN_BEVEL:
-			return LINEJOIN_BEVEL;
+			return TOVE_LINEJOIN_BEVEL;
 	}
-	return LINEJOIN_MITER;
+	return TOVE_LINEJOIN_MITER;
 }
 } // namespace nsvg
 

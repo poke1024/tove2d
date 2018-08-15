@@ -287,11 +287,11 @@ ToveChangeFlags GeometryFeedImpl::beginUpdate() {
 	geometryData.strokeWidth = lineWidth;
 
 	switch (path->getLineJoin()) {
-		case LINEJOIN_BEVEL:
-		case LINEJOIN_ROUND: // not supported.
+		case TOVE_LINEJOIN_BEVEL:
+		case TOVE_LINEJOIN_ROUND: // not supported.
 			geometryData.miterLimit = 0;
 			break;
-		case LINEJOIN_MITER:
+		case TOVE_LINEJOIN_MITER:
 			geometryData.miterLimit = path->getMiterLimit();
 			break;
 	}

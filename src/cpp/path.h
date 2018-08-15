@@ -34,6 +34,7 @@ private:
 
 	PaintRef fillColor;
 	PaintRef lineColor;
+	std::string name;
 
 	int16_t pathIndex;
 	uint8_t changes;
@@ -77,6 +78,11 @@ public:
 	const float *getExactBounds();
 
 	void addSubpath(const SubpathRef &t);
+
+	void setName(const char *name);
+	inline const char *getName() const {
+		return name.c_str();
+	}
 
 	inline void setFillColor(const PaintRef &color) {
 		_setFillColor(color);

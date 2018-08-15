@@ -65,7 +65,7 @@ protected:
 
 		if (style < PAINT_LINEAR_GRADIENT) {
 			if (style == PAINT_SOLID) {
-				//RGBA old = paintData.rgba;
+				//ToveRGBA old = paintData.rgba;
 				paint->getRGBA(paintData.rgba, opacity);
 
 				if (gradient.arguments) {

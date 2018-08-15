@@ -76,8 +76,8 @@ void ColorSet(TovePaintRef color, float r, float g, float b, float a) {
 	deref(color)->setRGBA(r, g, b, a);
 }
 
-RGBA ColorGet(TovePaintRef color, float opacity) {
-	RGBA rgba;
+ToveRGBA ColorGet(TovePaintRef color, float opacity) {
+	ToveRGBA rgba;
 	deref(color)->getRGBA(rgba, opacity);
 	return rgba;
 }

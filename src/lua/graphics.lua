@@ -358,8 +358,8 @@ function Graphics:animate(a, b, t)
 end
 
 local orientations = {
-	cw = lib.ORIENTATION_CW,
-	ccw = lib.ORIENTATION_CCW
+	cw = lib.TOVE_ORIENTATION_CW,
+	ccw = lib.TOVE_ORIENTATION_CCW
 }
 
 function Graphics:setOrientation(orientation)

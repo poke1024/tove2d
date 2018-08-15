@@ -10,9 +10,9 @@
 -- *****************************************************************
 
 local _holes = {
-	none = lib.HOLES_NONE,
-	cw = lib.HOLES_CW,
-	ccw = lib.HOLES_CCW
+	none = lib.TOVE_HOLES_NONE,
+	cw = lib.TOVE_HOLES_CW,
+	ccw = lib.TOVE_HOLES_CCW
 }
 
 tove.quality = {}
@@ -20,7 +20,7 @@ tove.quality = {}
 local fixed = {}
 tove.quality.fixed = function(depth, holes)
 	return setmetatable({depth = depth,
-		holes = _holes[holes] or lib.HOLES_CW}, fixed)
+		holes = _holes[holes] or lib.TOVE_HOLES_CW}, fixed)
 end
 
 local maxerror = {}
@@ -85,7 +85,7 @@ end
 
 return function (quality, usage)
 	local t = type(quality)
-	local holes = lib.HOLES_CW  -- default for adaptive.
+	local holes = lib.TOVE_HOLES_CW  -- default for adaptive.
 	if t == "number" then
 		if usage["points"] == "dynamic" then
 			local record = ffi.new("ToveTesselationQuality")

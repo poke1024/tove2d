@@ -35,25 +35,25 @@ typedef enum {
 } TovePaintType;
 
 typedef enum {
-	FILLRULE_NON_ZERO = 0,
-	FILLRULE_EVEN_ODD = 1
+	TOVE_FILLRULE_NON_ZERO = 0,
+	TOVE_FILLRULE_EVEN_ODD = 1
 } ToveFillRule;
 
 typedef enum {
-	LINEJOIN_MITER,
-	LINEJOIN_ROUND,
-	LINEJOIN_BEVEL
+	TOVE_LINEJOIN_MITER,
+	TOVE_LINEJOIN_ROUND,
+	TOVE_LINEJOIN_BEVEL
 } ToveLineJoin;
 
 typedef enum {
-	ORIENTATION_CW = 0,
-	ORIENTATION_CCW = 1
+	TOVE_ORIENTATION_CW = 0,
+	TOVE_ORIENTATION_CCW = 1
 } ToveOrientation;
 
 typedef enum {
-	HOLES_NONE,
-	HOLES_CW,
-	HOLES_CCW
+	TOVE_HOLES_NONE,
+	TOVE_HOLES_CW,
+	TOVE_HOLES_CCW
 } ToveHoles;
 
 enum {
@@ -124,10 +124,10 @@ typedef struct {
 
 typedef struct {
 	float r, g, b, a;
-} RGBA;
+} ToveRGBA;
 
 typedef struct {
-	RGBA rgba;
+	ToveRGBA rgba;
 	float offset;
 } ToveColorStop;
 
@@ -177,7 +177,7 @@ typedef struct {
 
 typedef struct {
 	int8_t style; // TovePaintType
-	RGBA rgba;
+	ToveRGBA rgba;
 	ToveGradientData gradient;
 } TovePaintData;
 

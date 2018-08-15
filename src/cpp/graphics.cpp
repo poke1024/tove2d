@@ -352,7 +352,7 @@ void Graphics::addPath(const PathRef &path) {
 
 PathRef Graphics::getPathByName(const char *name) const {
     for (const PathRef &p : paths) {
-        if (strcmp(p->nsvg.id, name) == 0) {
+        if (strcmp(p->getName(), name) == 0) {
             return p;
         }
     }

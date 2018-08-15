@@ -44,17 +44,17 @@ inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
 
 static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
 	switch (mode) {
-		case HOLES_NONE:
+		case TOVE_HOLES_NONE:
 			if (poly.GetOrientation() == TPPL_CW) {
 				poly.Invert();
 			}
 			break;
-		case HOLES_CW:
+		case TOVE_HOLES_CW:
 			if (poly.GetOrientation() == TPPL_CW) {
 				poly.SetHole(true);
 			}
 			break;
-		case HOLES_CCW:
+		case TOVE_HOLES_CCW:
 			poly.Invert();
 			if (poly.GetOrientation() == TPPL_CW) {
 				poly.SetHole(true);

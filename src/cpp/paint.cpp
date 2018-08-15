@@ -15,7 +15,7 @@
 
 BEGIN_TOVE_NAMESPACE
 
-void copyColor(RGBA &rgba, uint32_t color, float opacity) {
+void copyColor(ToveRGBA &rgba, uint32_t color, float opacity) {
 	uint32_t c;
 	if (opacity < 1.0f) {
 		c = nsvg::applyOpacity(color, opacity);

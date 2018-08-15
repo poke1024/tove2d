@@ -8,7 +8,7 @@ EXPORT int PaintGetNumColors(TovePaintRef color);
 EXPORT ToveColorStop PaintGetColorStop(TovePaintRef color, int i, float opacity);
 EXPORT TovePaintRef NewColor(float r, float g, float b, float a);
 EXPORT void ColorSet(TovePaintRef color, float r, float g, float b, float a);
-EXPORT RGBA ColorGet(TovePaintRef color, float opacity);
+EXPORT ToveRGBA ColorGet(TovePaintRef color, float opacity);
 EXPORT TovePaintRef NewLinearGradient(float x1, float y1, float x2, float y2);
 EXPORT TovePaintRef NewRadialGradient(float cx, float cy, float fx, float fy, float r);
 EXPORT ToveGradientParameters GradientGetParameters(TovePaintRef gradient);

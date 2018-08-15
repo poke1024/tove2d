@@ -18,7 +18,7 @@
 
 BEGIN_TOVE_NAMESPACE
 
-void copyColor(RGBA &rgba, uint32_t color, float opacity);
+void copyColor(ToveRGBA &rgba, uint32_t color, float opacity);
 
 class AbstractPaint : public Claimable<Path> {
 protected:
@@ -39,14 +39,14 @@ public:
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) = 0;
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) = 0;
-	virtual float getColorStop(int i, RGBA &rgba, float opacity) = 0;
+	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity) = 0;
 	virtual int getNumColorStops() const = 0;
 	virtual NSVGgradient *getNSVGgradient() const = 0;
 	virtual void getGradientMatrix(float *m, float scale) const = 0;
 
 	virtual void setRGBA(float r, float g, float b, float a) {
 	}
-	virtual void getRGBA(RGBA &rgba, float opacity) const {
+	virtual void getRGBA(ToveRGBA &rgba, float opacity) const {
 		rgba.r = 0.0;
 		rgba.g = 0.0;
 		rgba.b = 0.0;
@@ -67,7 +67,7 @@ public:
 	}
 
 	virtual PaintRef clone() const {
-		RGBA rgba;
+		ToveRGBA rgba;
 		getRGBA(rgba, 1.0);
 		return std::make_shared<Color>(rgba.r, rgba.g, rgba.b, rgba.a);
 	}
@@ -90,7 +90,7 @@ public:
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) {
 	}
 
-	virtual float getColorStop(int i, RGBA &rgba, float opacity) {
+	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity) {
 		getRGBA(rgba, opacity);
 		return 0.0f;
 	}
@@ -113,7 +113,7 @@ public:
 
 	virtual void store(NSVGpaint &paint);
 
-	virtual void getRGBA(RGBA &rgba, float opacity) const {
+	virtual void getRGBA(ToveRGBA &rgba, float opacity) const {
 		copyColor(rgba, color, opacity);
 	}
 };
@@ -170,7 +170,7 @@ public:
 		sorted = false;
 	}
 
-	virtual float getColorStop(int i, RGBA &rgba, float opacity) {
+	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity) {
 		if (i >= 0 && i < nsvg->nstops) {
 			copyColor(rgba, nsvg->stops[i].color, opacity);
 			return nsvg->stops[i].offset;

@@ -1127,7 +1127,7 @@ ToveOrientation Subpath::getOrientation() const {
 		const float *p2 = &nsvg.pts[i2 * 2];
 		area += p1[0] * p2[1] - p1[1] * p2[0];
 	}
-	return area < 0 ? ORIENTATION_CW : ORIENTATION_CCW;
+	return area < 0 ? TOVE_ORIENTATION_CW : TOVE_ORIENTATION_CCW;
 }
 
 void Subpath::setOrientation(ToveOrientation orientation) {

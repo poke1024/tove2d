@@ -103,7 +103,7 @@ void AdaptiveMeshifier::renderStrokes(
 			paths.push_back(node->Contour);
 			paths.insert(paths.end(), holes.begin(), holes.end());
 			clip(graphics, path, paths);
-			submesh->addClipperPaths(paths, flattener.getScale(), HOLES_CW);
+			submesh->addClipperPaths(paths, flattener.getScale(), TOVE_HOLES_CW);
 		}
 		holes.clear();
 	}
@@ -138,9 +138,9 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		clip(graphics, path, t.fill);
 		const int index0 = fill->getVertexCount();
- 		// ClipperLib always gives us HOLES_CW.
+ 		// ClipperLib always gives us TOVE_HOLES_CW.
  		fill->submesh(path, 0)->addClipperPaths(
-			t.fill, flattener.getScale(), HOLES_CW);
+			t.fill, flattener.getScale(), TOVE_HOLES_CW);
 		fill->setFillColor(path, index0, fill->getVertexCount() - index0);
 	}
 
@@ -229,7 +229,7 @@ ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
 	bool trianglesChanged = false;
 
 	const float miterLimit = path->getMiterLimit();
-	const bool miter = path->getLineJoin() == LINEJOIN_MITER &&
+	const bool miter = path->getLineJoin() == TOVE_LINEJOIN_MITER &&
 		miterLimit > 0.0f;
 
 	// in case of stroke-only paths, we still produce the fill vertices for
