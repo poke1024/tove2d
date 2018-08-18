@@ -23,8 +23,9 @@ public:
 	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
 	virtual void _changed_callback(Object *p_changed, const char *p_prop);
 
-	tove::GraphicsRef get_tove_graphics() const;
-	Ref<VectorGraphics> get_vector_graphics() const;
+	inline Ref<VectorGraphics> get_vg() const {
+		return vg;
+	}
 
 	Ref<Resource> get_graphics() const;
 	void set_graphics(const Ref<Resource> &p_graphics);

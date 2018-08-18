@@ -8,7 +8,7 @@ void NodeVG::_notification(int p_what) {
 
 	if (p_what == NOTIFICATION_DRAW) {
 		if (vg.is_valid()) {
-			draw_mesh(vg->get_mesh(), vg->get_texture(), Ref<Texture>());
+			vg->draw(this);
 		}
 	}
 }
@@ -93,19 +93,16 @@ float NodeVG::get_quality() {
 }
 
 Rect2 NodeVG::_edit_get_rect() const {
-	const tove::GraphicsRef tove_graphics = get_tove_graphics();
-	if (tove_graphics.get()) {
-		const float *bounds = tove_graphics->getBounds();
-		return Rect2(bounds[0], bounds[1], bounds[2], bounds[3]);
+	if (vg.is_valid()) {
+		return const_cast<VectorGraphics*>(vg.ptr())->get_bounds();
 	} else {
 		return Node2D::_edit_get_rect();
 	}
 }
 
 bool NodeVG::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
-	const tove::GraphicsRef tove_graphics = get_tove_graphics();
-	if (tove_graphics.get()) {
-		return tove_graphics->hit(p_point.x, p_point.y).get();
+	if (vg.is_valid()) {
+		return vg->find_path_at_point(p_point) >= 0;
 	} else {
 		return false;
 	}
@@ -122,14 +119,6 @@ void NodeVG::_changed_callback(Object *p_changed, const char *p_prop) {
  		_change_notify(p_prop); // propagate to editor
 #endif
 	}
-}
-
-Ref<VectorGraphics> NodeVG::get_vector_graphics() const {
-	return vg;
-}
-
-tove::GraphicsRef NodeVG::get_tove_graphics() const {
-	return vg.is_valid() ? vg->get_tove_graphics() : tove::GraphicsRef();
 }
 
 void NodeVG::set_points(int p_path, int p_subpath, Array p_points) {

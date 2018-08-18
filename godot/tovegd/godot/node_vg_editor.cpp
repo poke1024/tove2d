@@ -23,7 +23,7 @@ inline bool is_control_point(int pt) {
 }
 
 Array NodeVGEditor::_get_points(const SubpathId &p_id) {
-	tove::PathRef path = node_vg->get_tove_graphics()->getPath(p_id.path);
+	tove::PathRef path = node_vg->get_vg()->get_tove_path(p_id.path);
 	return subpath_points_array(path->getSubpath(p_id.subpath));
 }
 
@@ -34,7 +34,7 @@ void NodeVGEditor::_set_active_path(int p_active_path) {
 		canvas_item_editor->get_viewport_control()->update();
 
 		if (p_active_path >= 0) {
-			tove::PathRef path = node_vg->get_tove_graphics()->getPath(p_active_path);
+			tove::PathRef path = node_vg->get_vg()->get_tove_path(p_active_path);
 			line_width_slider->set_value(path->getLineWidth());
 			line_width_slider->show();
 		} else {
@@ -143,7 +143,7 @@ bool NodeVGEditor::_is_empty() const {
 	if (!_get_node())
 		return true;
 
-	return node_vg->get_tove_graphics()->getNumPaths() == 0;
+	return node_vg->get_vg()->get_num_paths() == 0;
 }
 
 void NodeVGEditor::_commit_action() {
@@ -155,7 +155,7 @@ void NodeVGEditor::_commit_action() {
 
 bool NodeVGEditor::_has_resource() const {
 
-	return node_vg && node_vg->get_vector_graphics().is_valid();
+	return node_vg && node_vg->get_vg().is_valid();
 }
 
 void NodeVGEditor::_create_resource() {
@@ -191,11 +191,11 @@ void NodeVGEditor::_menu_option(int p_option) {
 
 void NodeVGEditor::_create_mesh_node() {
 
-	if (!node_vg || !node_vg->get_vector_graphics().is_valid()) {
+	if (!node_vg || !node_vg->get_vg().is_valid()) {
 		return;
 	}
 
-	MeshInstance2D *baked = node_vg->get_vector_graphics()->create_mesh_node();
+	MeshInstance2D *baked = node_vg->get_vg()->create_mesh_node();
 	EditorNode::get_singleton()->get_scene_tree_dock()->replace_node(node_vg, baked);
 	edit(NULL);
 }
@@ -384,17 +384,17 @@ bool NodeVGEditor::forward_gui_input(const Ref<InputEvent> &p_event) {
 				Vector2 cpoint = _get_node()->get_global_transform().affine_inverse().xform(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(gpoint)));
 				edited_point = PosVertex(edited_point, cpoint);
 
-				tove::SubpathRef subpath = node_vg->get_tove_graphics()->getPath(edited_point.path)->getSubpath(edited_point.subpath);
+				tove::SubpathRef subpath = node_vg->get_vg()->get_tove_path(edited_point.path)->getSubpath(edited_point.subpath);
 				subpath->move(edited_point.pt, cpoint.x, cpoint.y);
 
-				node_vg->get_vector_graphics()->set_dirty();
+				node_vg->get_vg()->set_dirty();
 				canvas_item_editor->get_viewport_control()->update();
 			} else if (edited_path.valid()) {
 				Vector2 cpoint = _get_node()->get_global_transform().affine_inverse().xform(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(gpoint)));
-				tove::SubpathRef subpath = node_vg->get_tove_graphics()->getPath(mb_down_at.path)->getSubpath(mb_down_at.subpath);
+				tove::SubpathRef subpath = node_vg->get_vg()->get_tove_path(mb_down_at.path)->getSubpath(mb_down_at.subpath);
 				subpath->mould(mb_down_at.t, cpoint.x, cpoint.y);
 
-				node_vg->get_vector_graphics()->set_dirty();
+				node_vg->get_vg()->set_dirty();
 				canvas_item_editor->get_viewport_control()->update();
 			}
 		} else if (mode == MODE_EDIT || mode == MODE_CREATE) {
@@ -574,12 +574,11 @@ void NodeVGEditor::forward_draw_over_viewport(Control *p_overlay) {
 		_get_node()->get_global_transform();
 	const Ref<Texture> handle = get_icon("EditorHandle", "EditorIcons");
 
-	const tove::GraphicsRef graphics = node_vg->get_tove_graphics();
-	if (active_path < 0 || active_path >= graphics->getNumPaths()) {
+	if (active_path < 0 || active_path >= node_vg->get_vg()->get_num_paths()) {
 		return;
 	}
 
-	const tove::PathRef path = graphics->getPath(active_path);
+	const tove::PathRef path = node_vg->get_vg()->get_tove_path(active_path);
 	const Vertex active_point = get_active_point();
 
 	_update_overlay();
@@ -622,7 +621,7 @@ void NodeVGEditor::forward_draw_over_viewport(Control *p_overlay) {
 
 void NodeVGEditor::edit(Node *p_node_vg) {
 
-	if (p_node_vg && !Object::cast_to<NodeVG>(p_node_vg)->get_vector_graphics().is_valid()) {
+	if (p_node_vg && !Object::cast_to<NodeVG>(p_node_vg)->get_vg().is_valid()) {
 		p_node_vg = NULL;
 	}
 
@@ -675,9 +674,8 @@ void NodeVGEditor::_bind_methods() {
 
 void NodeVGEditor::remove_point(const Vertex &p_vertex) {
 
-	Ref<VectorGraphics> vg = node_vg->get_vector_graphics();
-	tove::GraphicsRef graphics = vg->get_tove_graphics();
-	tove::PathRef path = graphics->getPath(p_vertex.path);
+	Ref<VectorGraphics> vg = node_vg->get_vg();
+	tove::PathRef path = vg->get_tove_path(p_vertex.path);
 	tove::SubpathRef subpath = path->getSubpath(p_vertex.subpath);
 
 	if (subpath->getNumPoints() >= 4) {
@@ -711,31 +709,20 @@ NodeVGEditor::Vertex NodeVGEditor::get_active_point() const {
 	return hover_point.valid() ? hover_point : selected_point;
 }
 
-static Transform2D xform_inverse(const Transform2D &xform) {
-	float a = xform.elements[0][0];
-	float b = xform.elements[1][0];
-	float c = xform.elements[0][1];
-	float d = xform.elements[1][1];
-	float e = xform.elements[2][0];
-	float f = xform.elements[2][1];
-	float det = a * d - b * c;
-	return Transform2D(d / det, -c / det, -b / det, a / det, (-d * e + b * f) / det, (c * e - a * f) / det);
-}
-
 static Vector2 basis_xform_inv(const Transform2D &xform, const Vector2 &v) {
-	float a = xform.elements[0][0];
-	float b = xform.elements[1][0];
-	float c = xform.elements[0][1];
-	float d = xform.elements[1][1];
-	float det = a * d - b * c;
-	return Vector2((v.x * d + v.y * -b) / det, (v.x * -c + v.y * a) / det);
+	return xform.affine_inverse().basis_xform(v);
 }
 
 static Vector2 xform_inv(const Transform2D &xform, const Vector2 &p) {
-	return basis_xform_inv(xform, p - xform.elements[2]);
+	return xform.affine_inverse().xform(p);
 }
 
 NodeVGEditor::PosVertex NodeVGEditor::closest_point(const Vector2 &p_pos, bool p_cp) const {
+
+	if (!node_vg || !node_vg->get_vg().is_valid() || active_path < 0) {
+		return PosVertex();
+	}
+
 	const real_t grab_threshold = EDITOR_DEF("editors/poly_editor/point_grab_radius", 8);
 
 	const Transform2D xform = canvas_item_editor->get_canvas_transform() *
@@ -747,11 +734,10 @@ NodeVGEditor::PosVertex NodeVGEditor::closest_point(const Vector2 &p_pos, bool p
 	PosVertex closest;
 	real_t closest_dist = eps;
 
-	tove::GraphicsRef graphics = node_vg->get_tove_graphics();
-	if (active_path < 0 || active_path >= graphics->getNumPaths()) {
+	if (active_path < 0 || active_path >= node_vg->get_vg()->get_num_paths()) {
 		return PosVertex();
 	}
-	tove::PathRef path = graphics->getPath(active_path);
+	tove::PathRef path = node_vg->get_vg()->get_tove_path(active_path);
 
 	{
 		PointIterator pt_iterator(active_path, path);
@@ -782,13 +768,11 @@ NodeVGEditor::PosVertex NodeVGEditor::closest_point(const Vector2 &p_pos, bool p
 
 NodeVGEditor::SubpathPos NodeVGEditor::closest_subpath_point(const Vector2 &p_pos) const {
 
-	if (!node_vg || active_path < 0) {
+	if (!node_vg || !node_vg->get_vg().is_valid() || active_path < 0) {
 		return SubpathPos();
 	}
 
-	tove::GraphicsRef graphics = node_vg->get_tove_graphics();
-	ERR_FAIL_COND_V(!graphics.get(), SubpathPos());
-	ERR_FAIL_INDEX_V(active_path, graphics->getNumPaths(), SubpathPos());
+	ERR_FAIL_INDEX_V(active_path, node_vg->get_vg()->get_num_paths(), SubpathPos());
 
 	const real_t grab_threshold = EDITOR_DEF("editors/poly_editor/point_grab_radius", 8);
 
@@ -799,7 +783,7 @@ NodeVGEditor::SubpathPos NodeVGEditor::closest_subpath_point(const Vector2 &p_po
 	float dmin = basis_xform_inv(xform, Vector2(0.5, 0)).length();
 	float dmax = basis_xform_inv(xform, Vector2(grab_threshold, 0)).length();
 
-	tove::PathRef path = graphics->getPath(active_path);
+	tove::PathRef path = node_vg->get_vg()->get_tove_path(active_path);
 	const int n_subpaths = path->getNumSubpaths();
 	for (int j = 0; j < n_subpaths; j++) {
 		const tove::SubpathRef subpath = path->getSubpath(j);
@@ -813,35 +797,24 @@ NodeVGEditor::SubpathPos NodeVGEditor::closest_subpath_point(const Vector2 &p_po
 }
 
 int NodeVGEditor::find_path_at_point(const Vector2 &p_pos) const {
-	tove::GraphicsRef graphics = node_vg->get_tove_graphics();
-	ERR_FAIL_COND_V(!graphics.get(), -1);
+
+	if (!node_vg || !node_vg->get_vg().is_valid() || active_path < 0) {
+		return -1;
+	}
 
 	const Transform2D xform = canvas_item_editor->get_canvas_transform() *
 		_get_node()->get_global_transform();
 
-	const Vector2 pos = xform_inv(xform, p_pos);
-	tove::PathRef path_ref = graphics->hit(pos.x, pos.y);
-	if (!path_ref.get()) {
-		return -1;
-	}
-
-	for (int i = 0; i < graphics->getNumPaths(); i++) {
-		if (graphics->getPath(i) == path_ref) {
-			return i;
-		}
-	}
-
-	return -1;
+	return node_vg->get_vg()->find_path_at_point(xform_inv(xform, p_pos));
 }
 
 void NodeVGEditor::_update_overlay(bool p_always_update) {
-	if (!node_vg || !node_vg->get_vector_graphics().is_valid()) {
+	if (!node_vg || !node_vg->get_vg().is_valid()) {
 		overlay = Ref<Mesh>();
 		return;
 	}
 
-	tove::GraphicsRef tove_graphics = node_vg->get_tove_graphics();
-	if (active_path < 0 || active_path >= tove_graphics->getNumPaths()) {
+	if (active_path < 0 || active_path >= node_vg->get_vg()->get_num_paths()) {
 		overlay = Ref<Mesh>();
 		return;
 	}
@@ -867,7 +840,7 @@ void NodeVGEditor::_update_overlay(bool p_always_update) {
 	);
 
 	tove::PathRef tove_path = std::make_shared<tove::Path>();
-	tove_path->set(tove_graphics->getPath(active_path), transform);
+	tove_path->set(node_vg->get_vg()->get_tove_path(active_path), transform);
 
 	tove::GraphicsRef overlay_graphics = std::make_shared<tove::Graphics>();
 	overlay_graphics->addPath(tove_path);
@@ -877,7 +850,8 @@ void NodeVGEditor::_update_overlay(bool p_always_update) {
 	tove_path->setLineWidth(2);
 
     overlay = Ref<ArrayMesh>(memnew(ArrayMesh));
-	tove_graphics_to_mesh(overlay, overlay_graphics, 0.75);
+	ToveGraphicsBackend backend(overlay_graphics, 0.75);
+	backend.mesh(overlay);
 	overlay_full_xform = xform;
 }
 
@@ -889,9 +863,9 @@ void NodeVGEditor::_changed_callback(Object *p_changed, const char *p_prop) {
 
 void NodeVGEditor::_line_width_changed(double p_value) {
 	if (active_path >= 0) {
-		tove::PathRef path = node_vg->get_tove_graphics()->getPath(active_path);
+		tove::PathRef path = node_vg->get_vg()->get_tove_path(active_path);
 		path->setLineWidth(p_value);
-		node_vg->get_vector_graphics()->set_dirty();
+		node_vg->get_vg()->set_dirty();
 		canvas_item_editor->get_viewport_control()->update();		
 	}
 }

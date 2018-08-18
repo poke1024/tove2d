@@ -13,17 +13,30 @@ class VectorGraphics : public Resource {
 	GDCLASS(VectorGraphics, Resource);
 	RES_BASE_EXTENSION("vg");
 
-	tove::GraphicsRef tove_graphics;
-	Array paths;
-
 	ToveBackend backend;
 	float quality;
 
-	Ref<ArrayMesh> mesh;
-	Ref<ImageTexture> texture;
-	bool dirty;
+	struct Path {
+		Transform2D transform;
+		tove::PathRef tove_path;
+		ToveMeshData mesh_data;
+		bool dirty;
+		inline Path() : dirty(false) {}
+	};
+	Vector<Path> paths;
+	tove::ClipSetRef clip_set;
 
-	void update_mesh();
+	bool any_path_dirty;
+	bool editing;
+	Rect2 bounds;
+	ToveMeshData composite;
+
+	tove::GraphicsRef create_tove_graphics() const;
+	void update_mesh_representation();
+
+	inline bool use_composite_mesh_representation() const {
+		return editing;
+	}
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -36,22 +49,19 @@ public:
 	VectorGraphics();
 	virtual ~VectorGraphics();
 
+	void draw(CanvasItem *p_item);
+
 	Error load(const String &p_path, const String &p_units, float p_dpi);
 	void load_default();
 
-	inline const Ref<ArrayMesh> &get_mesh() {
-		if (dirty) {
-			update_mesh();
+	inline const Rect2 &get_bounds() {
+		if (any_path_dirty) {
+			update_mesh_representation();
 		}
-		return mesh;
+		return bounds;
 	}
 
-	inline const Ref<ImageTexture> &get_texture() {
-		if (dirty) {
-			update_mesh();
-		}
-		return texture;
-	}
+	int find_path_at_point(const Point2 &p_point) const;
 
 	Ref<Image> rasterize(
         int p_width, int p_height,
@@ -63,13 +73,19 @@ public:
 	void set_quality(float quality);
 	float get_quality();
 
-	tove::GraphicsRef get_tove_graphics() const;
+	inline int get_num_paths() const {
+		return paths.size();
+	}
+	inline const tove::PathRef &get_tove_path(int p_path) const {
+		return paths[p_path].tove_path;
+	}
+
 	MeshInstance2D *create_mesh_node();
 
 	void set_points(int p_path, int p_subpath, Array p_points);
 	void insert_curve(int p_path, int p_subpath, float p_t);
 	void remove_curve(int p_path, int p_subpath, int p_curve);
-	void set_dirty();
+	void set_dirty(int p_path = -1);
 };
 
 #endif // TOVEGD_GRAPHICS_H

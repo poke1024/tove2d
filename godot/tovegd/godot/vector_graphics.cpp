@@ -6,25 +6,49 @@
 #include "os/file_access.h"
 #include "scene/resources/primitive_meshes.h"
 
+inline Rect2 tove_bounds_to_rect2(const float *bounds) {
+	return Rect2(bounds[0], bounds[1],  bounds[2] - bounds[0], bounds[3] - bounds[1]);
+}
+
 VectorGraphics::VectorGraphics() {
     backend = TOVE_BACKEND_MESH;
 	quality = 0.5f;
-    mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
-	tove_graphics = std::make_shared<tove::Graphics>();
-	dirty = false;
+    composite.mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
+	any_path_dirty = false;
+	editing = true;
 }
 
 VectorGraphics::~VectorGraphics() {
 }
 
+void VectorGraphics::draw(CanvasItem *p_item) {
+	if (any_path_dirty) {
+		update_mesh_representation();
+	}
+
+	if (use_composite_mesh_representation()) {
+		p_item->draw_mesh(composite.mesh, composite.texture, Ref<Texture>());
+	} else {
+		const int n = paths.size();
+		for (int i = 0; i < n; i++) {
+			const Path &path = paths[i];
+			p_item->draw_set_transform_matrix(path.transform);
+			p_item->draw_mesh(path.mesh_data.mesh, path.mesh_data.texture, Ref<Texture>());			
+		}
+		p_item->draw_set_transform_matrix(Transform2D());
+	}
+}
+
 Error VectorGraphics::load(const String &p_path, const String &p_units, float p_dpi) {
+
+	paths.clear();
 
 	Vector<uint8_t> buf = FileAccess::get_file_as_array(p_path);
 
 	String str;
 	str.parse_utf8((const char *)buf.ptr(), buf.size());
 
-	tove_graphics = tove::Graphics::createFromSVG(
+	tove::GraphicsRef tove_graphics = tove::Graphics::createFromSVG(
 		str.utf8().ptr(), p_units.utf8().ptr(), p_dpi);
 
 	const float *bounds = tove_graphics->getExactBounds();
@@ -34,7 +58,16 @@ Error VectorGraphics::load(const String &p_path, const String &p_units, float p_
 		tove::nsvg::Transform transform(s, 0, 0, 0, s, 0);
 		transform.setWantsScaleLineWidth(true);
 		tove_graphics->set(tove_graphics, transform);
+
+		const int n = tove_graphics->getNumPaths();
+		for (int i = 0; i < n; i++) {
+			Path path;
+			path.tove_path = tove_graphics->getPath(i);
+			paths.push_back(path);
+		}
 	}
+
+	clip_set = tove_graphics->getClipSet();
 
 	set_dirty();
 	//_update_paths();
@@ -43,68 +76,90 @@ Error VectorGraphics::load(const String &p_path, const String &p_units, float p_
 }
 
 void VectorGraphics::load_default() {
-	tove_graphics = std::make_shared<tove::Graphics>();
+	tove::PathRef tove_path = std::make_shared<tove::Path>();
 
-	tove::SubpathRef subpath = tove_graphics->beginSubpath();
-	subpath->drawEllipse(0, 0, 100, 100);
+	tove::SubpathRef tove_subpath = std::make_shared<tove::Subpath>();
+	tove_subpath->drawEllipse(0, 0, 100, 100);
+	tove_path->addSubpath(tove_subpath);
 
-	tove_graphics->setFillColor(std::make_shared<tove::Color>(0.8, 0.1, 0.1));
-	tove_graphics->fill();
+	tove_path->setFillColor(std::make_shared<tove::Color>(0.8, 0.1, 0.1));
+	tove_path->setLineColor(std::make_shared<tove::Color>(0, 0, 0));
 
-	tove_graphics->setLineColor(std::make_shared<tove::Color>(0, 0, 0));
-	tove_graphics->stroke();
+	paths.clear();
+	Path path;
+	path.tove_path = tove_path;
+	paths.push_back(path);
 
 	set_dirty();
 	//_update_paths();
 }
 
-void VectorGraphics::update_mesh() {
+tove::GraphicsRef VectorGraphics::create_tove_graphics() const {
+	tove::GraphicsRef tove_graphics = std::make_shared<tove::Graphics>(clip_set);
+	for (int i = 0; i < paths.size(); i++) {
+		const Transform2D &t = paths[i].transform;
+		const Vector2 &tx = t.elements[0];
+		const Vector2 &ty = t.elements[1];
+		const Vector2 &to = t.elements[2];
+		tove::nsvg::Transform transform(tx.x, ty.x, to.x, ty.x, ty.y, to.y);
 
-	if (!dirty) {
+		const tove::PathRef tove_path = std::make_shared<tove::Path>();
+		tove_path->set(paths[i].tove_path, transform);
+		tove_graphics->addPath(tove_path);
+	}
+	return tove_graphics;
+}
+
+void VectorGraphics::update_mesh_representation() {
+
+	if (!any_path_dirty) {
 		return;
 	}
-	dirty = false;
+	any_path_dirty = false;
+	bounds = Rect2();
 
-    if (backend == TOVE_BACKEND_MESH) {
-		tove_graphics_to_mesh(mesh, tove_graphics, quality);
-		texture = Ref<ImageTexture>();
-    } else if (backend == TOVE_BACKEND_TEXTURE) {
-		tove_graphics_to_texture(mesh, tove_graphics, quality);
+	const int n_paths = paths.size();
 
-		const float resolution = quality;
-		const float *bounds = tove_graphics->getExactBounds();
-		const float w = bounds[2] - bounds[0];
-		const float h = bounds[3] - bounds[1];
+	if (use_composite_mesh_representation()) {
+		for (int i = 0; i < n_paths; i++) {
+			paths.write[i].dirty = false;
+		}
+		tove::GraphicsRef tove_graphics = create_tove_graphics();
+		composite = ToveGraphicsBackend(
+			tove_graphics, quality).create_mesh_data(backend);
+		bounds = tove_bounds_to_rect2(tove_graphics->getBounds());
+	} else {
+		for (int i = 0; i < n_paths; i++) {
+			Path &path = paths.write[i];
+			if (path.dirty) {
+				path.dirty = false;
+				path.mesh_data = TovePathBackend(
+					path.tove_path, clip_set, quality).create_mesh_data(backend);
+			}
 
-		texture.instance();
-		texture->create_from_image(rasterize(
-			w * resolution, h * resolution,
-			-bounds[0] * resolution, -bounds[1] * resolution,
-			resolution), ImageTexture::FLAG_FILTER);
+			if (i == 0) {
+				bounds = tove_bounds_to_rect2(path.tove_path->getBounds());
+			} else {
+				bounds.merge(tove_bounds_to_rect2(path.tove_path->getBounds()));
+			}
+		}
+
 	}
 }
 
+int VectorGraphics::find_path_at_point(const Point2 &p_point) const {
+	const int n = paths.size();
+	for (int i = 0; i < n; i++) {
+		Vector2 p = paths[i].transform.affine_inverse().xform(p_point);
+		if (paths[i].tove_path->isInside(p.x, p.y)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 Ref<Image> VectorGraphics::rasterize(int p_width, int p_height, float p_tx, float p_ty, float p_scale) const {
-
-	ERR_FAIL_COND_V(p_width <= 0, Ref<Image>());
-	ERR_FAIL_COND_V(p_height <= 0, Ref<Image>());
-
-	const int w = p_width;
-	const int h = p_height;
-
-	PoolVector<uint8_t> dst_image;
-	dst_image.resize(w * h * 4);
-
-    {
-        PoolVector<uint8_t>::Write dw = dst_image.write();
-		tove_graphics->rasterize(&dw[0], p_width, p_height, w * 4, p_tx, p_ty, p_scale, nullptr);
-    }
-
-	Ref<Image> image;
-	image.instance();
-	image->create(w, h, false, Image::FORMAT_RGBA8, dst_image);
-
-	return image;
+	return tove_graphics_rasterize(create_tove_graphics(), p_width, p_height, p_tx, p_ty, p_scale);
 }
 
 void VectorGraphics::_bind_methods() {
@@ -149,23 +204,20 @@ float VectorGraphics::get_quality() {
 	return quality;
 }
 
-tove::GraphicsRef VectorGraphics::get_tove_graphics() const {
-	return tove_graphics;
-}
-
 MeshInstance2D *VectorGraphics::create_mesh_node() {
-	update_mesh();
+	ToveMeshData mesh_data = ToveGraphicsBackend(
+		create_tove_graphics(), quality).create_mesh_data(backend);
 	MeshInstance2D *mesh_inst = memnew(MeshInstance2D);
-	mesh_inst->set_mesh(mesh);
-	mesh_inst->set_texture(texture);
+	mesh_inst->set_mesh(mesh_data.mesh);
+	mesh_inst->set_texture(mesh_data.texture);
 	return mesh_inst;
 }
 
 void VectorGraphics::set_points(int p_path, int p_subpath, Array p_points) {
-	ERR_FAIL_INDEX(p_path, tove_graphics->getNumPaths());
-	tove::PathRef path = tove_graphics->getPath(p_path);
-	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
-	tove::SubpathRef subpath = path->getSubpath(p_subpath);
+	ERR_FAIL_INDEX(p_path, paths.size());
+	tove::PathRef tove_path = paths[p_path].tove_path;
+	ERR_FAIL_INDEX(p_subpath, tove_path->getNumSubpaths());
+	tove::SubpathRef tove_subpath = tove_path->getSubpath(p_subpath);
 	const int n = p_points.size();
 	float *p = new float[2 * n];
 	for (int i = 0; i < n; i++) {
@@ -174,8 +226,8 @@ void VectorGraphics::set_points(int p_path, int p_subpath, Array p_points) {
 		p[2 * i + 1] = q.y;
 	}
 	try {
-		subpath->setPoints(p, n, false);
-		set_dirty();
+		tove_subpath->setPoints(p, n, false);
+		set_dirty(p_path);
 	} catch(...) {
 		delete[] p;
 		throw;	
@@ -184,31 +236,38 @@ void VectorGraphics::set_points(int p_path, int p_subpath, Array p_points) {
 }
 
 void VectorGraphics::insert_curve(int p_path, int p_subpath, float p_t) {
-	ERR_FAIL_INDEX(p_path, tove_graphics->getNumPaths());
-	tove::PathRef path = tove_graphics->getPath(p_path);
-	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
-	tove::SubpathRef subpath = path->getSubpath(p_subpath);
-	subpath->insertCurveAt(p_t);
-	set_dirty();
+	ERR_FAIL_INDEX(p_path, paths.size());
+	tove::PathRef tove_path = paths[p_path].tove_path;
+	ERR_FAIL_INDEX(p_subpath, tove_path->getNumSubpaths());
+	tove::SubpathRef tove_subpath = tove_path->getSubpath(p_subpath);
+	tove_subpath->insertCurveAt(p_t);
+	set_dirty(p_path);
 }
 
 void VectorGraphics::remove_curve(int p_path, int p_subpath, int p_curve) {
-	ERR_FAIL_INDEX(p_path, tove_graphics->getNumPaths());
-	tove::PathRef path = tove_graphics->getPath(p_path);
-	ERR_FAIL_INDEX(p_subpath, path->getNumSubpaths());
-	tove::SubpathRef subpath = path->getSubpath(p_subpath);
-	subpath->removeCurve(p_curve);
-	set_dirty();
+	ERR_FAIL_INDEX(p_path, paths.size());
+	tove::PathRef tove_path = paths[p_path].tove_path;
+	ERR_FAIL_INDEX(p_subpath, tove_path->getNumSubpaths());
+	tove::SubpathRef tove_subpath = tove_path->getSubpath(p_subpath);
+	tove_subpath->removeCurve(p_curve);
+	set_dirty(p_path);
 }
 
-void VectorGraphics::set_dirty() {
-	dirty = true;
+void VectorGraphics::set_dirty(int p_path) {
+	if (p_path < 0) {
+		for (int i = 0; i < paths.size(); i++) {
+			paths.write[i].dirty = true;
+		}
+	} else {
+		paths.write[p_path].dirty = true;
+	}
+	any_path_dirty = true;
 	_change_notify("curves");
 }
 
 bool VectorGraphics::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;
-	dirty = true;
+	any_path_dirty = true;
 
 	if (name == "backend") {
 		backend = static_cast<ToveBackend>((int)p_value);
@@ -225,13 +284,14 @@ bool VectorGraphics::_set(const StringName &p_name, const Variant &p_value) {
 		int path = name.get_slicec('/', 1).to_int();
 		String what = name.get_slicec('/', 2);
 
-		if (tove_graphics->getNumPaths() == path) {
-			tove::PathRef tove_path = std::make_shared<tove::Path>();
-			tove_graphics->addPath(tove_path);
+		if (paths.size() == path) {
+			Path p;
+			p.tove_path = std::make_shared<tove::Path>();
+			paths.push_back(p);
 		}
 
-		ERR_FAIL_INDEX_V(path, tove_graphics->getNumPaths(), false);
-		tove::PathRef tove_path = tove_graphics->getPath(path);
+		ERR_FAIL_INDEX_V(path, paths.size(), false);
+		tove::PathRef tove_path = paths[path].tove_path;
 
 		if (what == "name") {
 			String s = p_value;
@@ -316,8 +376,9 @@ bool VectorGraphics::_get(const StringName &p_name, Variant &r_ret) const {
 	} else if (name.begins_with("paths/")) {
 		int path = name.get_slicec('/', 1).to_int();
 		String what = name.get_slicec('/', 2);
-		ERR_FAIL_INDEX_V(path, tove_graphics->getNumPaths(), false);
-		tove::PathRef tove_path = tove_graphics->getPath(path);
+
+		ERR_FAIL_INDEX_V(path, paths.size(), false);
+		tove::PathRef tove_path = paths[path].tove_path;
 
 		if (what == "name") {
 			r_ret = String::utf8(tove_path->getName());
@@ -390,8 +451,8 @@ void VectorGraphics::_get_property_list(List<PropertyInfo> *p_list) const {
 	//p_list->push_back(PropertyInfo(Variant::STRING, "backend", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 	//p_list->push_back(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 
-	for (int i = 0; i < tove_graphics->getNumPaths(); i++) {
-		const tove::PathRef tove_path = tove_graphics->getPath(i);
+	for (int i = 0; i < paths.size(); i++) {
+		const tove::PathRef tove_path = paths[i].tove_path;
 		const String path_prefix = "paths/" + itos(i);
 
 		p_list->push_back(PropertyInfo(Variant::STRING, path_prefix + "/name", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));

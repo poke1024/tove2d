@@ -4,8 +4,43 @@
 
 #include "tove2d.h"
 
-void tove_graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
+static tove::GraphicsRef path_to_graphics(const tove::PathRef &p_path, const tove::ClipSetRef &p_clip_set) {
+	tove::GraphicsRef tove_graphics = std::make_shared<tove::Graphics>(p_clip_set);
+	tove_graphics->addPath(p_path);
+	 return tove_graphics;
+}
 
+TovePathBackend::TovePathBackend(
+	const tove::PathRef &p_path,
+	const tove::ClipSetRef &p_clip_set,
+	float p_quality) : ToveGraphicsBackend(path_to_graphics(p_path, p_clip_set), p_quality) {
+}
+
+ToveMeshData ToveGraphicsBackend::create_mesh_data(ToveBackend p_backend) {
+	ToveMeshData composite;
+
+	if (p_backend == TOVE_BACKEND_MESH) {
+		mesh(composite.mesh);
+		composite.texture = Ref<ImageTexture>();
+	} else if (p_backend == TOVE_BACKEND_TEXTURE) {
+		texture(composite.mesh);
+		composite.texture = create_texture();
+	}
+
+	return composite;
+}
+
+static void clear_mesh(Ref<ArrayMesh> &p_mesh) {
+	if (p_mesh.is_valid()) {
+		while (p_mesh->get_surface_count() > 0) {
+			p_mesh->surface_remove(0);
+		}
+	} else {
+		p_mesh.instance();
+	}
+}
+
+void ToveGraphicsBackend::mesh(Ref<ArrayMesh> &p_mesh) {
     const float quality_scale = 10.0;
 
     ToveTesselationQuality t_quality;
@@ -64,14 +99,11 @@ void tove_graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphi
     arr[Mesh::ARRAY_INDEX] = iarr;
     arr[Mesh::ARRAY_COLOR] = carr;
 
-    while (mesh->get_surface_count() > 0) {
-        mesh->surface_remove(0);
-    }
-
-    mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
+	clear_mesh(p_mesh);
+	p_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
 }
 
-void tove_graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality) {
+void ToveGraphicsBackend::texture(Ref<ArrayMesh> &p_mesh) {
 
     const float resolution = quality;
 
@@ -132,10 +164,50 @@ void tove_graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &gra
 	arr[VS::ARRAY_TANGENT] = tangents;
 	arr[VS::ARRAY_TEX_UV] = uvs;
 
-    while (mesh->get_surface_count() > 0) {
-        mesh->surface_remove(0);
-    }
-
-    mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
+	clear_mesh(p_mesh);
+	p_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
 }
 
+Ref<ImageTexture> ToveGraphicsBackend::create_texture() {
+	const float resolution = quality;
+	const float *bounds = graphics->getExactBounds();
+	const float w = bounds[2] - bounds[0];
+	const float h = bounds[3] - bounds[1];
+
+	Ref<ImageTexture> texture;
+	texture.instance();
+	texture->create_from_image(
+		tove_graphics_rasterize(
+			graphics,
+			w * resolution, h * resolution,
+			-bounds[0] * resolution, -bounds[1] * resolution,
+			resolution), ImageTexture::FLAG_FILTER);
+	return texture;
+}
+
+Ref<Image> tove_graphics_rasterize(
+	const tove::GraphicsRef &p_tove_graphics,
+	int p_width, int p_height,
+	float p_tx, float p_ty,
+	float p_scale) {
+
+	ERR_FAIL_COND_V(p_width <= 0, Ref<Image>());
+	ERR_FAIL_COND_V(p_height <= 0, Ref<Image>());
+
+	const int w = p_width;
+	const int h = p_height;
+
+	PoolVector<uint8_t> dst_image;
+	dst_image.resize(w * h * 4);
+
+	{
+		PoolVector<uint8_t>::Write dw = dst_image.write();
+		p_tove_graphics->rasterize(&dw[0], p_width, p_height, w * 4, p_tx, p_ty, p_scale, nullptr);
+	}
+
+	Ref<Image> image;
+	image.instance();
+	image->create(w, h, false, Image::FORMAT_RGBA8, dst_image);
+
+	return image;
+}

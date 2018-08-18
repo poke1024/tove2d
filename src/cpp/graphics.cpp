@@ -104,6 +104,26 @@ static void copyFromNSVG(
 	}
 }
 
+static void copyPaths(
+	PathOwner *owner,
+	NSVGshape **anchor,
+	std::vector<PathRef> &paths,
+	const std::vector<PathRef> &sourcePaths) {
+
+	int index = 0;
+	while (index < sourcePaths.size()) {
+		PathRef path = std::make_shared<Path>(sourcePaths[index].get());
+		path->setIndex(index++);
+		if (paths.empty()) {
+			*anchor = &path->nsvg;
+		} else {
+			paths[paths.size() - 1]->setNext(path);
+		}
+		path->claim(owner);
+		paths.push_back(path);
+	}
+}
+
 #ifdef NSVG_CLIP_PATHS
 Clip::Clip(NSVGclipPath *clipPath) {
     std::memset(&nsvg, 0, sizeof(nsvg));
@@ -111,17 +131,33 @@ Clip::Clip(NSVGclipPath *clipPath) {
     nsvg.index = clipPath->index;
 }
 
-void Clip::set(const ClipRef &source, const nsvg::Transform &transform) {
-	const int numPaths = source->paths.size();
-    assert(numPaths == paths.size());
-    //setNumPaths(numPaths);
-	for (int i = 0; i < numPaths; i++) {
-		paths[i]->set(source->paths[i], transform);
+Clip::Clip(const ClipRef &source, const nsvg::Transform &transform) {
+	std::memset(&nsvg, 0, sizeof(nsvg));
+	copyPaths(this, &nsvg.shapes, paths, source->paths);
+	nsvg.index = source->nsvg.index;
+	for (int i = 0; i < paths.size(); i++) {
+		paths[i]->set(paths[i], transform);
 	}
 }
 
 void Clip::compute(const AbstractMeshifier &meshifier) {
     computed = meshifier.toClipPath(paths);
+}
+
+
+void ClipSet::link() {
+	for (int i = 1; i < clips.size(); i++) {
+		clips[i - 1]->setNext(clips[i]);
+	}
+}
+
+ClipSet::ClipSet(const ClipSet &source, const nsvg::Transform &transform) {
+	const int numClips = source.clips.size();
+	clips.resize(numClips);
+	for (int i = 0; i < numClips; i++) {
+		clips[i] = std::make_shared<Clip>(source.clips[i], transform);
+	}
+	link();
 }
 #endif
 
@@ -218,6 +254,11 @@ Graphics::Graphics() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 	initialize(1.0, 1.0);
 }
 
+Graphics::Graphics(const ClipSetRef &clipSet) : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
+	initialize(1.0, 1.0);
+	this->clipSet = clipSet;
+}
+
 Graphics::Graphics(const NSVGimage *image) :
     changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
@@ -225,17 +266,14 @@ Graphics::Graphics(const NSVGimage *image) :
     copyFromNSVG(this, &nsvg.shapes, paths, image->shapes);
 
 #ifdef NSVG_CLIP_PATHS
+    std::vector<ClipRef> clips;
     NSVGclipPath *clipPath = image->clipPaths;
     while (clipPath) {
-        ClipRef clip = std::make_shared<Clip>(clipPath);
-        if (clips.empty()) {
-            nsvg.clipPaths = &clip->nsvg;
-        } else {
-            clips[clips.size() - 1]->setNext(clip);
-        }
-        clips.push_back(clip);
+        clips.push_back(std::make_shared<Clip>(clipPath));
         clipPath = clipPath->next;
     }
+    clipSet = std::make_shared<ClipSet>(clips);
+	nsvg.clipPaths = clipSet->getHead();
 #endif
 }
 
@@ -251,6 +289,8 @@ Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
 	strokeLineCap = graphics->strokeLineCap;
 	miterLimit = graphics->miterLimit;
 	fillRule = graphics->fillRule;
+
+	clipSet = graphics->clipSet;
 
 	for (const auto &path : graphics->paths) {
 		addPath(path->clone());
@@ -424,11 +464,12 @@ void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) 
 	}
 
 #ifdef NSVG_CLIP_PATHS
-    const int numClips = source->clips.size();
-    assert(numClips == clips.size());
-    for (int i = 0; i < numClips; i++) {
-		clips[i]->set(source->clips[i], transform);
+	if (source->clipSet) {
+		clipSet = std::make_shared<ClipSet>(*source->clipSet.get(), transform);
+	} else {
+		clipSet = ClipSetRef();
 	}
+	nsvg.clipPaths = clipSet->getHead();
 #endif
 }
 
@@ -462,9 +503,11 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 
 void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) const {
 #ifdef NSVG_CLIP_PATHS
-    for (const ClipRef &clip : clips) {
-        clip->compute(meshifier);
-    }
+	if (clipSet) {
+		for (const ClipRef &clip : clipSet->getClips()) {
+			clip->compute(meshifier);
+		}
+	}
 #endif
 }
 

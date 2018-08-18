@@ -7,11 +7,7 @@
 
 #include <stdint.h>
 #include "core/class_db.h"
-
-/*#define EXPORT
-extern "C" {
-#include "../src/cpp/_interface.h"
-}*/
+#include "scene/2d/mesh_instance_2d.h"
 
 #include "../src/cpp/graphics.h"
 #include "../src/cpp/path.h"
@@ -25,9 +21,42 @@ enum ToveBackend {
 
 VARIANT_ENUM_CAST(ToveBackend);
 
-#include "scene/2d/mesh_instance_2d.h"
+struct ToveMeshData {
+	Ref<ArrayMesh> mesh;
+	Ref<ImageTexture> texture;
+};
 
-void tove_graphics_to_mesh(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality);
-void tove_graphics_to_texture(Ref<ArrayMesh> &mesh, const tove::GraphicsRef &graphics, float quality);
+class ToveGraphicsBackend {
+	const tove::GraphicsRef &graphics;
+	const float quality;
+
+public:
+	inline ToveGraphicsBackend(
+		const tove::GraphicsRef &p_graphics,
+		float p_quality) :
+		graphics(p_graphics),
+		quality(p_quality) {
+	}
+
+	void mesh(Ref<ArrayMesh> &mesh);
+	void texture(Ref<ArrayMesh> &mesh);
+
+	ToveMeshData create_mesh_data(ToveBackend p_backend);
+	Ref<ImageTexture> create_texture();
+};
+
+class TovePathBackend : public ToveGraphicsBackend {
+public:
+	TovePathBackend(
+		const tove::PathRef &p_path,
+		const tove::ClipSetRef &p_clip_set,
+		float p_quality);
+};
+
+Ref<Image> tove_graphics_rasterize(
+	const tove::GraphicsRef &tove_graphics,
+	int p_width, int p_height,
+	float p_tx, float p_ty,
+	float p_scale);
 
 #endif // TOVEGD_TOVE2D_H

@@ -25,8 +25,7 @@ typedef std::shared_ptr<Clip> ClipRef;
 class Clip : public PathOwner {
 public:
 	Clip(NSVGclipPath *path);
-
-	void set(const ClipRef &source, const nsvg::Transform &transform);
+	Clip(const ClipRef &source, const nsvg::Transform &transform);
 
 	inline void setNext(ClipRef clip) {
 		nsvg.next = &clip->nsvg;
@@ -41,13 +40,39 @@ public:
 	std::vector<PathRef> paths;
 	ClipperLib::Paths computed;
 };
+
+class ClipSet { // clip sets are immutable.
+private:
+	std::vector<ClipRef> clips;
+	void link();
+
+public:
+	ClipSet(const std::vector<ClipRef> &c) : clips(c) {
+		link();
+	}
+	ClipSet(const ClipSet &source, const nsvg::Transform &t);
+
+	NSVGclipPath *getHead() const {
+		return clips.size() > 0 ? &clips[0]->nsvg : nullptr;
+	}
+
+	inline const ClipRef &get(int index) const {
+		return clips.at(index);
+	}
+
+	const std::vector<ClipRef> &getClips() const {
+		return clips;
+	}
+};
+
+typedef std::shared_ptr<ClipSet> ClipSetRef;
 #endif
 
 class Graphics : public PathOwner {
 private:
 	std::vector<PathRef> paths;
 #ifdef NSVG_CLIP_PATHS
-	std::vector<ClipRef> clips;
+	ClipSetRef clipSet;
 #endif
 	bool newPath;
 
@@ -103,6 +128,7 @@ public:
 		const char *svg, const char *units, float dpi);
 
 	Graphics();
+	Graphics(const ClipSetRef &clipSet);
 	Graphics(const NSVGimage *image);
 	Graphics(const GraphicsRef &graphics);
 
@@ -192,8 +218,12 @@ public:
 	void computeClipPaths(const AbstractMeshifier &meshifier) const;
 
 #ifdef NSVG_CLIP_PATHS
-	inline ClipRef getClipAtIndex(int index) const {
-		return clips.at(index);
+	inline const ClipSetRef &getClipSet() const {
+		return clipSet;
+	}
+
+	inline const ClipRef &getClipAtIndex(int index) const {
+		return clipSet->get(index);
 	}
 #endif
 
