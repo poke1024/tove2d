@@ -15,13 +15,14 @@
 #include "../src/cpp/paint.h"
 
 enum ToveBackend {
+	TOVE_BACKEND_INHERIT,
     TOVE_BACKEND_TEXTURE,
     TOVE_BACKEND_MESH
 };
 
 VARIANT_ENUM_CAST(ToveBackend);
 
-struct ToveMeshData {
+struct VGMeshData {
 	Ref<ArrayMesh> mesh;
 	Ref<ImageTexture> texture;
 };
@@ -41,7 +42,7 @@ public:
 	void mesh(Ref<ArrayMesh> &mesh);
 	void texture(Ref<ArrayMesh> &mesh);
 
-	ToveMeshData create_mesh_data(ToveBackend p_backend);
+	VGMeshData create_mesh_data(ToveBackend p_backend);
 	Ref<ImageTexture> create_texture();
 };
 

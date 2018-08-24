@@ -1,24 +1,22 @@
 /*************************************************************************/
-/*  node_vg_editor.h                 			                         */
+/*  vg_editor.h  			          			                         */
 /*************************************************************************/
 
-#ifndef NOVE_VG_EDITOR_H
-#define NOVE_VG_EDITOR_H
+#ifndef VG_EDITOR_H
+#define VG_EDITOR_H
 
 #include "editor/editor_node.h"
 #include "editor/editor_plugin.h"
 #include "scene/gui/tool_button.h"
-#include "node_vg.h"
+#include "vg_path.h"
 
 class CanvasItemEditor;
 
-class NodeVGEditor : public HBoxContainer {
+class VGEditor : public HBoxContainer {
 
-	GDCLASS(NodeVGEditor, HBoxContainer);
+	GDCLASS(VGEditor, HBoxContainer);
 
-    NodeVG *node_vg;
-
-	int active_path;
+    VGPath *node_vg;
 
 	Ref<ArrayMesh> overlay;
 	Transform2D overlay_full_xform;
@@ -28,25 +26,23 @@ class NodeVGEditor : public HBoxContainer {
 	ToolButton *button_edit;
 	ToolButton *button_delete;
 	ToolButton *button_bake;
-	Slider *line_width_slider;
 
 	struct SubpathId {
 		SubpathId();
-		SubpathId(int p_path, int p_subpath);
+		SubpathId(int p_subpath);
 
 		bool operator==(const SubpathId &p_id) const;
 		bool operator!=(const SubpathId &p_id) const;
 
 		bool valid() const;
 
-		int path;
 		int subpath;
 	};
 
 	struct Vertex : public SubpathId {
 		Vertex();
 		Vertex(int p_pt);
-		Vertex(int p_path, int p_subpath, int p_pt);
+		Vertex(int p_subpath, int p_pt);
 
 		bool operator==(const Vertex &p_vertex) const;
 		bool operator!=(const Vertex &p_vertex) const;
@@ -59,14 +55,14 @@ class NodeVGEditor : public HBoxContainer {
 	struct PosVertex : public Vertex {
 		PosVertex();
 		PosVertex(const Vertex &p_vertex, const Vector2 &p_pos);
-		PosVertex(int p_path, int p_subpath, int p_pt, const Vector2 &p_pos);
+		PosVertex(int p_subpath, int p_pt, const Vector2 &p_pos);
 
 		Vector2 pos;
 	};
 
 	struct SubpathPos : public SubpathId {
 		SubpathPos();
-		SubpathPos(int p_path, int p_subpath, float p_t);
+		SubpathPos(int p_subpath, float p_t);
 
 		bool valid() const;
 
@@ -75,7 +71,6 @@ class NodeVGEditor : public HBoxContainer {
 
 	class PointIterator {
 	private:
-		int path;
 		tove::PathRef path_ref;
 		int n_subpaths;
 		int subpath;
@@ -86,7 +81,6 @@ class NodeVGEditor : public HBoxContainer {
 
 	public:
 		PointIterator(
-			int p_path,
 			const tove::PathRef &p_path_ref);
 
 		bool next();
@@ -116,7 +110,6 @@ class NodeVGEditor : public HBoxContainer {
 
 	public:
 		ControlPointIterator(
-			int p_path,
 			const tove::PathRef &p_path_ref,
 			const Vertex &p_selected_point,
 			const Vertex &p_edited_point);
@@ -169,7 +162,7 @@ protected:
 	Vertex get_active_point() const;
 	PosVertex closest_point(const Vector2 &p_pos, bool p_cp = false) const;
 	SubpathPos closest_subpath_point(const Vector2 &p_pos) const;
-	int find_path_at_point(const Vector2 &p_pos) const;
+	bool is_inside(const Vector2 &p_pos) const;
 
 	bool _is_empty() const;
 	void _commit_action();
@@ -178,7 +171,6 @@ protected:
 	void _update_overlay(bool p_always_update = false);
 	virtual void _changed_callback(Object *p_changed, const char *p_prop);
 	void _line_width_changed(double p_value);
-	void _set_active_path(int p_active_path);
 
 protected:
 	virtual Node2D *_get_node() const;
@@ -193,7 +185,7 @@ public:
 
 	void edit(Node *p_node_vg);
 
-	NodeVGEditor(EditorNode *p_editor);
+	VGEditor(EditorNode *p_editor);
 };
 
-#endif // NOVE_VG_EDITOR_H
+#endif // VG_EDITOR_H

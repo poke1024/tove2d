@@ -3,11 +3,12 @@
 /*************************************************************************/
 
 #include "tove2d.h"
+#include "../src/cpp/mesh/meshifier.h"
 
 static tove::GraphicsRef path_to_graphics(const tove::PathRef &p_path, const tove::ClipSetRef &p_clip_set) {
-	tove::GraphicsRef tove_graphics = std::make_shared<tove::Graphics>(p_clip_set);
+	tove::GraphicsRef tove_graphics = tove::tove_make_shared<tove::Graphics>(p_clip_set);
 	tove_graphics->addPath(p_path);
-	 return tove_graphics;
+	return tove_graphics;
 }
 
 TovePathBackend::TovePathBackend(
@@ -16,8 +17,8 @@ TovePathBackend::TovePathBackend(
 	float p_quality) : ToveGraphicsBackend(path_to_graphics(p_path, p_clip_set), p_quality) {
 }
 
-ToveMeshData ToveGraphicsBackend::create_mesh_data(ToveBackend p_backend) {
-	ToveMeshData composite;
+VGMeshData ToveGraphicsBackend::create_mesh_data(ToveBackend p_backend) {
+	VGMeshData composite;
 
 	if (p_backend == TOVE_BACKEND_MESH) {
 		mesh(composite.mesh);
@@ -41,18 +42,22 @@ static void clear_mesh(Ref<ArrayMesh> &p_mesh) {
 }
 
 void ToveGraphicsBackend::mesh(Ref<ArrayMesh> &p_mesh) {
-    const float quality_scale = 10.0;
+	clear_mesh(p_mesh);
+	
+	tove::TesselatorRef tess = tove::tove_make_shared<tove::AdaptiveTesselator>(
+		new tove::AdaptiveFlattener<tove::DefaultCurveFlattener>(
+			tove::DefaultCurveFlattener(quality, 6)));
 
-    ToveTesselationQuality t_quality;
-    t_quality.stopCriterion = TOVE_MAX_ERROR;
-    t_quality.recursionLimit = 8;
-    t_quality.maximumError = 1.0 / (quality * quality_scale);
-    t_quality.arcTolerance = 1.0 / (quality * quality_scale);
-
-    tove::MeshRef tove_mesh = std::make_shared<tove::ColorMesh>();
-    graphics->tesselate(tove_mesh, 1024, t_quality, TOVE_HOLES_CW, 0);
+	//tove::TesselatorRef tess = tove::tove_make_shared<tove::RigidTesselator>(3, TOVE_HOLES_NONE);
+	
+    tove::MeshRef tove_mesh = tove::tove_make_shared<tove::ColorMesh>();
+	tess->graphicsToMesh(graphics.get(), UPDATE_MESH_EVERYTHING, tove_mesh, tove_mesh);
 
     const int n = tove_mesh->getVertexCount();
+	if (n < 1) {
+		return;
+	}
+
     int stride = sizeof(float) * 2 + 4;
     int size = n * stride;
     uint8_t *vertices = new uint8_t[size];
@@ -65,7 +70,7 @@ void ToveGraphicsBackend::mesh(Ref<ArrayMesh> &p_mesh) {
     {
         PoolVector<int>::Write w = iarr.write();
         for (int i = 0; i < triangles.size; i++) {
-            w[i] = triangles.array[i] - 1; // 1-based
+            w[i] = triangles.array[i];
         }
     }
 
@@ -99,7 +104,6 @@ void ToveGraphicsBackend::mesh(Ref<ArrayMesh> &p_mesh) {
     arr[Mesh::ARRAY_INDEX] = iarr;
     arr[Mesh::ARRAY_COLOR] = carr;
 
-	clear_mesh(p_mesh);
 	p_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
 }
 
@@ -169,10 +173,11 @@ void ToveGraphicsBackend::texture(Ref<ArrayMesh> &p_mesh) {
 }
 
 Ref<ImageTexture> ToveGraphicsBackend::create_texture() {
-	const float resolution = quality;
 	const float *bounds = graphics->getExactBounds();
 	const float w = bounds[2] - bounds[0];
 	const float h = bounds[3] - bounds[1];
+
+	const float resolution = quality / std::max(w, h);
 
 	Ref<ImageTexture> texture;
 	texture.instance();

@@ -1,16 +1,16 @@
 /*************************************************************************/
-/*  node_vg_editor_plugin.h          			                         */
+/*  vg_editor_plugin.h    		      			                         */
 /*************************************************************************/
 
-#ifndef NOVE_VG_EDITOR_PLUGIN_H
-#define NOVE_VG_EDITOR_PLUGIN_H
+#ifndef VG_EDITOR_PLUGIN_H
+#define VG_EDITOR_PLUGIN_H
 
-#include "node_vg_editor.h"
+#include "vg_editor.h"
 
-class NodeVGEditorPlugin : public EditorPlugin {
-	GDCLASS(NodeVGEditorPlugin, EditorPlugin);
+class VGEditorPlugin : public EditorPlugin {
+	GDCLASS(VGEditorPlugin, EditorPlugin);
 
-	NodeVGEditor *vg_editor;
+	VGEditor *vg_editor;
 	EditorNode *editor;
 	String klass;
 
@@ -24,8 +24,8 @@ public:
 	virtual bool handles(Object *p_object) const;
 	virtual void make_visible(bool p_visible);
 
-	NodeVGEditorPlugin(EditorNode *p_node);
-	~NodeVGEditorPlugin();
+	VGEditorPlugin(EditorNode *p_node);
+	~VGEditorPlugin();
 };
 
-#endif // NOVE_VG_EDITOR_PLUGIN_H
+#endif // VG_EDITOR_PLUGIN_H

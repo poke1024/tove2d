@@ -11,6 +11,7 @@ env_tove.add_source_files(env.modules_sources, "godot/*.cpp")
 env_tove.add_source_files(env.modules_sources, "src/cpp/*.cpp")
 env_tove.add_source_files(env.modules_sources, "src/cpp/mesh/*.cpp")
 env_tove.add_source_files(env.modules_sources, "src/cpp/shader/*.cpp")
+env_tove.add_source_files(env.modules_sources, "src/cpp/gpux/*.cpp")
 env_tove.add_source_files(env.modules_sources, "src/thirdparty/*.cpp")
 
-env_tove.Append(CXXFLAGS=['-std=c++11'])
+env_tove.Append(CXXFLAGS=['-std=c++11', '-DTOVE_GODOT'])

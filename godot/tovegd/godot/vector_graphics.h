@@ -19,7 +19,7 @@ class VectorGraphics : public Resource {
 	struct Path {
 		Transform2D transform;
 		tove::PathRef tove_path;
-		ToveMeshData mesh_data;
+		VGMeshData mesh_data;
 		bool dirty;
 		inline Path() : dirty(false) {}
 	};
@@ -29,7 +29,7 @@ class VectorGraphics : public Resource {
 	bool any_path_dirty;
 	bool editing;
 	Rect2 bounds;
-	ToveMeshData composite;
+	VGMeshData composite;
 
 	tove::GraphicsRef create_tove_graphics() const;
 	void update_mesh_representation();

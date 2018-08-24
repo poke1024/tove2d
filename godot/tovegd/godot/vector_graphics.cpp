@@ -76,14 +76,14 @@ Error VectorGraphics::load(const String &p_path, const String &p_units, float p_
 }
 
 void VectorGraphics::load_default() {
-	tove::PathRef tove_path = std::make_shared<tove::Path>();
+	tove::PathRef tove_path = tove::tove_make_shared<tove::Path>();
 
-	tove::SubpathRef tove_subpath = std::make_shared<tove::Subpath>();
+	tove::SubpathRef tove_subpath = tove::tove_make_shared<tove::Subpath>();
 	tove_subpath->drawEllipse(0, 0, 100, 100);
 	tove_path->addSubpath(tove_subpath);
 
-	tove_path->setFillColor(std::make_shared<tove::Color>(0.8, 0.1, 0.1));
-	tove_path->setLineColor(std::make_shared<tove::Color>(0, 0, 0));
+	tove_path->setFillColor(tove::tove_make_shared<tove::Color>(0.8, 0.1, 0.1));
+	tove_path->setLineColor(tove::tove_make_shared<tove::Color>(0, 0, 0));
 
 	paths.clear();
 	Path path;
@@ -95,7 +95,7 @@ void VectorGraphics::load_default() {
 }
 
 tove::GraphicsRef VectorGraphics::create_tove_graphics() const {
-	tove::GraphicsRef tove_graphics = std::make_shared<tove::Graphics>(clip_set);
+	tove::GraphicsRef tove_graphics = tove::tove_make_shared<tove::Graphics>(clip_set);
 	for (int i = 0; i < paths.size(); i++) {
 		const Transform2D &t = paths[i].transform;
 		const Vector2 &tx = t.elements[0];
@@ -103,7 +103,7 @@ tove::GraphicsRef VectorGraphics::create_tove_graphics() const {
 		const Vector2 &to = t.elements[2];
 		tove::nsvg::Transform transform(tx.x, ty.x, to.x, ty.x, ty.y, to.y);
 
-		const tove::PathRef tove_path = std::make_shared<tove::Path>();
+		const tove::PathRef tove_path = tove::tove_make_shared<tove::Path>();
 		tove_path->set(paths[i].tove_path, transform);
 		tove_graphics->addPath(tove_path);
 	}
@@ -205,7 +205,7 @@ float VectorGraphics::get_quality() {
 }
 
 MeshInstance2D *VectorGraphics::create_mesh_node() {
-	ToveMeshData mesh_data = ToveGraphicsBackend(
+	VGMeshData mesh_data = ToveGraphicsBackend(
 		create_tove_graphics(), quality).create_mesh_data(backend);
 	MeshInstance2D *mesh_inst = memnew(MeshInstance2D);
 	mesh_inst->set_mesh(mesh_data.mesh);
@@ -286,7 +286,7 @@ bool VectorGraphics::_set(const StringName &p_name, const Variant &p_value) {
 
 		if (paths.size() == path) {
 			Path p;
-			p.tove_path = std::make_shared<tove::Path>();
+			p.tove_path = tove::tove_make_shared<tove::Path>();
 			paths.push_back(p);
 		}
 
@@ -302,12 +302,12 @@ bool VectorGraphics::_set(const StringName &p_name, const Variant &p_value) {
 		} else if (what == "fill_color") {
 			if (p_value.get_type() == Variant::COLOR) {
 				Color c = p_value;
-				tove_path->setFillColor(std::make_shared<tove::Color>(c.r, c.g, c.b, c.a));
+				tove_path->setFillColor(tove::tove_make_shared<tove::Color>(c.r, c.g, c.b, c.a));
 			}
 		} else if (what == "line_color") {
 			if (p_value.get_type() == Variant::COLOR) {
 				Color c = p_value;
-				tove_path->setLineColor(std::make_shared<tove::Color>(c.r, c.g, c.b, c.a));
+				tove_path->setLineColor(tove::tove_make_shared<tove::Color>(c.r, c.g, c.b, c.a));
 			}
 		} else if (what == "fill_rule") {
 			if (p_value == "nonzero") {
@@ -322,7 +322,7 @@ bool VectorGraphics::_set(const StringName &p_name, const Variant &p_value) {
 			String subwhat = name.get_slicec('/', 4);
 
 			if (tove_path->getNumSubpaths() == subpath) {
-				tove::SubpathRef tove_subpath = std::make_shared<tove::Subpath>();
+				tove::SubpathRef tove_subpath = tove::tove_make_shared<tove::Subpath>();
 				tove_path->addSubpath(tove_subpath);
 			}
 

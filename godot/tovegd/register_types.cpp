@@ -5,10 +5,13 @@
 #include "register_types.h"
 #include "godot/resource_format_loader_svg.h"
 #include "godot/vector_graphics.h"
-#include "godot/node_vg.h"
+#include "godot/vg_path.h"
+#include "godot/vg_paint.h"
+#include "godot/vg_color.h"
+#include "godot/vg_adaptive_renderer.h"
 
 #ifdef TOOLS_ENABLED
-#include "godot/node_vg_editor_plugin.h"
+#include "godot/vg_editor_plugin.h"
 #endif
 
 #if GDTOVE_SVG_RFL
@@ -18,7 +21,7 @@ static ResourceFormatLoaderSVG *svg_loader = NULL;
 #ifdef TOOLS_ENABLED
 static void editor_init_callback() {
 	EditorNode *editor = EditorNode::get_singleton();
-	editor->add_editor_plugin(memnew(NodeVGEditorPlugin(editor)));
+	editor->add_editor_plugin(memnew(VGEditorPlugin(editor)));
 }
 #endif
 
@@ -29,7 +32,13 @@ void register_tovegd_types() {
 #endif
 
 	ClassDB::register_class<VectorGraphics>();
-	ClassDB::register_class<NodeVG>();
+
+	ClassDB::register_class<VGPath>();
+	ClassDB::register_class<VGPaint>();
+	ClassDB::register_class<VGColor>();
+
+	ClassDB::register_class<VGRenderer>();
+	ClassDB::register_class<VGAdaptiveRenderer>();
 
 #ifdef TOOLS_ENABLED
 	EditorNode::add_init_callback(editor_init_callback);
