@@ -18,43 +18,63 @@
 
 BEGIN_TOVE_NAMESPACE
 
-class AbstractMeshifier {
+class AbstractTesselator {
+protected:
+	const Graphics *graphics;
+
 public:
+	ToveMeshUpdateFlags graphicsToMesh(
+		Graphics *graphics,
+		ToveMeshUpdateFlags update,
+		const MeshRef &fill,
+		const MeshRef &line);
+
+	virtual void beginTesselate(
+		Graphics *graphics);
+
+	void endTesselate();
+
 	virtual ToveMeshUpdateFlags pathToMesh(
-		const Graphics *graphics,
+		ToveMeshUpdateFlags update,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,
 		int &fillIndex,
 		int &lineIndex) = 0;
 
-	virtual ToveMeshUpdateFlags graphicsToMesh(
-		const Graphics *graphics,
-		const MeshRef &fill,
-		const MeshRef &line);
-
 	virtual ClipperLib::Paths toClipPath(
 		const std::vector<PathRef> &paths) const = 0;
 
 	virtual bool hasFixedSize() const = 0;
+
+	inline AbstractTesselator() : graphics(nullptr) {
+	}
+
+	virtual ~AbstractTesselator() {
+	}
 };
 
-class AdaptiveMeshifier : public AbstractMeshifier {
+class AdaptiveTesselator : public AbstractTesselator {
 private:
 	void renderStrokes(
-		const Graphics *graphics,
 		const PathRef &path,
 		const ClipperLib::PolyNode *node,
 		ClipperPaths &holes,
 		Submesh *submesh);
 
-	AdaptiveFlattener flattener;
+	AbstractAdaptiveFlattener *flattener;
 
 public:
-	AdaptiveMeshifier(float scale, const ToveTesselationQuality &quality);
+	AdaptiveTesselator(
+		AbstractAdaptiveFlattener *flattener);
+
+	virtual ~AdaptiveTesselator();
+
+	virtual void beginTesselate(
+		Graphics *graphics);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
-		const Graphics *graphics,
+		ToveMeshUpdateFlags update,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,
@@ -67,19 +87,18 @@ public:
 	virtual bool hasFixedSize() const;
 };
 
-class FixedMeshifier : public AbstractMeshifier {
+class RigidTesselator : public AbstractTesselator {
 private:
-	int _nvertices;
-	const int depth;
-	const ToveMeshUpdateFlags _update;
+	const RigidFlattener flattener;
 	const ToveHoles holes;
 
 public:
-	FixedMeshifier(float scale, int recursionLimit,
-		ToveHoles holes, ToveMeshUpdateFlags update);
+	RigidTesselator(
+		int subdivisions,
+		ToveHoles holes);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
-		const Graphics *graphics,
+		ToveMeshUpdateFlags update,
 		const PathRef &path,
 		const MeshRef &fill,
 		const MeshRef &line,

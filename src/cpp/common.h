@@ -32,7 +32,6 @@
 #include <assert.h>
 
 BEGIN_TOVE_NAMESPACE
-
 #define NANOSVG_CPLUSPLUS 1
 #include "../thirdparty/nanosvg.h"
 #include "../thirdparty/nanosvgrast.h"
@@ -61,31 +60,34 @@ inline void store_fp16(uint16_t &p, float x) {
 }
 #endif
 
+#include "shared.h"
+
 BEGIN_TOVE_NAMESPACE
 
 typedef ClipperLib::Path ClipperPath;
 typedef ClipperLib::Paths ClipperPaths;
 typedef ClipperLib::IntPoint ClipperPoint;
 
-#define MAX_FLATTEN_RECURSIONS 10
-
 class AbstractPaint;
-typedef std::shared_ptr<AbstractPaint> PaintRef;
+typedef SharedPtr<AbstractPaint> PaintRef;
 
 class Subpath;
-typedef std::shared_ptr<Subpath> SubpathRef;
+typedef SharedPtr<Subpath> SubpathRef;
 
 class Graphics;
-typedef std::shared_ptr<Graphics> GraphicsRef;
+typedef SharedPtr<Graphics> GraphicsRef;
 
 class Path;
-typedef std::shared_ptr<Path> PathRef;
+typedef SharedPtr<Path> PathRef;
+
+class AbstractTesselator;
+typedef SharedPtr<AbstractTesselator> TesselatorRef;
 
 class AbstractMesh;
-typedef std::shared_ptr<AbstractMesh> MeshRef;
+typedef SharedPtr<AbstractMesh> MeshRef;
 
 class AbstractFeed;
-typedef std::shared_ptr<AbstractFeed> FeedRef;
+typedef SharedPtr<AbstractFeed> FeedRef;
 
 inline int nextpow2(uint32_t v) {
 	// see https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

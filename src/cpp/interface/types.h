@@ -102,6 +102,10 @@ typedef struct {
 	void *ptr;
 } ToveGraphicsRef;
 
+typedef struct {
+	void *ptr;
+} ToveTesselatorRef;
+
 typedef enum {
 	TOVE_REC_DEPTH,
 	TOVE_ANTIGRAIN,
@@ -109,18 +113,27 @@ typedef enum {
 } ToveStopCriterion;
 
 typedef struct {
+	float distanceTolerance;
+	float colinearityEpsilon;
+	float angleEpsilon;
+	float angleTolerance;
+	float cuspLimit;
+} AntiGrainSettings;
+
+typedef struct {
 	ToveStopCriterion stopCriterion;
 	int recursionLimit;
 	float arcTolerance;
-	struct {
-		float distanceTolerance;
-		float colinearityEpsilon;
-		float angleEpsilon;
-		float angleTolerance;
-		float cuspLimit;
-	} antigrain;
+	AntiGrainSettings antigrain;
 	float maximumError;
-} ToveTesselationQuality;
+	float clipperScale;
+	ToveHoles holes;
+} ToveTesselationSettings;
+
+typedef struct {
+	float tessTolerance;
+	float distTolerance;
+} ToveRasterizeSettings;
 
 typedef struct {
 	float r, g, b, a;

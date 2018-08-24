@@ -21,13 +21,13 @@ class MeshPaint {
 private:
 	nsvg::CachedPaint cache;
 	float scale;
-	float _colors[256];
+	float cacheColors[256];
 
 public:
-	MeshPaint() : cache(_colors, sizeof(uint32_t), 256) {
+	inline MeshPaint() : cache(cacheColors, sizeof(uint32_t), 256) {
 	}
 
-	void initialize(const NSVGpaint &paint, float opacity, float scale) {
+	inline void initialize(const NSVGpaint &paint, float opacity, float scale) {
 		cache.init(paint, opacity);
 		this->scale = scale;
 	}

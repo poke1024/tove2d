@@ -394,7 +394,7 @@ function Editor:startup()
 
 	self.rendererButtons = {}
 	local rendererButtons = utils.makeButtons(
-		{"texture", "mesh", "shader"},
+		{"texture", "mesh", "gpux"},
 		"monochrome",
 		function(name, button)
 			button:setMode("radio")
@@ -438,7 +438,7 @@ function Editor:startup()
 		self.colorWheel,
 		self.colorDabs.gradientBox,
 		boxy.Label("Opacity"),
-		self.opacitySlider,
+		self.opacitySlider,	
 		boxy.Label("Line Width"),
 		self.lineWidthSlider,
 		boxy.Label("Line Join"),
@@ -467,10 +467,10 @@ end
 function Editor:setDisplayMode(newmode)
 	local mode, quality = self:getDisplay()
 	if mode ~= newmode then
-		if newmode == "shader" then
+		if newmode == "gpux" then
 			quality = {line = {type = "vertex", quality = 1.0}}
 		else
-			quality = 0.5
+			quality = 200
 		end
 		self:setDisplay(newmode, quality)
 		mode = newmode
@@ -487,7 +487,7 @@ function Editor:updateLineUI()
 
 	self.miterLimitSlider:setEnabled(true)
 
-	if mode == "shader" then
+	if mode == "gpux" then
 		if quality.line.type == "vertex" then
 			self.lineJoinButtons["round"]:setEnabled(false)
 		else
@@ -511,7 +511,7 @@ function Editor:updateDisplayUI()
 		end)
 		animatedCheckBox:setChecked(usage.points == "dynamic")
 
-		local qualitySlider = boxy.Slider(0, 1)
+		local qualitySlider = boxy.Slider(0, 1000)
 		qualitySlider.valueChanged:connect(function(value)
 			self:setDisplay("mesh", value)
 		end)
@@ -521,11 +521,11 @@ function Editor:updateDisplayUI()
 			boxy.Label("Tesselation Quality"),
 			qualitySlider,
 			animatedCheckBox)
-	elseif mode == "shader" then
+	elseif mode == "gpux" then
 		local vslCheckBox = boxy.CheckBox("Mesh Lines")
 		vslCheckBox.valueChanged:connect(function(value)
 			local mode, quality = self:getDisplay()
-			self:setDisplay("shader",
+			self:setDisplay("gpux",
 				{line = {
 					type = value and "vertex" or "fragment",
 					quality = quality.line.quality
@@ -537,7 +537,7 @@ function Editor:updateDisplayUI()
 		local lineQualitySlider = boxy.Slider(0, 1)
 		lineQualitySlider.valueChanged:connect(function(value)
 			local mode, quality = self:getDisplay()
-			self:setDisplay("shader",
+			self:setDisplay("gpux",
 				{line = {
 					type = quality.line.type,
 					quality = value
@@ -981,7 +981,9 @@ function Editor:restore(chunk)
 	self:clear()
 	local data = chunk()
 	for _, object in ipairs(data.objects) do
-		table.insert(self.objects, Object.deserialize(object))
+		local object = Object.deserialize(object)
+		--object:setDisplay("mesh", 100)
+		table.insert(self.objects, object)
 	end
 end
 

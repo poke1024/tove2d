@@ -38,8 +38,6 @@ Path.getMiterLimit = lib.PathGetMiterLimit
 Path.getNumCurves = lib.PathGetNumCurves
 Path.getOpacity = lib.PathGetOpacity
 Path.setOpacity = lib.PathSetOpacity
-Path.clearChanges = lib.PathClearChanges
-Path.fetchChanges = lib.PathFetchChanges
 Path.inside = lib.PathIsInside
 
 function Path:beginSubpath()

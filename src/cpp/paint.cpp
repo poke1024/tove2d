@@ -30,9 +30,7 @@ void copyColor(ToveRGBA &rgba, uint32_t color, float opacity) {
 
 
 void AbstractPaint::changed() {
-	if (claimer) {
-		claimer->colorChanged(this);
-	}
+	broadcastChange(CHANGED_COLORS);
 }
 
 
@@ -227,17 +225,17 @@ PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 			return PaintRef();
 		} break;
 		case NSVG_PAINT_COLOR: {
-			return std::make_shared<Color>(
+			return tove_make_shared<Color>(
 				(paint.color & 0xff) / 255.0,
 				((paint.color >> 8) & 0xff) / 255.0,
 				((paint.color >> 16) & 0xff) / 255.0,
 				((paint.color >> 24) & 0xff) / 255.0);
 		} break;
 		case NSVG_PAINT_LINEAR_GRADIENT: {
-			return std::make_shared<LinearGradient>(paint.gradient);
+			return tove_make_shared<LinearGradient>(paint.gradient);
 		} break;
 		case NSVG_PAINT_RADIAL_GRADIENT: {
-			return std::make_shared<RadialGradient>(paint.gradient);
+			return tove_make_shared<RadialGradient>(paint.gradient);
 		} break;
 	}
 	TOVE_WARN("Invalid nsvg paint type.");

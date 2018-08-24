@@ -1059,9 +1059,7 @@ void Subpath::updateNSVG() {
 
 void Subpath::changed(ToveChangeFlags flags) {
 	dirty |= DIRTY_BOUNDS | DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS;
-	if (claimer) {
-		claimer->changed(flags);
-	}
+	broadcastChange(flags);
 }
 
 void Subpath::invert() {

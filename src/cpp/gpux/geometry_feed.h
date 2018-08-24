@@ -11,14 +11,16 @@
 
 #include <vector>
 #include "../common.h"
-#include "data.h"
+#include "../observer.h"
+#include "geometry_data.h"
 #include "lookup.h"
 
 BEGIN_TOVE_NAMESPACE
 
-class GeometryFeedImpl {
+class GeometryFeed : public Observer {
 private:
 	const PathRef path;
+	ToveChangeFlags changes;
 	bool initialUpdate;
 
 	const int maxCurves;
@@ -35,22 +37,25 @@ private:
     LookupTable::CurveSet strokeCurves;
 	std::vector<ExCurveData> extended;
 
-	AllocateGeometryData allocData;
-	AllocateGeometryNoLinkData allocStrokeData;
+	GeometryData allocData;
+	GeometryNoLinkData allocStrokeData;
 	const bool enableFragmentShaderStrokes;
 
 	int buildLUT(int dim, const int ncurves);
 	void dumpCurveData();
 
 public:
-	GeometryFeedImpl(
+	GeometryFeed(
 		const PathRef &path,
 		ToveShaderGeometryData &data,
 		const TovePaintData &lineColorData,
 		bool enableFragmentShaderStrokes);
+	virtual ~GeometryFeed();
 
 	ToveChangeFlags beginUpdate();
     ToveChangeFlags endUpdate();
+
+	virtual void observableChanged(Observable *observable, ToveChangeFlags what);
 };
 
 END_TOVE_NAMESPACE

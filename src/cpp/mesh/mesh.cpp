@@ -263,7 +263,7 @@ void Submesh::triangulateFixedLine(
 	int v0,
 	bool miter,
 	const PathRef &path,
-	const FixedFlattener &flattener) {
+	const RigidFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
 	int i0 = 1 + v0; // 1-based for love2d
@@ -321,7 +321,7 @@ void Submesh::triangulateFixedLine(
 void Submesh::triangulateFixedFill(
 	const int vertexIndex0,
 	const PathRef &path,
-	const FixedFlattener &flattener,
+	const RigidFlattener &flattener,
 	const ToveHoles holes) {
 
 	const int numSubpaths = path->getNumSubpaths();

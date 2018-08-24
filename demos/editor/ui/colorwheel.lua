@@ -82,6 +82,11 @@ function ColorWheel:computeTriangleVertices()
 	end
 end
 
+function ColorWheel:_setEmpty(empty)
+	self.empty = empty
+	self.opacitySlider:setVisible(not self.empty)	
+end
+
 function ColorWheel:setRGBColor(r, g, b, a)
 	h, s, v = rgb2hsv(r, g, b)
 	self.currentHue = h * pi2
@@ -95,15 +100,13 @@ function ColorWheel:setRGBColor(r, g, b, a)
 	triangleSpot[1] = c
 	triangleSpot[2] = m
 	triangleSpot[3] = 1 - c - m
-	self.empty = false
+	self:_setEmpty(false)
 
 	self.opacitySlider:setValue(a)
-	self.opacitySlider:setVisible(true)
 end
 
 function ColorWheel:setEmpty()
-	self.empty = true
-	self.opacitySlider:setVisible(false)
+	self:_setEmpty(true)
 end
 
 function ColorWheel:colorChanged()
@@ -147,7 +150,7 @@ function ColorWheel:updateSL(mx, my, mode)
 		return false
 	end
 	self.triangleSpot = {u, v, w}
-	self.empty = false
+	self:_setEmpty(false)
 	self:colorChanged()
 	return true
 end
@@ -157,7 +160,7 @@ function ColorWheel:updateHue(mx, my)
 	local dx = mx - x
 	local dy = my - y
 	self.currentHue = math.atan2(dy, dx)
-	self.empty = false
+	self:_setEmpty(false)
 	self:computeTriangleVertices()
 	self:colorChanged()
 end
@@ -215,7 +218,7 @@ function ColorWheel:mousepressed(mx, my)
 		local npx = x + halfsize - nopaintRadius
 		local npy = y + halfsize - nopaintRadius
 		if distance(npx, npy, mx, my) < nopaintRadius then
-			self.empty = true
+			self:_setEmpty(true)
 			self:colorChanged()
 			return function() end
 		end

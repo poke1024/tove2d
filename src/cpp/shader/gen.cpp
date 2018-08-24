@@ -242,8 +242,7 @@ vec4 do_color() {
 	// many linear gradients, texture_pos == texture_pos_exact.
 	vec4 c = TEXEL(colors, texture_pos);
 
-	return texture_pos_exact == texture_pos ?
-		c : TEXEL(colors, texture_pos_exact);
+	return TEXEL(colors, texture_pos_exact);
 }
 )GLSL";
 
@@ -283,7 +282,7 @@ vec4 do_vertex(vec4 vertex_pos) {
 	w.computeLineColor(lines ? data->color.line.style : 0);
 	w.computeFillColor(data->color.fill.style);
 
-	#include "../glsl/fill.inc"
+	#include "glsl/fill.inc"
 
 	w.endFragmentShader();
 
@@ -301,7 +300,7 @@ varying vec2 raw_vertex_pos;
 		data->geometry.curvesTextureSize[0] << "\n";
 
 	w.beginVertexShader();
-	#include "../glsl/line.inc"
+	#include "glsl/line.inc"
 	w.endVertexShader();
 
 	w.beginFragmentShader();

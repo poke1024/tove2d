@@ -12,7 +12,7 @@
 #ifndef __TOVE_MESH_UTILS
 #define __TOVE_MESH_UTILS 1
 
-#include "utils.h"
+#include "../common.h"
 #include "../../thirdparty/polypartition.h"
 
 BEGIN_TOVE_NAMESPACE
@@ -38,13 +38,13 @@ public:
         stride(v.stride) {
 	}
 
-	vec2 &operator[](size_t i) const {
+	inline vec2 &operator[](size_t i) const {
 		return *reinterpret_cast<vec2*>(
             reinterpret_cast<uint8_t*>(vertices) + (i * stride)
         );
 	}
 
-	vec2* operator->() const {
+	inline vec2* operator->() const {
 		return reinterpret_cast<vec2*>(vertices);
 	}
 
@@ -52,12 +52,12 @@ public:
         return reinterpret_cast<uint8_t*>(vertices) + sizeof(vec2);
     }
 
-	Vertices& operator++() { // prefix
+	inline Vertices& operator++() { // prefix
 		vertices = reinterpret_cast<uint8_t*>(vertices) + stride;
 		return *this;
 	}
 
-	Vertices operator++(int) { // postfix
+	inline Vertices operator++(int) { // postfix
 		Vertices saved(*this);
 		operator++();
 		return saved;

@@ -9,7 +9,7 @@
 -- All rights reserved.
 -- *****************************************************************
 
---!! import "core/cquality.lua" as cquality
+--!! import "core/tesselator.lua" as createTesselator
 
 local function gcpath(p)
 	return p and ffi.gc(p, lib.ReleasePath)
@@ -95,7 +95,7 @@ local function makeDisplay(mode, quality, usage)
 		quality = quality or 1
 	end
 	return {mode = mode, quality = clonedQuality,
-		cquality = cquality(quality, usage)}
+		tesselator = createTesselator(quality, usage)}
 end
 
 function Graphics:setName(name)
@@ -259,7 +259,7 @@ function Graphics:setUsage(what, usage)
 		if what == "points" then
 			self._usage["triangles"] = usage
 		end
-		self._display.cquality = cquality(
+		self._display.tesselator = createTesselator(
 			self._display.quality, self._usage)
 	end
 end
@@ -319,7 +319,7 @@ function Graphics:draw(x, y, r, sx, sy)
 	self:_create().draw(x, y, r, sx, sy)
 end
 
-function Graphics:rasterize(width, height, tx, ty, scale, quality)
+function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
 		local resolution = self._resolution * tove._highdpi
 		local x0, y0, x1, y1 = self:computeAABB("exact")
@@ -348,7 +348,7 @@ function Graphics:rasterize(width, height, tx, ty, scale, quality)
 	local stride = imageData:getSize() / height
 	lib.GraphicsRasterize(
 		self._ref, imageData:getPointer(), width, height, stride,
-		tx or 0, ty or 0, scale or 1, quality)
+		tx or 0, ty or 0, scale or 1, settings)
 
 	return imageData
 end

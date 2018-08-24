@@ -35,55 +35,29 @@ GraphicsRef Graphics::createFromSVG(
 		NSVGimage *image = nsvgParse(mutableSVG, units, dpi);
 		free(mutableSVG);
 
-		graphics = std::make_shared<Graphics>(image);
+		graphics = tove_make_shared<Graphics>(image);
 		nsvgDelete(image);
 	} else {
-		graphics = std::make_shared<Graphics>();
+		graphics = tove_make_shared<Graphics>();
 	}
 	return graphics;
 }
 
-ToveMeshUpdateFlags Graphics::tesselate(
-	MeshRef mesh,
-	float scale,
-	const ToveTesselationQuality &quality,
-	ToveHoles holes,
-	ToveMeshUpdateFlags flags) const {
-
-	const int n = getNumPaths();
-	ToveMeshUpdateFlags updated;
-
-	if (quality.stopCriterion == TOVE_REC_DEPTH) {
-		FixedMeshifier meshifier(
-			scale, quality.recursionLimit, holes, flags);
-
-		updated = meshifier.graphicsToMesh(
-			this, mesh, mesh);
-	} else {
-		AdaptiveMeshifier meshifier(scale, quality);
-
-		// note: only this case supports clip paths.
-		computeClipPaths(meshifier);
-
-		updated = meshifier.graphicsToMesh(
-			this, mesh, mesh);
-	}
-
-	return updated;
-}
+// note: only this case supports clip paths.
+//computeClipPaths(meshifier); FIXME
 
 void Graphics::rasterize(
 	uint8_t *pixels,
 	int width, int height, int stride,
 	float tx, float ty, float scale,
-	const ToveTesselationQuality *quality) {
+	const ToveRasterizeSettings *settings) {
 
 	nsvg::rasterize(getImage(), tx, ty, scale,
-		pixels, width, height, stride, quality);
+		pixels, width, height, stride, settings);
 }
 
 static void copyFromNSVG(
-    PathOwner *owner,
+    Observer *observer,
     NSVGshape **anchor,
     std::vector<PathRef> &paths,
     const NSVGshape *shapes) {
@@ -91,35 +65,39 @@ static void copyFromNSVG(
     const NSVGshape *shape = shapes;
     int index = 0;
 	while (shape) {
-		PathRef path = std::make_shared<Path>(owner, shape);
+		PathRef path = tove_make_shared<Path>(shape);
+		if (observer) {
+			path->addObserver(observer);
+		}
         path->setIndex(index++);
 		if (paths.empty()) {
 			*anchor = &path->nsvg;
 		} else {
 			paths[paths.size() - 1]->setNext(path);
 		}
-		path->claim(owner);
 		paths.push_back(path);
 		shape = shape->next;
 	}
 }
 
 static void copyPaths(
-	PathOwner *owner,
+	Observer *observer,
 	NSVGshape **anchor,
 	std::vector<PathRef> &paths,
 	const std::vector<PathRef> &sourcePaths) {
 
 	int index = 0;
 	while (index < sourcePaths.size()) {
-		PathRef path = std::make_shared<Path>(sourcePaths[index].get());
+		PathRef path = tove_make_shared<Path>(sourcePaths[index].get());
+		if (observer) {
+			path->addObserver(observer);
+		}
 		path->setIndex(index++);
 		if (paths.empty()) {
 			*anchor = &path->nsvg;
 		} else {
 			paths[paths.size() - 1]->setNext(path);
 		}
-		path->claim(owner);
 		paths.push_back(path);
 	}
 }
@@ -127,21 +105,21 @@ static void copyPaths(
 #ifdef NSVG_CLIP_PATHS
 Clip::Clip(NSVGclipPath *clipPath) {
     std::memset(&nsvg, 0, sizeof(nsvg));
-    copyFromNSVG(this, &nsvg.shapes, paths, clipPath->shapes);
+    copyFromNSVG(nullptr, &nsvg.shapes, paths, clipPath->shapes);
     nsvg.index = clipPath->index;
 }
 
 Clip::Clip(const ClipRef &source, const nsvg::Transform &transform) {
 	std::memset(&nsvg, 0, sizeof(nsvg));
-	copyPaths(this, &nsvg.shapes, paths, source->paths);
+	copyPaths(nullptr, &nsvg.shapes, paths, source->paths);
 	nsvg.index = source->nsvg.index;
 	for (int i = 0; i < paths.size(); i++) {
 		paths[i]->set(paths[i], transform);
 	}
 }
 
-void Clip::compute(const AbstractMeshifier &meshifier) {
-    computed = meshifier.toClipPath(paths);
+void Clip::compute(const AbstractTesselator &tess) {
+    computed = tess.toClipPath(paths);
 }
 
 
@@ -155,7 +133,7 @@ ClipSet::ClipSet(const ClipSet &source, const nsvg::Transform &transform) {
 	const int numClips = source.clips.size();
 	clips.resize(numClips);
 	for (int i = 0; i < numClips; i++) {
-		clips[i] = std::make_shared<Clip>(source.clips[i], transform);
+		clips[i] = tove_make_shared<Clip>(source.clips[i], transform);
 	}
 	link();
 }
@@ -168,7 +146,7 @@ void Graphics::setNumPaths(int n) {
 	if (paths.size() != n) {
 		clear();
 		for (int i = 0; i < n; i++) {
-			_appendPath(std::make_shared<Path>());
+			_appendPath(tove_make_shared<Path>());
 		}
 	}
 }
@@ -179,11 +157,14 @@ void Graphics::_appendPath(const PathRef &path) {
 	} else {
 		current()->setNext(path);
 	}
+
     path->setIndex(paths.size());
 	path->clearNext();
-	path->claim(this);
 	paths.push_back(path);
-    changed(CHANGED_GEOMETRY);
+
+	path->addObserver(this);
+
+	changed(CHANGED_GEOMETRY | CHANGED_COLORS);
 }
 
 PathRef Graphics::beginPath() {
@@ -191,7 +172,7 @@ PathRef Graphics::beginPath() {
 		return current();
 	}
 
-	PathRef path = std::make_shared<Path>(this);
+	PathRef path = tove_make_shared<Path>();
 	_appendPath(path);
 
 	path->beginSubpath();
@@ -231,8 +212,8 @@ void Graphics::initialize(float width, float height) {
 	nsvg.width = width;
 	nsvg.height = height;
 
-	strokeColor = std::make_shared<Color>(0.25, 0.25, 0.25);
-	fillColor = std::make_shared<Color>(0.95, 0.95, 0.95);
+	strokeColor = tove_make_shared<Color>(0.25, 0.25, 0.25);
+	fillColor = tove_make_shared<Color>(0.95, 0.95, 0.95);
 
 	strokeWidth = 3.0;
 	strokeDashOffset = 0.0;
@@ -269,10 +250,10 @@ Graphics::Graphics(const NSVGimage *image) :
     std::vector<ClipRef> clips;
     NSVGclipPath *clipPath = image->clipPaths;
     while (clipPath) {
-        clips.push_back(std::make_shared<Clip>(clipPath));
+        clips.push_back(tove_make_shared<Clip>(clipPath));
         clipPath = clipPath->next;
     }
-    clipSet = std::make_shared<ClipSet>(clips);
+    clipSet = tove_make_shared<ClipSet>(clips);
 	nsvg.clipPaths = clipSet->getHead();
 #endif
 }
@@ -293,14 +274,14 @@ Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
 	clipSet = graphics->clipSet;
 
 	for (const auto &path : graphics->paths) {
-		addPath(path->clone());
+		addPath(path);
 	}
 }
 
 void Graphics::clear() {
 	if (paths.size() > 0) {
 		for (const auto &p : paths) {
-			p->unclaim(this);
+			p->removeObserver(this);
 		}
 		paths.clear();
 		nsvg.shapes = nullptr;
@@ -377,17 +358,11 @@ void Graphics::stroke() {
 }
 
 void Graphics::addPath(const PathRef &path) {
-	if (path->isClaimed()) {
-		addPath(path->clone());
-	} else {
-		closePath();
+	closePath();
 
-		path->closeSubpath();
-		_appendPath(path);
-
-		newPath = true;
-		changed(CHANGED_GEOMETRY);
-	}
+	path->closeSubpath();
+	_appendPath(path);
+	newPath = true;
 }
 
 PathRef Graphics::getPathByName(const char *name) const {
@@ -465,23 +440,18 @@ void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) 
 
 #ifdef NSVG_CLIP_PATHS
 	if (source->clipSet) {
-		clipSet = std::make_shared<ClipSet>(*source->clipSet.get(), transform);
+		clipSet = tove_make_shared<ClipSet>(*source->clipSet.get(), transform);
 	} else {
 		clipSet = ClipSetRef();
 	}
-	nsvg.clipPaths = clipSet->getHead();
+	nsvg.clipPaths = clipSet ? clipSet->getHead() : nullptr;
 #endif
 }
 
-ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags, bool clearAll) {
+ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags) {
     flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
 	const ToveChangeFlags c = changes & flags;
 	changes &= ~flags;
-	if (clearAll && c != 0) {
-		for (int i = 0; i < paths.size(); i++) {
-			paths[i]->clearChanges(flags);
-		}
-	}
 	return c;
 }
 
@@ -493,7 +463,7 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	if (paths.size() != n) {
 		clear();
 		while (paths.size() < n) {
-			addPath(std::make_shared<Path>());
+			addPath(tove_make_shared<Path>());
 		}
 	}
 	for (int i = 0; i < n; i++) {
@@ -501,11 +471,11 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	}
 }
 
-void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) const {
+void Graphics::computeClipPaths(const AbstractTesselator &tess) const {
 #ifdef NSVG_CLIP_PATHS
 	if (clipSet) {
 		for (const ClipRef &clip : clipSet->getClips()) {
-			clip->compute(meshifier);
+			clip->compute(tess);
 		}
 	}
 #endif
@@ -514,9 +484,6 @@ void Graphics::computeClipPaths(const AbstractMeshifier &meshifier) const {
 void Graphics::clearChanges(ToveChangeFlags flags) {
 	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
 	changes &= ~flags;
-	for (const auto &p : paths) {
-		p->clearChanges(flags);
-	}
 }
 
 END_TOVE_NAMESPACE

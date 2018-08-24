@@ -19,9 +19,9 @@ BEGIN_TOVE_NAMESPACE
 
 void Path::setSubpathCount(int n) {
 	if (subpaths.size() != n) {
-		clear();
+		removeSubpaths();
 		while (subpaths.size() < n) {
-			addSubpath(std::make_shared<Subpath>());
+			addSubpath(tove_make_shared<Subpath>());
 		}
 	}
 }
@@ -32,7 +32,7 @@ void Path::_append(const SubpathRef &trajectory) {
 	} else {
 		subpaths[subpaths.size() - 1]->setNext(trajectory);
 	}
-	trajectory->claim(this);
+	trajectory->addObserver(this);
 	subpaths.push_back(trajectory);
 	if (fillColor) {
 		trajectory->setIsClosed(true);
@@ -46,13 +46,13 @@ void Path::_setFillColor(const PaintRef &color) {
 	}
 
 	if (fillColor) {
-		fillColor->unclaim(this);
+		fillColor->removeObserver(this);
 	}
 
 	fillColor = color;
 
 	if (color) {
-		color->claim(this);
+		color->addObserver(this);
 		color->store(nsvg.fill);
 	} else {
 		nsvg.fill.type = NSVG_PAINT_NONE;
@@ -71,13 +71,13 @@ void Path::_setLineColor(const PaintRef &color) {
 	}
 
 	if (lineColor) {
-		lineColor->unclaim(this);
+		lineColor->removeObserver(this);
 	}
 
 	lineColor = color;
 
 	if (color) {
-		color->claim(this);
+		color->addObserver(this);
 		color->store(nsvg.stroke);
 	} else {
 		nsvg.stroke.type = NSVG_PAINT_NONE;
@@ -118,7 +118,7 @@ void Path::set(const NSVGshape *shape) {
 
 	NSVGpath *path = shape->paths;
 	while (path) {
-		_append(std::make_shared<Subpath>(path));
+		_append(tove_make_shared<Subpath>(path));
 		path = path->next;
 	}
 
@@ -162,38 +162,12 @@ Path::Path() :
 	newSubpath = true;
 }
 
-Path::Path(PathOwner *owner) :
-	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS),
-	pathIndex(-1) {
-
-	memset(&nsvg, 0, sizeof(nsvg));
-	nsvg.stroke.type = NSVG_PAINT_NONE;
-	nsvg.fill.type = NSVG_PAINT_NONE;
-	nsvg.opacity = 1.0;
-	nsvg.strokeWidth = 1.0;
-	nsvg.strokeDashOffset = 0.0;
-	nsvg.strokeDashCount = 0;
-	nsvg.strokeLineJoin = NSVG_JOIN_MITER;
-	nsvg.strokeLineCap = NSVG_CAP_BUTT;
-	nsvg.miterLimit = 4;
-	nsvg.fillRule = NSVG_FILLRULE_NONZERO;
-	nsvg.flags = NSVG_FLAGS_VISIBLE;
-	for (int i = 0; i < 4; i++) {
-		nsvg.bounds[i] = 0.0;
-		exactBounds[i] = 0.0f;
-	}
-
-	newSubpath = true;
-	claim(owner);
-}
-
-Path::Path(PathOwner *owner, const NSVGshape *shape) :
+Path::Path(const NSVGshape *shape) :
 	changes(0),
 	pathIndex(-1) {
 
 	set(shape);
 	newSubpath = true;
-	claim(owner);
 }
 
 Path::Path(const char *d) : changes(0), pathIndex(-1) {
@@ -235,21 +209,28 @@ Path::Path(const Path *path) :
 
 	subpaths.reserve(path->subpaths.size());
 	for (int i = 0; i < path->subpaths.size(); i++) {
-		_append(std::make_shared<Subpath>(path->subpaths[i]));
+		_append(tove_make_shared<Subpath>(path->subpaths[i]));
 	}
 
 	newSubpath = true;
 }
 
-void Path::clear() {
+void Path::removeSubpaths() {
 	if (subpaths.size() > 0) {
 		for (const auto &t : subpaths) {
-			t->unclaim(this);
+			t->removeObserver(this);
 		}
 		subpaths.clear();
 		nsvg.paths = nullptr;
 		changed(CHANGED_GEOMETRY);
 	}
+}
+
+void Path::clear() {
+	removeSubpaths();
+
+	_setFillColor(PaintRef());
+	_setLineColor(PaintRef());
 
 #ifdef NSVG_CLIP_PATHS
 	clipIndices.clear();
@@ -264,8 +245,8 @@ SubpathRef Path::beginSubpath() {
 	}
 	closeSubpath();
 
-	SubpathRef trajectory = std::make_shared<Subpath>();
-	trajectory->claim(this);
+	SubpathRef trajectory = tove_make_shared<Subpath>();
+	trajectory->addObserver(this);
 	if (subpaths.empty()) {
 		nsvg.paths = &trajectory->nsvg;
 	} else {
@@ -573,7 +554,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 }
 
 PathRef Path::clone() const {
-	return std::make_shared<Path>(this);
+	return tove_make_shared<Path>(this);
 }
 
 void Path::clean(float eps) {
@@ -643,38 +624,31 @@ void Path::geometryChanged() {
 	changed(CHANGED_GEOMETRY);
 }
 
-void Path::colorChanged(AbstractPaint *paint) {
-	if (paint == lineColor.get()) {
-		lineColor->store(nsvg.stroke);
-		changed(CHANGED_LINE_STYLE);
-	} else if (paint == fillColor.get()) {
-		fillColor->store(nsvg.fill);
-		changed(CHANGED_FILL_STYLE);
+void Path::observableChanged(Observable *observable, ToveChangeFlags flags) {
+	if ((flags & CHANGED_COLORS) != 0) {
+		ToveChangeFlags newFlags = 0;
+		if (observable == lineColor.get()) {
+			lineColor->store(nsvg.stroke);
+			newFlags |= CHANGED_LINE_STYLE;
+		}
+		if (observable == fillColor.get()) {
+			fillColor->store(nsvg.fill);
+			newFlags |= CHANGED_FILL_STYLE;
+		}
+		flags = newFlags;
 	}
-}
 
-void Path::clearChanges(ToveChangeFlags flags) {
-	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
-	changes &= ~flags;
-	for (const auto &t : subpaths) {
-		t->clearChanges(flags);
-	}
+	changed(flags);
 }
 
 void Path::changed(ToveChangeFlags flags) {
 	if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
-		flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
+		changes |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 	}
-	if ((changes & flags) == flags) {
-		return;
-	}
-	changes |= flags;
-	if (claimer) {
-		claimer->changed(flags);
-	}
+	broadcastChange(flags);
 }
 
-int Path::getFlattenedSize(const FixedFlattener &flattener) const {
+int Path::getFlattenedSize(const RigidFlattener &flattener) const {
 	int size = 0;
 	for (const auto &subpath : subpaths) {
 		size += flattener.size(subpath);

@@ -9,8 +9,11 @@
  * All rights reserved.
  */
 
+#ifndef __TOVE_SHADER_COLOR
+#define __TOVE_SHADER_COLOR 1
+
 #include <functional>
-#include "gen.h"
+#include "../gen.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -162,12 +165,13 @@ public:
 	}
 };
 
-class PaintFeedBase : public AbstractPaintFeed {
+class PaintFeedBase : public AbstractPaintFeed, public Observer {
 protected:
 	const ToveChangeFlags CHANGED_STYLE;
 	const PathRef path;
+	bool changed;
 
-	const PaintRef &getColor() const {
+	inline const PaintRef &getColor() const {
 		static const PaintRef none;
 
 		switch (CHANGED_STYLE) {
@@ -192,6 +196,9 @@ public:
 		path(path),
 		CHANGED_STYLE(CHANGED_STYLE) {
 
+		path->addObserver(this);
+		changed = false;
+
 		std::memset(&paintData, 0, sizeof(paintData));
 
 		const PaintRef &color = getColor();
@@ -200,7 +207,17 @@ public:
 		paintData.gradient.numColors = determineNumColors(color);
 	}
 
-	int getNumColors() const {
+	virtual ~PaintFeedBase() {
+		path->removeObserver(this);
+	}
+
+	virtual void observableChanged(Observable *observable, ToveChangeFlags what) {
+		if (what & CHANGED_STYLE) {
+			changed = true;
+		}
+	}
+
+	inline int getNumColors() const {
 		return paintData.gradient.numColors;
 	}
 
@@ -216,7 +233,9 @@ public:
 	}
 
 	inline ToveChangeFlags beginUpdate() {
-		if (path->fetchChanges(CHANGED_STYLE)) {
+		if (changed) {
+			changed = false;
+
 			const PaintRef &color = getColor();
 	        const TovePaintType style = getStyle(color);
 
@@ -266,3 +285,5 @@ public:
 };
 
 END_TOVE_NAMESPACE
+
+#endif // __TOVE_SHADER_COLOR

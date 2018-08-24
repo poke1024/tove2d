@@ -13,16 +13,16 @@
  #define __TOVE_TRAJECTORY 1
 
 #include "common.h"
-#include "claimable.h"
+#include "observer.h"
 #include "primitive.h"
-#include "shader/curvedata.h"
+#include "gpux/curve_data.h"
 #include "nsvg.h"
 #include "utils.h"
 #include "intersect.h"
 
 BEGIN_TOVE_NAMESPACE
 
-class Subpath : public Claimable<Path>, public std::enable_shared_from_this<Subpath> {
+class Subpath : public Observable, public std::enable_shared_from_this<Subpath> {
 private:
 	struct Command {
 		uint8_t type; // ToveCommandType
@@ -223,16 +223,7 @@ public:
 
 	void updateNSVG();
 
-	inline int fetchChanges() {
-		// always emits a change; could be optimized. currently
-		// only used in the curves renderer GeometryFeedImpl.
-		return CHANGED_POINTS;
-	}
-
 	void changed(ToveChangeFlags flags);
-
-	inline void clearChanges(ToveChangeFlags flags) {
-	}
 
 	void invert();
 	void clean(float eps = 0.0);

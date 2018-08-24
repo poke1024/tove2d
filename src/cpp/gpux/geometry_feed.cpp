@@ -9,7 +9,7 @@
  * All rights reserved.
  */
 
-#include "geometry.h"
+#include "geometry_feed.h"
 #include "../common.h"
 #include "../utils.h"
 #include "../subpath.h"
@@ -72,7 +72,7 @@ static void queryLUT(
 	}
 }
 
-int GeometryFeedImpl::buildLUT(int dim, const int ncurves) {
+int GeometryFeed::buildLUT(int dim, const int ncurves) {
 	const bool hasFragLine = geometryData.fragmentShaderStrokes;
 	const float lineWidth = geometryData.strokeWidth;
 
@@ -222,7 +222,7 @@ int GeometryFeedImpl::buildLUT(int dim, const int ncurves) {
 	return numFillEvents;
 }
 
-void GeometryFeedImpl::dumpCurveData() {
+void GeometryFeed::dumpCurveData() {
 #if 0
 	const int w = geometryData.curvesTextureSize[0];
 	const int h = geometryData.curvesTextureSize[1];
@@ -239,7 +239,7 @@ void GeometryFeedImpl::dumpCurveData() {
 #endif
 }
 
-GeometryFeedImpl::GeometryFeedImpl(
+GeometryFeed::GeometryFeed(
 	const PathRef &path,
 	ToveShaderGeometryData &data,
 	const TovePaintData &lineColorData,
@@ -270,10 +270,22 @@ GeometryFeedImpl::GeometryFeedImpl(
 	strokeCurves.reserve(maxCurves);
 	extended.resize(maxCurves);
 	initialUpdate = true;
+
+	path->addObserver(this);
+	changes = 0;
 }
 
-ToveChangeFlags GeometryFeedImpl::beginUpdate() {
-	if (!initialUpdate && path->fetchChanges(CHANGED_GEOMETRY)) {
+GeometryFeed::~GeometryFeed() {
+	path->removeObserver(this);	
+}
+
+ void GeometryFeed::observableChanged(Observable *observable, ToveChangeFlags what) {
+	changes |= what;
+}
+
+ToveChangeFlags GeometryFeed::beginUpdate() {
+	if (!initialUpdate && (changes & CHANGED_GEOMETRY)) {
+		changes = 0;
 		return CHANGED_RECREATE;
 	}
 
@@ -301,9 +313,8 @@ ToveChangeFlags GeometryFeedImpl::beginUpdate() {
 	return 0;
 }
 
-ToveChangeFlags GeometryFeedImpl::endUpdate() {
-	const ToveChangeFlags changes = path->fetchChanges(
-		CHANGED_POINTS | CHANGED_LINE_ARGS);
+ToveChangeFlags GeometryFeed::endUpdate() {
+	changes &= (CHANGED_POINTS | CHANGED_LINE_ARGS);
 	if (changes == 0 && !initialUpdate) {
 		return 0;
 	}
@@ -341,7 +352,7 @@ ToveChangeFlags GeometryFeedImpl::endUpdate() {
 			lineRuns++;
 		}
 
-		if (initialUpdate || t->fetchChanges() != 0) {
+		if (initialUpdate || true) { // FIXME: check for subpath changes
 			for (int j = 0; j < n; j++) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCurveData(
@@ -395,10 +406,13 @@ ToveChangeFlags GeometryFeedImpl::endUpdate() {
 
 	initialUpdate = false;
 
-	if ((changes & CHANGED_LINE_ARGS) && !path->hasStroke()) {
-		return changes & ~CHANGED_LINE_ARGS;
+	const ToveChangeFlags returnedChanges = changes;
+	changes = 0;
+
+	if ((returnedChanges & CHANGED_LINE_ARGS) && !path->hasStroke()) {
+		return returnedChanges & ~CHANGED_LINE_ARGS;
 	} else {
-		return changes;
+		return returnedChanges;
 	}
 }
 

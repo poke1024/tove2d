@@ -20,7 +20,7 @@ local meshRabbit = newRabbit()
 meshRabbit:setDisplay("mesh", 0.05)
 
 local shaderRabbit = newRabbit()
-shaderRabbit:setDisplay("shader")
+shaderRabbit:setDisplay("gpux")
 
 function love.draw()
 	tovedemo.draw("Zoom.")
@@ -43,7 +43,7 @@ function love.draw()
 			name = "mesh"
 		elseif i == 3 then
 			shaderRabbit:draw(110, 20)
-			name = "shader"
+			name = "gpux"
 		end
 		love.graphics.pop()
 

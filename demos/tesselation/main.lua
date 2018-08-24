@@ -5,7 +5,7 @@ local tove = require "tove"
 require "assets/tovedemo"
 
 local function newInfoText(graphics, quality)
-	return "quality " .. string.format("%.3f", quality) .. "\n" ..
+	return "resolution " .. string.format("%d", quality) .. "\n" ..
 		tostring(graphics:getNumTriangles()) .. " triangles"
 end
 
@@ -19,11 +19,12 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	local qualities = {0.01, 0.25, 1}
+	local qualities = {50, 100, 200}
 	for i = 1, 3 do
 		local graphics = newGraphics()
 		graphics:setDisplay("mesh", qualities[i])
-		flow:add(newInfoText(graphics, qualities[i]), graphics)
+		local record = flow:add(newInfoText(graphics, qualities[i]), graphics)
+		record.minsize = math.max(10, qualities[i])
 	end
 end
 

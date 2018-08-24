@@ -9,15 +9,14 @@
  * All rights reserved.
  */
 
-#include "data.h"
-
+#include "geometry_data.h"
 #include "../common.h"
 #include "../utils.h"
 #include <memory.h>
 
 BEGIN_TOVE_NAMESPACE
 
-AllocateGeometryData::AllocateGeometryData(
+GeometryData::GeometryData(
 	int maxCurves,
 	int maxSubPaths,
 	bool fragmentShaderStrokes,
@@ -83,14 +82,14 @@ AllocateGeometryData::AllocateGeometryData(
 	// - curvesTexture
 }
 
-AllocateGeometryData::~AllocateGeometryData() {
+GeometryData::~GeometryData() {
 	delete[] data.lineRuns;
 }
 
-AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
+GeometryNoLinkData::GeometryNoLinkData(
 	int maxCurves, int maxSubPaths,
 	bool fragmentShaderStrokes, ToveShaderGeometryData &data) :
-	AllocateGeometryData(maxCurves, maxSubPaths, fragmentShaderStrokes, data) {
+	GeometryData(maxCurves, maxSubPaths, fragmentShaderStrokes, data) {
 
 	// do not use this variant for data linked to tove's lua lib.
 
@@ -108,7 +107,7 @@ AllocateGeometryNoLinkData::AllocateGeometryNoLinkData(
 	data.lookupTableMeta = new ToveLookupTableMeta;
 }
 
-AllocateGeometryNoLinkData::~AllocateGeometryNoLinkData() {
+GeometryNoLinkData::~GeometryNoLinkData() {
 	delete data.bounds;
 
     delete[] data.listsTexture;

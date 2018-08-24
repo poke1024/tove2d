@@ -20,9 +20,9 @@ class AbstractMeshifier;
 
 #ifdef NSVG_CLIP_PATHS
 class Clip;
-typedef std::shared_ptr<Clip> ClipRef;
+typedef SharedPtr<Clip> ClipRef;
 
-class Clip : public PathOwner {
+class Clip : public Referencable {
 public:
 	Clip(NSVGclipPath *path);
 	Clip(const ClipRef &source, const nsvg::Transform &transform);
@@ -31,17 +31,14 @@ public:
 		nsvg.next = &clip->nsvg;
 	}
 
-	virtual void changed(ToveChangeFlags flags) {
-	}
-
-	void compute(const AbstractMeshifier &meshifier);
+	void compute(const AbstractTesselator &tess);
 
 	NSVGclipPath nsvg;
 	std::vector<PathRef> paths;
 	ClipperLib::Paths computed;
 };
 
-class ClipSet { // clip sets are immutable.
+class ClipSet : public Referencable { // clip sets are immutable.
 private:
 	std::vector<ClipRef> clips;
 	void link();
@@ -65,10 +62,10 @@ public:
 	}
 };
 
-typedef std::shared_ptr<ClipSet> ClipSetRef;
+typedef SharedPtr<ClipSet> ClipSetRef;
 #endif
 
-class Graphics : public PathOwner {
+class Graphics : public Referencable, public Observer {
 private:
 	std::vector<PathRef> paths;
 #ifdef NSVG_CLIP_PATHS
@@ -203,19 +200,23 @@ public:
 
 	void set(const GraphicsRef &source, const nsvg::Transform &transform);
 
-	virtual void changed(ToveChangeFlags flags) {
+	inline void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
 			flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
 		}
 		changes |= flags;
 	}
 
-	ToveChangeFlags fetchChanges(ToveChangeFlags flags, bool clearAll = false);
+	virtual void observableChanged(Observable *observable, ToveChangeFlags flags) {
+		changed(flags);
+	}
+
+	ToveChangeFlags fetchChanges(ToveChangeFlags flags);
 	void clearChanges(ToveChangeFlags flags);
 
 	void animate(const GraphicsRef &a, const GraphicsRef &b, float t);
 
-	void computeClipPaths(const AbstractMeshifier &meshifier) const;
+	void computeClipPaths(const AbstractTesselator &tess) const;
 
 #ifdef NSVG_CLIP_PATHS
 	inline const ClipSetRef &getClipSet() const {
@@ -227,18 +228,11 @@ public:
 	}
 #endif
 
-	ToveMeshUpdateFlags tesselate(
-		MeshRef mesh,
-		float scale,
-		const ToveTesselationQuality &quality,
-		ToveHoles holes,
-		ToveMeshUpdateFlags flags) const;
-
 	void rasterize(
 		uint8_t *pixels,
 		int width, int height, int stride,
 		float tx, float ty, float scale,
-		const ToveTesselationQuality *quality);
+		const ToveRasterizeSettings *settings = nullptr);
 };
 
 END_TOVE_NAMESPACE

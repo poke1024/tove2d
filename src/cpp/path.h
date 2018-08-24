@@ -14,17 +14,12 @@
 
 #include "subpath.h"
 #include "paint.h"
-#include "claimable.h"
+#include "observer.h"
 #include "mesh/flatten.h"
 
 BEGIN_TOVE_NAMESPACE
 
-class PathOwner {
-public:
-	virtual void changed(ToveChangeFlags flags) = 0;
-};
-
-class Path : public Claimable<PathOwner> {
+class Path : public Observable, public Observer {
 private:
 	bool newSubpath;
 	std::vector<SubpathRef> subpaths;
@@ -56,15 +51,15 @@ public:
 	NSVGshape nsvg;
 
 	Path();
-	Path(PathOwner *owner);
-	Path(PathOwner *owner, const NSVGshape *shape);
+	Path(const NSVGshape *shape);
 	Path(const char *d);
 	Path(const Path *path);
 
-	inline ~Path() {
+	virtual ~Path() {
 		clear();
 	}
 
+	void removeSubpaths();
 	void clear();
 
 	SubpathRef beginSubpath();
@@ -168,27 +163,15 @@ public:
 
 	void geometryChanged();
 
-	void colorChanged(AbstractPaint *paint);
-
-	inline bool hasChange(ToveChangeFlags change) const {
-		return changes & change;
-	}
-
-	inline ToveChangeFlags fetchChanges(ToveChangeFlags change) {
-		const ToveChangeFlags f = changes & change;
-		changes &= ~change;
-		return f;
-	}
-
-	void clearChanges(ToveChangeFlags flags);
-
 	void changed(ToveChangeFlags flags);
 
-	inline int getSubpathSize(int i, const FixedFlattener &flattener) const {
+	virtual void observableChanged(Observable *observable, ToveChangeFlags flags);
+
+	inline int getSubpathSize(int i, const RigidFlattener &flattener) const {
 		return flattener.size(subpaths[i]);
 	}
 
-	int getFlattenedSize(const FixedFlattener &flattener) const;
+	int getFlattenedSize(const RigidFlattener &flattener) const;
 
 	inline bool hasStroke() const {
 		return nsvg.stroke.type > 0 && nsvg.strokeWidth > 0.0f;

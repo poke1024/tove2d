@@ -26,7 +26,9 @@ namespace nsvg {
 thread_local NSVGparser *_parser = nullptr;
 thread_local NSVGrasterizer *rasterizer = nullptr;
 
-NSVGrasterizer *getRasterizer(const ToveTesselationQuality *quality) {
+NSVGrasterizer *getRasterizer(
+	const ToveRasterizeSettings *settings) {
+
 	static float defaultTessTol;
 	static float defaultDistTol;
 
@@ -41,9 +43,9 @@ NSVGrasterizer *getRasterizer(const ToveTesselationQuality *quality) {
 		defaultDistTol = rasterizer->distTol;
 	}
 
-	if (quality && quality->stopCriterion == TOVE_MAX_ERROR) {
-		rasterizer->tessTol = quality->maximumError;
-		rasterizer->distTol = quality->maximumError;
+	if (settings) {
+		rasterizer->tessTol = settings->tessTolerance;
+		rasterizer->distTol = settings->distTolerance;
 	} else {
 		rasterizer->tessTol = defaultTessTol;
 		rasterizer->distTol = defaultDistTol;
@@ -143,7 +145,7 @@ void CachedPaint::init(const NSVGpaint &paint, float opacity) {
 }
 
 bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
-	float scale, const ToveTesselationQuality *quality) {
+	float scale, const ToveRasterizeSettings *quality) {
 
 	// computing the shape stroke bounds is not trivial as miters
 	// might take varying amounts of space.
@@ -191,7 +193,7 @@ bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
 
 void rasterize(NSVGimage *image, float tx, float ty, float scale,
 	uint8_t* pixels, int width, int height, int stride,
-	const ToveTesselationQuality *quality) {
+	const ToveRasterizeSettings *quality) {
 
 	NSVGrasterizer *rasterizer = getRasterizer(quality);
 
@@ -221,8 +223,17 @@ Transform::Transform(
 	matrix[5] = f;
 }
 
+Transform::Transform(const Transform &t) {
+	identity = t.identity;
+	scaleLineWidth = t.scaleLineWidth;
+	for (int i = 0; i < 6; i++) {
+		matrix[i] = t.matrix[i];
+	}
+}
+
 void Transform::multiply(const Transform &t) {
 	nsvg__xformMultiply(matrix, const_cast<float*>(&t.matrix[0]));
+	identity = identity && t.identity;
 }
 
 void Transform::transformGradient(NSVGgradient* grad) const {

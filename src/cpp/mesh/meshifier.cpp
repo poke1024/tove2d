@@ -15,8 +15,19 @@
 
 BEGIN_TOVE_NAMESPACE
 
-ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
-	const Graphics *graphics,
+void AbstractTesselator::beginTesselate(
+	Graphics *graphics) {
+
+	this->graphics = graphics;
+}
+
+void AbstractTesselator::endTesselate() {
+	this->graphics = nullptr;
+}
+
+ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
+	Graphics *graphics,
+	ToveMeshUpdateFlags update, // UPDATE_MESH_EVERYTHING
 	const MeshRef &fill,
 	const MeshRef &line) {
 
@@ -28,16 +39,20 @@ ToveMeshUpdateFlags AbstractMeshifier::graphicsToMesh(
 		line->clear();
 	}
 
+	beginTesselate(graphics);
+
 	int fillIndex = 0;
 	int lineIndex = 0;
 
 	for (int i = 0; i < n; i++) {
 		updated |= pathToMesh(
-			graphics,
+			update,
 			graphics->getPath(i),
 			fill, line,
 			fillIndex, lineIndex);
 	}
+
+	endTesselate();
 
 	return updated;
 }
@@ -71,17 +86,32 @@ static void clip(
 #endif
 }
 
-AdaptiveMeshifier::AdaptiveMeshifier(
-	float scale, const ToveTesselationQuality &quality) :
-	flattener(scale, quality) {
+AdaptiveTesselator::AdaptiveTesselator(
+	AbstractAdaptiveFlattener *flattener) :
+	flattener(flattener) {
 }
 
-bool AdaptiveMeshifier::hasFixedSize() const {
+AdaptiveTesselator::~AdaptiveTesselator() {
+	delete flattener;
+}
+
+void AdaptiveTesselator::beginTesselate(
+	Graphics *graphics) {
+
+	AbstractTesselator::beginTesselate(graphics);
+
+	const float *bounds = graphics->getBounds();
+	const float extent = std::max(
+		bounds[2] - bounds[0], bounds[3] - bounds[1]);
+
+	flattener->configure(extent);
+}
+
+bool AdaptiveTesselator::hasFixedSize() const {
 	return false;
 }
 
-void AdaptiveMeshifier::renderStrokes(
-	const Graphics *graphics,
+void AdaptiveTesselator::renderStrokes(
 	const PathRef &path,
 	const ClipperLib::PolyNode *node,
 	ClipperPaths &holes,
@@ -90,7 +120,7 @@ void AdaptiveMeshifier::renderStrokes(
 	const NSVGshape *shape = path->getNSVG();
 
 	for (int i = 0; i < node->ChildCount(); i++) {
-		renderStrokes(graphics, path, node->Childs[i], holes, submesh);
+		renderStrokes(path, node->Childs[i], holes, submesh);
 	}
 
 	if (node->IsHole()) {
@@ -103,14 +133,15 @@ void AdaptiveMeshifier::renderStrokes(
 			paths.push_back(node->Contour);
 			paths.insert(paths.end(), holes.begin(), holes.end());
 			clip(graphics, path, paths);
-			submesh->addClipperPaths(paths, flattener.getScale(), TOVE_HOLES_CW);
+			submesh->addClipperPaths(
+				paths, flattener->getClipperScale(), TOVE_HOLES_CW);
 		}
 		holes.clear();
 	}
 }
 
-ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
-	const Graphics *graphics,
+ToveMeshUpdateFlags AdaptiveTesselator::pathToMesh(
+	ToveMeshUpdateFlags update,
 	const PathRef &path,
 	const MeshRef &fill,
 	const MeshRef &line,
@@ -132,7 +163,7 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 	}
 
 	Tesselation t;
-	flattener(path, t);
+	flattener->flatten(path, t);
 	// ClosedPathsFromPolyTree
 
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
@@ -140,7 +171,7 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 		const int index0 = fill->getVertexCount();
  		// ClipperLib always gives us TOVE_HOLES_CW.
  		fill->submesh(path, 0)->addClipperPaths(
-			t.fill, flattener.getScale(), TOVE_HOLES_CW);
+			t.fill, flattener->getClipperScale(), TOVE_HOLES_CW);
 		fill->setFillColor(path, index0, fill->getVertexCount() - index0);
 	}
 
@@ -148,7 +179,7 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 		shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
 		const int index0 = line->getVertexCount();
 		ClipperPaths holes;
-		renderStrokes(graphics, path, &t.stroke, holes, line->submesh(path, 1));
+		renderStrokes(path, &t.stroke, holes, line->submesh(path, 1));
 		line->setLineColor(path, index0, line->getVertexCount() - index0);
 	}
 
@@ -158,14 +189,14 @@ ToveMeshUpdateFlags AdaptiveMeshifier::pathToMesh(
 	return UPDATE_MESH_EVERYTHING;
 }
 
-ClipperLib::Paths AdaptiveMeshifier::toClipPath(
+ClipperLib::Paths AdaptiveTesselator::toClipPath(
 	const std::vector<PathRef> &paths) const {
 
 	ClipperLib::Paths flattened;
 
 	for (const PathRef &path : paths) {
 		Tesselation t;
-		flattener(path, t);
+		flattener->flatten(path, t);
 		ClipperLib::SimplifyPolygons(
 			t.fill, path->getClipperFillType());
 
@@ -181,19 +212,16 @@ ClipperLib::Paths AdaptiveMeshifier::toClipPath(
 	return std::move(flattened);
 }
 
-FixedMeshifier::FixedMeshifier(
-	float scale,
-	int recursionLimit,
-	ToveHoles holes,
-	ToveMeshUpdateFlags update) :
-	depth(std::min(MAX_FLATTEN_RECURSIONS, recursionLimit)),
-	holes(holes),
-	_update(update) {
-	assert(scale == 1.0f);
+RigidTesselator::RigidTesselator(
+	int subdivisions,
+	ToveHoles holes) :
+
+	flattener(subdivisions, 0.0),
+	holes(holes) {
 }
 
-ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
-	const Graphics *graphics,
+ToveMeshUpdateFlags RigidTesselator::pathToMesh(
+	ToveMeshUpdateFlags _update,
 	const PathRef &path,
 	const MeshRef &fill,
 	const MeshRef &line,
@@ -210,8 +238,6 @@ ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
 		shape->stroke.type == NSVG_PAINT_NONE) {
 		return _update;
 	}
-
-	FixedFlattener flattener(depth, 0.0);
 
 	const bool hasStroke = path->hasStroke();
 	const int n = path->getNumSubpaths();
@@ -402,13 +428,13 @@ ToveMeshUpdateFlags FixedMeshifier::pathToMesh(
 	return update;
 }
 
-ClipperLib::Paths FixedMeshifier::toClipPath(
+ClipperLib::Paths RigidTesselator::toClipPath(
 	const std::vector<PathRef> &paths) const {
 
 	return ClipperPaths();
 }
 
-bool FixedMeshifier::hasFixedSize() const {
+bool RigidTesselator::hasFixedSize() const {
 	return true;
 }
 

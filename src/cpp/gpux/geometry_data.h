@@ -17,26 +17,26 @@
 
 BEGIN_TOVE_NAMESPACE
 
-class AllocateGeometryData {
+class GeometryData {
 protected:
 	ToveShaderGeometryData &data;
 
 public:
-	AllocateGeometryData(
+	GeometryData(
 		int maxCurves,
 		int maxSubPaths,
 		bool fragmentShaderStrokes,
 		ToveShaderGeometryData &data);
-	~AllocateGeometryData();
+	~GeometryData();
 };
 
-struct AllocateGeometryNoLinkData : public AllocateGeometryData {
-	AllocateGeometryNoLinkData(
+struct GeometryNoLinkData : public GeometryData {
+	GeometryNoLinkData(
 		int maxCurves,
 		int maxSubPaths,
 		bool fragmentShaderStrokes,
 		ToveShaderGeometryData &data);
-	~AllocateGeometryNoLinkData();
+	~GeometryNoLinkData();
 };
 
 END_TOVE_NAMESPACE

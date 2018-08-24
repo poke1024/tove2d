@@ -30,7 +30,7 @@ local function newLinearGradient(r)
 end
 
 local hearts = {}
-local modes = {"texture", "mesh", "mesh", "shader"}
+local modes = {"texture", "mesh", "mesh", "gpux"}
 local names = {}
 
 local function createHearts(stroke, filled)
@@ -53,7 +53,7 @@ local function createHearts(stroke, filled)
 		-- cleanup for animated mesh rendering.
 		heart:setOrientation("ccw")
 
-		heart:setDisplay(modes[i], 1)
+		heart:setDisplay(modes[i], tove.newRigidTesselator(4))
 		heart:setUsage("points", "dynamic")
 		heart:setUsage("colors", "dynamic")
 

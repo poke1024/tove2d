@@ -12,6 +12,7 @@
 #ifndef __TOVE_CURVEDATA
 #define __TOVE_CURVEDATA 1
 
+#include "../common.h"
 #include <cmath>
 
 BEGIN_TOVE_NAMESPACE

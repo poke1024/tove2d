@@ -52,11 +52,11 @@ struct CachedPaint {
 };
 
 bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
-	float scale, const ToveTesselationQuality *quality);
+	float scale, const ToveRasterizeSettings *settings);
 
 void rasterize(NSVGimage *image, float tx, float ty, float scale,
 	uint8_t *pixels, int width, int height, int stride,
-	const ToveTesselationQuality *quality);
+	const ToveRasterizeSettings *settings);
 
 class Transform {
 private:
@@ -69,6 +69,7 @@ public:
 	Transform(
 		float a, float b, float c,
 		float d, float e, float f);
+	Transform(const Transform &t);
 
 	void multiply(const Transform &t);
 

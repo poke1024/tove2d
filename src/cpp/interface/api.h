@@ -80,11 +80,6 @@ EXPORT ToveFillRule PathGetFillRule(TovePathRef path);
 EXPORT void PathSetFillRule(TovePathRef path, ToveFillRule rule);
 EXPORT float PathGetOpacity(TovePathRef path);
 EXPORT void PathSetOpacity(TovePathRef path, float opacity);
-EXPORT void PathClearChanges(TovePathRef path);
-EXPORT ToveMeshResult PathTesselate(
-	TovePathRef path, ToveMeshRef fillMesh, ToveMeshRef lineMesh, float scale,
-	const ToveTesselationQuality *quality, ToveHoles holes, ToveMeshUpdateFlags flags);
-EXPORT ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags);
 EXPORT void PathSetOrientation(TovePathRef path, ToveOrientation orientation);
 EXPORT void PathClean(TovePathRef path, float eps);
 EXPORT bool PathIsInside(TovePathRef path, float x, float y);
@@ -117,12 +112,9 @@ EXPORT void GraphicsStroke(ToveGraphicsRef shape);
 EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact);
 EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
 	bool scaleLineWidth, float a, float b, float c, float d, float e, float f);
-EXPORT ToveMeshResult GraphicsTesselate(ToveGraphicsRef shape, ToveMeshRef mesh,
-	float scale, const ToveTesselationQuality *quality, ToveHoles holes,
-	ToveMeshUpdateFlags flags);
 EXPORT void GraphicsRasterize(ToveGraphicsRef shape, uint8_t *pixels,
 	int width, int height, int stride, float tx, float ty, float scale,
-	const ToveTesselationQuality *quality);
+	const ToveRasterizeSettings *settings);
 EXPORT void GraphicsAnimate(ToveGraphicsRef shape, ToveGraphicsRef a, ToveGraphicsRef b, float t);
 EXPORT void GraphicsSetOrientation(ToveGraphicsRef shape, ToveOrientation orientation);
 EXPORT void GraphicsClean(ToveGraphicsRef shape, float eps);
@@ -156,3 +148,14 @@ EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
 EXPORT const char *GetPaintShaderCode(int numPaints);
 EXPORT const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool lines);
 EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);
+
+EXPORT ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit);
+EXPORT ToveTesselatorRef NewRigidTesselator(int subdivisions, ToveHoles holes);
+EXPORT ToveTesselatorRef NewAntiGrainTesselator(const AntiGrainSettings *settings);
+EXPORT ToveMeshUpdateFlags TesselatorTessGraphics(ToveTesselatorRef tess,
+	ToveGraphicsRef graphics, ToveMeshRef mesh, ToveMeshUpdateFlags flags);
+EXPORT ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
+	ToveGraphicsRef graphics, TovePathRef path,
+	ToveMeshRef fillMesh, ToveMeshRef lineMesh, ToveMeshUpdateFlags flags);
+EXPORT void TesselatorSetMaxSubdivisions(int subdivisions);
+EXPORT void ReleaseTesselator(ToveTesselatorRef tess);

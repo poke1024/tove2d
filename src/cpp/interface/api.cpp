@@ -15,7 +15,9 @@
 #include "../graphics.h"
 #include "../mesh/mesh.h"
 #include "../mesh/meshifier.h"
-#include "../shader/link.h"
+#include "../mesh/flatten.h"
+#include "../shader/feed/color_feed.h"
+#include "../gpux/gpux_feed.h"
 #include <sstream>
 
 #if TOVE_TARGET == TOVE_TARGET_LOVE2D
@@ -37,8 +39,8 @@ static ToveMeshResult exception_safe(const F &f) {
 	}
 }
 
-static const ToveTesselationQuality *getDefaultQuality() {
-	static ToveTesselationQuality defaultQuality;
+static const ToveTesselationSettings *getDefaultQuality() {
+	static ToveTesselationSettings defaultQuality;
 
 	defaultQuality.stopCriterion = TOVE_MAX_ERROR;
 
@@ -69,7 +71,7 @@ TovePaintRef NewEmptyPaint() {
 }
 
 TovePaintRef NewColor(float r, float g, float b, float a) {
-	return paints.publish(std::make_shared<Color>(r, g, b, a));
+	return paints.publish(tove_make_shared<Color>(r, g, b, a));
 }
 
 void ColorSet(TovePaintRef color, float r, float g, float b, float a) {
@@ -93,11 +95,11 @@ ToveColorStop PaintGetColorStop(TovePaintRef paint, int i, float opacity) {
 }
 
 TovePaintRef NewLinearGradient(float x1, float y1, float x2, float y2) {
-	return paints.publish(std::make_shared<LinearGradient>(x1, y1, x2, y2));
+	return paints.publish(tove_make_shared<LinearGradient>(x1, y1, x2, y2));
 }
 
 TovePaintRef NewRadialGradient(float cx, float cy, float fx, float fy, float r) {
-	return paints.publish(std::make_shared<RadialGradient>(cx, cy, fx, fy, r));
+	return paints.publish(tove_make_shared<RadialGradient>(cx, cy, fx, fy, r));
 }
 
 ToveGradientParameters GradientGetParameters(TovePaintRef gradient) {
@@ -215,58 +217,55 @@ void PathSetOpacity(TovePathRef path, float opacity) {
 	deref(path)->setOpacity(opacity);
 }
 
-void PathClearChanges(TovePathRef path) {
-	deref(path)->clearChanges(-1);
-}
-
-ToveMeshResult PathTesselate(
+/*ToveMeshResult PathTesselate(
+	ToveGraphicsRef graphics,
 	TovePathRef path,
 	ToveMeshRef fillMesh,
 	ToveMeshRef lineMesh,
-	float scale,
-	const ToveTesselationQuality *quality0,
-	ToveHoles holes,
+	const ToveTesselationSettings *quality0,
 	ToveMeshUpdateFlags flags) {
 
+	const ToveTesselationSettings *quality =
+		quality0 ? quality0 : getDefaultQuality();
+
+	AbstractMeshifier *meshifier =
+		graphics->getMeshifier(path, *quality);
+	return meshifier->pathToMesh(
+		p,
+		deref(fillMesh), deref(lineMesh),
+		fillIndex, lineIndex);
+
+
+
 	return exception_safe(
-		[path, fillMesh, lineMesh, scale, quality0, holes, flags] () {
+		[graphics, path, fillMesh, lineMesh, quality0, flags] () {
 
 		ToveMeshUpdateFlags updated;
 		int fillIndex = 0;
 		int lineIndex = 0;
 
 		const PathRef p = deref(path);
-		Graphics *g = dynamic_cast<Graphics*>(p->getClaimer());
-		assert(g);
+		const Graphics *g = deref(graphics).get();
 
-		const ToveTesselationQuality *quality =
+		const ToveTesselationSettings *quality =
 			quality0 ? quality0 : getDefaultQuality();
 
 		if (quality->stopCriterion == TOVE_REC_DEPTH) {
-			FixedMeshifier meshifier(
-				scale, quality->recursionLimit, holes, flags);
+			FixedMeshifier meshifier(g, *quality, flags);
 			updated = meshifier.pathToMesh(
-				g,
 				p,
 				deref(fillMesh), deref(lineMesh),
 				fillIndex, lineIndex);
 		} else {
-			AdaptiveMeshifier meshifier(scale, *quality);
+			AdaptiveMeshifier meshifier(g, *quality);
 			updated = meshifier.pathToMesh(
-				g,
 				p,
 				deref(fillMesh), deref(lineMesh),
 				fillIndex, lineIndex);
 		}
 		return updated;
 	});
-}
-
-ToveChangeFlags PathFetchChanges(TovePathRef path, ToveChangeFlags flags) {
-	const ToveChangeFlags changes = deref(path)->fetchChanges(flags);
-	deref(path)->clearChanges(flags);
-	return changes;
-}
+}*/
 
 void PathSetOrientation(TovePathRef path, ToveOrientation orientation) {
 	deref(path)->setOrientation(orientation);
@@ -469,7 +468,7 @@ ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
 }
 
 ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics) {
-	return shapes.publish(std::make_shared<Graphics>(deref(graphics)));
+	return shapes.publish(tove_make_shared<Graphics>(deref(graphics)));
 }
 
 ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics) {
@@ -510,7 +509,7 @@ EXPORT TovePathRef GraphicsGetPathByName(ToveGraphicsRef shape, const char *name
 }
 
 ToveChangeFlags GraphicsFetchChanges(ToveGraphicsRef shape, ToveChangeFlags flags) {
-	return deref(shape)->fetchChanges(flags, true);
+	return deref(shape)->fetchChanges(flags);
 }
 
 void GraphicsSetFillColor(ToveGraphicsRef shape, TovePaintRef color) {
@@ -574,30 +573,28 @@ void GraphicsSet(
 	deref(graphics)->set(deref(source), transform);
 }
 
-ToveMeshResult GraphicsTesselate(
+/*ToveMeshResult GraphicsTesselate(
 	ToveGraphicsRef graphics,
 	ToveMeshRef mesh,
-	float scale,
-	const ToveTesselationQuality *quality,
-	ToveHoles holes,
+	const ToveTesselationSettings *quality,
 	ToveMeshUpdateFlags flags) {
 
 	return exception_safe(
-		[graphics, mesh, scale, quality, holes, flags] () {
+		[graphics, mesh, quality, flags] () {
 
 		return deref(graphics)->tesselate(
-			deref(mesh), scale,
+			deref(mesh),
 			*(quality ? quality : getDefaultQuality()),
-			holes, flags);
+			flags);
 	});
-}
+}*/
 
 void GraphicsRasterize(
 	ToveGraphicsRef shape, uint8_t *pixels, int width, int height, int stride,
-	float tx, float ty, float scale, const ToveTesselationQuality *quality) {
+	float tx, float ty, float scale, const ToveRasterizeSettings *settings) {
 
 	deref(shape)->rasterize(
-		pixels, width, height, stride, tx, ty, scale, quality);
+		pixels, width, height, stride, tx, ty, scale, settings);
 }
 
 void GraphicsAnimate(
@@ -648,11 +645,11 @@ void ReleaseGraphics(ToveGraphicsRef graphics) {
 
 
 ToveFeedRef NewColorFeed(ToveGraphicsRef graphics, float scale) {
-	return shaderLinks.publish(std::make_shared<ColorFeed>(deref(graphics), scale));
+	return shaderLinks.publish(tove_make_shared<ColorFeed>(deref(graphics), scale));
 }
 
 ToveFeedRef NewGeometryFeed(TovePathRef path, bool enableFragmentShaderStrokes) {
-	return shaderLinks.publish(std::make_shared<GeometryFeed>(
+	return shaderLinks.publish(tove_make_shared<GPUXFeed>(
 		deref(path), enableFragmentShaderStrokes));
 }
 
@@ -682,15 +679,15 @@ void ReleaseFeed(ToveFeedRef link) {
 
 
 ToveMeshRef NewMesh() {
-	return meshes.publish(std::make_shared<Mesh>());
+	return meshes.publish(tove_make_shared<Mesh>());
 }
 
 ToveMeshRef NewColorMesh() {
-	return meshes.publish(std::make_shared<ColorMesh>());
+	return meshes.publish(tove_make_shared<ColorMesh>());
 }
 
 ToveMeshRef NewPaintMesh() {
-	return meshes.publish(std::make_shared<PaintMesh>());
+	return meshes.publish(tove_make_shared<PaintMesh>());
 }
 
 int MeshGetVertexCount(ToveMeshRef mesh) {
@@ -712,6 +709,54 @@ void MeshCache(ToveMeshRef mesh, bool keyframe) {
 void ReleaseMesh(ToveMeshRef mesh) {
 	meshes.release(mesh);
 }
+
+ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit) {
+	return tesselators.publish(tove_make_shared<AdaptiveTesselator>(
+		new AdaptiveFlattener<DefaultCurveFlattener>(
+			DefaultCurveFlattener(resolution, recursionLimit))));
+}
+
+ToveTesselatorRef NewRigidTesselator(int subdivisions, ToveHoles holes) {
+	return tesselators.publish(tove_make_shared<RigidTesselator>(subdivisions, holes));
+}
+
+ToveMeshUpdateFlags TesselatorTessGraphics(ToveTesselatorRef tess,
+	ToveGraphicsRef graphics, ToveMeshRef mesh, ToveMeshUpdateFlags flags) {
+
+	tove::MeshRef m = deref(mesh);
+	return deref(tess)->graphicsToMesh(deref(graphics).get(), flags, m, m);
+}
+
+ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
+	ToveGraphicsRef graphics, TovePathRef path,
+	ToveMeshRef fillMesh, ToveMeshRef lineMesh, ToveMeshUpdateFlags flags) {
+
+	const float *bounds = deref(graphics)->getBounds();
+	const float graphicsScale = std::max(
+		bounds[2] - bounds[0], bounds[3] - bounds[1]);
+
+	int lineIndex = 0;
+	int fillIndex = 0;
+
+	deref(tess)->beginTesselate(deref(graphics).get());
+
+	ToveMeshUpdateFlags result = deref(tess)->pathToMesh(
+		flags, deref(path),
+		deref(fillMesh), deref(lineMesh), fillIndex, lineIndex);
+
+	deref(tess)->endTesselate();
+
+	return result;
+}
+
+void TesselatorSetMaxSubdivisions(int subdivisions) {
+	toveMaxFlattenSubdivisions = subdivisions;
+}
+
+void ReleaseTesselator(ToveTesselatorRef tess) {
+	tesselators.release(tess);
+}
+
 
 } // extern "C"
 

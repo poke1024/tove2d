@@ -13,14 +13,14 @@
 #define __TOVE_PAINT 1
 
 #include "common.h"
-#include "claimable.h"
+#include "observer.h"
 #include "nsvg.h"
 
 BEGIN_TOVE_NAMESPACE
 
 void copyColor(ToveRGBA &rgba, uint32_t color, float opacity);
 
-class AbstractPaint : public Claimable<Path> {
+class AbstractPaint : public Observable {
 protected:
 	void changed();
 
@@ -69,7 +69,7 @@ public:
 	virtual PaintRef clone() const {
 		ToveRGBA rgba;
 		getRGBA(rgba, 1.0);
-		return std::make_shared<Color>(rgba.r, rgba.g, rgba.b, rgba.a);
+		return tove_make_shared<Color>(rgba.r, rgba.g, rgba.b, rgba.a);
 	}
 
 	virtual void getGradientParameters(ToveGradientParameters &p);
@@ -226,7 +226,7 @@ public:
 	virtual void getGradientParameters(ToveGradientParameters &p);
 
 	virtual PaintRef clone() const {
-		return std::make_shared<LinearGradient>(*this);
+		return tove_make_shared<LinearGradient>(*this);
 	}
 
 	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);
@@ -258,7 +258,7 @@ public:
 	virtual void getGradientParameters(ToveGradientParameters &p);
 
 	virtual PaintRef clone() const {
-		return std::make_shared<RadialGradient>(*this);
+		return tove_make_shared<RadialGradient>(*this);
 	}
 
 	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform);

@@ -19,13 +19,13 @@
 
 BEGIN_TOVE_NAMESPACE
 
-class FixedFlattener;
+class RigidFlattener;
 
 typedef uint32_t SubmeshId;
 
 class Submesh;
 
-class AbstractMesh {
+class AbstractMesh : public Referencable {
 protected:
 	void *mVertices;
 	uint32_t mVertexCount;
@@ -98,13 +98,13 @@ public:
 	void triangulateFixedFill(
 		const int vertexIndex0,
 		const PathRef &path,
-		const FixedFlattener &flattener,
+		const RigidFlattener &flattener,
 		ToveHoles holes);
 	void triangulateFixedLine(
 		int v0,
 		bool miter,
 		const PathRef &path,
-		const FixedFlattener &flattener);
+		const RigidFlattener &flattener);
 
 	inline bool checkTriangles(bool &trianglesChanged) {
 		return mTriangles.check(

@@ -51,12 +51,16 @@ function tovedemo.newCoverFlow(scale)
 end
 
 function CoverFlow:add(name, item)
-	table.insert(self.items, {
+	local rec = {
 		zoom = 0,
+		minsize = 200,
+		maxsize = 400,
 		scale = 1,
 		name = name,
 		item = item
-	})
+	}
+	table.insert(self.items, rec)
+	return rec
 end
 
 function CoverFlow:getFocus()
@@ -87,7 +91,7 @@ function CoverFlow:draw()
 	local x = love.graphics.getWidth() / 2 - width / 2
 	for i, item in ipairs(self.items) do
 		local scale = item.scale
-		local size = scale * 200
+		local size = 200 * scale
 
 		x = x + size / 2
 
@@ -100,7 +104,8 @@ function CoverFlow:draw()
 		love.graphics.setColor(1, 1, 1)
 		love.graphics.push()
 		love.graphics.translate(x, love.graphics.getHeight() / 2)
-		love.graphics.scale(scale * self.basescale)
+		local s = (item.minsize + (item.maxsize - item.minsize) * (scale - 1)) / 200
+		love.graphics.scale(s * self.basescale)
 		item.item:draw(0, 0)
 		love.graphics.pop()
 

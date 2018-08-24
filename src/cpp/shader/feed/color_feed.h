@@ -12,8 +12,7 @@
 #ifndef __TOVE_SHADER_LINK
 #define __TOVE_SHADER_LINK 1
 
-#include "color.h"
-#include "geometry.h"
+#include "paint_feed.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -85,37 +84,6 @@ public:
 			changes |= feed.endUpdate();
 		}
 		return changes;
-    }
-};
-
-class GeometryFeed : public AbstractFeed {
-private:
-	ToveShaderData data;
-	LinePaintFeed lineColor;
-	FillPaintFeed fillColor;
-	GeometryFeedImpl geometry;
-
-public:
-	GeometryFeed(const PathRef &path, bool enableFragmentShaderStrokes) :
-		lineColor(path, data.color.line, 1),
-		fillColor(path, data.color.fill, 1),
-		geometry(path, data.geometry, data.color.line, enableFragmentShaderStrokes) {
-	}
-
-	virtual ToveChangeFlags beginUpdate() {
-		return lineColor.beginUpdate() |
-			fillColor.beginUpdate() |
-			geometry.beginUpdate();
-	}
-
-    virtual ToveChangeFlags endUpdate() {
-		return lineColor.endUpdate() |
-			fillColor.endUpdate() |
-			geometry.endUpdate();
-    }
-
-    virtual ToveShaderData *getData() {
-    	return &data;
     }
 };
 

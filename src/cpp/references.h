@@ -16,11 +16,11 @@ BEGIN_TOVE_NAMESPACE
 template<typename T, typename ToveType>
 struct References {
 public:
-	typedef std::shared_ptr<T> Ref;
+	typedef SharedPtr<T> Ref;
 
 	template<typename... Params>
 	inline ToveType make(Params... params) {
-		return publish(std::make_shared<T>(params...));
+		return publish(tove_make_shared<T>(params...));
 	}
 
 	inline ToveType publish(const Ref &ref) {
@@ -76,6 +76,10 @@ inline const MeshRef &deref(const ToveMeshRef &ref) {
 	DEREF(MeshRef)
 }
 
+inline const TesselatorRef &deref(const ToveTesselatorRef &ref) {
+	DEREF(TesselatorRef)
+}
+
 #undef DEREF
 
 References<Graphics, ToveGraphicsRef> shapes;
@@ -84,6 +88,7 @@ References<Subpath, ToveSubpathRef> trajectories;
 References<AbstractPaint, TovePaintRef> paints;
 References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;
+References<AbstractTesselator, ToveTesselatorRef> tesselators;
 
 #endif // TOVE_TARGET_LOVE2D
 

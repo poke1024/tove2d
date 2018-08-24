@@ -117,29 +117,18 @@ local function _cacheMesh(data, ...)
 end
 
 create.mesh = function(self)
-	-- allow line strokes <= 1 by prescaling.
 	local display = self._display
-	local cquality, holes = unpack(display.cquality)
+	local tsref = display.tesselator
 	local usage = self._usage
 	local name = self._name or "unnamed"
 
-	local resolution
-	if cquality.stopCriterion == lib.TOVE_REC_DEPTH then
-		resolution = 1
-	else
-		resolution = self._resolution * 1024
-	end
-
 	local gref = self._ref
-
 	local tess = function(cmesh, flags)
-		local res = lib.GraphicsTesselate(
-			gref, cmesh, resolution, cquality, holes, flags)
-		return res.update
+		return lib.TesselatorTessGraphics(tsref, gref, cmesh, flags)
 	end
 
-	if lib.GraphicsAreColorsSolid(self._ref) and
-		usage["shaders"] ~= "prefer" then
+	if lib.GraphicsAreColorsSolid(self._ref) or
+		usage["shaders"] == "avoid" then
 
 		local mesh = tove.newColorMesh(name, usage, tess)
 		local x0, y0, x1, y1 = self:computeAABB()
@@ -164,7 +153,7 @@ create.mesh = function(self)
 	end
 end
 
-create.shader = function(self)
+create.gpux = function(self)
 	local quality = self._display.quality
 	local shaders = self:shaders(function(path)
 		return _shaders.newComputeShader(path, quality)

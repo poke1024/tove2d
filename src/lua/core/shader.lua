@@ -230,8 +230,6 @@ local function newComputeFeedData(path, quality)
 	fillColorSend:endInit(path)
 	geometryFeed:endInit(data.color.line.style)
 
-	path:clearChanges()
-
 	local linkData = {
 		link = link,
 		data = data,

@@ -15,7 +15,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "curvedata.h"
+#include "curve_data.h"
 
 BEGIN_TOVE_NAMESPACE
 

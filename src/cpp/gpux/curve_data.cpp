@@ -10,7 +10,7 @@
  */
 
 #include "../common.h"
-#include "curvedata.h"
+#include "curve_data.h"
 #include <algorithm>
 
 BEGIN_TOVE_NAMESPACE
