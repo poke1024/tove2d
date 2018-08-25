@@ -6,6 +6,7 @@
 
 #include "editor/plugins/canvas_item_editor_plugin.h"
 #include "core/os/keyboard.h"
+#include "../src/cpp/mesh/meshifier.h"
 
 static Array subpath_points_array(const tove::SubpathRef &subpath) {
 	const int n = subpath->getNumPoints();
@@ -825,8 +826,12 @@ void VGEditor::_update_overlay(bool p_always_update) {
 
     overlay = Ref<ArrayMesh>(memnew(ArrayMesh));
 	if (overlay_graphics->getNumPaths() > 0) {
-		ToveGraphicsBackend backend(overlay_graphics, 0.75);
-		backend.mesh(overlay);		
+		tove::TesselatorRef tesselator = tove::tove_make_shared<tove::AdaptiveTesselator>(
+			new tove::AdaptiveFlattener<tove::DefaultCurveFlattener>(
+				tove::DefaultCurveFlattener(200.0f, 6)));
+	    tove::MeshRef tove_mesh = tove::tove_make_shared<tove::ColorMesh>(); 
+		tesselator->graphicsToMesh(overlay_graphics.get(), UPDATE_MESH_EVERYTHING, tove_mesh, tove_mesh);
+		copy_mesh(overlay, tove_mesh);
 	}
 	overlay_full_xform = xform;
 }

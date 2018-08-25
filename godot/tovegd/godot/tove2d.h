@@ -14,50 +14,12 @@
 #include "../src/cpp/subpath.h"
 #include "../src/cpp/paint.h"
 
-enum ToveBackend {
-	TOVE_BACKEND_INHERIT,
-    TOVE_BACKEND_TEXTURE,
-    TOVE_BACKEND_MESH
-};
+inline Rect2 tove_bounds_to_rect2(const float *bounds) {
+	return Rect2(bounds[0], bounds[1],  bounds[2] - bounds[0], bounds[3] - bounds[1]);
+}
 
-VARIANT_ENUM_CAST(ToveBackend);
+tove::PathRef new_transformed_path(const tove::PathRef &p_tove_path, const Transform2D &p_transform);
 
-struct VGMeshData {
-	Ref<ArrayMesh> mesh;
-	Ref<ImageTexture> texture;
-};
-
-class ToveGraphicsBackend {
-	const tove::GraphicsRef &graphics;
-	const float quality;
-
-public:
-	inline ToveGraphicsBackend(
-		const tove::GraphicsRef &p_graphics,
-		float p_quality) :
-		graphics(p_graphics),
-		quality(p_quality) {
-	}
-
-	void mesh(Ref<ArrayMesh> &mesh);
-	void texture(Ref<ArrayMesh> &mesh);
-
-	VGMeshData create_mesh_data(ToveBackend p_backend);
-	Ref<ImageTexture> create_texture();
-};
-
-class TovePathBackend : public ToveGraphicsBackend {
-public:
-	TovePathBackend(
-		const tove::PathRef &p_path,
-		const tove::ClipSetRef &p_clip_set,
-		float p_quality);
-};
-
-Ref<Image> tove_graphics_rasterize(
-	const tove::GraphicsRef &tove_graphics,
-	int p_width, int p_height,
-	float p_tx, float p_ty,
-	float p_scale);
+void copy_mesh(Ref<ArrayMesh> &p_mesh, tove::MeshRef &p_tove_mesh);
 
 #endif // TOVEGD_TOVE2D_H

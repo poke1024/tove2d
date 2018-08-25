@@ -2,6 +2,8 @@
 /*  vector_graphics.cpp                                                  */
 /*************************************************************************/
 
+#if 0
+
 #include "vector_graphics.h"
 #include "os/file_access.h"
 #include "scene/resources/primitive_meshes.h"
@@ -469,3 +471,5 @@ void VectorGraphics::_get_property_list(List<PropertyInfo> *p_list) const {
 		}
 	}
 }
+
+#endif

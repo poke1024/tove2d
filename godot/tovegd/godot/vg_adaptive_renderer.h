@@ -5,17 +5,23 @@
 #ifndef VG_ADAPTIVE_RENDERER_H
 #define VG_ADAPTIVE_RENDERER_H
 
-#include "vg_renderer.h"
+#include "vg_mesh_renderer.h"
 
-class VGAdaptiveRenderer : public VGRenderer {
+class VGAdaptiveRenderer : public VGMeshRenderer {
 	GDCLASS(VGAdaptiveRenderer, VGRenderer);
 
     float quality;
 
+protected:
+    void create_tesselator();
+
+	static void _bind_methods();
+
 public:
     VGAdaptiveRenderer();
 
-    virtual VGMeshData graphics_to_mesh(const tove::GraphicsRef &p_tove_graphics) const;
+    float get_quality();
+    void set_quality(float p_quality);
 };
 
 #endif VG_ADAPTIVE_RENDERER_H

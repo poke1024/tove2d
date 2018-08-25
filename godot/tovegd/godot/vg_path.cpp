@@ -8,10 +8,6 @@
 #include "vg_color.h"
 #include "vg_adaptive_renderer.h"
 
-inline Rect2 tove_bounds_to_rect2(const float *bounds) {
-	return Rect2(bounds[0], bounds[1],  bounds[2] - bounds[0], bounds[3] - bounds[1]);
-}
-
 static tove::PaintRef to_tove_paint(Ref<VGPaint> p_paint) {
 	Ref<VGColor> color = p_paint;
 	if (color.is_null()) {
@@ -94,20 +90,43 @@ void VGPath::set_inherited_dirty(Node *p_node) {
 	}
 }
 
-void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics, Node *p_node) {
+void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics,
+	const Transform2D &p_transform, Node *p_node) {
+
 	const int n = p_node->get_child_count();
 	for (int i = 0; i < n; i++) {
 		Node *child = p_node->get_child(i);
-		if (child->is_class_ptr(get_class_ptr_static())) {
-			Object::cast_to<VGPath>(child)->add_tove_path(p_tove_graphics);
+
+		Transform2D t;
+		if (child->is_class_ptr(CanvasItem::get_class_ptr_static())) {
+			t = p_transform * Object::cast_to<CanvasItem>(child)->get_transform();
 		} else {
-			compose_graphics(p_tove_graphics, child);
+			t = p_transform;
 		}
+
+		compose_graphics(p_tove_graphics, t, child);
+	}
+
+	if (p_node->is_class_ptr(get_class_ptr_static())) {
+		VGPath *path = Object::cast_to<VGPath>(p_node);
+		p_tove_graphics->addPath(new_transformed_path(path->get_tove_path(), p_transform));
 	}
 }
 
 bool VGPath::inherits_renderer() const {
 	return renderer.is_null();
+}
+
+VGPath *VGPath::get_root_path() {
+	VGPath *root = this;
+	Node *node = get_parent();
+	while (node) {
+		if (node->is_class_ptr(get_class_ptr_static())) {
+			root = Object::cast_to<VGPath>(node);
+		}
+		node = node->get_parent();
+	}
+	return root;	
 }
 
 Ref<VGRenderer> VGPath::get_inherited_renderer() const {
@@ -139,12 +158,11 @@ void VGPath::update_mesh_representation() {
 	if (!is_empty()) {
 		Ref<VGRenderer> renderer = get_inherited_renderer();
 		if (renderer.is_valid()) {
-			tove::GraphicsRef tove_graphics = create_tove_graphics();
-			// FIXME use composite graphics from root node here.
-			mesh_data = renderer->graphics_to_mesh(tove_graphics);
-			bounds = tove_bounds_to_rect2(tove_graphics->getBounds());
+
+			bounds = renderer->render_mesh(mesh, this);
+			texture = renderer->render_texture(this);
 		}
-	}		
+	}
 }
 
 void VGPath::update_tove_fill_color() {
@@ -163,13 +181,18 @@ void VGPath::create_line_color() {
 	set_line_color(from_tove_paint(tove_path->getLineColor()));
 }
 
+void VGPath::_renderer_changed() {
+	set_dirty();
+	set_inherited_dirty(this);	
+}
+
 void VGPath::_notification(int p_what) {
 
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
 			update_mesh_representation();
 			if (!is_empty()) {
-				draw_mesh(mesh_data.mesh, mesh_data.texture, Ref<Texture>());
+				draw_mesh(mesh, texture, Ref<Texture>());
 			}
 		} break;
 		case NOTIFICATION_PARENTED: {
@@ -203,6 +226,8 @@ void VGPath::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("insert_curve", "subpath", "t"), &VGPath::insert_curve);
 	ClassDB::bind_method(D_METHOD("remove_curve", "subpath", "curve"), &VGPath::remove_curve);
 	ClassDB::bind_method(D_METHOD("set_points", "subpath", "points"), &VGPath::set_points);
+
+	ClassDB::bind_method(D_METHOD("_renderer_changed"), &VGPath::_renderer_changed);
 }
 
 bool VGPath::_set(const StringName &p_name, const Variant &p_value) {
@@ -326,7 +351,14 @@ Ref<VGRenderer> VGPath::get_renderer() {
 
 void VGPath::set_renderer(const Ref<VGRenderer> &p_renderer) {
 
+	if (renderer.is_valid()) {
+		renderer->disconnect("changed", this, "_renderer_changed");		
+	}
 	renderer = p_renderer;
+	if (renderer.is_valid()) {
+		renderer->connect("changed", this, "_renderer_changed");
+	}
+
 	set_inherited_dirty(this);
 	set_dirty();
 }
@@ -521,16 +553,24 @@ tove::PathRef VGPath::get_tove_path() const {
 	return tove_path;
 }
 
-MeshInstance2D *VGPath::create_mesh_node() {
-	const Ref<VGRenderer> renderer = get_inherited_renderer();
+tove::GraphicsRef VGPath::get_subtree_graphics() {
 	tove::GraphicsRef tove_graphics = tove::tove_make_shared<tove::Graphics>();
-	compose_graphics(tove_graphics, this);
+	compose_graphics(tove_graphics, Transform2D(), this);
+	return tove_graphics;
+}
+
+MeshInstance2D *VGPath::create_mesh_node() {
 	MeshInstance2D *mesh_inst = memnew(MeshInstance2D);
+
+	Ref<VGRenderer> renderer = get_inherited_renderer();
 	if (renderer.is_valid()) {
-		VGMeshData mesh_data = renderer->graphics_to_mesh(tove_graphics);
-		mesh_inst->set_mesh(mesh_data.mesh);
-		mesh_inst->set_texture(mesh_data.texture);		
+		Ref<ArrayMesh> mesh;
+		mesh.instance();
+		renderer->render_mesh(mesh, this);
+		mesh_inst->set_mesh(mesh);
+		mesh_inst->set_texture(renderer->render_texture(this));		
 	}
+
 	return mesh_inst;
 }
 
@@ -588,7 +628,7 @@ VGPath *VGPath::createFromSVG(Ref<Resource> p_resource, Node *p_owner) {
 
 	Ref<VGAdaptiveRenderer> renderer;
 	renderer.instance();
-	root->renderer = renderer;
+	root->set_renderer(renderer);
 
 	const float *bounds = tove_graphics->getBounds();
 
@@ -612,26 +652,6 @@ VGPath *VGPath::createFromSVG(Ref<Resource> p_resource, Node *p_owner) {
 		if (name.empty()) {
 			name = "path";
 		}
-
-//		Point2 center = compute_center(tove_path);
-//		path->set_position(center);
-
-/*
-		Transform2D t = path->get_transform().affine_inverse();
-		const Vector2 &tx = t.elements[0];
-		const Vector2 &ty = t.elements[1];
-		const Vector2 &to = t.elements[2];
-
-		printf("?? %f %f\n", center.x, center.y);
-		printf("! %f %f %f %f %f %f\n", tx.x, ty.x, to.x, tx.y, ty.y, to.y);
-
-		//tove::nsvg::Transform tove_transform(tx.x, ty.x, to.x, tx.y, ty.y, to.y);#
-		tove::nsvg::Transform tove_transform(1, 0, -center.x, 0, 1, -center.y);
-		tove_path->set(tove_path, tove_transform);
-		*/
-//		tove_path->set(tove_path, tove::nsvg::Transform(1, 0, -center.x, 0, 1, -center.y));
-
-		//path->get_transform().elements[0]
 
 		path->set_name(String(name.c_str()));
 		root->add_child(path);

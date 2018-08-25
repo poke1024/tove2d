@@ -7,7 +7,6 @@
 
 #include "tove2d.h"
 #include "scene/2d/mesh_instance_2d.h"
-#include "vector_graphics.h"
 #include "vg_paint.h"
 #include "vg_renderer.h"
 
@@ -16,7 +15,8 @@ class VGPath : public Node2D {
 
 	Transform2D transform;
 	tove::PathRef tove_path;
-	VGMeshData mesh_data;
+	Ref<ArrayMesh> mesh;
+	Ref<Texture> texture;
 
 	Rect2 bounds;
 	bool dirty;
@@ -26,10 +26,10 @@ class VGPath : public Node2D {
 	Ref<VGRenderer> renderer;
 
 	static void set_inherited_dirty(Node *p_node);
-	static void compose_graphics(const tove::GraphicsRef &p_tove_graphics, Node *p_node);
+	static void compose_graphics(const tove::GraphicsRef &p_tove_graphics,
+		const Transform2D &p_transform, Node *p_node);
 
 	bool inherits_renderer() const;
-	Ref<VGRenderer> get_inherited_renderer() const;
 
 	tove::GraphicsRef create_tove_graphics() const;
 	void add_tove_path(const tove::GraphicsRef &p_tove_graphics) const;
@@ -47,6 +47,8 @@ protected:
 	bool _get(const StringName &p_name, Variant &r_ret) const;
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 
+	void _renderer_changed();
+
 	void _notification(int p_what);
 	static void _bind_methods();
 
@@ -54,6 +56,9 @@ public:
 	virtual Rect2 _edit_get_rect() const;
 	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
 	virtual void _changed_callback(Object *p_changed, const char *p_prop);
+
+	VGPath *get_root_path();
+	Ref<VGRenderer> get_inherited_renderer() const;
 
  	Ref<VGRenderer> get_renderer();
 	void set_renderer(const Ref<VGRenderer> &p_renderer);
@@ -77,6 +82,7 @@ public:
 	int get_num_subpaths() const;
 	tove::SubpathRef get_subpath(int p_subpath) const;
 	tove::PathRef get_tove_path() const;
+    tove::GraphicsRef get_subtree_graphics();
 
 	void set_dirty();
 

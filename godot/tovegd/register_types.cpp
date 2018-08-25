@@ -4,10 +4,11 @@
 
 #include "register_types.h"
 #include "godot/resource_format_loader_svg.h"
-#include "godot/vector_graphics.h"
 #include "godot/vg_path.h"
 #include "godot/vg_paint.h"
 #include "godot/vg_color.h"
+#include "godot/vg_renderer.h"
+#include "godot/vg_texture_renderer.h"
 #include "godot/vg_adaptive_renderer.h"
 
 #ifdef TOOLS_ENABLED
@@ -31,13 +32,12 @@ void register_tovegd_types() {
 	ResourceLoader::add_resource_format_loader(svg_loader);
 #endif
 
-	ClassDB::register_class<VectorGraphics>();
-
 	ClassDB::register_class<VGPath>();
 	ClassDB::register_class<VGPaint>();
 	ClassDB::register_class<VGColor>();
 
 	ClassDB::register_class<VGRenderer>();
+	ClassDB::register_class<VGTextureRenderer>();
 	ClassDB::register_class<VGAdaptiveRenderer>();
 
 #ifdef TOOLS_ENABLED

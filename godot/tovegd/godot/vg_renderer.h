@@ -6,14 +6,22 @@
 #define VG_RENDERER_H
 
 #include "resource.h"
-#include "tove2d.h"
+#include "scene/2d/mesh_instance_2d.h"
+
+class VGPath;
 
 class VGRenderer : public Resource {
 	GDCLASS(VGRenderer, Resource);
 
+protected:
+    static void clear_mesh(Ref<ArrayMesh> &p_mesh);
+
 public:
-    virtual VGMeshData graphics_to_mesh(const tove::GraphicsRef &p_tove_graphics) const {
-        return VGMeshData();
+    virtual Rect2 render_mesh(Ref<ArrayMesh> &p_mesh, VGPath *p_path) {
+        return Rect2();
+    }
+    virtual Ref<ImageTexture> render_texture(VGPath *p_path) {
+        return Ref<ImageTexture>();
     }
 };
 

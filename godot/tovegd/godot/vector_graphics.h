@@ -9,6 +9,8 @@
 #include "scene/2d/mesh_instance_2d.h"
 #include "core/image.h"
 
+#if 0
+
 class VectorGraphics : public Resource {
 	GDCLASS(VectorGraphics, Resource);
 	RES_BASE_EXTENSION("vg");
@@ -89,3 +91,5 @@ public:
 };
 
 #endif // TOVEGD_GRAPHICS_H
+
+#endif
