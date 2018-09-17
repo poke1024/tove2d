@@ -32,27 +32,15 @@ static Ref<VGPaint> from_tove_paint(const tove::PaintRef &p_paint) {
 }
 
 static Point2 compute_center(const tove::PathRef &p_path) {
-	float x = 0.0f, y = 0.0f;
-	int k = 0;
-	const int n = p_path->getNumSubpaths();
-	for (int i = 0; i < n; i++) {
-		tove::SubpathRef tove_subpath = p_path->getSubpath(i);
-		const int m = tove_subpath->getNumPoints();
-		const float *p = tove_subpath->getPoints();
-		for (int j = 0; j < m; j++) {
-			if (k++ == 0) {
-				x = p[2 * j + 0];
-				y = p[2 * j + 1];
-			} else {
-				x += p[2 * j + 0];
-				y += p[2 * j + 1];
-			}
-		}
-	}
-	if (k == 0) {
-		return Point2(0, 0);
-	}
-	return Point2(x / k, y / k);
+	const float *bounds = p_path->getBounds();
+	return Point2((bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2);
+}
+
+void VGPath::recenter() {
+	compute_center(tove_path);
+	set_position(get_position() + get_transform().untranslated().xform(vg_transform.elements[2]));
+	vg_transform = vg_transform.untranslated();
+	set_dirty();
 }
 
 tove::GraphicsRef VGPath::create_tove_graphics() const {
@@ -62,7 +50,7 @@ tove::GraphicsRef VGPath::create_tove_graphics() const {
 }
 
 void VGPath::add_tove_path(const tove::GraphicsRef &p_tove_graphics) const {
-	const Transform2D t = get_transform();
+	const Transform2D t = get_transform() * vg_transform;
 
 	const Vector2 &tx = t.elements[0];
 	const Vector2 &ty = t.elements[1];
@@ -91,7 +79,7 @@ void VGPath::set_inherited_dirty(Node *p_node) {
 }
 
 void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics,
-	const Transform2D &p_transform, Node *p_node) {
+	const Transform2D &p_transform, const Node *p_node) {
 
 	const int n = p_node->get_child_count();
 	for (int i = 0; i < n; i++) {
@@ -108,8 +96,9 @@ void VGPath::compose_graphics(const tove::GraphicsRef &p_tove_graphics,
 	}
 
 	if (p_node->is_class_ptr(get_class_ptr_static())) {
-		VGPath *path = Object::cast_to<VGPath>(p_node);
-		p_tove_graphics->addPath(new_transformed_path(path->get_tove_path(), p_transform));
+		const VGPath *path = Object::cast_to<VGPath>(p_node);
+		p_tove_graphics->addPath(new_transformed_path(
+			path->get_tove_path(), p_transform));
 	}
 }
 
@@ -153,13 +142,12 @@ void VGPath::update_mesh_representation() {
 		return;
 	}
 	dirty = false;
-	bounds = Rect2();
 
 	if (!is_empty()) {
 		Ref<VGRenderer> renderer = get_inherited_renderer();
 		if (renderer.is_valid()) {
 
-			bounds = renderer->render_mesh(mesh, this);
+			renderer->render_mesh(mesh, this);
 			texture = renderer->render_texture(this);
 		}
 	}
@@ -199,6 +187,17 @@ void VGPath::_notification(int p_what) {
 			if (inherits_renderer()) {
 				set_dirty();
 				set_inherited_dirty(this);
+			}
+		} break;
+		case NOTIFICATION_TRANSFORM_CHANGED: {
+			if (is_inside_tree()) {
+				Node *node = get_parent();
+				while (node) {
+					if (node->is_class_ptr(get_class_ptr_static())) {
+						Object::cast_to<VGPath>(node)->subtree_graphics = tove::GraphicsRef();
+					}
+					node = node->get_parent();
+				}
 			}
 		} break;
 	}
@@ -427,7 +426,7 @@ VGPath *VGPath::find_clicked_child(const Point2 &p_point) {
 		if (child->is_class_ptr(get_class_ptr_static())) {
 			VGPath *path = Object::cast_to<VGPath>(child);
 			if (path->is_visible()) {
-				Point2 p = path->get_transform().affine_inverse().xform(p_point);
+				Point2 p = (path->get_transform() * vg_transform).affine_inverse().xform(p_point);
 				if (path->is_inside(p)) {
 					return path;
 				}
@@ -438,49 +437,30 @@ VGPath *VGPath::find_clicked_child(const Point2 &p_point) {
 	return nullptr;	
 }
 
-bool VGPath::_is_clicked(const Point2 &p_point) const {
-	if (is_inside(p_point)) {
-		return true;
-	}
-
-	const int n = get_child_count();
-	for (int i = 0; i < n; i++) {
-		Node *child = get_child(i);
-		if (child->is_class_ptr(get_class_ptr_static())) {
-			if (Object::cast_to<VGPath>(child)->_is_clicked(p_point)) {
-				return true;
-			}
-		}
-	}
-	
-	return false;
-}
-
 Rect2 VGPath::_edit_get_rect() const {
-	const_cast<VGPath*>(this)->update_mesh_representation();
-
-	const int n = get_child_count();
-	for (int i = 0; i < n; i++) {
-		Node *child = get_child(i);
-		if (child->is_class_ptr(get_class_ptr_static())) {
-			// FIXME: apply child transform
-			bounds.merge(Object::cast_to<VGPath>(child)->_edit_get_rect());
-		}
-	}
-
-	return bounds;
+	return tove_bounds_to_rect2(get_subtree_graphics()->getBounds());
 }
 
 bool VGPath::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
-	if (get_parent() && get_parent()->is_class_ptr(get_class_ptr_static())) {
+	/*if (const_cast<VGPath*>(this)->get_root_path() != this) {
 		return false;
-	}
+	}*/
+	return get_subtree_graphics()->hit(p_point.x, p_point.y) != tove::PathRef();
+}
 
-	return _is_clicked(p_point);
+void VGPath::_edit_set_position(const Point2 &p_position) {
+	set_position(p_position);
+	update();
+}
+
+void VGPath::_edit_set_scale(const Size2 &p_scale) {
+	/*Transform2D t;
+	t.scale(p_scale);
+	set_vg_transform(t);
+	update();*/
 }
 
 void VGPath::_changed_callback(Object *p_changed, const char *p_prop) {
-
 	if (fill_color.ptr() == p_changed) {
 		update_tove_fill_color();
 		set_dirty();
@@ -526,8 +506,22 @@ void VGPath::remove_curve(int p_subpath, int p_curve) {
 	set_dirty();
 }
 
-void VGPath::set_dirty() {
+void VGPath::set_dirty(bool p_children) {
+	if (p_children) {
+		set_inherited_dirty(this);
+		return;
+	}
+
+	Node *node = this;
+	while (node) {
+		if (node->is_class_ptr(get_class_ptr_static())) {
+			Object::cast_to<VGPath>(node)->subtree_graphics = tove::GraphicsRef();
+		}
+		node = node->get_parent();
+	}
+
 	dirty = true;
+	_change_notify("path_shape");
 	update();
 }
 
@@ -553,10 +547,12 @@ tove::PathRef VGPath::get_tove_path() const {
 	return tove_path;
 }
 
-tove::GraphicsRef VGPath::get_subtree_graphics() {
-	tove::GraphicsRef tove_graphics = tove::tove_make_shared<tove::Graphics>();
-	compose_graphics(tove_graphics, Transform2D(), this);
-	return tove_graphics;
+tove::GraphicsRef VGPath::get_subtree_graphics() const {
+	if (!subtree_graphics) {
+		subtree_graphics = tove::tove_make_shared<tove::Graphics>();
+		compose_graphics(subtree_graphics, Transform2D(), this);
+	}
+	return subtree_graphics;
 }
 
 MeshInstance2D *VGPath::create_mesh_node() {
@@ -574,8 +570,21 @@ MeshInstance2D *VGPath::create_mesh_node() {
 	return mesh_inst;
 }
 
+void VGPath::set_tove_path(tove::PathRef p_path) {
+	tove_path = p_path;
+	create_fill_color();
+	create_line_color();
+	set_dirty();
+}
+
+/*void VGPath::set_vg_transform(const Transform2D &p_transform) {
+	vg_transform = p_transform;
+	set_dirty();
+}*/
+
 VGPath::VGPath() {
 	tove_path = tove::tove_make_shared<tove::Path>();
+	set_notify_transform(true);
 
 	/*tove::SubpathRef tove_subpath = tove::tove_make_shared<tove::Subpath>();
 	tove_subpath->drawEllipse(0, 0, 100, 100);
@@ -590,10 +599,7 @@ VGPath::VGPath() {
 }
 
 VGPath::VGPath(tove::PathRef p_path) {
-	tove_path = p_path;
-	create_fill_color();
-	create_line_color();
-	set_dirty();
+	set_tove_path(p_path);
 }
 
 VGPath::~VGPath() {

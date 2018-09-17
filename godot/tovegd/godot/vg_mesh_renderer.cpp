@@ -43,7 +43,8 @@ public:
                 tove::TesselatorRef tesselator =
                     Object::cast_to<VGMeshRenderer>(renderer.ptr())->get_tesselator();
                 if (tesselator) {
-                    tesselator->beginTesselate(root_graphics.get());
+                    Size2 s = path->get_global_transform().get_scale();
+                    tesselator->beginTesselate(root_graphics.get(), MAX(s.width, s.height));
 
                     tesselator->pathToMesh(
                         UPDATE_MESH_EVERYTHING,

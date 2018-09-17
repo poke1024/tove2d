@@ -13,12 +13,12 @@
 class VGPath : public Node2D {
 	GDCLASS(VGPath, Node2D);
 
-	Transform2D transform;
+	Transform2D vg_transform;
 	tove::PathRef tove_path;
 	Ref<ArrayMesh> mesh;
 	Ref<Texture> texture;
 
-	Rect2 bounds;
+	mutable tove::GraphicsRef subtree_graphics;
 	bool dirty;
 
 	Ref<VGPaint> fill_color;
@@ -27,7 +27,7 @@ class VGPath : public Node2D {
 
 	static void set_inherited_dirty(Node *p_node);
 	static void compose_graphics(const tove::GraphicsRef &p_tove_graphics,
-		const Transform2D &p_transform, Node *p_node);
+		const Transform2D &p_transform, const Node *p_node);
 
 	bool inherits_renderer() const;
 
@@ -39,8 +39,6 @@ class VGPath : public Node2D {
 	void update_tove_line_color();
 	void create_fill_color();
 	void create_line_color();
-
-	bool _is_clicked(const Point2 &p_point) const;
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -55,6 +53,9 @@ protected:
 public:
 	virtual Rect2 _edit_get_rect() const;
 	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
+	virtual void _edit_set_position(const Point2 &p_position);
+	virtual void _edit_set_scale(const Size2 &p_scale);
+
 	virtual void _changed_callback(Object *p_changed, const char *p_prop);
 
 	VGPath *get_root_path();
@@ -82,9 +83,11 @@ public:
 	int get_num_subpaths() const;
 	tove::SubpathRef get_subpath(int p_subpath) const;
 	tove::PathRef get_tove_path() const;
-    tove::GraphicsRef get_subtree_graphics();
+    tove::GraphicsRef get_subtree_graphics() const;
 
-	void set_dirty();
+	void set_dirty(bool p_children = false);
+	void set_tove_path(tove::PathRef p_path);
+	void recenter();
 
 	MeshInstance2D *create_mesh_node();
 

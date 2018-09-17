@@ -32,7 +32,7 @@ static Ref<Image> tove_graphics_rasterize(
 	return image;
 }
 
-VGTextureRenderer::VGTextureRenderer() : quality(100) {
+VGTextureRenderer::VGTextureRenderer() : quality(1) {
 }
 
 float VGTextureRenderer::get_quality() {
@@ -48,7 +48,7 @@ void VGTextureRenderer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_quality", "quality"), &VGTextureRenderer::set_quality);
 	ClassDB::bind_method(D_METHOD("get_quality"), &VGTextureRenderer::get_quality);
 
-	ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_RANGE, "0,2000,10"), "set_quality", "get_quality");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "quality", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_quality", "get_quality");
 }
 
 Rect2 VGTextureRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, VGPath *p_path) {
@@ -122,11 +122,18 @@ Rect2 VGTextureRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, VGPath *p_path) {
 Ref<ImageTexture> VGTextureRenderer::render_texture(VGPath *p_path) {
 
     VGPath *root = p_path->get_root_path();
-    tove::GraphicsRef root_graphics = root->get_subtree_graphics();
+
+	Size2 s = p_path->get_global_transform().get_scale();
+	//float scale = MAX(s.width, s.height);
+
+    /*tove::GraphicsRef root_graphics = root->get_subtree_graphics();
 	const float *root_bounds = root_graphics->getExactBounds();
 	const float rw = root_bounds[2] - root_bounds[0];
 	const float rh = root_bounds[3] - root_bounds[1];
-	const float resolution = quality / std::max(rw, rh);
+	const float resolution = quality / std::max(rw, rh);*/
+
+	float resolution = quality;
+	resolution *= MAX(s.width, s.height);
 
     tove::GraphicsRef graphics = p_path->get_subtree_graphics();
 	const float *bounds = graphics->getExactBounds();
@@ -138,7 +145,7 @@ Ref<ImageTexture> VGTextureRenderer::render_texture(VGPath *p_path) {
 	texture->create_from_image(
 		tove_graphics_rasterize(
 			graphics,
-			w * resolution, h * resolution,
+			Math::ceil(w * resolution), Math::ceil(h * resolution),
 			-bounds[0] * resolution, -bounds[1] * resolution,
 			resolution), ImageTexture::FLAG_FILTER);
 	return texture;
