@@ -28,8 +28,8 @@ inline double squareDistance(double x1, double y1, double x2, double y2) {
 	return dx * dx + dy * dy;
 }
 
-ClipperParameters DefaultCurveFlattener::configure(float extent) {
-	const float e = extent / resolution;
+ClipperParameters DefaultCurveFlattener::configure(float scale) {
+	const float e = 1.0f / (resolution * scale);
 
 	// note that clipper scale here also impacts the minimal possible
 	// line width.

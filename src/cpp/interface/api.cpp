@@ -732,13 +732,13 @@ ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
 	ToveMeshRef fillMesh, ToveMeshRef lineMesh, ToveMeshUpdateFlags flags) {
 
 	const float *bounds = deref(graphics)->getBounds();
-	const float graphicsScale = std::max(
+	const float extent = std::max(
 		bounds[2] - bounds[0], bounds[3] - bounds[1]);
 
 	int lineIndex = 0;
 	int fillIndex = 0;
 
-	deref(tess)->beginTesselate(deref(graphics).get());
+	deref(tess)->beginTesselate(deref(graphics).get(), 1.0f / extent);
 
 	ToveMeshUpdateFlags result = deref(tess)->pathToMesh(
 		flags, deref(path),

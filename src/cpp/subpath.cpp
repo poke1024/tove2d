@@ -716,6 +716,7 @@ void Subpath::setPoints(const float *pts, int npts, bool add_loop) {
 		nsvg.pts[n1 * 2 - 1] = nsvg.pts[1];
 	}
 	commands.clear();
+	changed(CHANGED_POINTS);
 }
 
 bool Subpath::isCollinear(int u, int v, int w) const {

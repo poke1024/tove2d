@@ -30,7 +30,8 @@ public:
 		const MeshRef &line);
 
 	virtual void beginTesselate(
-		Graphics *graphics);
+		Graphics *graphics,
+		float scale);
 
 	void endTesselate();
 
@@ -71,7 +72,8 @@ public:
 	virtual ~AdaptiveTesselator();
 
 	virtual void beginTesselate(
-		Graphics *graphics);
+		Graphics *graphics,
+		float scale);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
 		ToveMeshUpdateFlags update,

@@ -16,7 +16,8 @@
 BEGIN_TOVE_NAMESPACE
 
 void AbstractTesselator::beginTesselate(
-	Graphics *graphics) {
+	Graphics *graphics,
+	float scale) {
 
 	this->graphics = graphics;
 }
@@ -39,7 +40,11 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 		line->clear();
 	}
 
-	beginTesselate(graphics);
+	const float *bounds = graphics->getBounds();
+	const float extent = std::max(
+		bounds[2] - bounds[0], bounds[3] - bounds[1]);
+
+	beginTesselate(graphics, 1.0f / extent);
 
 	int fillIndex = 0;
 	int lineIndex = 0;
@@ -96,15 +101,12 @@ AdaptiveTesselator::~AdaptiveTesselator() {
 }
 
 void AdaptiveTesselator::beginTesselate(
-	Graphics *graphics) {
+	Graphics *graphics,
+	float scale) {
 
-	AbstractTesselator::beginTesselate(graphics);
+	AbstractTesselator::beginTesselate(graphics, scale);
 
-	const float *bounds = graphics->getBounds();
-	const float extent = std::max(
-		bounds[2] - bounds[0], bounds[3] - bounds[1]);
-
-	flattener->configure(extent);
+	flattener->configure(scale);
 }
 
 bool AdaptiveTesselator::hasFixedSize() const {
