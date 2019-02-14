@@ -169,7 +169,7 @@ private:
 	const CompiledRay<DX, DY> ray;
 
 public:
-	inline NonZeroCounter(double x, double y) : ray(x, y), x(x), y(y) {
+	inline NonZeroCounter(double x, double y) : x(x), y(y), ray(x, y) {
 	}
 
 	inline int operator()(const coeff *bx, const coeff *by) {
@@ -200,7 +200,7 @@ private:
 	const CompiledRay<DX, DY> ray;
 
 public:
-	inline EvenOddCounter(double x, double y) : ray(x, y), x(x), y(y) {
+	inline EvenOddCounter(double x, double y) : x(x), y(y), ray(x, y) {
 	}
 
 	inline int operator()(const coeff *bx, const coeff *by) {

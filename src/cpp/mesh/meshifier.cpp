@@ -279,7 +279,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 			}
 
 			if (hasStroke) {
-				const bool closed = path->getSubpath(i)->isClosed();
+				// const bool closed = path->getSubpath(i)->isClosed();
 				const int verticesPerSegment = miter ? 5 : 4;
 				const float miterLimitSquared = miterLimit * miterLimit;
 

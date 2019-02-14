@@ -41,7 +41,7 @@ private:
 
 public:
 	inline TriangleStore(ToveTrianglesMode mode) :
-		triangles(nullptr), mode(mode), size(0) {
+		size(0), triangles(nullptr), mode(mode) {
 	}
 
 	inline ~TriangleStore() {
@@ -51,7 +51,7 @@ public:
 	}
 
 	inline TriangleStore(const std::list<TPPLPoly> &triangles) :
-		triangles(nullptr), mode(TRIANGLES_LIST), size(0) {
+		size(0), triangles(nullptr), mode(TRIANGLES_LIST) {
 
 		_add(triangles, true);
 	}
@@ -85,9 +85,9 @@ struct Triangulation {
 
 	inline Triangulation(const std::list<TPPLPoly> &convex) :
 		partition(convex),
+		triangles(TRIANGLES_LIST),
 		useCount(0),
-		keyframe(false),
-		triangles(TRIANGLES_LIST) {
+		keyframe(false) {
 	}
 
 	inline ToveTrianglesMode getMode() const {

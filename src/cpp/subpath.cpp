@@ -129,7 +129,7 @@ Subpath::Subpath(const SubpathRef &t) {
 
 int Subpath::moveTo(float x, float y) {
 	NSVGpath *p = &nsvg;
-	const int index = nsvg.npts;
+	// const int index = nsvg.npts;
 	if (p->npts > 0) {
 		p->pts[(p->npts-1)*2+0] = x;
 		p->pts[(p->npts-1)*2+1] = y;
