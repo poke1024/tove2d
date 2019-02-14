@@ -24,4 +24,4 @@ public:
     void set_quality(float p_quality);
 };
 
-#endif VG_ADAPTIVE_RENDERER_H
+#endif // VG_ADAPTIVE_RENDERER_H

@@ -26,4 +26,4 @@ public:
     virtual Ref<ImageTexture> render_texture(VGPath *p_path);
 };
 
-#endif VG_TEXTURE_RENDERER_H
+#endif // VG_TEXTURE_RENDERER_H

@@ -25,4 +25,4 @@ public:
     virtual Ref<ImageTexture> render_texture(VGPath *p_path);
 };
 
-#endif VG_MESH_RENDERER_H
+#endif // VG_MESH_RENDERER_H

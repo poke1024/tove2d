@@ -5,10 +5,10 @@
 #ifndef VG_PAINT_H
 #define VG_PAINT_H
 
-#include "resource.h"
+#include "core/resource.h"
 
 class VGPaint : public Resource {
 	GDCLASS(VGPaint, Resource);
 };
 
-#endif VG_PAINT_H
+#endif // VG_PAINT_H

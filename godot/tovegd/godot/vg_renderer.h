@@ -5,7 +5,7 @@
 #ifndef VG_RENDERER_H
 #define VG_RENDERER_H
 
-#include "resource.h"
+#include "core/resource.h"
 #include "scene/2d/mesh_instance_2d.h"
 
 class VGPath;
@@ -25,4 +25,4 @@ public:
     }
 };
 
-#endif VG_RENDERER_H
+#endif // VG_RENDERER_H

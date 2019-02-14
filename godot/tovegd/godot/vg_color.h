@@ -26,4 +26,4 @@ public:
     Color get_color() const;
 };
 
-#endif VG_COLOR_H
+#endif // VG_COLOR_H

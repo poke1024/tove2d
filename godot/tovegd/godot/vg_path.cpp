@@ -3,7 +3,7 @@
 /*************************************************************************/
 
 #include "vg_path.h"
-#include "os/file_access.h"
+#include "core/os/file_access.h"
 #include "editor/editor_node.h"
 #include "vg_color.h"
 #include "vg_adaptive_renderer.h"
@@ -247,7 +247,7 @@ bool VGPath::_set(const StringName &p_name, const Variant &p_value) {
 		} else {
 			return false;
 		}
-	} else if (name.begins_with("subpaths/")) {
+	} else if (name.begins_with("subpaths/")) {
 		int subpath = name.get_slicec('/', 1).to_int();
 		String subwhat = name.get_slicec('/', 2);
 

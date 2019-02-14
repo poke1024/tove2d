@@ -340,6 +340,9 @@ public:
 
 						path->_edit_set_rotation(canvas_item_editor->snap_angle(path->_edit_get_rotation() + phi, path->_edit_get_rotation()));
 					} break;
+
+					case WIDGET_NONE: {
+					} break;
 				}
 
 				canvas_item_editor->get_viewport_control()->update();
@@ -446,7 +449,7 @@ public:
 
 		if (path && mm.is_valid()) {
 			if (mm->get_button_mask() & BUTTON_MASK_LEFT) {
-				Vector2 gpoint = mm->get_position();
+				// Vector2 gpoint = mm->get_position();
 				Vector2 point1 = global_to_local(root, mm->get_position());
 
 				Vector2 center = (point0 + point1) / 2;
@@ -540,7 +543,7 @@ private:
 	const Vertex &edited_point;
 	int edited_pt0;
 
-	int path;
+	// int path;
 	tove::PathRef path_ref;
 	int n_subpaths;
 	int subpath;
@@ -566,7 +569,7 @@ public:
 };
 
 class VGCurveTool : public VGTool {
-	VGPath *root;
+	// VGPath *root;
 	VGPath *node_vg;
 
 	VGEditor *vg_editor;
@@ -599,7 +602,7 @@ class VGCurveTool : public VGTool {
 
 public:	
 	VGCurveTool(VGEditor *p_vg_editor, VGPath *p_path) :
-		editor(p_vg_editor->get_editor_node()), vg_editor(p_vg_editor) {
+		vg_editor(p_vg_editor), editor(p_vg_editor->get_editor_node()) {
 
 		node_vg = p_path;
 
@@ -628,7 +631,7 @@ public:
 			}
 
 			Vector2 gpoint = mb->get_position();
-			Vector2 cpoint = node_vg->get_global_transform().affine_inverse().xform(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(mb->get_position())));
+			// Vector2 cpoint = node_vg->get_global_transform().affine_inverse().xform(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(mb->get_position())));
 
 			if (true) {
 
@@ -839,14 +842,14 @@ public:
 	}
 };
 
-static void reown_children(Node *p_node) {
+/* static void reown_children(Node *p_node) {
 	const int n = p_node->get_child_count();
 	for (int i = 0; i < n; i++) {
 		Node *child = p_node->get_child(i);
 		child->force_parent_owned();
 		reown_children(child);
 	}
-}
+} */
 
 Array VGCurveTool::_get_points(const SubpathId &p_id) {
 	tove::PathRef path = node_vg->get_tove_path();
@@ -1145,9 +1148,9 @@ ControlPointIterator::ControlPointIterator(
 	const Vertex &p_selected_point,
 	const Vertex &p_edited_point) :
 	
-	path_ref(p_path_ref),
 	selected_point(p_selected_point),
-	edited_point(p_edited_point) {
+	edited_point(p_edited_point),
+	path_ref(p_path_ref) {
 
 	n_subpaths = path_ref->getNumSubpaths();
 	edited_pt0 = knot_point(edited_point.pt);
@@ -1226,8 +1229,8 @@ void VGEditor::forward_draw_over_viewport(Control *p_overlay) {
 		return;
 
 	Control *vpc = canvas_item_editor->get_viewport_control();
-	Transform2D xform = canvas_item_editor->get_canvas_transform() *
-		_get_node()->get_global_transform();
+	/* Transform2D xform = canvas_item_editor->get_canvas_transform() *
+		_get_node()->get_global_transform(); */
 	const Ref<Texture> handle = get_icon("EditorHandle", "EditorIcons");
 
 	_update_overlay();

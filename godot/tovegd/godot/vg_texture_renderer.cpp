@@ -53,7 +53,7 @@ void VGTextureRenderer::_bind_methods() {
 
 Rect2 VGTextureRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, VGPath *p_path) {
 
-    const float resolution = quality;
+    // const float resolution = quality;
     tove::GraphicsRef graphics = p_path->get_subtree_graphics();
 
     const float *bounds = graphics->getExactBounds();
@@ -121,7 +121,7 @@ Rect2 VGTextureRenderer::render_mesh(Ref<ArrayMesh> &p_mesh, VGPath *p_path) {
 
 Ref<ImageTexture> VGTextureRenderer::render_texture(VGPath *p_path) {
 
-    VGPath *root = p_path->get_root_path();
+    // VGPath *root = p_path->get_root_path();
 
 	Size2 s = p_path->get_global_transform().get_scale();
 	//float scale = MAX(s.width, s.height);
