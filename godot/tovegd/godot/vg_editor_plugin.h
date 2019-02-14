@@ -16,7 +16,7 @@ class VGEditorPlugin : public EditorPlugin {
 
 public:
 	virtual bool forward_canvas_gui_input(const Ref<InputEvent> &p_event);
-	virtual void forward_draw_over_viewport(Control *p_overlay);
+	virtual void forward_canvas_draw_over_viewport(Control *p_overlay);
 
 	bool has_main_screen() const { return false; }
 	virtual String get_name() const { return klass; }

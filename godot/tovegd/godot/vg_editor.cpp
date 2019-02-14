@@ -355,7 +355,7 @@ public:
 		return false;
 	}
 
-	virtual void forward_draw_over_viewport(Control *p_overlay) {
+	virtual void forward_canvas_draw_over_viewport(Control *p_overlay) {
 		Transform2D xform = canvas_item_editor->get_canvas_transform() * path->get_global_transform();
 		const Ref<Texture> handle = vg_editor->get_icon("EditorHandle", "EditorIcons");
 		Control *vpc = canvas_item_editor->get_viewport_control();
@@ -799,7 +799,7 @@ public:
 		return false;
 	}
 
-	void forward_draw_over_viewport(Control *p_overlay)
+	void forward_canvas_draw_over_viewport(Control *p_overlay)
 	{
 		Control *vpc = canvas_item_editor->get_viewport_control();
 		Transform2D xform = canvas_item_editor->get_canvas_transform() *
@@ -1223,7 +1223,7 @@ Vector2 ControlPointIterator::get_knot_pos() const {
 	return Vector2(points[i + 0], points[i + 1]);
 }
 
-void VGEditor::forward_draw_over_viewport(Control *p_overlay) {
+void VGEditor::forward_canvas_draw_over_viewport(Control *p_overlay) {
 
 	if (!node_vg)
 		return;
@@ -1241,7 +1241,7 @@ void VGEditor::forward_draw_over_viewport(Control *p_overlay) {
 	}
 
 	if (tool.is_valid()) {
-		tool->forward_draw_over_viewport(p_overlay);
+		tool->forward_canvas_draw_over_viewport(p_overlay);
 		return;
 	}
 }

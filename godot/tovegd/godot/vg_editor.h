@@ -22,7 +22,7 @@ public:
 	VGTool();
 
 	virtual bool forward_gui_input(const Ref<InputEvent> &p_event) = 0;
-	virtual void forward_draw_over_viewport(Control *p_overlay) { }
+	virtual void forward_canvas_draw_over_viewport(Control *p_overlay) { }
 };
 
 class VGEditor : public HBoxContainer {
@@ -78,7 +78,7 @@ protected:
 
 public:
 	bool forward_gui_input(const Ref<InputEvent> &p_event);
-	void forward_draw_over_viewport(Control *p_overlay);
+	void forward_canvas_draw_over_viewport(Control *p_overlay);
 
 	void edit(Node *p_node_vg);
 	EditorNode *get_editor_node() const {

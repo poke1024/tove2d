@@ -10,9 +10,9 @@ bool VGEditorPlugin::forward_canvas_gui_input(const Ref<InputEvent> &p_event) {
     return vg_editor->forward_gui_input(p_event);
 }
 
-void VGEditorPlugin::forward_draw_over_viewport(Control *p_overlay) {
+void VGEditorPlugin::forward_canvas_draw_over_viewport(Control *p_overlay) {
 
-    vg_editor->forward_draw_over_viewport(p_overlay);
+    vg_editor->forward_canvas_draw_over_viewport(p_overlay);
 }
 
 void VGEditorPlugin::edit(Object *p_object) {
