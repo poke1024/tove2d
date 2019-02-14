@@ -1463,7 +1463,7 @@ void VGEditor::_update_overlay(bool p_always_update) {
 	if (overlay_graphics->getNumPaths() > 0) {
 		tove::TesselatorRef tesselator = tove::tove_make_shared<tove::AdaptiveTesselator>(
 			new tove::AdaptiveFlattener<tove::DefaultCurveFlattener>(
-				tove::DefaultCurveFlattener(0.5f, 6)));
+				tove::DefaultCurveFlattener(100, 6)));
 	    tove::MeshRef tove_mesh = tove::tove_make_shared<tove::ColorMesh>(); 
 		tesselator->graphicsToMesh(overlay_graphics.get(), UPDATE_MESH_EVERYTHING, tove_mesh, tove_mesh);
 		copy_mesh(overlay, tove_mesh);
