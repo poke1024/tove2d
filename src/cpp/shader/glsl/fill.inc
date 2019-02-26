@@ -303,13 +303,14 @@ ivec4 bsearch(ivec4 lohi, vec2 position) {
 
 	ivec4 nextLo = ivec4(mid + ivec2(1), XY_HI);
 
-#ifdef GLSL3
+#ifdef GLSL_4_5
+	// https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/mix.xhtml
 	return ivec4(mix(
 		lohi.xyzw,
 		mix(ivec4(X_LO, X_MID, Y_LO, Y_MID), nextLo.xzyw, smaller.xxyy),
 		notDone.xxyy));
 #else
-	// glsl2 version of the glsl3 code below.
+	// non GLSL 4.5 version of code above.
 	return ivec4(
 		notDone.x ? (smaller.x ? nextLo.xz : ivec2(X_LO, X_MID)) : X_LOHI,
         notDone.y ? (smaller.y ? nextLo.yw : ivec2(Y_LO, Y_MID)) : Y_LOHI);
