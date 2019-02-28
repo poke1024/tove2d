@@ -14,9 +14,9 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	for _, mode in ipairs {"texture", "mesh", "shader"} do
+	for _, mode in ipairs {"texture", "mesh", "gpux"} do
 		local graphics = newGraphics()
-		graphics:setDisplay(mode)
+		graphics:setDisplay(mode, 200)
 		flow:add(mode, graphics)
 	end
 end
