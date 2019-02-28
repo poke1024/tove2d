@@ -83,10 +83,10 @@ function Demo:keypressed(key, scancode, isrepeat)
     if key == "a" then
         self.animation = not self.animation
     end
-    if key == "+" then
+    if key == "+" or key == "kp+" then
         self:addObjects()
     end
-    if key == "-" then
+    if key == "-" or key == "kp-" then
         self:removeObjects()
     end
 end
