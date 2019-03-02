@@ -18,14 +18,15 @@ local Tween = {}
 Tween.__index = Tween
 
 tove.newTween = function(graphics)
-	return setmetatable({_graphics0 = graphics, _to = {}}, Tween)
+	return setmetatable({_graphics0 = graphics, _to = {}, _duration = 0}, Tween)
 end
 
 function Tween:to(graphics, duration, ease)
 	table.insert(self._to, {graphics = graphics, duration = duration, ease = ease or _linear})
+	self._duration = self._duration + duration
+
 	return self
 end
-
 
 local function createGraphics(graphics)
 	if type(graphics) == "string" then
@@ -68,7 +69,7 @@ tove.newFlipbook = function(fps, tween, ...)
 			end
 		end
 	end
-	return setmetatable({_fps = fps, _frames = frames, _t = 0, _i = 1}, Flipbook)
+	return setmetatable({_fps = fps, _frames = frames, _duration = tween._duration, _t = 0, _i = 1}, Flipbook)
 end
 
 Flipbook.__index = function(self, key)
@@ -81,7 +82,7 @@ end
 
 Flipbook.__newindex = function(self, key, value)
 	if key == "t" then
-		self._t = value
+		self._t = value % self._duration
 		self._i = math.min(math.max(1,
 			1 + math.floor(value * self._fps)), #self._frames)
 	end
@@ -124,12 +125,12 @@ tove.newAnimation = function(tween, ...)
 	end
 
 	return setmetatable({_keyframes = keyframes, _graphics = graphics,
-		_t = 0, _i = 1, _duration = 0}, Animation)
+		_t = 0, _i = 1, _duration = tween._duration}, Animation)
 end
 
 Animation.__newindex = function(self, key, value)
 	if key == "t" then
-		local t = math.min(math.max(value, 0), 1)
+		local t = value % self._duration
 		self._t = t
 		local f = self._keyframes
 		local lo = 0
