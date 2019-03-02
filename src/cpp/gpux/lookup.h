@@ -103,10 +103,10 @@ public:
 
 		yptr += dim * rowBytes * (data.listsTextureSize[1] / 2);
 
-        float y0 = i->y;
         int z = 0;
 
         if (data.fragmentShaderStrokes && padding > 0.0) {
+            const float y0 = i->y;
             *ylookup = y0 - padding;
             ylookup += 2;
             finish(y0 - padding, y0, active, yptr, z++);
@@ -115,6 +115,7 @@ public:
 
         while (i != end) {
             auto j = i;
+            float y0 = i->y;
             while (j != end && j->y == y0) {
                 switch (j->t) {
 					case EVENT_ENTER:
@@ -123,19 +124,10 @@ public:
 					case EVENT_EXIT:
                     	active.erase(j->curve);
 						break;
-					case EVENT_MARK:
+					case EVENT_MARK: // roots
 						break;
                 }
                 j++;
-            }
-
-            float y;
-            if (j != end) {
-                y = j->y;
-            } else if (data.fragmentShaderStrokes && padding > 0.0) {
-                y = y0 + padding;
-            } else {
-                y = y0;
             }
 
             *ylookup = y0;
@@ -150,15 +142,23 @@ public:
 				}
             }
 
-            finish(y0, y, active, &yptr[k], z++);
+            float y1;
+            if (j != end) {
+                y1 = j->y;
+            } else {
+                y1 = y0;
+
+                if (data.fragmentShaderStrokes && padding > 0.0) {
+                    y1 += padding;
+                }
+            }
+
+            finish(y0, y1, active, &yptr[k], z++);
 
             i = j;
-            y0 = y;
 			yptr += rowBytes;
         }
 
-        *ylookup = y0;
-        ylookup += 2;
         *yptr = SENTINEL_END;
 
         data.lookupTableMeta->n[dim] = (ylookup - lookupTable) / 2;
