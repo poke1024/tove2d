@@ -183,7 +183,9 @@ function GeometrySend:endInit(lineStyle)
 	local listsTexture = love.graphics.newImage(self.listsImageData)
 	local curvesTexture = love.graphics.newImage(self.curvesImageData)
 	listsTexture:setFilter("nearest", "nearest")
+	listsTexture:setWrap("clamp", "clamp")
 	curvesTexture:setFilter("nearest", "nearest")
+	curvesTexture:setWrap("clamp", "clamp")
 	self.listsTexture = listsTexture
 	self.curvesTexture = curvesTexture
 
