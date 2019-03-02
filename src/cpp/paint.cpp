@@ -15,17 +15,31 @@
 
 BEGIN_TOVE_NAMESPACE
 
-void copyColor(ToveRGBA &rgba, uint32_t color, float opacity) {
+static void extractColor(ToveRGBA &rgba, uint32_t c) {
+	rgba.r = (c & 0xff) / 255.0;
+	rgba.g = ((c >> 8) & 0xff) / 255.0;
+	rgba.b = ((c >> 16) & 0xff) / 255.0;
+	rgba.a = ((c >> 24) & 0xff) / 255.0;
+}
+
+static void extractColor(ToveRGBA &rgba, uint32_t color, float opacity) {
 	uint32_t c;
 	if (opacity < 1.0f) {
 		c = nsvg::applyOpacity(color, opacity);
 	} else {
 		c = color;
 	}
-	rgba.r = (c & 0xff) / 255.0;
-	rgba.g = ((c >> 8) & 0xff) / 255.0;
-	rgba.b = ((c >> 16) & 0xff) / 255.0;
-	rgba.a = ((c >> 24) & 0xff) / 255.0;
+	extractColor(rgba, c);
+}
+
+static uint32_t lerpColor(uint32_t c1, uint32_t c2, float p_t) {
+	const int32_t t = int32_t(p_t * 0x100);
+	const int32_t s = 0x100 - t;
+	return
+		(((c1 & 0xff) * s + (c2 & 0xff) * t) >> 8) |
+		(((((c1 >> 8) & 0xff) * s + ((c2 >> 8) & 0xff) * t) >> 8) << 8) |
+		(((((c1 >> 16) & 0xff) * s + ((c2 >> 16) & 0xff) * t) >> 8) << 16) |
+		(((((c1 >> 24) & 0xff) * s + ((c2 >> 24) & 0xff) * t) >> 8) << 24);
 }
 
 
@@ -52,6 +66,24 @@ void Color::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
 void Color::store(NSVGpaint &paint) {
 	paint.type = NSVG_PAINT_COLOR;
 	paint.color = color;
+}
+
+void Color::getRGBA(ToveRGBA &rgba, float opacity) const {
+	extractColor(rgba, color, opacity);
+}
+
+void Color::animate(const PaintRef &a, const PaintRef &b, float t) {
+	if (a->getType() == NSVG_PAINT_COLOR &&
+		b->getType() == NSVG_PAINT_COLOR) {
+		
+		color = lerpColor(
+			static_cast<Color*>(a.get())->color,
+			static_cast<Color*>(b.get())->color,
+			t
+		);
+	
+		changed();
+	}
 }
 
 
@@ -152,6 +184,92 @@ void AbstractGradient::set(const AbstractGradient *source) {
 void AbstractGradient::transform(const nsvg::Transform &transform) {
 	transform.transformGradient(nsvg);
 	nsvg::xformInverse(xformInverse, nsvg->xform);
+	changed();
+}
+
+void AbstractGradient::setNumColorStops(int numStops) {
+	const size_t size = getRecordSize(numStops);
+	nsvg = static_cast<NSVGgradient*>(realloc(nsvg, nextpow2(size)));
+	if (!nsvg) {
+		throw std::bad_alloc();
+	}
+	nsvg->nstops = numStops;
+
+}
+
+void AbstractGradient::addColorStop(float offset, float r, float g, float b, float a) {
+	setNumColorStops(nsvg->nstops + 1);
+	setColorStop(nsvg->nstops - 1, offset, r, g, b, a);
+	sorted = false;
+}
+
+float AbstractGradient::getColorStop(int i, ToveRGBA &rgba, float opacity) {
+	if (i >= 0 && i < nsvg->nstops) {
+		extractColor(rgba, nsvg->stops[i].color, opacity);
+		return nsvg->stops[i].offset;
+	} else {
+		return 0.0f;
+	}
+}
+
+void AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
+	const TovePaintType type = getType();
+	if (a->getType() != type || b->getType() != type) {
+		return; // cannot animate
+	}
+
+	const auto *gradA = static_cast<AbstractGradient*>(a.get());
+	const auto *gradB = static_cast<AbstractGradient*>(b.get());
+
+	const auto *nsvgA = gradA->nsvg;
+	const auto *nsvgB = gradB->nsvg;
+
+	const int nstops = gradA->nsvg->nstops;
+	if (nstops != gradB->nsvg->nstops) {
+		return; // cannot animate
+	}
+
+	if (nsvg->nstops != nstops) {
+		setNumColorStops(nstops);
+	}
+
+	const float s = 1.0f - t;
+
+	float *xform = nsvg->xform;
+	bool xformIsAnimated = false;
+	for (int i = 0; i < 6; i++) {
+		const float xformA = nsvgA->xform[i];
+		const float xformB = nsvgB->xform[i];
+		if (xformA != xformB) {
+			xform[i] = xformA * s + xformB * t;
+			xformIsAnimated = true;
+		} else {
+			xform[i] = xformA;
+		}
+	}
+	if (xformIsAnimated) {
+		nsvg::xformInverse(xformInverse, xform);
+	} else if (gradA != this) {
+		std::memcpy(xformInverse, gradA->xformInverse, sizeof(xformInverse));
+	}
+	nsvg->fx = nsvgA->fx * s + nsvgB->fx * t;
+	nsvg->fy = nsvgA->fy * s + nsvgB->fy * t;
+
+	sorted = true;
+	for (int i = 0; i < nstops; i++) {
+		const auto &stopA = nsvgA->stops[i];
+		const auto &stopB = nsvgB->stops[i];
+		
+		float offset = stopA.offset * s + stopB.offset * t;
+		nsvg->stops[i].offset = offset;
+
+		if (i > 0 && offset < nsvg->stops[i - 1].offset) {
+			sorted = false;
+		}
+
+		nsvg->stops[i].color = lerpColor(stopA.color, stopB.color, t);
+	}
+
 	changed();
 }
 

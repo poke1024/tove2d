@@ -18,8 +18,6 @@
 
 BEGIN_TOVE_NAMESPACE
 
-void copyColor(ToveRGBA &rgba, uint32_t color, float opacity);
-
 class AbstractPaint : public Observable {
 protected:
 	void changed();
@@ -57,7 +55,7 @@ public:
 	}
 };
 
-class Color : public AbstractPaint {
+class Color final : public AbstractPaint {
 private:
 	uint32_t color;
 
@@ -113,9 +111,9 @@ public:
 
 	virtual void store(NSVGpaint &paint);
 
-	virtual void getRGBA(ToveRGBA &rgba, float opacity) const {
-		copyColor(rgba, color, opacity);
-	}
+	virtual void getRGBA(ToveRGBA &rgba, float opacity) const;
+
+	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
 };
 
 class AbstractGradient : public AbstractPaint {
@@ -141,6 +139,8 @@ protected:
 
 	void set(const AbstractGradient *source);
 
+	void setNumColorStops(int numStops);
+
 public:
 	AbstractGradient(int nstops);
 	AbstractGradient(const NSVGgradient *gradient);
@@ -159,25 +159,9 @@ public:
 		return true;
 	}
 
-	virtual void addColorStop(float offset, float r, float g, float b, float a) {
-		const size_t size = getRecordSize(nsvg->nstops + 1);
-		nsvg = static_cast<NSVGgradient*>(realloc(nsvg, nextpow2(size)));
-		if (!nsvg) {
-			throw std::bad_alloc();
-		}
-		nsvg->nstops += 1;
-		setColorStop(nsvg->nstops - 1, offset, r, g, b, a);
-		sorted = false;
-	}
+	virtual void addColorStop(float offset, float r, float g, float b, float a);
 
-	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity) {
-		if (i >= 0 && i < nsvg->nstops) {
-			copyColor(rgba, nsvg->stops[i].color, opacity);
-			return nsvg->stops[i].offset;
-		} else {
-			return 0.0f;
-		}
-	}
+	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity);
 
 	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) {
 		if (i >= 0 && i < nsvg->nstops) {
@@ -208,9 +192,11 @@ public:
 		m[4] = xform[3] / scale;
 		m[5] = xform[5];
 	}
+
+	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
 };
 
-class LinearGradient : public AbstractGradient {
+class LinearGradient final : public AbstractGradient {
 public:
 	LinearGradient(float x1, float y1, float x2, float y2);
 
@@ -242,7 +228,7 @@ public:
 	}
 };
 
-class RadialGradient : public AbstractGradient {
+class RadialGradient final : public AbstractGradient {
 public:
 	RadialGradient(float cx, float cy, float fx, float fy, float r);
 
