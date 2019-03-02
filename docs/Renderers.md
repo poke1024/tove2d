@@ -25,7 +25,7 @@ end
 You might notice that the bottom right edge looks a bit edgy now. That's due to the mesh's default quality setting. To see that we're really dealing with a mesh, let's increase that effect by telling TÖVE to use even less triangles:
 
 ```
- myDrawing:setDisplay("mesh", 0.05) -- between 0 and 1
+ myDrawing:setDisplay("mesh", 100) -- specify the target resolution in pixels to define tesselation detail
 ```
 
 ![](images/tutorial/mesh-low.jpg)
