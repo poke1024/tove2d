@@ -82,11 +82,7 @@ end
 
 Flipbook.__newindex = function(self, key, value)
 	if key == "t" then
-		local t = value
-		if (t > self._duration) then
-			t = t % self._duration
-		end
-		self._t = t
+		self._t = math.max(0, math.min(value, self._duration))
 		self._i = math.min(math.max(1,
 			1 + math.floor(value * self._fps)), #self._frames)
 	end
@@ -134,10 +130,7 @@ end
 
 Animation.__newindex = function(self, key, value)
 	if key == "t" then
-		local t = value
-		if t > self._duration then
-			t = t % self._duration
-		end
+		local t = math.max(0, math.min(value, self._duration))
 		self._t = t
 		local f = self._keyframes
 		local lo = 0
