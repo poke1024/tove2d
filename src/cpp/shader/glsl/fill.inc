@@ -32,16 +32,17 @@ w << R"GLSL(
 
 #define M_PI 3.1415926535897932384626433832795
 
+uniform sampler2D lists;
+uniform sampler2D curves;
+
 uniform ivec3 constants;
 #define NUM_CURVES constants.x
 #define LISTS_W constants.y
 #define LISTS_H constants.z
 
 uniform ivec3 tablemeta;
-uniform float lut[2 * LUT_SIZE];
-
-uniform sampler2D lists;
-uniform sampler2D curves;
+uniform float lutX[LUT_SIZE];
+uniform float lutY[LUT_SIZE];
 
 #if LINE_STYLE > 0
 #define LINE_OFFSET lineargs.x
@@ -295,11 +296,11 @@ bool isInside(int z) {
 
 ivec4 bsearch(ivec4 lohi, vec2 position) {
     ivec2 mid = (XY_LO + XY_HI) / 2;
-	ivec2 lutIndex = mid * 2;
+	ivec2 lutIndex = mid;
 
     bvec2 notDone = lessThan(XY_LO, XY_HI);
     bvec2 smaller = lessThan(
-		vec2(lut[lutIndex.x], lut[lutIndex.y + 1]), position);
+		vec2(lutX[lutIndex.x], lutY[lutIndex.y]), position);
 
 	ivec4 nextLo = ivec4(mid + ivec2(1), XY_HI);
 
@@ -327,12 +328,12 @@ ivec2 search(vec2 position) {
 }
 
 vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
-	ivec2 index = 2 * (at - ivec2(1));
+	ivec2 index = at - ivec2(1);
 
-	float x0 = lut[index.x + 0];
-	float x1 = lut[index.x + 2];
-	float y0 = lut[index.y + 1];
-	float y1 = lut[index.y + 3];
+	float x0 = lutX[index.x + 0];
+	float x1 = lutX[index.x + 1];
+	float y0 = lutY[index.y + 0];
+	float y1 = lutY[index.y + 1];
 
 	vec2 d0 = position - vec2(x0, y0);
 	vec2 d1 = vec2(x1, y1) - position;

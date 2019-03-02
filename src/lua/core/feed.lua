@@ -40,7 +40,9 @@ local function sendColor(shader, uniform, rgba)
 end
 
 local function sendLUT(feed, shader)
-	shader:send("lut", feed.lookupTableByteData)
+	local lutX, lutY = unpack(feed.lookupTableByteData)
+	shader:send("lutX", lutX)
+	shader:send("lutY", lutY)
 	shader:send("tablemeta", feed.lookupTableMetaByteData)
 end
 
@@ -141,7 +143,7 @@ local function newGeometrySend(fillShader, lineShader, data)
 		boundsByteData = nil,
 		listsImageData = nil,
 		curvesImageData = nil,
-		lookupTableByteData = nil,
+		lookupTableByteData = {nil, nil},
 		lookupTableMetaByteData = nil}, GeometrySend)
 end
 
@@ -170,9 +172,12 @@ function GeometrySend:beginInit()
 	self.listsImageData = listsImageData
 	self.curvesImageData = curvesImageData
 
-	self.lookupTableByteData = love.data.newByteData(
-		ffi.sizeof("float[?]", data.lookupTableSize * 2))
-	data.lookupTable = self.lookupTableByteData:getPointer()
+	for i = 1, 2 do
+		local lutData = love.data.newByteData(
+			ffi.sizeof("float[?]", data.lookupTableSize))
+		self.lookupTableByteData[i] = lutData
+		data.lookupTable[i - 1] = lutData:getPointer()
+	end
 
 	self.lookupTableMetaByteData = love.data.newByteData(
 		ffi.sizeof("ToveLookupTableMeta"))

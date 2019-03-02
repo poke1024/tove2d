@@ -227,7 +227,7 @@ typedef struct {
 	bool fragmentShaderStrokes;
 	ToveLineRun *lineRuns;
 
-	float *lookupTable;
+	float *lookupTable[2];
 	int16_t lookupTableSize;
 	ToveLookupTableMeta *lookupTableMeta;
 

@@ -37,7 +37,8 @@ GeometryData::GeometryData(
 
 	int baseLookupTableSize = maxCurves * 4; // number of (x, y) pairs
 
-    data.lookupTable = nullptr;
+    data.lookupTable[0] = nullptr;
+    data.lookupTable[1] = nullptr;
 	data.lookupTableMeta = nullptr;
 	if (fragmentShaderStrokes) {
 		data.lookupTableSize = baseLookupTableSize + 2; // 2 for padding
@@ -111,7 +112,8 @@ GeometryNoLinkData::GeometryNoLinkData(
     data.curvesTexture = new gpu_float_t[
 		data.curvesTextureRowBytes * data.curvesTextureSize[1] / sizeof(gpu_float_t)];
 
-	data.lookupTable = new float[data.lookupTableSize * 2];
+	data.lookupTable[0] = new float[data.lookupTableSize];
+	data.lookupTable[1] = new float[data.lookupTableSize];
 	data.lookupTableMeta = new ToveLookupTableMeta;
 }
 
@@ -121,7 +123,8 @@ GeometryNoLinkData::~GeometryNoLinkData() {
     delete[] data.listsTexture;
     delete[] data.curvesTexture;
 
-	delete[] data.lookupTable;
+	delete[] data.lookupTable[0];
+	delete[] data.lookupTable[1];
 	delete data.lookupTableMeta;
 }
 

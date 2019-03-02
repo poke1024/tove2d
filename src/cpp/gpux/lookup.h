@@ -91,7 +91,7 @@ public:
 		const int ignore = _ignore;
 
         active.clear();
-        float *lookupTable = data.lookupTable + dim;
+        float *lookupTable = data.lookupTable[dim];
 
         auto i = events.cbegin();
         const auto end = events.cbegin() + numEvents;
@@ -107,8 +107,7 @@ public:
 
         if (data.fragmentShaderStrokes && padding > 0.0) {
             const float y0 = i->y;
-            *ylookup = y0 - padding;
-            ylookup += 2;
+            *ylookup++ = y0 - padding;
             finish(y0 - padding, y0, active, yptr, z++);
             yptr += rowBytes;
         }
@@ -130,8 +129,7 @@ public:
                 j++;
             }
 
-            *ylookup = y0;
-			ylookup += 2;
+            *ylookup++ = y0;
 
             int k = 0;
             assert(active.size() <= _maxCurves);
@@ -161,7 +159,7 @@ public:
 
         *yptr = SENTINEL_END;
 
-        data.lookupTableMeta->n[dim] = (ylookup - lookupTable) / 2;
+        data.lookupTableMeta->n[dim] = ylookup - lookupTable;
 		assert(data.lookupTableMeta->n[dim] <= data.lookupTableSize);
     }
 

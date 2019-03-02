@@ -33,7 +33,7 @@ static void queryLUT(
 	int dim, float y0, float y1,
 	std::unordered_set<uint8_t> &result) {
 
-	const float *lut = data->lookupTable + dim;
+	const float *lut = data->lookupTable[dim];
 	const int n = data->lookupTableMeta->n[dim];
 
 	if (n < 1) {
@@ -45,14 +45,14 @@ static void queryLUT(
 
 	do {
 		const int mid = (lo + hi) / 2;
-		if (lut[2 * mid] < y0) {
+		if (lut[mid] < y0) {
 			lo = mid + 1;
 		} else {
 			hi = mid;
 		}
 	} while (lo < hi);
 
-	while (lo > 0 && lut[2 * lo] > y0) {
+	while (lo > 0 && lut[lo] > y0) {
 		lo -= 1;
 	}
 
@@ -61,7 +61,7 @@ static void queryLUT(
 	base += dim * rowBytes * (data->listsTextureSize[1] / 2);
 
 	for (int i = lo; i < n; i++) {
-		if (lut[2 * i] > y1) {
+		if (lut[i] > y1) {
 			break;
 		}
 
@@ -321,7 +321,8 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 
 	assert(path->getNumCurves() <= maxCurves);
 
-	assert(geometryData.lookupTable != nullptr);
+	assert(geometryData.lookupTable[0] != nullptr);
+	assert(geometryData.lookupTable[1] != nullptr);
 	assert(geometryData.lookupTableMeta != nullptr);
 
 	assert(geometryData.listsTexture != nullptr);
