@@ -69,7 +69,11 @@ import sys
 def get_version_string():
 	os.chdir(Dir('.').abspath)
 	args = ['git', 'describe', '--tags', '--long']
-	res = subprocess.check_output(args).strip()
+	try:
+		res = subprocess.check_output(args).strip()
+	except subprocess.CalledProcessError:
+		print("could not determine tove version.")
+		return "unknown"
 	if sys.version_info >= (3, 0):
 		res = res.decode("utf8")
 	return res
