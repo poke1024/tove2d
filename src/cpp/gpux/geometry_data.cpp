@@ -13,6 +13,7 @@
 #include "../common.h"
 #include "../utils.h"
 #include <memory.h>
+#include <iostream>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -64,7 +65,14 @@ GeometryData::GeometryData(
 		data.curvesTextureSize[0] = div4(12);
 	}
     data.curvesTextureSize[1] = maxCurves;
-    data.curvesTextureFormat = "rgba16f";
+	if (sizeof(gpu_float_t) == sizeof(float)) {
+	    data.curvesTextureFormat = "rgba32f";
+	} else if (sizeof(gpu_float_t) == sizeof(uint16_t)) {
+	    data.curvesTextureFormat = "rgba16f";
+	} else {
+		std::cerr << "illegal gpu_float_t typedef" << std::endl;
+		assert(false);
+	}
 
 	if (fragmentShaderStrokes) {
 		data.lineRuns = nullptr;
@@ -99,9 +107,9 @@ GeometryNoLinkData::GeometryNoLinkData(
     data.listsTexture = new uint8_t[
 		data.listsTextureRowBytes * data.listsTextureSize[1]];
 
-    data.curvesTextureRowBytes = data.curvesTextureSize[0] * sizeof(uint16_t) * 4;
-    data.curvesTexture = new uint16_t[
-		data.curvesTextureRowBytes * data.curvesTextureSize[1] / sizeof(uint16_t)];
+    data.curvesTextureRowBytes = data.curvesTextureSize[0] * sizeof(gpu_float_t) * 4;
+    data.curvesTexture = new gpu_float_t[
+		data.curvesTextureRowBytes * data.curvesTextureSize[1] / sizeof(gpu_float_t)];
 
 	data.lookupTable = new float[data.lookupTableSize * 2];
 	data.lookupTableMeta = new ToveLookupTableMeta;

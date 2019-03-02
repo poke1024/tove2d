@@ -59,7 +59,7 @@ public:
 		bounds.update(pts, bx, by);
 	}
 
-	void storeRoots(uint16_t *out) const;
+	void storeRoots(gpu_float_t *out) const;
 };
 
 enum {

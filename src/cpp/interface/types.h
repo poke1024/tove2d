@@ -1,3 +1,8 @@
+typedef uint16_t tove_gpu_float_t;
+
+// enable the following for rgba32f support:
+// typedef float tove_gpu_float_t;
+
 typedef void (*ToveWarningFunction)(const char *s);
 
 typedef uint32_t ToveChangeFlags;
@@ -231,7 +236,7 @@ typedef struct {
 	int listsTextureSize[2];
 	const char *listsTextureFormat;
 
-	uint16_t *curvesTexture;
+	tove_gpu_float_t *curvesTexture;
 	int curvesTextureRowBytes;
 	int curvesTextureSize[2];
 	const char *curvesTextureFormat;

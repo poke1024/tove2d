@@ -43,26 +43,32 @@ END_TOVE_NAMESPACE
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
+#include "shared.h"
+
+BEGIN_TOVE_NAMESPACE
+
+typedef tove_gpu_float_t gpu_float_t;
+
+inline void store_gpu_float(float &p, float x) {
+	p = x;
+}
+
 #if __clang__
-inline void store_fp16(uint16_t &p, float x) {
+inline void store_gpu_float(uint16_t &p, float x) {
 	*reinterpret_cast<__fp16*>(&p) = x;
 }
 #elif __GNUC__
 #include <x86intrin.h>
-inline void store_fp16(uint16_t &p, float x) {
+inline void store_gpu_float(uint16_t &p, float x) {
 	p = _cvtss_sh(x, 0);
 }
 #else
 #include "../thirdparty/half/include/half.hpp"
-inline void store_fp16(uint16_t &p, float x) {
+inline void store_gpu_float(uint16_t &p, float x) {
 	half_float::half y(x);
 	p = *(uint16_t*)&y;
 }
 #endif
-
-#include "shared.h"
-
-BEGIN_TOVE_NAMESPACE
 
 typedef ClipperLib::Path ClipperPath;
 typedef ClipperLib::Paths ClipperPaths;

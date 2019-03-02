@@ -962,11 +962,11 @@ bool Subpath::computeShaderCurveData(
 
 	commit();
 
-	uint16_t *curveTexturesDataBegin =
-		reinterpret_cast<uint16_t*>(shaderData->curvesTexture) +
-			shaderData->curvesTextureRowBytes * target / sizeof(uint16_t);
+	gpu_float_t *curveTexturesDataBegin =
+		reinterpret_cast<gpu_float_t*>(shaderData->curvesTexture) +
+			shaderData->curvesTextureRowBytes * target / sizeof(gpu_float_t);
 
-	uint16_t *curveTexturesData = curveTexturesDataBegin;
+	gpu_float_t *curveTexturesData = curveTexturesDataBegin;
 
 	ensureCurveData(DIRTY_COEFFICIENTS | DIRTY_CURVE_BOUNDS);
 	assert(curves.size() > 0);
@@ -999,13 +999,13 @@ bool Subpath::computeShaderCurveData(
 
 	// write curve data.
 	for (int i = 0; i < 4; i++) {
-		store_fp16(curveTexturesData[i], bx[i]);
-		store_fp16(curveTexturesData[i + 4], by[i]);
+		store_gpu_float(curveTexturesData[i], bx[i]);
+		store_gpu_float(curveTexturesData[i + 4], by[i]);
 	}
 	curveTexturesData += 8;
 
 	for (int i = 0; i < 4; i++) {
-		store_fp16(curveTexturesData[i], curveData.bounds.bounds[i]);
+		store_gpu_float(curveTexturesData[i], curveData.bounds.bounds[i]);
 	}
 	curveTexturesData += 4;
 
