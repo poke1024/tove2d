@@ -325,6 +325,8 @@ const float *Path::getExactBounds() {
 		return exactBounds;
 	}
 
+	updateNSVG();
+
 	if (!nsvg::shapeStrokeBounds(exactBounds, &nsvg, 1.0f, nullptr)) {
 		updateBounds();
 		for (int i = 0; i < 4; i++) {
@@ -615,9 +617,20 @@ void Path::intersect(float x1, float y1, float x2, float y2) const {
 void Path::updateNSVG() {
 	updateBounds();
 
+	NSVGpath **link = &nsvg.paths;
+
 	for (const auto &t : subpaths) {
 		t->updateNSVG();
+
+		if (t->getNumPoints() > 0) {
+			// NanoSVG will crash on subpaths
+			// with 0 points. exlude them now.
+			*link = &t->nsvg;
+			link = &t->nsvg.next;
+		}
 	}
+
+	*link = nullptr;
 }
 
 void Path::geometryChanged() {
