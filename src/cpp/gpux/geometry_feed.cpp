@@ -31,7 +31,7 @@ inline void updateLookupTableMeta(ToveLookupTableMeta *meta) {
 static void queryLUT(
 	ToveShaderGeometryData *data,
 	int dim, float y0, float y1,
-	std::unordered_set<uint8_t> &result) {
+	CurveSet &result) {
 
 	const float *lut = data->lookupTable[dim];
 	const int n = data->lookupTableMeta->n[dim];
@@ -67,7 +67,7 @@ static void queryLUT(
 
 		const uint8_t *list = base + rowBytes * i;
 		while (*list != SENTINEL_END) {
-			result.insert(*list++);
+			result[*list++] = true;
 		}
 	}
 }
@@ -171,8 +171,8 @@ int GeometryFeed::buildLUT(int dim, const int ncurves) {
 				queryLUT(&strokeShaderData, dim, y0, y1, strokeCurves);
 
 				bool hasStrokeSentinel = false;
-				for (auto i = strokeCurves.begin(); i != strokeCurves.end(); i++) {
-					const int curveIndex = *i;
+				for (const auto &i : strokeCurves) {
+					const int curveIndex = i.first;
 					if (active.find(curveIndex) == active.end()) {
 						if (!hasStrokeSentinel) {
 							*list++ = SENTINEL_STROKES;
@@ -252,6 +252,7 @@ GeometryFeed::GeometryFeed(
 	lineColorData(lineColorData),
 	fillEventsLUT(maxCurves, geometryData, IGNORE_FILL),
 	strokeEventsLUT(maxCurves, strokeShaderData, IGNORE_LINE),
+	strokeCurves(256, -1),
 	allocData(maxCurves, maxSubPaths,
 		enableFragmentShaderStrokes && path->hasStroke(), geometryData),
 	allocStrokeData(maxCurves, maxSubPaths, true, strokeShaderData),
@@ -267,7 +268,6 @@ GeometryFeed::GeometryFeed(
 
 	fillEvents.resize(6 * maxCurves);
 	strokeEvents.resize(2 * maxCurves);
-	strokeCurves.reserve(maxCurves);
 	extended.resize(maxCurves);
 	initialUpdate = true;
 

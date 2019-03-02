@@ -12,7 +12,7 @@
 #ifndef __TOVE_SHADER_LOOKUP
 #define __TOVE_SHADER_LOOKUP 1
 
-#include <unordered_set>
+#include "../../thirdparty/HashMap.h"
 #include <vector>
 
 #include "curve_data.h"
@@ -38,7 +38,19 @@ enum {
 
 class LookupTable {
 public:
-	typedef std::unordered_set<uint8_t> CurveSet;
+    struct Hash {
+        size_t operator()(int x) const {
+            return x;
+        }
+    };
+
+    struct Equal {
+        bool operator()(int lhs, int rhs) const {
+            return lhs == rhs;
+        }
+    };
+
+	typedef rigtorp::HashMap<int16_t, bool, Hash, Equal> CurveSet;
 
 private:
 	ToveShaderGeometryData &_data;
@@ -48,9 +60,10 @@ private:
 
 public:
     LookupTable(int maxCurves, ToveShaderGeometryData &data, int ignore) :
-		_maxCurves(maxCurves), _data(data), _ignore(ignore) {
-
-        active.reserve(maxCurves);
+		active(256, -1),
+        _maxCurves(maxCurves),
+        _data(data),
+        _ignore(ignore) {
     }
 
 	void dump(ToveShaderGeometryData *data) {
@@ -118,7 +131,7 @@ public:
             while (j != end && j->y == y0) {
                 switch (j->t) {
 					case EVENT_ENTER:
-                    	active.insert(j->curve);
+                    	active[j->curve] = true;
 						break;
 					case EVENT_EXIT:
                     	active.erase(j->curve);
@@ -133,8 +146,8 @@ public:
 
             int k = 0;
             assert(active.size() <= _maxCurves);
-            for (auto a = active.cbegin(); a != active.cend(); a++) {
-				const int curve = *a;
+            for (const auto &a : active) {
+				const int curve = a.first;
 				if ((extended[curve].ignore & ignore) == 0) {
 					yptr[k++] = curve;
 				}
