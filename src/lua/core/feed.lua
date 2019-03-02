@@ -41,8 +41,9 @@ end
 
 local function sendLUT(feed, shader)
 	local lutX, lutY = unpack(feed.lookupTableByteData)
-	shader:send("lutX", lutX)
-	shader:send("lutY", lutY)
+	local n = feed.data.lookupTableMeta.n
+	shader:send("lutX", lutX, 0, ffi.sizeof("float[?]", n[0]))
+	shader:send("lutY", lutY, 0, ffi.sizeof("float[?]", n[1]))
 	shader:send("tablemeta", feed.lookupTableMetaByteData)
 end
 
