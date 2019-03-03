@@ -40,9 +40,11 @@ uniform ivec3 constants;
 #define LISTS_W constants.y
 #define LISTS_H constants.z
 
+#ifdef LUT_BANDS
 uniform ivec3 tablemeta;
 uniform float lutX[LUT_SIZE];
 uniform float lutY[LUT_SIZE];
+#endif // LUT_BANDS
 
 #if LINE_STYLE > 0
 #define LINE_OFFSET lineargs.x
@@ -282,6 +284,8 @@ bool isInside(int z) {
 #endif
 }
 
+#ifdef LUT_BANDS
+
 #define X_LO lohi.x
 #define X_HI lohi.y
 #define X_LOHI lohi.xy
@@ -351,12 +355,24 @@ vec2 orient(ivec2 at, vec2 position, out bool rayOnX) {
 	return rayOnX ? vec2(position.x, npos.y) : vec2(npos.x, position.y);
 }
 
-vec4 do_color() {
+#endif // LUT_BANDS
+
+vec4 do_color(vec2 textureUV) {
+#ifdef LUT_BANDS
 	vec2 position = raw_vertex_pos.xy;
 	ivec2 at = search(position);
 
 	bool rayOnX;
 	position = orient(at, position, rayOnX);
+
+	vec2 blockPos = rayOnX ?
+		vec2(0, (at.y - 1) / float(LISTS_H) + 0.5f) :
+		vec2(0, (at.x - 1) / float(LISTS_H));
+#else // LUT_BANDS
+	vec2 position = raw_vertex_pos.xy;
+	bool rayOnX = textureUV.x > 0;
+	vec2 blockPos = vec2(0.0, textureUV.y);
+#endif // LUT_BANDS
 
 	vec2 axis1 = vec2(int(rayOnX), 1 - int(rayOnX));
 	vec2 axis2 = vec2(1) - axis1;
@@ -364,16 +380,12 @@ vec4 do_color() {
 	float rayPos = dot(position, axis1);
 	vec4 C = vec4(0.0, 0.0, 0.0, dot(position, axis2));
 
-	int z = 0;
-
-	vec2 blockpos = rayOnX ?
-		vec2(0, (at.y - 1) / float(LISTS_H) + 0.5f) :
-		vec2(0, (at.x - 1) / float(LISTS_H));
-	vec2 blockadv = vec2(1.0 / LISTS_W, 0);
+	vec2 blockStep = vec2(1.0 / LISTS_W, 0);
 
 	float C_ID_SCALE = 255.0 / NUM_CURVES;
-	vec4 curveIds = Texel(lists, blockpos) * C_ID_SCALE;
-	int k = 0;
+	vec4 curveIds = Texel(lists, blockPos) * C_ID_SCALE;
+	int shift = 0;
+	int z = 0;
 
 	while (curveIds.x < SENTINEL_STROKES * C_ID_SCALE) {
 		float curveId = curveIds.x;
@@ -405,43 +417,43 @@ vec4 do_color() {
 		}
 #endif
 
-		if (++k < 4) {
+		if (++shift < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
-			blockpos += blockadv;
-			if (blockpos.x >= 1.0) {
+			blockPos += blockStep;
+			if (blockPos.x >= 1.0) {
 				// something went horribly wrong.
 				return vec4(0.33, 1, 1, 1);
 			}
-			curveIds = Texel(lists, blockpos) * C_ID_SCALE;
-			k = 0;
+			curveIds = Texel(lists, blockPos) * C_ID_SCALE;
+			shift = 0;
 		}
 	}
 
 #if LINE_STYLE > 0
 	if (curveIds.x == SENTINEL_STROKES * C_ID_SCALE) {
-		if (++k < 4) {
+		if (++shift < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
-			blockpos += blockadv;
-			curveIds = Texel(lists, blockpos) * C_ID_SCALE;
-			k = 0;
+			blockPos += blockStep;
+			curveIds = Texel(lists, blockPos) * C_ID_SCALE;
+			shift = 0;
 		}
 		while (curveIds.x < SENTINEL_END * C_ID_SCALE) {
 			if (checkLine(curveIds.x, position, axis1)) {
 				return computeLineColor(position);
 			}
 
-			if (++k < 4) {
+			if (++shift < 4) {
 				curveIds.xyzw = curveIds.yzwx;
 			} else {
-				blockpos += blockadv;
-				if (blockpos.x >= 1.0) {
+				blockPos += blockStep;
+				if (blockPos.x >= 1.0) {
 					// something went horribly wrong.
 					return vec4(0.33, 1, 1, 1);
 				}
-				curveIds = Texel(lists, blockpos) * C_ID_SCALE;
-				k = 0;
+				curveIds = Texel(lists, blockPos) * C_ID_SCALE;
+				shift = 0;
 			}
 		}
 	}

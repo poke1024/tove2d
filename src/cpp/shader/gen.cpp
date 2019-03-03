@@ -100,8 +100,8 @@ void ShaderWriter::beginFragmentShader() {
 void ShaderWriter::endFragmentShader() {
 #if TOVE_TARGET == TOVE_TARGET_LOVE2D
 	out << R"GLSL(
-vec4 effect(vec4 _1, Image _2, vec2 _3, vec2 _4) {
-	return do_color();
+vec4 effect(vec4 _1, Image _2, vec2 texture_coords, vec2 _4) {
+	return do_color(texture_coords);
 }
 #endif // PIXEL
 )GLSL";
@@ -233,7 +233,7 @@ vec4 do_vertex(vec4 vertex_pos) {
 	w << R"GLSL(
 uniform sampler2D colors;
 
-vec4 do_color() {
+vec4 do_color(vec2 _1) {
 	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
 	y = gradient_scale.x + gradient_scale.y * y;
 
@@ -251,7 +251,7 @@ vec4 do_color() {
 	return w.getSourcePtr();
 }
 
-const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool lines) {
+const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool fragLine, bool meshBand) {
 	tove::ShaderWriter w;
 
 	w << R"GLSL(
@@ -259,7 +259,8 @@ varying vec4 raw_vertex_pos;
 )GLSL";
 
 	w.beginVertexShader();
-	w << R"GLSL(
+	if (!meshBand) {
+		w << R"GLSL(
 uniform vec4 bounds;
 
 vec4 do_vertex(vec4 vertex_pos) {
@@ -267,19 +268,33 @@ vec4 do_vertex(vec4 vertex_pos) {
 	return raw_vertex_pos;
 }
 )GLSL";
+	} else {
+		w << R"GLSL(
+vec4 do_vertex(vec4 vertex_pos) {
+	raw_vertex_pos = vertex_pos;
+	return vertex_pos;
+}
+)GLSL";
+	}
 	w.endVertexShader();
 
 	w.beginFragmentShader();
 
-	// encourage shader caching by trying to reduce code changing states.
-	const int lutN = tove::nextpow2(data->geometry.lookupTableSize);
+	if (!meshBand) {
+		// encourage shader caching by trying to reduce code changing states.
+		const int lutN = tove::nextpow2(data->geometry.lookupTableSize);
 
-	w << "#define LUT_SIZE "<< lutN << "\n";
+		w << "#define LUT_SIZE "<< lutN << "\n";
+		w << "#define LUT_BANDS 1\n";
+	} else {
+		w << "#define MESH_BANDS 1\n";
+	}
+
 	w << "#define FILL_RULE "<< data->geometry.fillRule << "\n";
 	w << "#define CURVE_DATA_SIZE "<<
 		data->geometry.curvesTextureSize[0] << "\n";
 
-	w.computeLineColor(lines ? data->color.line.style : 0);
+	w.computeLineColor(fragLine ? data->color.line.style : 0);
 	w.computeFillColor(data->color.fill.style);
 
 	#include "glsl/fill.inc"
@@ -306,7 +321,7 @@ varying vec2 raw_vertex_pos;
 	w.beginFragmentShader();
 	w.computeLineColor(data->color.line.style);
 	w << R"GLSL(
-vec4 do_color() {
+vec4 do_color(vec2 _1) {
 	return computeLineColor(raw_vertex_pos);
 }
 )GLSL";

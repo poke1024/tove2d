@@ -133,14 +133,104 @@ function ColorSend:updateUniforms(chg1, path)
 end
 
 
+
+local MeshBands = {}
+MeshBands.__index = MeshBands
+
+-- 4 floats for each band vertex: (VertexPosition, VertexTexCoord)
+MeshBands.FLOATS_PER_VERTEX = {4, 2, 4}
+
+local function newMeshBands(data)
+	return setmetatable({
+		data = data,
+		meshes = {nil, nil, nil},
+		bandsVertexByteData = {nil, nil, nil},
+		bandsVertexViewCache = {{}, {}, {}}
+	}, MeshBands)
+end
+
+function MeshBands:initData()
+	local data = self.data
+	for i = 1, 3 do
+		local bandDataSize = ffi.sizeof(
+			"float[?]", data.maxBandsVertices * MeshBands.FLOATS_PER_VERTEX[i])
+		local bandsByteData = love.data.newByteData(bandDataSize)
+		self.bandsVertexByteData[i] = bandsByteData
+		data.bandsVertices[i - 1] = bandsByteData:getPointer()
+	end
+end
+
+function MeshBands:createMeshes()
+	local data = self.data
+
+	self.meshes[1] = love.graphics.newMesh(
+		{{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}},
+		-- see FLOATS_PER_VERTEX
+		data.maxBandsVertices,
+		"triangles")
+
+	self.meshes[2] = love.graphics.newMesh(
+		{{"VertexPosition", "float", 2}},
+		data.maxBandsVertices,
+		"triangles")
+
+	self.meshes[3] = love.graphics.newMesh(
+		{{"VertexPosition", "float", 2}, {"VertexTexCoord", "float", 2}},
+		-- see FLOATS_PER_VERTEX
+		data.maxBandsVertices,
+		"triangles")
+	
+	local lg = love.graphics
+
+	local drawUnsafeBands = function(...)
+		lg.setShader()
+		lg.draw(self.meshes[2], ...)
+	end
+
+	return function(fillShader, ...)
+		lg.stencil(drawUnsafeBands, "replace", 1)
+	
+		lg.setShader(fillShader)
+		lg.draw(self.meshes[1], ...)
+		lg.setStencilTest("greater", 0)
+		lg.draw(self.meshes[3], ...)
+		lg.setStencilTest()
+	end
+end
+
+local function bandsGetVertexView(self, i)
+	local size = self.data.numBandsVertices[i - 1]
+	local cache = self.bandsVertexViewCache[i]
+	local view = cache[size]
+	if view == nil and size > 0 then
+		view = love.data.newDataView(
+			self.bandsVertexByteData[i], 0, ffi.sizeof(
+				"float[?]", size * MeshBands.FLOATS_PER_VERTEX[i]))
+		cache[size] = view
+	end
+	return view, size
+end
+
+function MeshBands:update()
+	for i, mesh in ipairs(self.meshes) do
+		local view, n = bandsGetVertexView(self, i)
+		if n > 0 then
+			mesh:setDrawRange(1, n)
+			mesh:setVertices(view)
+		end
+	end
+end
+
+
 local GeometrySend = {}
 GeometrySend.__index = GeometrySend
 
-local function newGeometrySend(fillShader, lineShader, data)
+local function newGeometrySend(fillShader, lineShader, data, meshBand)
 	return setmetatable({
 		fillShader = fillShader,
 		lineShader = lineShader,
 		data = data,
+		bands = meshBand and newMeshBands(data) or nil,
 		boundsByteData = nil,
 		listsImageData = nil,
 		curvesImageData = nil,
@@ -183,6 +273,38 @@ function GeometrySend:beginInit()
 	self.lookupTableMetaByteData = love.data.newByteData(
 		ffi.sizeof("ToveLookupTableMeta"))
 	data.lookupTableMeta = self.lookupTableMetaByteData:getPointer()
+
+	if self.bands ~= nil then
+		self.bands:initData()
+	end
+end
+
+local function drawLine(linkdata, ...)
+	local geometry = linkdata.data.geometry
+	local lineRuns = geometry.lineRuns
+	if lineRuns == nil then
+		return
+	end
+
+	lg.setShader(lineShader)
+
+	local feed = linkdata.geometryFeed
+	local lineMesh = feed.lineMesh
+	local lineJoinMesh = feed.lineJoinMesh
+	local numSegments = linkdata.numSegments
+	for i = 0, geometry.numSubPaths - 1 do
+		local run = lineRuns[i]
+		local numCurves = run.numCurves
+		local numInstances = numSegments * numCurves
+		lineShader:send("curve_index", run.curveIndex)
+		lineShader:send("num_curves", numCurves)
+		lineShader:send("draw_joins", 0)
+		lg.drawInstanced(lineMesh, numInstances, ...)
+		lineShader:send("draw_joins", 1)
+		lg.drawInstanced(lineJoinMesh,
+			numCurves - (run.isClosed and 0 or 1), ...)
+	end
+
 end
 
 function GeometrySend:endInit(lineStyle)
@@ -195,28 +317,41 @@ function GeometrySend:endInit(lineStyle)
 	self.listsTexture = listsTexture
 	self.curvesTexture = curvesTexture
 
-	-- create mesh
-
 	local fillShader = self.fillShader
 	local lineShader = self.lineShader
 	local data = self.data
 
-	-- note: since bezier curves stay in the convex hull of their control points, we
-	-- could triangulate the mesh here. with strokes, it gets difficult though.
+	if self.bands == nil then
+		local mesh = love.graphics.newMesh(
+			{{"VertexPosition", "float", 2}},
+			{{0, 0}, {0, 1}, {1, 0}, {1, 1}}, "strip")
 
-	self.mesh = love.graphics.newMesh(
-		{{"VertexPosition", "float", 2}},
-		{{0, 0}, {0, 1}, {1, 0}, {1, 1}}, "strip")
+		local lg = love.graphics
+
+		self.drawFill = function(fillShader, ...)
+			lg.setShader(fillShader)
+			lg.draw(mesh, ...)
+		end
+	else
+		self.drawFill = self.bands:createMeshes()
+	end
 
 	if fillShader ~= lineShader and lineShader ~= nil then
 		self.lineMesh = love.graphics.newMesh(
 			{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
 		self.lineJoinMesh = love.graphics.newMesh(
 			{{0, 0}, {1, -1}, {1, 1}, {-1, -1}, {-1, 1}}, "strip")
+
+		self.drawLine = function(...)
+		end
 	end
 
-	sendLUT(self, fillShader)
-	fillShader:send("bounds", self.boundsByteData)
+	if self.bands == nil then
+		sendLUT(self, fillShader)
+		fillShader:send("bounds", self.boundsByteData)
+	else
+		self.bands:update()
+	end
 
 	fillShader:send("lists", listsTexture)
 	fillShader:send("curves", curvesTexture)
@@ -235,8 +370,12 @@ function GeometrySend:updateUniforms(flags)
 		local fillShader = self.fillShader
 		local lineShader = self.lineShader
 
-		sendLUT(self, fillShader)
-		fillShader:send("bounds", self.boundsByteData)
+		if self.bands == nil then
+			sendLUT(self, fillShader)
+			fillShader:send("bounds", self.boundsByteData)
+		else
+			self.bands:update()
+		end
 
 		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 then
 			if lineShader ~= nil then

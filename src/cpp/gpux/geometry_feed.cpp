@@ -28,6 +28,22 @@ inline void updateLookupTableMeta(ToveLookupTableMeta *meta) {
 	meta->bsearch = int(std::floor(std::log2(fill))) + 1;
 }
 
+#if TOVE_GPUX_MESH_BAND
+inline float *vertex(float *v, float x, float y) {
+	*v++ = x;
+	*v++ = y;
+	return v;
+}
+
+inline float *vertex(float *v, float x, float y, float tx, float ty) {
+	*v++ = x;
+	*v++ = y;
+	*v++ = tx;
+	*v++ = ty;
+	return v;
+}
+#endif // TOVE_GPUX_MESH_BAND
+
 static void queryLUT(
 	ToveShaderGeometryData *data,
 	int dim, float y0, float y1,
@@ -222,6 +238,159 @@ int GeometryFeed::buildLUT(int dim, const int ncurves) {
 	return numFillEvents;
 }
 
+#if TOVE_GPUX_MESH_BAND
+int GeometryFeed::computeYBands() {
+	float last_y1;
+	Band *bands = this->bands.data();
+	int numBands = 0;
+
+	const float *in = geometryData.lookupTable[1];
+	const int n = geometryData.lookupTableMeta->n[1];
+	const float margin = 0.5f;
+	assert(this->bands.size() >= n);
+
+	for (int i = 0; i < n; i++) {
+		const float y = in[i];
+
+		const float y0 = y - margin;
+		const float y1 = y + margin;
+
+		if (numBands > 0 && y0 < last_y1) {
+			bands[numBands - 1].y1 = y1;
+			bands[numBands - 1].i = i;
+		} else {
+			bands[numBands].y0 = y0;
+			bands[numBands].y1 = y1;
+			bands[numBands].i = i;
+			numBands++;
+		}
+
+		last_y1 = y1;
+	}
+
+	if (numBands > 0) {
+		const float *bounds = geometryData.bounds->bounds;
+		bands[0].y0 = std::max(bands[0].y0, bounds[1]);
+		bands[numBands - 1].y1 = std::min(bands[numBands - 1].y1, bounds[3]);
+	}
+
+	return numBands;
+}
+
+void GeometryFeed::createSafeYBandMesh(const int numBands) {
+	float *out = geometryData.bandsVertices[0];
+	float *out0 = out;
+
+	float *bounds = geometryData.bounds->bounds;
+	const float x0 = bounds[0];
+	const float x1 = bounds[2];
+
+	float y0;
+	Band *bands = this->bands.data();
+	assert(this->bands.size() >= numBands);
+	float ty;
+
+	const float numLists = geometryData.listsTextureSize[1];
+
+	for (int i = 0; i < numBands; i++) {
+		const Band &band = bands[i];
+		const float y1 = band.y0;
+		if (i > 0 && y0 < y1) {
+			out = vertex(out, x0, y0, 1, ty);
+			out = vertex(out, x1, y0, 1, ty);
+			out = vertex(out, x0, y1, 1, ty);
+
+			out = vertex(out, x0, y1, 1, ty);
+			out = vertex(out, x1, y0, 1, ty);
+			out = vertex(out, x1, y1, 1, ty);
+		}
+		y0 = band.y1;
+
+		// compute texture coordinate into curve lists texture
+		ty = band.i / numLists + 0.5f;
+	}
+
+	float y1 = bounds[3];
+
+	out = vertex(out, x0, y0, 1, ty);
+	out = vertex(out, x1, y0, 1, ty);
+	out = vertex(out, x0, y1, 1, ty);
+
+	out = vertex(out, x0, y1, 1, ty);
+	out = vertex(out, x1, y0, 1, ty);
+	out = vertex(out, x1, y1, 1, ty);
+
+	const int floatsPerVertex = 4;
+	geometryData.numBandsVertices[0] = (out - out0) / floatsPerVertex;
+}
+
+void GeometryFeed::createUnsafeYBandMesh(const int numBands) {
+	float *out = geometryData.bandsVertices[1];
+	float *out0 = out;
+
+	float *bounds = geometryData.bounds->bounds;
+	const float x0 = bounds[0];
+	const float x1 = bounds[2];
+
+	Band *bands = this->bands.data();
+	assert(this->bands.size() >= numBands);
+	for (int i = 0; i < numBands; i++) {
+		const Band &band = bands[i];
+		const float y0 = band.y0;
+		const float y1 = band.y1;
+
+		out = vertex(out, x0, y0);
+		out = vertex(out, x1, y0);
+		out = vertex(out, x0, y1);
+
+		out = vertex(out, x0, y1);
+		out = vertex(out, x1, y0);
+		out = vertex(out, x1, y1);
+	}
+
+	const int floatsPerVertex = 2;
+	geometryData.numBandsVertices[1] = (out - out0) / floatsPerVertex;
+}
+
+void GeometryFeed::createXBandMesh() {
+	const float *in = geometryData.lookupTable[0];
+	const int n = geometryData.lookupTableMeta->n[0];
+
+	float *out = geometryData.bandsVertices[2];
+	float *out0 = out;
+
+	float *bounds = geometryData.bounds->bounds;
+	const float y0 = bounds[1];
+	const float y1 = bounds[3];
+
+	const float numLists = geometryData.listsTextureSize[1];
+
+	float x0, ty;
+	for (int i = 0; i < n; i++) {
+		const float x1 = in[i];
+
+		if (i > 0) {
+			out = vertex(out, x0, y0, 0, ty);
+			out = vertex(out, x1, y0, 0, ty);
+			out = vertex(out, x0, y1, 0, ty);
+
+			out = vertex(out, x0, y1, 0, ty);
+			out = vertex(out, x1, y0, 0, ty);
+			out = vertex(out, x1, y1, 0, ty);
+		}
+
+		x0 = x1;
+
+		// compute texture coordinate into curve lists texture
+		ty = i / numLists;
+	}
+
+	const int floatsPerVertex = 4;
+	geometryData.numBandsVertices[2] = (out - out0) / floatsPerVertex;
+}
+
+#endif // TOVE_GPUX_MESH_BAND
+
 void GeometryFeed::dumpCurveData() {
 #if 0
 	const int w = geometryData.curvesTextureSize[0];
@@ -269,6 +438,9 @@ GeometryFeed::GeometryFeed(
 	fillEvents.resize(6 * maxCurves);
 	strokeEvents.resize(2 * maxCurves);
 	extended.resize(maxCurves);
+#if TOVE_GPUX_MESH_BAND
+	bands.resize(geometryData.lookupTableSize);
+#endif
 	initialUpdate = true;
 
 	path->addObserver(this);
@@ -402,6 +574,20 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 		bounds[2] += lineWidth;
 		bounds[3] += lineWidth;
 	}
+
+#if TOVE_GPUX_MESH_BAND
+	if (geometryData.bandsVertices[0]) {
+		const int numBands = computeYBands();
+
+		createSafeYBandMesh(numBands);
+		createUnsafeYBandMesh(numBands);
+		createXBandMesh();
+
+		for (int i = 0; i < 3; i++) {
+			assert(geometryData.numBandsVertices[i] <= geometryData.maxBandsVertices);
+		}
+	}
+#endif
 
 	updateLookupTableMeta(geometryData.lookupTableMeta);
 

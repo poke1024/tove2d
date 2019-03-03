@@ -42,6 +42,22 @@ private:
 	const bool enableFragmentShaderStrokes;
 
 	int buildLUT(int dim, const int ncurves);
+
+#if TOVE_GPUX_MESH_BAND
+	struct Band {
+		float y0;
+		float y1;
+		int16_t i;
+	};
+
+	std::vector<Band> bands;
+
+	int computeYBands();
+	void createSafeYBandMesh(const int numBands);
+	void createUnsafeYBandMesh(const int numBands);
+	void createXBandMesh();
+#endif
+
 	void dumpCurveData();
 
 public:

@@ -11,11 +11,11 @@
 
 local lg = love.graphics
 
-local function newGeometryFillShader(data, fragLine)
+local function newGeometryFillShader(data, fragLine, meshBand)
 	local geometry = data.geometry
 
 	local shader = lg.newShader(
-		ffi.string(lib.GetImplicitFillShaderCode(data, fragLine)))
+		ffi.string(lib.GetImplicitFillShaderCode(data, fragLine, meshBand)))
 
 	shader:send("constants", {geometry.maxCurves,
 		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
@@ -200,12 +200,16 @@ local function newComputeFeedData(path, quality)
 	local lineType, lineQuality = parseQuality(quality)
 	local fragLine = (lineType == "fragment")
 
+	-- enables slower mesh-based drawing instead of
+	-- in-shader binary search in lookup tables.
+	local meshBand = false
+
 	local link = ffi.gc(
 		lib.NewGeometryFeed(path, fragLine), lib.ReleaseFeed)
 	local data = lib.FeedGetData(link)
 
 	lib.FeedBeginUpdate(link)
-	local fillShader = newGeometryFillShader(data, fragLine)
+	local fillShader = newGeometryFillShader(data, fragLine, meshBand)
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
@@ -221,7 +225,7 @@ local function newComputeFeedData(path, quality)
 	fillColorSend:beginInit()
 
 	local geometryFeed = feed.newGeometrySend(
-		fillShader, lineShader, data.geometry)
+		fillShader, lineShader, data.geometry, meshBand)
 	geometryFeed:beginInit()
 
 	lib.FeedEndUpdate(link)
@@ -284,14 +288,12 @@ end
 
 function ComputeShader:draw(...)
 	local linkdata = self.linkdata
+	local feed = linkdata.geometryFeed
 
 	local fillShader = linkdata.fillShader
 	local lineShader = linkdata.lineShader
-	local lineQuality = linkdata.lineQuality
-	local feed = linkdata.geometryFeed
 
-	lg.setShader(fillShader)
-	lg.draw(feed.mesh, ...)
+	feed.drawFill(fillShader, ...)
 
 	if fillShader == lineShader or lineShader == nil then
 		return

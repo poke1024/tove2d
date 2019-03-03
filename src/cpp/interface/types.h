@@ -1,6 +1,5 @@
 typedef uint16_t tove_gpu_float_t;
-
-// enable the following for rgba32f support:
+// rgba32f support:
 // typedef float tove_gpu_float_t;
 
 typedef void (*ToveWarningFunction)(const char *s);
@@ -230,6 +229,12 @@ typedef struct {
 	float *lookupTable[2];
 	int16_t lookupTableSize;
 	ToveLookupTableMeta *lookupTableMeta;
+
+// #if TOVE_GPUX_MESH_BAND
+	float *bandsVertices[3];
+	int16_t numBandsVertices[3];
+	int16_t maxBandsVertices;
+// #endif
 
 	uint8_t *listsTexture;
 	int listsTextureRowBytes;

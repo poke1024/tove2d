@@ -24,6 +24,8 @@
 #define TOVE_TARGET TOVE_TARGET_LOVE2D
 #endif
 
+#define TOVE_GPUX_MESH_BAND 1
+
 #include "interface.h"
 #include "warn.h"
 

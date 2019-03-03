@@ -46,6 +46,11 @@ GeometryData::GeometryData(
 		data.lookupTableSize = baseLookupTableSize;
 	}
 
+#if TOVE_GPUX_MESH_BAND
+	// 2 triangles (3 vertices each) for each band.
+	data.maxBandsVertices = 2 * 3 * data.lookupTableSize;
+#endif
+
 	// lists texture size: per axis, we can have up to 2 entries per
 	// curve.
 
