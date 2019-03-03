@@ -1021,21 +1021,38 @@ bool Subpath::computeShaderCurveData(
 }
 
 void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
-	const int n = a->nsvg.npts;
-	if (b->nsvg.npts != n) {
-		return;
-	}
-
 	commands.clear();
-	if (nsvg.npts != n) {
-		setNumPoints(n);
+
+	const int nptsA = a->nsvg.npts;
+	const int nptsB = b->nsvg.npts;
+
+	if (nptsA != nptsB) {
+		if (t < 0.5) {
+			setNumPoints(nptsA);
+			for (int i = 0; i < nptsA * 2; i++) {
+				nsvg.pts[i] = a->nsvg.pts[i];
+			}
+			nsvg.closed = a->nsvg.closed;
+		} else {
+			setNumPoints(nptsB);
+			for (int i = 0; i < nptsB * 2; i++) {
+				nsvg.pts[i] = b->nsvg.pts[i];
+			}
+			nsvg.closed = b->nsvg.closed;
+		}
+	} else {
+		const int n = nptsA;
+		if (nsvg.npts != n) {
+			setNumPoints(n);
+		}
+
+		for (int i = 0; i < n * 2; i++) {
+			nsvg.pts[i] = lerp(a->nsvg.pts[i], b->nsvg.pts[i], t);
+		}
+
+		nsvg.closed = t < 0.5 ? a->nsvg.closed : b->nsvg.closed;
 	}
 
-	for (int i = 0; i < n * 2; i++) {
-		nsvg.pts[i] = lerp(a->nsvg.pts[i], b->nsvg.pts[i], t);
-	}
-
-	nsvg.closed = a->nsvg.closed;
 	changed(CHANGED_POINTS);
 }
 
