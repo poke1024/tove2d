@@ -78,6 +78,8 @@ private:
 
     void updateCurveData(uint8_t flags) const;
 
+	void dump();
+
 public:
 	NSVGpath nsvg;
 
