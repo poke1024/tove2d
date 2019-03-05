@@ -252,7 +252,7 @@ int advancedMagic(vec4 bx, vec4 by, vec4 P, float position, float upperBound) {
 		if (D > 0.0) { // complex or duplicate roots
 			float sqrtD = sqrt(D);
 			vec2 r = vec2(R + sqrtD, R - sqrtD);
-			vec2 ST = sign(r) * pow(r, vec2(1.0 / 3.0));
+			vec2 ST = sign(r) * pow(abs(r), vec2(1.0 / 3.0));
 			float st = ST.x + ST.y;
 
 			// real root:
