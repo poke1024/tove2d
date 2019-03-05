@@ -266,7 +266,7 @@ int advancedMagic(vec4 bx, vec4 by, vec4 P, float position, float upperBound) {
 			return z;
 		} else { // distinct real roots
 			vec2 tmp = sqrt(vec2(-Q3, -Q));
-			vec3 phi = vec3(acos(R / tmp.x)) + vec3(0, 2 * M_PI, 4 * M_PI);
+			vec3 phi = vec3(acos(clamp(R / tmp.x, -1, 1))) + vec3(0, 2 * M_PI, 4 * M_PI);
 			vec3 t = 2 * tmp.y * cos(phi / 3.0) - A_third;
 			return contribute3(bx, by, t, position);
 		}
