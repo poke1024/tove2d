@@ -54,6 +54,11 @@ uniform float line_quality;
 #define MAX_LINE_ITERATIONS 16
 #endif
 
+#ifdef GPUX_DEBUG
+uniform int debug_curve = -1;
+uniform bool debug_ray_on_x = true;
+#endif
+
 #if LINE_STYLE > 0
 vec2 eval(vec4 bx, vec4 by, float t) {
 	float t2 = t * t;
@@ -365,6 +370,9 @@ vec4 do_color(vec2 textureUV) {
 
 	bool rayOnX;
 	position = orient(at, position, rayOnX);
+#ifdef GPUX_DEBUG
+	rayOnX = debug_ray_on_x;
+#endif
 
 	vec2 blockPos = rayOnX ?
 		vec2(0, (at.y - 1) / float(LISTS_H) + 0.5f) :
@@ -401,6 +409,12 @@ vec4 do_color(vec2 textureUV) {
 		if (abs(dot(off, axis1)) < LINE_OFFSET) {
 			vec4 roots = Texel(curves, vec2(3.0 / CURVE_DATA_SIZE, curveId));
 			if (onCurveLine(position, bx, by, roots, LINE_OFFSET * LINE_OFFSET)) {
+#ifdef GPUX_DEBUG
+				if (int(round(curveIds.x)) == debug_curve) {
+					return vec4(1, 0, 0, 1);
+				}
+#endif
+
 				return computeLineColor(position);
 			}
 		}
@@ -408,12 +422,20 @@ vec4 do_color(vec2 textureUV) {
 		if (dot(off, axis2) == 0.0) {
 #endif
 
-			z += advancedMagic(
+			int zdiff = advancedMagic(
 				rayOnX ? bx : by,
 				rayOnX ? by : bx,
 				rayOnX ? -by + C : bx - C,
 				rayPos,
 				dot(bounds.zw, axis1));
+			z += zdiff;
+
+#ifdef GPUX_DEBUG
+			if (int(round(curveIds.x)) == debug_curve) {
+				return vec4(vec3(0.5, 1 - abs(zdiff), abs(zdiff)) / 3, 1);
+			}
+#endif
+
 
 #if LINE_STYLE > 0
 		}
@@ -445,6 +467,11 @@ vec4 do_color(vec2 textureUV) {
 			float curveId = (curveIds.x + 0.5) / NUM_CURVES;
 
 			if (checkLine(curveId, position, axis1)) {
+#ifdef GPUX_DEBUG
+				if (int(round(curveIds.x)) == debug_curve) {
+					return vec4(1, 0, 0, 1);
+				}
+#endif
 				return computeLineColor(position);
 			}
 
@@ -460,6 +487,14 @@ vec4 do_color(vec2 textureUV) {
 				shift = 0;
 			}
 		}
+	}
+#endif
+
+#ifdef GPUX_DEBUG
+	if (isInside(z)) {
+		return vec4(0, 0, 0, 1);
+	} else {
+		discard;
 	}
 #endif
 
