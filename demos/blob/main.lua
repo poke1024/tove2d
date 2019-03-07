@@ -18,7 +18,7 @@ table.insert(animations, tove.newAnimation(tween, "gpux"))
 local flow = tovedemo.newCoverFlow(0.5)
 flow:add("flipbook", animations[1])
 flow:add("mesh", animations[2])
-flow:add("shader", animations[3])
+flow:add("gpux", animations[3])
 
 function love.draw()
 	tovedemo.draw("Blob.")
