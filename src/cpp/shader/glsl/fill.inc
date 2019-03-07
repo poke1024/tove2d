@@ -25,10 +25,9 @@ w << R"GLSL(
 // varying vec4 raw_vertex_pos;
 
 #define T_EPS 0.0
-#define SENTINEL_END 1.0
-#define SENTINEL_STROKES (254.0 / 255.0)
 
-#define LUT_LOG_N tablemeta.z
+#define SENTINEL_END 254.5
+#define SENTINEL_STROKES 253.5
 
 #define M_PI 3.1415926535897932384626433832795
 
@@ -41,6 +40,8 @@ uniform ivec3 constants;
 #define LISTS_H constants.z
 
 #ifdef LUT_BANDS
+#define LUT_LOG_N tablemeta.z
+
 uniform ivec3 tablemeta;
 uniform float lutX[LUT_SIZE];
 uniform float lutY[LUT_SIZE];
@@ -381,14 +382,15 @@ vec4 do_color(vec2 textureUV) {
 	vec4 C = vec4(0.0, 0.0, 0.0, dot(position, axis2));
 
 	vec2 blockStep = vec2(1.0 / LISTS_W, 0);
+	const float C_ID_SCALE = 255.0;
 
-	float C_ID_SCALE = 255.0 / NUM_CURVES;
 	vec4 curveIds = Texel(lists, blockPos) * C_ID_SCALE;
 	int shift = 0;
 	int z = 0;
 
-	while (curveIds.x < SENTINEL_STROKES * C_ID_SCALE) {
-		float curveId = curveIds.x;
+	while (curveIds.x < SENTINEL_STROKES) {
+		float curveId = (curveIds.x + 0.5) / NUM_CURVES;
+
 		vec4 bx = Texel(curves, vec2(0.0 / CURVE_DATA_SIZE, curveId));
 		vec4 by = Texel(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
 		vec4 bounds = Texel(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
@@ -431,7 +433,7 @@ vec4 do_color(vec2 textureUV) {
 	}
 
 #if LINE_STYLE > 0
-	if (curveIds.x == SENTINEL_STROKES * C_ID_SCALE) {
+	if (curveIds.x >= SENTINEL_STROKES && curveIds.x < SENTINEL_END) {
 		if (++shift < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
@@ -439,8 +441,10 @@ vec4 do_color(vec2 textureUV) {
 			curveIds = Texel(lists, blockPos) * C_ID_SCALE;
 			shift = 0;
 		}
-		while (curveIds.x < SENTINEL_END * C_ID_SCALE) {
-			if (checkLine(curveIds.x, position, axis1)) {
+		while (curveIds.x < SENTINEL_END) {
+			float curveId = (curveIds.x + 0.5) / NUM_CURVES;
+
+			if (checkLine(curveId, position, axis1)) {
 				return computeLineColor(position);
 			}
 
