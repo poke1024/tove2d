@@ -424,5 +424,11 @@ function Graphics:serialize()
 		usage = self._usage}
 end
 
+function Graphics:debug(...)
+	if self._cache ~= nil and self._cache.debug ~= nil then
+		self._cache.debug(...)
+	end
+end
+
 --!! import "core/create.lua" as create
 Graphics._create = create

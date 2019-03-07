@@ -11,11 +11,12 @@
 
 local lg = love.graphics
 
-local function newGeometryFillShader(data, fragLine, meshBand)
+local function newGeometryFillShader(data, fragLine, meshBand, debug)
 	local geometry = data.geometry
 
 	local shader = lg.newShader(
-		ffi.string(lib.GetImplicitFillShaderCode(data, fragLine, meshBand)))
+		ffi.string(lib.GetImplicitFillShaderCode(
+			data, fragLine, meshBand, debug)))
 
 	shader:send("constants", {geometry.maxCurves,
 		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
@@ -196,7 +197,7 @@ local function parseQuality(q)
 	return lineType, lineQuality
 end
 
-local function newComputeFeedData(path, quality)
+local function newComputeFeedData(path, quality, debug)
 	local lineType, lineQuality = parseQuality(quality)
 	local fragLine = (lineType == "fragment")
 
@@ -209,7 +210,8 @@ local function newComputeFeedData(path, quality)
 	local data = lib.FeedGetData(link)
 
 	lib.FeedBeginUpdate(link)
-	local fillShader = newGeometryFillShader(data, fragLine, meshBand)
+	local fillShader = newGeometryFillShader(
+		data, fragLine, meshBand, debug or false)
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
@@ -240,6 +242,7 @@ local function newComputeFeedData(path, quality)
 		fillShader = fillShader,
 		lineShader = lineShader,
 		lineType = lineType,
+		quality = quality,
 		lineQuality = lineQuality,
 		geometryFeed = geometryFeed,
 		lineColorSend = lineColorSend,
@@ -264,7 +267,7 @@ function ComputeShader:update()
 	local chg1 = lib.FeedBeginUpdate(link)
 
 	if bit.band(chg1, lib.CHANGED_RECREATE) ~= 0 then
-		self.linkdata = newComputeFeedData(path)
+		self.linkdata = newComputeFeedData(path, linkdata.quality)
 		return
 	end
 
@@ -277,6 +280,7 @@ end
 
 function ComputeShader:updateQuality(quality)
 	local linkdata = self.linkdata
+	linkdata.quality = quality
 	local lineType, lineQuality = parseQuality(quality)
 	if lineType == linkdata.lineType then
 		setLineQuality(linkdata, lineQuality)
@@ -322,6 +326,22 @@ function ComputeShader:draw(...)
 		lg.drawInstanced(lineJoinMesh,
 			numCurves - (run.isClosed and 0 or 1), ...)
 	end
+end
+
+function ComputeShader:debug(curve)
+	if curve == "off" then
+		self.linkdata = newComputeFeedData(
+			self.path, self.linkdata.quality, false)
+		self.debugging = nil
+		return
+	end
+	if self.debugging == nil then
+		self.debugging = true
+
+		self.linkdata = newComputeFeedData(
+			self.path, self.linkdata.quality, true)
+	end
+	self.linkdata.fillShader:send("debug_curve", curve)	
 end
 
 return {

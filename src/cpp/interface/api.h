@@ -146,7 +146,8 @@ EXPORT void ReleaseMesh(ToveMeshRef mesh);
 
 EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
 EXPORT const char *GetPaintShaderCode(int numPaints);
-EXPORT const char *GetImplicitFillShaderCode(const ToveShaderData *data, bool fragLine, bool meshBand);
+EXPORT const char *GetImplicitFillShaderCode(
+	const ToveShaderData *data, bool fragLine, bool meshBand, bool debug);
 EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);
 
 EXPORT ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit);

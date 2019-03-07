@@ -170,6 +170,9 @@ create.gpux = function(self)
 			end
 			return true
 		end,
+		debug = function(i, ...)
+			shaders[i]:debug(...)
+		end,
 		cache = _noCache
 	}
 end

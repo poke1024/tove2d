@@ -153,6 +153,8 @@ end
 Animation.__index = function(self, key)
 	if key == "t" then
 		return self._t
+	elseif key == "paths" then
+		return self._graphics.paths
 	else
 		return Animation[key]
 	end
@@ -160,4 +162,8 @@ end
 
 function Animation:draw(...)
 	self._graphics:draw(...)
+end
+
+function Animation:debug(...)
+	self._graphics:debug(...)
 end
