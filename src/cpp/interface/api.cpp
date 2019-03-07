@@ -325,7 +325,7 @@ void ReleaseSubpath(ToveSubpathRef subpath) {
 }
 
 int SubpathGetNumCurves(ToveSubpathRef subpath) {
-	return deref(subpath)->getNumCurves();
+	return deref(subpath)->getNumCurves(false);
 }
 
 int SubpathGetNumPoints(ToveSubpathRef subpath) {

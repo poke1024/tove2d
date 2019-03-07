@@ -11,12 +11,8 @@
 
 local Curve = {}
 Curve.__index = function (self, key)
-	if key == "count" then
-		return lib.SubpathGetNumCurves(self.traj)
-	else
-		return lib.SubpathGetCurveValue(
-			self.traj, self.curve, _attributes[key])
-	end
+	return lib.SubpathGetCurveValue(
+		self.traj, self.curve, _attributes[key])
 end
 Curve.__newindex = function (self, key, value)
 	return lib.SubpathSetCurveValue(
@@ -25,7 +21,11 @@ end
 
 local Curves = {}
 Curves.__index = function (self, curve)
-	return setmetatable({traj = self.traj, curve = curve - 1}, Curve)
+	if curve == "count" then
+		return lib.SubpathGetNumCurves(self.traj)
+	else
+		return setmetatable({traj = self.traj, curve = curve - 1}, Curve)
+	end
 end
 
 local _pt = {
