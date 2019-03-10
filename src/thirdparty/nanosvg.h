@@ -1169,7 +1169,7 @@ static double nsvg__atof(const char* s)
 
 	// Parse optional exponent
 	if (*cur == 'e' || *cur == 'E') {
-		int expPart = 0;
+		long expPart = 0;
 		cur++; // skip 'E'
 		expPart = strtol(cur, &end, 10); // Parse digit sequence with sign
 		if (cur != end) {
@@ -1207,7 +1207,7 @@ static const char* nsvg__parseNumber(const char* s, char* it, const int size)
 		}
 	}
 	// exponent
-	if (*s == 'e' || *s == 'E') {
+	if ((*s == 'e' || *s == 'E') && (s[1] != 'm' && s[1] != 'x')) {
 		if (i < last) it[i++] = *s;
 		s++;
 		if (*s == '-' || *s == '+') {
@@ -1461,8 +1461,7 @@ static unsigned int nsvg__parseColor(const char* str)
 
 static float nsvg__parseOpacity(const char* str)
 {
-	float val = 0;
-	sscanf(str, "%f", &val);
+	float val = nsvg__atof(str);
 	if (val < 0.0f) val = 0.0f;
 	if (val > 1.0f) val = 1.0f;
 	return val;
@@ -1470,8 +1469,7 @@ static float nsvg__parseOpacity(const char* str)
 
 static float nsvg__parseMiterLimit(const char* str)
 {
-	float val = 0;
-	sscanf(str, "%f", &val);
+	float val = nsvg__atof(str);
 	if (val < 0.0f) val = 0.0f;
 	return val;
 }
@@ -1502,9 +1500,9 @@ static int nsvg__parseUnits(const char* units)
 static NSVGcoordinate nsvg__parseCoordinateRaw(const char* str)
 {
 	NSVGcoordinate coord = {0, NSVG_UNITS_USER};
-	char units[32]="";
-	sscanf(str, "%f%31s", &coord.value, units);
-	coord.units = nsvg__parseUnits(units);
+	char buf[64];
+	coord.units = nsvg__parseUnits(nsvg__parseNumber(str, buf, 64));
+	coord.value = nsvg__atof(buf);
 	return coord;
 }
 
@@ -2581,7 +2579,22 @@ static void nsvg__parseSVG(NSVGparser* p, const char** attr)
 			} else if (strcmp(attr[i], "height") == 0) {
 				p->image->height = nsvg__parseCoordinate(p, attr[i + 1], 0.0f, 0.0f);
 			} else if (strcmp(attr[i], "viewBox") == 0) {
-				sscanf(attr[i + 1], "%f%*[%%, \t]%f%*[%%, \t]%f%*[%%, \t]%f", &p->viewMinx, &p->viewMiny, &p->viewWidth, &p->viewHeight);
+				const char *s = attr[i + 1];
+				char buf[64];
+				s = nsvg__parseNumber(s, buf, 64);
+				p->viewMinx = nsvg__atof(buf);
+				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
+				if (!*s) return;
+				s = nsvg__parseNumber(s, buf, 64);
+				p->viewMiny = nsvg__atof(buf);
+				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
+				if (!*s) return;
+				s = nsvg__parseNumber(s, buf, 64);
+				p->viewWidth = nsvg__atof(buf);
+				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
+				if (!*s) return;
+				s = nsvg__parseNumber(s, buf, 64);
+				p->viewHeight = nsvg__atof(buf);
 			} else if (strcmp(attr[i], "preserveAspectRatio") == 0) {
 				if (strstr(attr[i + 1], "none") != 0) {
 					// No uniform scaling
