@@ -25,6 +25,7 @@
 #endif
 
 #define TOVE_GPUX_MESH_BAND 1
+#define TOVE_DEBUG 0
 
 #include "interface.h"
 #include "warn.h"
@@ -46,6 +47,7 @@ END_TOVE_NAMESPACE
 #endif
 
 #include "shared.h"
+#include "tovedebug.h"
 
 BEGIN_TOVE_NAMESPACE
 

@@ -11,6 +11,9 @@
 
 #include "nsvg.h"
 #include "utils.h"
+#if TOVE_DEBUG
+#include <iostream>
+#endif
 
 BEGIN_TOVE_NAMESPACE
 
@@ -100,6 +103,8 @@ void xformIdentity(float *m) {
 }
 
 NSVGimage *parsePath(const char *d) {
+	const Env env; // important
+
 	NSVGparser *parser = getNSVGparser();
 
 	const char *attr[3] = {"d", d, nullptr};
@@ -237,7 +242,17 @@ void Transform::multiply(const Transform &t) {
 }
 
 void Transform::transformGradient(NSVGgradient* grad) const {
+#if TOVE_DEBUG
+	std::cout << "transformGradient [original]" << std::endl;
+	std::cout << tove::debug::xform(grad->xform);
+#endif
+
 	nsvg__xformMultiply(grad->xform, const_cast<float*>(&matrix[0]));
+
+#if TOVE_DEBUG
+	std::cout << "transformGradient [transformed]" << std::endl;
+	std::cout << tove::debug::xform(grad->xform);
+#endif
 }
 
 void Transform::transformPoints(float *pts, const float *srcpts, int npts) const {

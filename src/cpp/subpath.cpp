@@ -1020,17 +1020,19 @@ bool Subpath::computeShaderCurveData(
 	return true;
 }
 
-void Subpath::dump() {
-#if 0
+#if TOVE_DEBUG
+std::ostream &Subpath::dump(std::ostream &os) {
 	for (int i = 0; i < nsvg.npts; i++) {
 		if (i > 0) {
-			printf(", ");
+			os << ", ";
 		}
-		printf("(%f, %f)", nsvg.pts[2 * i + 0], nsvg.pts[2 * i + 1]);
+		os << "(" << nsvg.pts[2 * i + 0] <<
+			", " <<  nsvg.pts[2 * i + 1] << ")";
 	}
-	printf("\n");
-#endif
+	os << std::endl;
+	return os;
 }
+#endif
 
 void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 	commands.clear();

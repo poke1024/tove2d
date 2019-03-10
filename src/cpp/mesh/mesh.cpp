@@ -12,6 +12,9 @@
 #include "../common.h"
 #include "mesh.h"
 #include "../path.h"
+#if TOVE_DEBUG
+#include <iostream>
+#endif
 
 BEGIN_TOVE_NAMESPACE
 
@@ -25,19 +28,22 @@ BEGIN_TOVE_NAMESPACE
 #include "../../thirdparty/earcut/earcut.hpp"
 #endif
 
-static void dumpPolygons(const std::list<TPPLPoly> &polys) {
+#if TOVE_DEBUG
+static void dumpPolygons(std::ostream &os, const std::list<TPPLPoly> &polys) {
+	int poly_i = 0;
 	for (auto p = polys.begin(); p != polys.end(); p++) {
-		printf("poly:\n");
+		os << "Polygon " << ++poly_i << ":" << std::endl;
 		for (int i = 0; i < p->GetNumPoints(); i++) {
-			printf("%f %f\n", (*p)[i].x, (*p)[i].y);
+			os << (*p)[i].x << " " <<  (*p)[i].y << std::endl;
 		}
 	}
 }
+#endif
 
 inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
-#if 0
-	printf("triangulation failed:\n");
-	dumpPolygons(polys);
+#if TOVE_DEBUG
+	std::cerr << "Triangulation failed:" << std::endl;
+	dumpPolygons(std::cerr, polys);
 #endif
 	TOVE_WARN("Triangulation failed.");
 }

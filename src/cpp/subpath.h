@@ -78,7 +78,9 @@ private:
 
     void updateCurveData(uint8_t flags) const;
 
-	void dump();
+#if TOVE_DEBUG
+	std::ostream &dump(std::ostream &os);
+#endif
 
 public:
 	NSVGpath nsvg;

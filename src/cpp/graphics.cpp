@@ -31,6 +31,8 @@ GraphicsRef Graphics::createFromSVG(
 
 	GraphicsRef graphics;
 	if (svg) {
+		const nsvg::Env env; // important
+
 		char *mutableSVG = strdup(svg);
 		NSVGimage *image = nsvgParse(mutableSVG, units, dpi);
 		free(mutableSVG);

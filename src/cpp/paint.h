@@ -53,6 +53,10 @@ public:
 
 	virtual void animate(const PaintRef &a, const PaintRef &b, float t) {
 	}
+
+#if TOVE_DEBUG
+	virtual std::ostream &dump(std::ostream &os) = 0;
+#endif
 };
 
 class Color final : public AbstractPaint {
@@ -114,6 +118,10 @@ public:
 	virtual void getRGBA(ToveRGBA &rgba, float opacity) const;
 
 	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
+
+#if TOVE_DEBUG
+	virtual std::ostream &dump(std::ostream &os);
+#endif
 };
 
 class AbstractGradient : public AbstractPaint {
@@ -194,6 +202,10 @@ public:
 	}
 
 	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
+
+#if TOVE_DEBUG
+	virtual std::ostream &dump(std::ostream &os);
+#endif
 };
 
 class LinearGradient final : public AbstractGradient {
@@ -203,8 +215,7 @@ public:
 	inline LinearGradient(int nstops) : AbstractGradient(nstops) {
 	}
 
-	inline LinearGradient(const NSVGgradient *gradient) : AbstractGradient(gradient) {
-	}
+	inline LinearGradient(const NSVGgradient *gradient);
 
 	inline LinearGradient(const LinearGradient &gradient) : AbstractGradient(gradient) {
 	}
@@ -226,6 +237,10 @@ public:
 		paint.type = NSVG_PAINT_LINEAR_GRADIENT;
 		paint.gradient = getInverseNSVGgradient();
 	}
+
+#if TOVE_DEBUG
+	virtual std::ostream &dump(std::ostream &os);
+#endif
 };
 
 class RadialGradient final : public AbstractGradient {
@@ -258,6 +273,10 @@ public:
 		paint.type = NSVG_PAINT_RADIAL_GRADIENT;
 		paint.gradient = getInverseNSVGgradient();
 	}
+
+#if TOVE_DEBUG
+	virtual std::ostream &dump(std::ostream &os);
+#endif
 };
 
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint);

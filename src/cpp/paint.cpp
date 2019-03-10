@@ -86,6 +86,13 @@ void Color::animate(const PaintRef &a, const PaintRef &b, float t) {
 	}
 }
 
+#if TOVE_DEBUG
+std::ostream &Color::dump(std::ostream &os) {
+	os << tove::debug::color(color);
+	return os;
+}
+#endif
+
 
 void AbstractGradient::sort() const {
 	std::sort(nsvg->stops, nsvg->stops + nsvg->nstops,
@@ -273,6 +280,46 @@ void AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 	changed();
 }
 
+#if TOVE_DEBUG
+std::ostream &AbstractGradient::dump(std::ostream &os) {
+	os << "xform:" << std::endl;
+	os << tove::debug::xform(nsvg->xform);
+
+	os << "xform inverse:" << std::endl;
+	os << tove::debug::xform(xformInverse);
+
+	tove::debug::save_ios_fmt fmt(os);
+	os << std::fixed << std::setprecision(2);
+
+	os << "fx/fy: " <<
+		nsvg->fx << ", " <<
+		nsvg->fy << ", " <<
+		(int)nsvg->spread << std::endl;
+
+	os << "color stops:" << std::endl;
+
+	{
+		tove::debug::indent_output indent(os);
+
+		for (int i = 0; i < nsvg->nstops; i++) {
+			const auto &stop = nsvg->stops[i];
+			os << "[" << i << ": " << stop.offset << "] " <<
+				tove::debug::color(stop.color) << std::endl;
+		}
+	}
+
+	return os;
+}
+#endif
+
+
+LinearGradient::LinearGradient(const NSVGgradient *gradient) :
+	AbstractGradient(gradient) {
+	
+	nsvg->spread = 0;
+	nsvg->fx = 0;
+	nsvg->fy = 0;
+}
 
 LinearGradient::LinearGradient(float x1, float y1, float x2, float y2) :
 	AbstractGradient(0) {
@@ -303,6 +350,13 @@ void LinearGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform)
 	}
 	target->transform(transform);
 }
+
+#if TOVE_DEBUG
+std::ostream &LinearGradient::dump(std::ostream &os) {
+	os << "linear gradient" << std::endl;
+	return AbstractGradient::dump(os);
+}
+#endif
 
 
 RadialGradient::RadialGradient(float cx, float cy, float fx, float fy, float r) :
@@ -335,6 +389,13 @@ void RadialGradient::cloneTo(PaintRef &target, const nsvg::Transform &transform)
 	}
 	target->transform(transform);
 }
+
+#if TOVE_DEBUG
+std::ostream &RadialGradient::dump(std::ostream &os) {
+	os << "radial gradient" << std::endl;
+	return AbstractGradient::dump(os);
+}
+#endif
 
 
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {

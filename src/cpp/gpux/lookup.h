@@ -66,12 +66,12 @@ public:
         _ignore(ignore) {
     }
 
-	void dump(ToveShaderGeometryData *data) {
-#if 0
-		printf("-- dump lut --\n");
+#if TOVE_DEBUG
+	void dump(ToveShaderGeometryData *data, int dim) {
+		printf("-- dump lut %d --\n", dim);
 		printf("maxCurves: %d\n", _maxCurves);
-		for (int i = 0; i < 2 * (_maxCurves + 2); i++) {
-			printf("lut %03d: %f (%s)\n", i, data->lookupTable[i], (i & 1) == 0 ? "x" : "y");
+		for (int i = 0; i < _maxCurves; i++) {
+			printf("lut %03d: %f\n", i, data->lookupTable[dim][i]);
 		}
 
 		for (int y = 0; y < data->listsTextureSize[1]; y++) {
@@ -86,8 +86,8 @@ public:
 			printf("\n");
 		}
 		printf("-- end dump lut --\n");
-#endif
 	}
+#endif
 
     template<typename F>
     void build(int dim, const std::vector<Event> &events,
