@@ -140,8 +140,12 @@ EXPORT ToveMeshRef NewMesh();
 EXPORT ToveMeshRef NewColorMesh();
 EXPORT ToveMeshRef NewPaintMesh();
 EXPORT int MeshGetVertexCount(ToveMeshRef mesh);
-EXPORT void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, uint32_t size);
-EXPORT ToveTriangles MeshGetTriangles(ToveMeshRef mesh);
+EXPORT void MeshCopyVertexData(
+	ToveMeshRef mesh, void *buffer, int32_t size);
+EXPORT ToveTrianglesMode MeshGetIndexMode(ToveMeshRef mesh);
+EXPORT int MeshGetIndexCount(ToveMeshRef mesh);
+EXPORT void MeshCopyIndexData(
+	ToveMeshRef mesh, void *buffer, int32_t size);
 EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
 

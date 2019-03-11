@@ -83,44 +83,42 @@ AbstractMesh::~AbstractMesh() {
 	}
 }
 
-ToveTriangles AbstractMesh::getTriangles() const {
+ToveTrianglesMode AbstractMesh::getIndexMode() const {
+	if (mSubmeshes.size() == 1) {
+		return mSubmeshes.begin()->second->getIndexMode();
+	} else {
+		return TRIANGLES_LIST;
+	}
+}
+
+int32_t AbstractMesh::getIndexCount() const {
+	int32_t k = 0;
+	for (auto submesh : mSubmeshes) {
+		k += submesh.second->getIndexCount();
+	}
+	return k;
+}
+
+void AbstractMesh::copyIndexData(
+	ToveVertexIndex *indices,
+	int32_t indexCount) const {
+
 	const int n = mSubmeshes.size();
-	if (n < 1) {
-		return ToveTriangles {
-			TRIANGLES_LIST,
-			nullptr,
-			0
-		};
-	} else if (n == 1) {
-		return mSubmeshes.begin()->second->getTriangles();
+	if (n == 1) {
+		mSubmeshes.begin()->second->copyIndexData(
+			indices, indexCount);
 	} else {
 		// subtle point: mSubmeshes needs to be ordered (e.g.
 		// a map here) otherwise our triangle order would be
 		// messed up, resulting in wrong visuals.
 
-		size_t k = 0;
+		int32_t offset = 0;
 		for (auto submesh : mSubmeshes) {
-			k += submesh.second->getTriangles().size;
+			Submesh *m = submesh.second;
+			m->copyIndexData(
+				indices + offset, indexCount - offset);
+			offset += m->getIndexCount();
 		}
-		mCoalescedTriangles.resize(k);
-
-		size_t offset = 0;
-		for (auto submesh : mSubmeshes) {
-			const ToveTriangles t =
-				submesh.second->getTriangles();
-			assert(t.mode == TRIANGLES_LIST);
-			std::memcpy(
-				&mCoalescedTriangles[offset],
-				t.array,
-				t.size * sizeof(ToveVertexIndex));
-			offset += t.size;
-		}
-
-		return ToveTriangles {
-			TRIANGLES_LIST,
-			mCoalescedTriangles.data(),
-			int(mCoalescedTriangles.size())
-		};
 	}
 }
 
@@ -151,10 +149,6 @@ void AbstractMesh::clearTriangles() {
 	for (auto submesh : mSubmeshes) {
 		submesh.second->clearTriangles();
 	}
-}
-
-ToveTriangles Submesh::getTriangles() const {
-	return mTriangles.get();
 }
 
 void Submesh::cache(bool keyframe) {
@@ -274,6 +268,8 @@ void Submesh::triangulateFixedLine(
 	const int numSubpaths = path->getNumSubpaths();
 	int i0 = 1 + v0; // 1-based for love2d
 	std::vector<uint16_t> tempIndices;
+
+	mTriangles.clear();
 
 	for (int t = 0; t < numSubpaths; t++) {
 		const bool closed = path->getSubpath(t)->isClosed();

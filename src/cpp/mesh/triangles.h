@@ -21,11 +21,11 @@ BEGIN_TOVE_NAMESPACE
 
 class TriangleStore {
 private:
-	int size;
-	ToveVertexIndex *triangles;
+	int mSize;
+	ToveVertexIndex *mTriangles;
 
 public:
-	const ToveTrianglesMode mode;
+	const ToveTrianglesMode mMode;
 
 	ToveVertexIndex *allocate(int n, bool isFinalSize = false);
 
@@ -41,41 +41,49 @@ private:
 
 public:
 	inline TriangleStore(ToveTrianglesMode mode) :
-		size(0), triangles(nullptr), mode(mode) {
+		mSize(0), mTriangles(nullptr), mMode(mode) {
 	}
 
 	inline ~TriangleStore() {
-		if (triangles) {
-			free(triangles);
+		if (mTriangles) {
+			free(mTriangles);
 		}
 	}
 
 	inline TriangleStore(const std::list<TPPLPoly> &triangles) :
-		size(0), triangles(nullptr), mode(TRIANGLES_LIST) {
+		mSize(0), mTriangles(nullptr), mMode(TRIANGLES_LIST) {
 
 		_add(triangles, true);
 	}
 
 	inline void add(const std::list<TPPLPoly> &triangles) {
-		assert(mode == TRIANGLES_LIST);
+		assert(mMode == TRIANGLES_LIST);
 		_add(triangles, false);
 	}
 
 	inline void add(const std::vector<ToveVertexIndex> &triangles, ToveVertexIndex i0) {
-		assert(mode == TRIANGLES_LIST);
+		assert(mMode == TRIANGLES_LIST);
 		_add(triangles, i0, false);
 	}
 
 	inline void clear() {
-		size = 0;
+		mSize = 0;
 	}
 
-	inline ToveTriangles get() const {
-		ToveTriangles array;
-		array.array = triangles;
-		array.mode = mode;
-		array.size = size;
-		return array;
+	inline size_t size() const {
+		return mSize;
+	}
+
+	inline ToveTrianglesMode mode() const {
+		return mMode;
+	}
+
+	inline void copy(
+		ToveVertexIndex *indices,
+		int32_t indexCount) const {
+
+		std::memcpy(indices, mTriangles,
+			std::min(mSize, indexCount) * sizeof(ToveVertexIndex));
 	}
 };
 
@@ -91,7 +99,7 @@ struct Triangulation {
 	}
 
 	inline ToveTrianglesMode getMode() const {
-		return triangles.mode;
+		return triangles.mode();
 	}
 
 	Partition partition;
@@ -178,19 +186,34 @@ public:
 		}
 	}
 
-	inline ToveTriangles get() const {
+	inline ToveTrianglesMode getIndexMode() const {
 		if (current < triangulations.size()) {
-			return triangulations[current]->triangles.get();
+			return triangulations[current]->triangles.mode();
 		} else {
-			ToveTriangles array;
-			array.array = nullptr;
-			array.mode = TRIANGLES_LIST;
-			array.size = 0;
-			return array;
+			return TRIANGLES_LIST;
 		}
 	}
 
-	bool check(const Vertices &vertices, bool &trianglesChanged);
+	inline int32_t getIndexCount() const {
+		if (current < triangulations.size()) {
+			return triangulations[current]->triangles.size();
+		} else {
+			return 0;
+		}
+	}
+
+	inline void copyIndexData(
+		ToveVertexIndex *indices,
+		int32_t indexCount) const {
+
+		if (current < triangulations.size()) {
+			auto &t = triangulations[current]->triangles;
+			t.copy(indices, indexCount);
+		}
+	}
+
+	bool findCachedTriangulation(
+		const Vertices &vertices, bool &trianglesChanged);
 };
 
 END_TOVE_NAMESPACE

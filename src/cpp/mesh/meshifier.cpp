@@ -33,7 +33,6 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 	const MeshRef &line) {
 
 	const int n = graphics->getNumPaths();
-	ToveMeshUpdateFlags updated = 0;
 
 	if (!hasFixedSize()) {
 		fill->clear();
@@ -46,6 +45,7 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 
 	beginTesselate(graphics, 1.0f / extent);
 
+	ToveMeshUpdateFlags updated = 0;
 	int fillIndex = 0;
 	int lineIndex = 0;
 
@@ -385,7 +385,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 		if ((update & UPDATE_MESH_TRIANGLES) == 0 &&
 			(update & UPDATE_MESH_AUTO_TRIANGLES)) {
-			if (!fillSubmesh->checkTriangles(trianglesChanged)) {
+			if (!fillSubmesh->findCachedTriangulation(trianglesChanged)) {
 				update |= UPDATE_MESH_TRIANGLES;
 			}
 		}

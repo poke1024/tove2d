@@ -25,21 +25,21 @@ inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
 #endif
 
 ToveVertexIndex *TriangleStore::allocate(int n, bool isFinalSize) {
-    const int offset = size;
+    const int offset = mSize;
 
-    const int k = (mode == TRIANGLES_LIST) ? 3 : 1;
-    size += n * k;
+    const int k = (mMode == TRIANGLES_LIST) ? 3 : 1;
+    mSize += n * k;
 
-    const int count = isFinalSize ? size : nextpow2(size);
-    triangles = static_cast<ToveVertexIndex*>(realloc(
-        triangles, count * sizeof(ToveVertexIndex)));
+    const int count = isFinalSize ? mSize : nextpow2(mSize);
+    mTriangles = static_cast<ToveVertexIndex*>(realloc(
+        mTriangles, count * sizeof(ToveVertexIndex)));
 
-    if (!triangles) {
+    if (!mTriangles) {
         TOVE_BAD_ALLOC();
         return nullptr;
     }
 
-    return &triangles[offset];
+    return &mTriangles[offset];
 }
 
 void TriangleStore::_add(
@@ -92,12 +92,15 @@ void TriangleCache::evict() {
     }
 
     if (minIndex >= 0) {
+        delete triangulations[minIndex];
         triangulations.erase(triangulations.begin() + minIndex);
         current = std::min(current, (int)(triangulations.size() - 1));
     }
 }
 
-bool TriangleCache::check(const Vertices &vertices, bool &trianglesChanged) {
+bool TriangleCache::findCachedTriangulation(
+    const Vertices &vertices, bool &trianglesChanged) {
+    
     const int n = triangulations.size();
     if (n == 0) {
         return false;
@@ -106,6 +109,7 @@ bool TriangleCache::check(const Vertices &vertices, bool &trianglesChanged) {
     assert(current < n);
     if (triangulations[current]->partition.check(vertices)) {
         triangulations[current]->useCount++;
+        trianglesChanged = false;
         return true;
     }
 

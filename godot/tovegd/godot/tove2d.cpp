@@ -26,14 +26,16 @@ void copy_mesh(Ref<ArrayMesh> &p_mesh, tove::MeshRef &p_tove_mesh) {
     uint8_t *vertices = new uint8_t[size];
     p_tove_mesh->copyVertexData(vertices, size);
 
-    ToveTriangles triangles = p_tove_mesh->getTriangles();
+    const int indexCount = p_tove_mesh->getIndexCount();
+    ToveVertexIndex *indices = new ToveVertexIndex[indexCount];
+    p_tove_mesh->copyIndexData(indices, indexCount);
 
     PoolVector<int> iarr;
-    iarr.resize(triangles.size);
+    iarr.resize(indexCount);
     {
         PoolVector<int>::Write w = iarr.write();
-        for (int i = 0; i < triangles.size; i++) {
-            w[i] = triangles.array[i];
+        for (int i = 0; i < indexCount; i++) {
+            w[i] = indices[i];
         }
     }
 
@@ -60,6 +62,7 @@ void copy_mesh(Ref<ArrayMesh> &p_mesh, tove::MeshRef &p_tove_mesh) {
     }
 
     delete[] vertices;
+    delete[] indices;
 
     Array arr;
     arr.resize(Mesh::ARRAY_MAX);

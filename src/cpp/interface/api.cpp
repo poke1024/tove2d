@@ -698,12 +698,22 @@ int MeshGetVertexCount(ToveMeshRef mesh) {
 	return deref(mesh)->getVertexCount();
 }
 
-void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, uint32_t size) {
+void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, int32_t size) {
 	deref(mesh)->copyVertexData(buffer, size);
 }
 
-ToveTriangles MeshGetTriangles(ToveMeshRef mesh) {
-	return deref(mesh)->getTriangles();
+ToveTrianglesMode MeshGetIndexMode(ToveMeshRef mesh) {
+	return deref(mesh)->getIndexMode();
+}
+
+int MeshGetIndexCount(ToveMeshRef mesh) {
+	return deref(mesh)->getIndexCount();
+}
+
+void MeshCopyIndexData(ToveMeshRef mesh, void *buffer, int32_t size) {
+	deref(mesh)->copyIndexData(
+		static_cast<ToveVertexIndex*>(buffer),
+		size / sizeof(ToveVertexIndex));
 }
 
 void MeshCache(ToveMeshRef mesh, bool keyframe) {

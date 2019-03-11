@@ -10,10 +10,11 @@
 -- *****************************************************************
 
 local floatSize = ffi.sizeof("float")
+local indexSize = ffi.sizeof("ToveVertexIndex")
 
 local function getTrianglesMode(cmesh)
-	local m = lib.MeshGetTriangles(cmesh).mode
-	return m == lib.TRIANGLES_LIST and "triangles" or "strip"
+	return lib.MeshGetIndexMode(cmesh) == lib.TRIANGLES_LIST
+		and "triangles" or "strip"
 end
 
 
@@ -41,9 +42,20 @@ end
 function AbstractMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
-		local ctriangles = lib.MeshGetTriangles(self._tovemesh)
-		local indices = totable(ctriangles.array, ctriangles.size)
-		mesh:setVertexMap(indices)
+		local indexCount = lib.MeshGetIndexCount(self._tovemesh)
+		local size = indexCount * indexSize
+
+		if size ~= self._idatasize then
+			-- this is not great - yet better than the old solution.
+			self._idata = love.data.newByteData(size)
+			self._idatasize = size
+		end
+
+		local idata = self._idata
+		lib.MeshCopyIndexData(
+			self._tovemesh, idata:getPointer(), idata:getSize())
+
+		mesh:setVertexMap(idata, indexSize == 2 and "uint16" or "uint32")
 	else
 		self:getMesh()
 	end

@@ -39,7 +39,13 @@ public:
 	AbstractMesh(uint16_t stride);
 	virtual ~AbstractMesh();
 
-	ToveTriangles getTriangles() const;
+	ToveTrianglesMode getIndexMode() const;
+
+	int32_t getIndexCount() const;
+
+	void copyIndexData(
+		ToveVertexIndex *indices,
+		int32_t indexCount) const;
 
 	inline Vertices vertices(int from, int n) {
 		if (from + n > mVertexCount) {
@@ -79,7 +85,20 @@ public:
 	inline Submesh(AbstractMesh *mesh) : mMesh(mesh) {
 	}
 
-	ToveTriangles getTriangles() const;
+	inline ToveTrianglesMode getIndexMode() const {
+		return mTriangles.getIndexMode();
+	}
+
+	inline int32_t getIndexCount() const {
+		return mTriangles.getIndexCount();
+	}
+
+	inline void copyIndexData(
+		ToveVertexIndex *indices,
+		int32_t indexCount) const {
+
+		mTriangles.copyIndexData(indices, indexCount);
+	}
 
 	void cache(bool keyframe);
 	void clearTriangles();
@@ -106,8 +125,10 @@ public:
 		const PathRef &path,
 		const RigidFlattener &flattener);
 
-	inline bool checkTriangles(bool &trianglesChanged) {
-		return mTriangles.check(
+	inline bool findCachedTriangulation(
+		bool &trianglesChanged) {
+		
+		return mTriangles.findCachedTriangulation(
 			vertices(0, mMesh->getVertexCount()),
 			trianglesChanged);
 	}
