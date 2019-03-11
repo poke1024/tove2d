@@ -314,7 +314,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 					float dx21 = x2 - x1;
 					float dy21 = y2 - y1;
-					float d21 = std::sqrt(dx21 * dx21 + dy21 * dy21);
+					const float d21 = std::sqrt(dx21 * dx21 + dy21 * dy21);
 					dx21 /= d21;
 					dy21 /= d21;
 
@@ -324,7 +324,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 					if (miter) {
 						float dx10 = x1 - x0;
 						float dy10 = y1 - y0;
-						float d10 = sqrt(dx10 * dx10 + dy10 * dy10);
+						const float d10 = std::sqrt(dx10 * dx10 + dy10 * dy10);
 						dx10 /= d10;
 						dy10 /= d10;
 

@@ -98,6 +98,11 @@ class TPPLPoly {
         long GetNumPoints() const {
             return numpoints;
         }
+
+        // tove2d patch.
+        inline void Shrink(long n) {
+            numpoints = n;
+        }
         
         bool IsHole() const {
             return hole;

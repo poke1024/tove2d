@@ -249,7 +249,7 @@ static void stripToList(
 		uint16_t i0 = *in++;
 		uint16_t i1 = *in++;
 		for (int i = 0; i < triangleCount; i++) {
-			uint16_t i2 = *in++;
+			const uint16_t i2 = *in++;
 			if (i & 1) {
 				*out++ = i1;
 				*out++ = i0;
@@ -273,6 +273,7 @@ void Submesh::triangulateFixedLine(
 
 	const int numSubpaths = path->getNumSubpaths();
 	int i0 = 1 + v0; // 1-based for love2d
+	std::vector<uint16_t> tempIndices;
 
 	for (int t = 0; t < numSubpaths; t++) {
 		const bool closed = path->getSubpath(t)->isClosed();
@@ -287,7 +288,6 @@ void Submesh::triangulateFixedLine(
 		uint16_t *indices;
 		const int num0 = 4 * numSegments + (numSegments - 1) * (miter ? 1 : 0);
 		const int numIndices = num0 + (closed ? 2 + (miter ? 1 : 0) : 0);
-		std::vector<uint16_t> tempIndices;
 
 		if (true) { //mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
 			// this only happens for compound (flat) meshes and
@@ -295,13 +295,12 @@ void Submesh::triangulateFixedLine(
 			tempIndices.resize(numIndices);
 			indices = tempIndices.data();
 		} else {
-			// we have our own mesh. use triangle strips.
+			// we have our own separate mesh just for lines. use triangle strips.
 			indices = mTriangles.allocate(
 				TRIANGLES_STRIP, numIndices);
 		}
 
 		int j = i0 + (miter ? 1 : 0);
-
 		for (int i = 0; i < num0; i++) {
 			*indices++ = j++;
 		}
@@ -316,6 +315,8 @@ void Submesh::triangulateFixedLine(
 
 		if (!tempIndices.empty()) {
 			const int triangleCount = numIndices - 2;
+			assert(tempIndices.size() - 2 == triangleCount);
+
 			stripToList(tempIndices.data(), mTriangles.allocate(
 				TRIANGLES_LIST, triangleCount), triangleCount);
 		}
@@ -381,7 +382,8 @@ void Submesh::triangulateFixedFill(
 
 	   	const auto vertex = vertices(vertexIndex, n);
 
-		TPPLPoly poly;
+		polys.push_back(TPPLPoly());
+		TPPLPoly &poly = polys.back();
 		poly.Init(n);
 
 		int written = 0;
@@ -407,18 +409,17 @@ void Submesh::triangulateFixedFill(
 		}
 		vertexIndex += n;
 
+		if (written > 1 &&
+			poly[written - 1].x == poly[0].x &&
+			poly[written - 1].y == poly[0].y) {
+			written -= 1;
+		}
+
 		if (written < n) {
-			// there were indeed duplicate points. we need to copy, alas.
-			TPPLPoly poly2;
-			poly2.Init(written);
-			for (int j = 0; j < written; j++) {
-				poly2[j] = poly[j];
-			}
-			poly = poly2;
+			poly.Shrink(written);
 		}
 
 		applyHoles(holes, poly);
-		polys.push_back(poly);
 	}
 
 	TPPLPartition partition;

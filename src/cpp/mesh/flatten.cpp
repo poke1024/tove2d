@@ -473,8 +473,7 @@ int RigidFlattener::flatten(
 
 
 int RigidFlattener::size(const SubpathRef &subpath) const {
-
-	NSVGpath *path = &subpath->nsvg;
+	const NSVGpath *path = &subpath->nsvg;
 	const int npts = path->npts;
 	const int n = ncurves(npts);
 	const int verticesPerCurve = (1 << _depth);
@@ -484,17 +483,18 @@ int RigidFlattener::size(const SubpathRef &subpath) const {
 int RigidFlattener::flatten(
 	const SubpathRef &subpath, const MeshRef &mesh, int index) const {
 
-	NSVGpath *path = &subpath->nsvg;
+	const NSVGpath *path = &subpath->nsvg;
 	const int npts = path->npts;
-	const int n = ncurves(npts);
 
-	if (npts < 1) {
+	if (npts < 3) {
 		return 0;
 	}
 
+	const int n = ncurves(npts);
+
 	const int verticesPerCurve = (1 << _depth);
-	const int nvertices = 1 + n * verticesPerCurve;
-	const auto vertices = mesh->vertices(index, nvertices);
+	const int numVertices = 1 + n * verticesPerCurve;
+	const auto vertices = mesh->vertices(index, numVertices);
 
 	vertices[0].x = path->pts[0];
 	vertices[0].y = path->pts[1];
@@ -504,14 +504,15 @@ int RigidFlattener::flatten(
 	for (int i = 0; i < n; i++) {
 		const float *p = &path->pts[k * 2];
 		k += 3;
+
 		const int v0 = v;
 		v = flatten(vertices, v, 0,
 			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
 		assert(v - v0 == verticesPerCurve);
 	}
 
-	assert(v == nvertices);
-	return nvertices;
+	assert(v == numVertices);
+	return numVertices;
 }
 
 END_TOVE_NAMESPACE
