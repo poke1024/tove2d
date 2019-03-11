@@ -13,17 +13,6 @@
 
 BEGIN_TOVE_NAMESPACE
 
-#if TOVE_TARGET == TOVE_TARGET_LOVE2D
-inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
-	// convert to 1-based indices for LÖVE's Mesh:setVertexMap()
-	return i + 1;
-}
-#else
-inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
-	return i;
-}
-#endif
-
 ToveVertexIndex *TriangleStore::allocate(int n, bool isFinalSize) {
     const int offset = mSize;
 

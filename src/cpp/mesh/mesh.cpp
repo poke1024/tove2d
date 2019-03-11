@@ -266,7 +266,7 @@ void Submesh::triangulateFixedLine(
 	const RigidFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
-	int i0 = 1 + v0; // 1-based for love2d
+	int i0 = ToLoveVertexMapIndex(v0);
 	std::vector<uint16_t> tempIndices;
 
 	mTriangles.clear();

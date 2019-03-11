@@ -19,9 +19,22 @@
 
 BEGIN_TOVE_NAMESPACE
 
+#if TOVE_TARGET == TOVE_TARGET_LOVE2D
+inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
+	// convert to indices for LÖVE's Mesh:setVertexMap(). this
+	// used to be (1 + i), but since we use the ByteData based
+	// version, it's now 0-based as well.
+	return i;
+}
+#else
+inline ToveVertexIndex ToLoveVertexMapIndex(ToveVertexIndex i) {
+	return i;
+}
+#endif
+
 class TriangleStore {
 private:
-	int mSize;
+	int32_t mSize;
 	ToveVertexIndex *mTriangles;
 
 public:
@@ -82,8 +95,11 @@ public:
 		ToveVertexIndex *indices,
 		int32_t indexCount) const {
 
-		std::memcpy(indices, mTriangles,
-			std::min(mSize, indexCount) * sizeof(ToveVertexIndex));
+		const int32_t n = std::min(mSize, indexCount);
+		if (n > 0) {
+			std::memcpy(indices, mTriangles,
+				n * sizeof(ToveVertexIndex));
+		}
 	}
 };
 
