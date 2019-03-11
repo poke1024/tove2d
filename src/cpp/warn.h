@@ -17,11 +17,35 @@
 
 BEGIN_TOVE_NAMESPACE
 
-extern ToveWarningFunction tove_warn_func;
+namespace report {
+    struct Configuration {
+        ToveReportFunction report;
+        ToveReportLevel level;
+    };
 
-void tove_warn(const char *file, int line, const char *s);
-#define TOVE_WARN(s) tove::tove_warn(__FILE__, __LINE__, s)
-#define TOVE_BAD_ALLOC() { TOVE_WARN("Out of memory"); throw std::bad_alloc(); }
+    extern Configuration config;
+
+    inline bool warnings() {
+        return config.level <= TOVE_REPORT_WARN;
+    }
+
+    inline void report(const char *s, ToveReportLevel l) {
+        if (l >= config.level && config.report) {
+            config.report(s, l);
+        }
+    }
+
+    inline void warn(const char *s) {
+        report(s, TOVE_REPORT_WARN);
+    }
+
+    void err(const char *s);
+    void fatal(const char *file, int line, const char *s);
+
+} // namespace report 
+
+#define TOVE_FATAL(s) tove::report::fatal(__FILE__, __LINE__, s)
+#define TOVE_BAD_ALLOC() { TOVE_FATAL("Out of memory"); throw std::bad_alloc(); }
 
 END_TOVE_NAMESPACE
 

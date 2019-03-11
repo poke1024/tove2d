@@ -72,7 +72,7 @@ void Color::getRGBA(ToveRGBA &rgba, float opacity) const {
 	extractColor(rgba, color, opacity);
 }
 
-void Color::animate(const PaintRef &a, const PaintRef &b, float t) {
+bool Color::animate(const PaintRef &a, const PaintRef &b, float t) {
 	if (a->getType() == NSVG_PAINT_COLOR &&
 		b->getType() == NSVG_PAINT_COLOR) {
 		
@@ -83,6 +83,9 @@ void Color::animate(const PaintRef &a, const PaintRef &b, float t) {
 		);
 	
 		changed();
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -219,10 +222,10 @@ float AbstractGradient::getColorStop(int i, ToveRGBA &rgba, float opacity) {
 	}
 }
 
-void AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
+bool AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 	const TovePaintType type = getType();
 	if (a->getType() != type || b->getType() != type) {
-		return; // cannot animate
+		return false; // cannot animate
 	}
 
 	const auto *gradA = static_cast<AbstractGradient*>(a.get());
@@ -233,7 +236,7 @@ void AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 
 	const int nstops = gradA->nsvg->nstops;
 	if (nstops != gradB->nsvg->nstops) {
-		return; // cannot animate
+		return false; // cannot animate
 	}
 
 	if (nsvg->nstops != nstops) {
@@ -278,6 +281,7 @@ void AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 	}
 
 	changed();
+	return true;
 }
 
 #if TOVE_DEBUG
@@ -417,7 +421,7 @@ PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 			return tove_make_shared<RadialGradient>(paint.gradient);
 		} break;
 	}
-	TOVE_WARN("Invalid nsvg paint type.");
+	tove::report::err("invalid nsvg paint type.");
 	return PaintRef();
 }
 

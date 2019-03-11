@@ -17,17 +17,23 @@
 
 BEGIN_TOVE_NAMESPACE
 
-ToveWarningFunction tove_warn_func = nullptr;
+namespace report {
 
-void tove_warn(const char *file, int line, const char *s) {
+Configuration config = Configuration{nullptr, TOVE_REPORT_WARN};
+
+static std::string last_warning;
+
+void err(const char *s) {
+    report(s, TOVE_REPORT_WARN);
+}
+
+void fatal(const char *file, int line, const char *s) {
     std::ostringstream text;
     text << file << ":" << line << ": " << s;
     const std::string output(text.str());
-    if (tove_warn_func) {
-        tove_warn_func(output.c_str());
-    } else {
-        std::cerr << "TÖVE: " << output << std::endl;
-    }
+    report(output.c_str(), TOVE_REPORT_FATAL);
 }
+
+} // namespace report
 
 END_TOVE_NAMESPACE

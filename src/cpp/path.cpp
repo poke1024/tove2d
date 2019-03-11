@@ -14,6 +14,7 @@
 #include "graphics.h"
 #include "intersect.h"
 #include "nsvg.h"
+#include <sstream>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -530,17 +531,41 @@ void Path::setFillRule(ToveFillRule rule) {
 void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	const int n = a->subpaths.size();
 	if (n != b->subpaths.size()) {
+		if (tove::report::warnings()) {
+			std::ostringstream message;
+			message << "cannot animate over sub path counts " <<
+				a->subpaths.size() << " <-> " <<
+				b->subpaths.size() << " in path "
+				<< (pathIndex + 1) << ".";
+			tove::report::warn(message.str().c_str());
+		}
 		return;
 	}
 	setSubpathCount(n);
 	for (int i = 0; i < n; i++) {
-		subpaths[i]->animate(a->subpaths[i], b->subpaths[i], t);
+		if (!subpaths[i]->animate(a->subpaths[i], b->subpaths[i], t)) {
+			if (tove::report::warnings()) {
+				std::ostringstream message;
+				message << "cannot animate over point sizes " <<
+					a->subpaths[i]->nsvg.npts << " <-> " <<
+					b->subpaths[i]->nsvg.npts << " in sub path "
+					<< (pathIndex + 1) << "/" << (i + 1) << ".";
+				tove::report::warn(message.str().c_str());
+			}
+		}
 	}
 	if (a->fillColor && b->fillColor) {
 		if (!fillColor) {
 			setFillColor(a->fillColor->clone());
 		}
-		fillColor->animate(a->fillColor, b->fillColor, t);
+		if (!fillColor->animate(a->fillColor, b->fillColor, t)) {
+			if (tove::report::warnings()) {
+				std::ostringstream message;
+				message << "cannot animate fill color " <<
+					" in path " << (pathIndex + 1) << ".";
+				tove::report::warn(message.str().c_str());
+			}
+		}
 	} else {
 		setFillColor(PaintRef());
 	}
@@ -548,7 +573,14 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 		if (!lineColor) {
 			setLineColor(a->lineColor->clone());
 		}
-		lineColor->animate(a->lineColor, b->lineColor, t);
+		if (!lineColor->animate(a->lineColor, b->lineColor, t)) {
+			if (tove::report::warnings()) {
+				std::ostringstream message;
+				message << "cannot animate line color " <<
+					" in path " << (pathIndex + 1) << ".";
+				tove::report::warn(message.str().c_str());
+			}
+		}
 	} else {
 		setLineColor(PaintRef());
 	}

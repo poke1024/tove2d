@@ -34,23 +34,58 @@ tove.init = function(path)
 		return ffi.string(lib.GetVersion())
 	end
 
-	tove._debug = false
+	do
+		local reportLevel
 
-	tove._warnverbose = 1
-	tove.warn = function(s)
-		if tove._warnverbose == 0 then
-			return
+		local levels = {"debug", "slow", "warn", "err", "fatal"}
+		local ilevels = {}
+		local outputs = {}
+
+		for i, n in ipairs(levels) do
+			ilevels[n] = i
 		end
-		print("TÖVE warning: " .. s)
-		if tove._warnverbose >= 2 then
-			print(debug.traceback())
+
+		tove.setReportLevel = function(level)
+			local l = ilevels[level]
+			if l ~= nil then
+				reportLevel = l
+				lib.SetReportLevel(l)
+			else
+				print("illegal report level " .. level)
+			end
 		end
+
+		tove.getReportLevel = function()
+			return reportLevel
+		end
+	
+		local report = function(s, l)
+			l = tonumber(l)
+			if l >= reportLevel then
+				if outputs[l] ~= s then  -- dry
+					outputs[l] = s
+					print("TÖVE [" .. levels[l] .. "] " .. s)
+					if l >= math.min(reportLevel + 1, lib.TOVE_REPORT_ERR) then
+						print("     " .. debug.traceback())
+					end
+				end
+			end
+		end
+
+		tove.report = report
+		tove.warn = function(s)
+			report(s, lib.TOVE_REPORT_WARN)
+		end
+		tove.slow = function(s)
+			report(s, lib.TOVE_REPORT_SLOW)
+		end
+
+		lib.SetReportFunction(ffi.cast("ToveReportFunction", function(s, level)
+			report(ffi.string(s), level)
+		end))
+
+		tove.setReportLevel("slow")
 	end
-	tove.slow = tove.warn
-
-	lib.SetWarningFunction(ffi.cast("ToveWarningFunction", function(s)
-		tove.warn(ffi.string(s))
-  	end))
 
 	tove._highdpi = 1
 

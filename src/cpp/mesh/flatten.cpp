@@ -404,7 +404,7 @@ void AbstractAdaptiveFlattener::flatten(
 			// scaled offsets < 1 will generate artefacts as the ClipperLib's
 			// underlying integer resolution cannot handle them.
 			lineOffset = 0.0f;
-			TOVE_WARN("Ignoring line width < 2. Please use setResolution().");
+			tove::report::warn("ignoring line width < 2. please use setResolution().");
 		}
 
 		ClipperLib::ClipperOffset offset(

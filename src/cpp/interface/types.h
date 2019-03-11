@@ -2,7 +2,16 @@ typedef uint16_t tove_gpu_float_t;
 // rgba32f support:
 // typedef float tove_gpu_float_t;
 
-typedef void (*ToveWarningFunction)(const char *s);
+typedef enum {
+	TOVE_REPORT_DEBUG = 1,
+	TOVE_REPORT_SLOW,
+	TOVE_REPORT_WARN,
+	TOVE_REPORT_ERR,
+	TOVE_REPORT_FATAL
+} ToveReportLevel;
+
+typedef void (*ToveReportFunction)(
+	const char *s, ToveReportLevel level);
 
 typedef uint32_t ToveChangeFlags;
 

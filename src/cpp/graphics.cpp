@@ -23,6 +23,7 @@
 #include "graphics.h"
 #include "mesh/meshifier.h"
 #include "nsvg.h"
+#include <sstream>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -460,6 +461,13 @@ ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags) {
 void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	const int n = a->paths.size();
 	if (n != b->paths.size()) {
+		if (tove::report::warnings()) {
+			std::ostringstream message;
+			message << "cannot animate over path counts " <<
+				a->paths.size() << " <-> " <<
+				b->paths.size() << ".";
+			tove::report::warn(message.str().c_str());
+		}
 		return;
 	}
 	if (paths.size() != n) {

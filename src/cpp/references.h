@@ -50,7 +50,7 @@ public:
 
 #define DEREF(RefType)													\
 	{ const RefType &r = *static_cast<const RefType*>(ref.ptr); 		\
-	if (!r.get()) { TOVE_WARN(#RefType " is nil"); } return r; }
+	if (!r.get()) { tove::report::warn(#RefType " is nil"); } return r; }
 
 inline const GraphicsRef &deref(const ToveGraphicsRef &ref) {
 	DEREF(GraphicsRef)

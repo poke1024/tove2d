@@ -219,7 +219,7 @@ public:
 		int target,
 		ExCurveData &extended);
 
-	void animate(const SubpathRef &a, const SubpathRef &b, float t);
+	bool animate(const SubpathRef &a, const SubpathRef &b, float t);
 
 	inline void setNext(const SubpathRef &trajectory) {
 		nsvg.next = &trajectory->nsvg;

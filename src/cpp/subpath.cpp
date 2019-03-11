@@ -22,7 +22,7 @@ inline float length(float x, float y) {
 
 float *Subpath::addPoints(int n, bool allowClosedEdit) {
 	if (!allowClosedEdit && isClosed()) {
-		TOVE_WARN("editing closed trajectory.");
+		tove::report::warn("editing closed trajectory.");
 	}
 	const int cpts = nextpow2(nsvg.npts + n);
 	nsvg.pts = static_cast<float*>(
@@ -1034,7 +1034,7 @@ std::ostream &Subpath::dump(std::ostream &os) {
 }
 #endif
 
-void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
+bool Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 	commands.clear();
 
 	const int nptsA = a->nsvg.npts;
@@ -1054,6 +1054,8 @@ void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 			}
 			nsvg.closed = b->nsvg.closed;
 		}
+
+		return false;
 	} else {
 		const int n = nptsA;
 		if (nsvg.npts != n) {
@@ -1068,6 +1070,7 @@ void Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 	}
 
 	changed(CHANGED_POINTS);
+	return true;
 }
 
 void Subpath::updateNSVG() {

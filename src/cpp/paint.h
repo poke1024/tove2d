@@ -51,8 +51,7 @@ public:
 		rgba.a = 0.0;
 	}
 
-	virtual void animate(const PaintRef &a, const PaintRef &b, float t) {
-	}
+	virtual bool animate(const PaintRef &a, const PaintRef &b, float t) = 0;
 
 #if TOVE_DEBUG
 	virtual std::ostream &dump(std::ostream &os) = 0;
@@ -117,7 +116,7 @@ public:
 
 	virtual void getRGBA(ToveRGBA &rgba, float opacity) const;
 
-	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
+	virtual bool animate(const PaintRef &a, const PaintRef &b, float t);
 
 #if TOVE_DEBUG
 	virtual std::ostream &dump(std::ostream &os);
@@ -201,7 +200,7 @@ public:
 		m[5] = xform[5];
 	}
 
-	virtual void animate(const PaintRef &a, const PaintRef &b, float t);
+	virtual bool animate(const PaintRef &a, const PaintRef &b, float t);
 
 #if TOVE_DEBUG
 	virtual std::ostream &dump(std::ostream &os);

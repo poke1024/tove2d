@@ -428,11 +428,9 @@ GeometryFeed::GeometryFeed(
 	enableFragmentShaderStrokes(enableFragmentShaderStrokes) {
 
 	if (maxCurves < 1) {
-		TOVE_WARN("Cannot render empty paths.");
-	}
-
-	if (maxCurves > 253) {
-		TOVE_WARN("Path too complex; only up to 253 curves.");
+		tove::report::warn("cannot render empty paths.");
+	} else if (maxCurves > 253) {
+		tove::report::warn("path too complex; only up to 253 curves.");
 	}
 
 	fillEvents.resize(6 * maxCurves);

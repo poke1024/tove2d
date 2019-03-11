@@ -45,7 +45,7 @@ inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
 	std::cerr << "Triangulation failed:" << std::endl;
 	dumpPolygons(std::cerr, polys);
 #endif
-	TOVE_WARN("Triangulation failed.");
+	tove::report::warn("triangulation failed.");
 }
 
 static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
@@ -279,7 +279,7 @@ void Submesh::triangulateFixedLine(
 
 		const int numVertices = path->getSubpathSize(t, flattener);
 		if (numVertices < 2) {
-			TOVE_WARN("cannot render line with npts < 2");
+			tove::report::warn("cannot render line with less than 2 vertices.");
 			continue;
 		}
 		const int numSegments = numVertices - 1;
@@ -425,7 +425,7 @@ void Submesh::triangulateFixedFill(
 
 	std::list<TPPLPoly> convex;
 	if (partition.ConvexPartition_HM(&polys, &convex) == 0) {
-		TOVE_WARN("ConvexPartition_HM failed.");
+		tove::report::warn("triangulation (ConvexPartition_HM) failed.");
 		return;
 	}
 

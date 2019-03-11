@@ -1,5 +1,6 @@
 EXPORT const char *GetVersion();
-EXPORT void SetWarningFunction(ToveWarningFunction f);
+EXPORT void SetReportFunction(ToveReportFunction f);
+EXPORT void SetReportLevel(ToveReportLevel l);
 
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);

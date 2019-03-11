@@ -49,7 +49,7 @@ tove.newGraphics = function(data, size)
 		svg = data
 	end
 	local name = "unnamed"
-	if tove._debug then
+	if tove.getReportLevel() == lib.TOVE_REPORT_DEBUG then
 		name = "Graphics originally created at " .. debug.traceback()
 	end
 	local ref = ffi.gc(lib.NewGraphics(svg, "px", 72), lib.ReleaseGraphics)

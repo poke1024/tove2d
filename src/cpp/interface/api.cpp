@@ -29,10 +29,10 @@ static ToveMeshResult exception_safe(const F &f) {
 	try {
 		return ToveMeshResult{f()};
 	} catch (const std::bad_alloc &e) {
-		TOVE_WARN("Out of memory.");
+		TOVE_BAD_ALLOC();
 		return ToveMeshResult{0};
 	} catch (const std::exception &e) {
-		TOVE_WARN(e.what());
+		tove::report::err(e.what());
 		return ToveMeshResult{0};
 	} catch (...) {
 		return ToveMeshResult{0};
@@ -53,8 +53,12 @@ static const ToveTesselationSettings *getDefaultQuality() {
 
 extern "C" {
 
-void SetWarningFunction(ToveWarningFunction f) {
-	tove::tove_warn_func = f;
+void SetReportFunction(ToveReportFunction f) {
+	tove::report::config.report = f;
+}
+
+void SetReportLevel(ToveReportLevel l) {
+	tove::report::config.level = l;
 }
 
 
