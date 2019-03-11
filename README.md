@@ -14,7 +14,7 @@ TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL'
 ## Capabilities
 Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games. Here's what you can expect from TÖVE's different renderers:
 
-|                     | texture            | mesh (1)           | mesh (2)               | shader                  |
+|                     | texture            | mesh (1)           | mesh (2)               | gpux                    |
 |---------------------|--------------------|--------------------|------------------------|-------------------------|
 | Holes Support       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: (4) | :heavy_check_mark:      |
 | Non-Zero Fill Rule  | :heavy_check_mark: | :heavy_check_mark: | :x:				     | :heavy_check_mark:      |
@@ -61,3 +61,6 @@ The rabbit you see in the tutorials and demos is from [Kenney](https://kenney.nl
 ## About the name
 TÖVE is a portmanteau of **LÖVE**, **To**wards **Ve**ctor Graphics and **Tove** Jansson, the Swedish author and illustrator of the Moomins.
 
+## Similar Projects
+* For a pure-lua implementation of SVG rendering, look at Lovable Vector Graphics: https://github.com/Bananicorn/lvg
+* A super-elegant NanoSVG wrapper can be found at https://love2d.org/forums/viewtopic.php?f=5&t=86419
