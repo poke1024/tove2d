@@ -375,8 +375,8 @@ vec4 do_color(vec2 textureUV) {
 #endif
 
 	vec2 blockPos = rayOnX ?
-		vec2(0, (at.y - 1) / float(LISTS_H) + 0.5f) :
-		vec2(0, (at.x - 1) / float(LISTS_H));
+		vec2(0, (at.y - 1 + 0.5) / float(LISTS_H) + 0.5f) :
+		vec2(0, (at.x - 1 + 0.5) / float(LISTS_H));
 #else // LUT_BANDS
 	vec2 position = raw_vertex_pos.xy;
 	bool rayOnX = textureUV.x > 0;
