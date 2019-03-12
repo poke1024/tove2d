@@ -391,6 +391,7 @@ vec4 do_color(vec2 textureUV) {
 
 	vec2 blockStep = vec2(1.0 / LISTS_W, 0);
 	const float C_ID_SCALE = 255.0;
+	blockPos += 0.5 * blockStep;
 
 	vec4 curveIds = Texel(lists, blockPos) * C_ID_SCALE;
 	int shift = 0;
