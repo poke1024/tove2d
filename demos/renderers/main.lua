@@ -16,7 +16,11 @@ local function load(svg)
 	flow = tovedemo.newCoverFlow()
 	for _, mode in ipairs {"texture", "mesh", "gpux"} do
 		local graphics = newGraphics()
-		graphics:setDisplay(mode, 200)
+		local quality = {}
+		if mode == "mesh" then
+			quality = {200}
+		end
+		graphics:setDisplay(mode, unpack(quality))
 		flow:add(mode, graphics)
 	end
 end

@@ -53,7 +53,12 @@ local function createHearts(stroke, filled)
 		-- cleanup for animated mesh rendering.
 		heart:setOrientation("ccw")
 
-		heart:setDisplay(modes[i], tove.newRigidTesselator(4))
+		local quality = {}
+		if modes[i] == "mesh" then
+			quality = {tove.newRigidTesselator(4)}
+		end
+
+		heart:setDisplay(modes[i], unpack(quality))
 		heart:setUsage("points", "dynamic")
 		heart:setUsage("colors", "dynamic")
 

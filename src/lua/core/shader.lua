@@ -181,9 +181,9 @@ ComputeShader.__index = ComputeShader
 local function parseQuality(q)
 	local lineType = "fragment"
 	local lineQuality = 1.0
-	if type(q) == "table" and type(q.line) == "table" then
-		lineType = q.line.type or "fragment"
-		lineQuality = q.line.quality or 1.0
+	if type(q) == "table" then
+		lineType = q[1] or "fragment"
+		lineQuality = q[2] or 1.0
 		if lineType == "vertex" then
 			if not env.graphics.instancing then
 				tove.warn("falling back on fragment line mode.")

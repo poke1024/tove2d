@@ -96,9 +96,6 @@ private:
 	void setNumPaths(int n);
 	void _appendPath(const PathRef &path);
 
-	PathRef beginPath();
-	void closePath(bool closeCurves = false);
-
 	void initialize(float width, float height);
 
 	template<typename Get>
@@ -135,8 +132,11 @@ public:
 
 	void clear();
 	SubpathRef beginSubpath();
-	void closeSubpath();
+	void closeSubpath(bool closeCurves = false);
 	void invertSubpath();
+
+	PathRef beginPath();
+	void closePath(bool closeCurves = false);
 
 	inline void setFillColor(const PaintRef &color) {
 		fillColor = color;

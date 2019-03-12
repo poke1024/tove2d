@@ -296,9 +296,9 @@ SubpathRef Graphics::beginSubpath() {
 	return beginPath()->beginSubpath();
 }
 
-void Graphics::closeSubpath() {
+void Graphics::closeSubpath(bool closeCurves) {
 	if (!paths.empty()) {
-		current()->closeSubpath();
+		current()->closeSubpath(closeCurves);
 	}
 }
 

@@ -475,12 +475,20 @@ ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics) {
 	return shapes.publish(tove_make_shared<Graphics>(deref(graphics)));
 }
 
+TovePathRef GraphicsBeginPath(ToveGraphicsRef graphics) {
+	return paths.publish(deref(graphics)->beginPath());
+}
+
+void GraphicsClosePath(ToveGraphicsRef graphics) {
+	deref(graphics)->closePath(true);
+}
+
 ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics) {
 	return trajectories.publish(deref(graphics)->beginSubpath());
 }
 
-void GraphicsCloseSubpath(ToveGraphicsRef graphics) {
-	deref(graphics)->closeSubpath();
+void GraphicsCloseSubpath(ToveGraphicsRef graphics, bool close) {
+	deref(graphics)->closeSubpath(close);
 }
 
 void GraphicsInvertSubpath(ToveGraphicsRef graphics) {

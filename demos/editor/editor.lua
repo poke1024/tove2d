@@ -95,7 +95,7 @@ function Selection:computeAABB()
 	local n = self._n
 	if n == 1 then
 		local g = self:first().graphics
-		self._aabb = {g:computeAABB("exact")}
+		self._aabb = {g:computeAABB("high")}
 	elseif n > 1 then
 		local x0, y0, x1, y1 = nil, nil, nil, nil
 		local min, max = math.min, math.max
@@ -465,21 +465,21 @@ function Editor:startup()
 end
 
 function Editor:setDisplayMode(newmode)
-	local mode, quality = self:getDisplay()
+	local mode = self:getDisplay()
 	if mode ~= newmode then
 		if newmode == "gpux" then
-			quality = {line = {type = "vertex", quality = 1.0}}
+			quality = {"vertex", 1.0}
 		else
-			quality = 200
+			quality = {200}
 		end
-		self:setDisplay(newmode, quality)
+		self:setDisplay(newmode, unpack(quality))
 		mode = newmode
 	end
 	self:updateDisplayUI()
 end
 
 function Editor:updateLineUI()
-	local mode, quality = self:getDisplay()
+	local mode, quality1, quality2 = self:getDisplay()
 
 	for _, button in pairs(self.lineJoinButtons) do
 		button:setEnabled(true)
@@ -488,7 +488,7 @@ function Editor:updateLineUI()
 	self.miterLimitSlider:setEnabled(true)
 
 	if mode == "gpux" then
-		if quality.line.type == "vertex" then
+		if quality1 == "vertex" then
 			self.lineJoinButtons["round"]:setEnabled(false)
 		else
 			for _, button in pairs(self.lineJoinButtons) do
@@ -500,7 +500,7 @@ function Editor:updateLineUI()
 end
 
 function Editor:updateDisplayUI()
-	local mode, quality = self:getDisplay()
+	local mode = self:getDisplay()
 	local usage = self:getUsage()
 
 	self.displaycontrol:clear()
@@ -515,36 +515,36 @@ function Editor:updateDisplayUI()
 		qualitySlider.valueChanged:connect(function(value)
 			self:setDisplay("mesh", value)
 		end)
-		qualitySlider:setValue(quality)
+		qualitySlider:setValue(self:getQuality())
 
 		self.displaycontrol:add(
 			boxy.Label("Tesselation Quality"),
 			qualitySlider,
 			animatedCheckBox)
 	elseif mode == "gpux" then
+		local lineType, lineQuality = self:getQuality()
+
 		local vslCheckBox = boxy.CheckBox("Mesh Lines")
 		vslCheckBox.valueChanged:connect(function(value)
-			local mode, quality = self:getDisplay()
-			self:setDisplay("gpux",
-				{line = {
-					type = value and "vertex" or "fragment",
-					quality = quality.line.quality
-				}})
+			local _, lineQuality = self:getQuality()
+			self:setDisplay(
+				"gpux",
+				value and "vertex" or "fragment",
+				lineQuality)
 			self:updateLineUI()
 		end)
-		vslCheckBox:setChecked(quality.line.type == "vertex")
+		vslCheckBox:setChecked(lineType == "vertex")
 
 		local lineQualitySlider = boxy.Slider(0, 1)
 		lineQualitySlider.valueChanged:connect(function(value)
-			local mode, quality = self:getDisplay()
-			self:setDisplay("gpux",
-				{line = {
-					type = quality.line.type,
-					quality = value
-				}})
+			local lineType, _ = self:getQuality()
+			self:setDisplay(
+				"gpux",
+				lineType,
+				value)
 			local _, qq = self:getDisplay()
 		end)
-		lineQualitySlider:setValue(quality.line.quality)
+		lineQualitySlider:setValue(lineQuality or 0)
 
 		self.displaycontrol:add(
 			vslCheckBox,
@@ -646,7 +646,7 @@ function Editor:selectionChanged()
 	self.colorDabs:setFillColor(path:getFillColor())
 	self.lineWidthSlider:setValue(path:getLineWidth())
 	self.miterLimitSlider:setValue(path:getMiterLimit())
-	local mode, quality = object:getDisplay()
+	local mode = object:getDisplay()
 	self.rendererButtons[mode]:setChecked(true)
 	self.lineJoinButtons[path:getLineJoin()]:setChecked(true)
 	self.widgetDirty = true
@@ -900,6 +900,12 @@ end
 function Editor:getDisplay()
 	if not self.selection:empty() then
         return self.selection:first():getDisplay()
+    end
+end
+
+function Editor:getQuality()
+	if not self.selection:empty() then
+        return self.selection:first():getQuality()
     end
 end
 

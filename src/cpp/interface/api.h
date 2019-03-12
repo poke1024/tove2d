@@ -93,8 +93,10 @@ EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
 EXPORT ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics);
+EXPORT TovePathRef GraphicsBeginPath(ToveGraphicsRef graphics);
+EXPORT void GraphicsClosePath(ToveGraphicsRef graphics);
 EXPORT ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics);
-EXPORT void GraphicsCloseSubpath(ToveGraphicsRef graphics);
+EXPORT void GraphicsCloseSubpath(ToveGraphicsRef graphics, bool close);
 EXPORT void GraphicsInvertSubpath(ToveGraphicsRef graphics);
 EXPORT TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape);
 EXPORT void GraphicsAddPath(ToveGraphicsRef shape, TovePathRef path);

@@ -56,7 +56,7 @@ tove.newGraphics = function(data, size)
 	local graphics = setmetatable({
 		_ref = ref,
 		_cache = nil,
-		_display = {mode = "texture"},
+		_display = {mode = "texture", quality = {}},
 		_resolution = 1,
 		_usage = newUsage(),
 		_name = name,
@@ -71,7 +71,7 @@ tove.newGraphics = function(data, size)
 		end
 	end
 	if data then
-		if size == "none" then
+		if size == "copy" then
 			-- nothing
 		elseif type(size) == "number" then
 			graphics:rescale(size)
@@ -95,7 +95,7 @@ local function makeDisplay(mode, quality, usage)
 		quality = quality or 1
 	end
 	return {mode = mode, quality = clonedQuality,
-		tesselator = createTesselator(quality, usage)}
+		tesselator = createTesselator(unpack(quality), usage)}
 end
 
 function Graphics:setName(name)
@@ -119,10 +119,17 @@ function Graphics:clone()
 	return g
 end
 
+function Graphics:beginPath()
+	return ffi.gc(lib.GraphicsBeginPath(self._ref), lib.ReleasePath)
+end
+bind("closePath", "GraphicsClosePath")
+
 function Graphics:beginSubpath()
 	return ffi.gc(lib.GraphicsBeginSubpath(self._ref), lib.ReleaseSubpath)
 end
-bind("closeSubpath", "GraphicsCloseSubpath")
+function Graphics:closeSubpath()
+	lib.GraphicsCloseSubpath(self._ref, true)
+end
 bind("invertSubpath", "GraphicsInvertSubpath")
 
 function Graphics:getCurrentPath()
@@ -136,6 +143,7 @@ function Graphics:fetchChanges(flags)
 end
 
 function Graphics:moveTo(x, y)
+	lib.GraphicsCloseSubpath(self._ref, false)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathMoveTo(t, x, y))
 end
@@ -196,22 +204,23 @@ end
 bind("fill", "GraphicsFill")
 bind("stroke", "GraphicsStroke")
 
-function Graphics:computeAABB(mode)
-	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
+function Graphics:computeAABB(prec)
+	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 
-function Graphics:getWidth(mode)
-	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
+function Graphics:getWidth(prec)
+	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.x1 - bounds.x0
 end
 
-function Graphics:getHeight(mode)
-	local bounds = lib.GraphicsGetBounds(self._ref, mode == "exact")
+function Graphics:getHeight(prec)
+	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.y1 - bounds.y0
 end
 
-function Graphics:setDisplay(mode, quality)
+function Graphics:setDisplay(mode, ...)
+	local quality = {...}
 	if mode.__index == Graphics then
 		local g = mode
 		mode = g._display.mode
@@ -229,11 +238,11 @@ function Graphics:setDisplay(mode, quality)
 end
 
 function Graphics:getDisplay()
-	return self._display.mode, self._display.quality
+	return self._display.mode, unpack(self._display.quality)
 end
 
 function Graphics:getQuality()
-	return self._display.quality
+	return unpack(self._display.quality)
 end
 
 function Graphics:getUsage()
@@ -260,7 +269,7 @@ function Graphics:setUsage(what, usage)
 			self._usage["triangles"] = usage
 		end
 		self._display.tesselator = createTesselator(
-			self._display.quality, self._usage)
+			unpack(self._display.quality), self._usage)
 	end
 end
 
@@ -322,7 +331,7 @@ end
 function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
 		local resolution = self._resolution * tove._highdpi
-		local x0, y0, x1, y1 = self:computeAABB("exact")
+		local x0, y0, x1, y1 = self:computeAABB("high")
 
 		x0 = math.floor(x0)
 		y0 = math.floor(y0)

@@ -46,7 +46,7 @@ function Object:computeAABB()
 		local t = self.transform
 		g:set(tove.transformed(
 			self.graphics, t:get("full")), true)
-		self._aabb = {g:computeAABB("exact")}
+		self._aabb = {g:computeAABB("high")}
 	end
 	return unpack(self._aabb)
 end
@@ -98,8 +98,11 @@ function Object:setDisplay(...)
 end
 
 function Object:getDisplay()
-	local mode, quality = self.scaledGraphics:getDisplay()
-	return mode, quality
+	return self.scaledGraphics:getDisplay()
+end
+
+function Object:getQuality()
+	return self.scaledGraphics:getQuality()
 end
 
 function Object:setUsage(what, value)
