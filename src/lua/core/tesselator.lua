@@ -25,9 +25,17 @@ tove.newRigidTesselator = function(subdivisions, holes)
 		subdivisions, _holes[holes or "none"]), lib.ReleaseTesselator)
 end
 
-return function (quality, usage)
+return function (usage, quality, ...)
 	local t = type(quality)
-	if t == "number" then
+	if t == "string" then
+		if quality == "rigid" then
+			return tove.newRigidTesselator(...)
+		elseif quality == "adaptive" then
+			return tove.newAdaptiveTesselator(...)
+		else
+			error("tesselator must be \"rigid\" or \"adaptive\".")			
+		end
+	elseif t == "number" then
 		if usage["points"] == "dynamic" then
 			return tove.newRigidTesselator(
 				math.log(quality) / math.log(2), "cw")

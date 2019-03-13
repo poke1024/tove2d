@@ -17,7 +17,7 @@ local textureRabbit = newRabbit()
 textureRabbit:setDisplay("texture")
 
 local meshRabbit = newRabbit()
-meshRabbit:setDisplay("mesh", 0.05)
+meshRabbit:setDisplay("mesh", "rigid", 0)
 
 local shaderRabbit = newRabbit()
 shaderRabbit:setDisplay("gpux")

@@ -95,7 +95,7 @@ local function makeDisplay(mode, quality, usage)
 		quality = quality or 1
 	end
 	return {mode = mode, quality = clonedQuality,
-		tesselator = createTesselator(unpack(quality), usage)}
+		tesselator = createTesselator(usage, unpack(quality))}
 end
 
 function Graphics:setName(name)
@@ -269,7 +269,7 @@ function Graphics:setUsage(what, usage)
 			self._usage["triangles"] = usage
 		end
 		self._display.tesselator = createTesselator(
-			unpack(self._display.quality), self._usage)
+			self._usage, unpack(self._display.quality))
 	end
 end
 

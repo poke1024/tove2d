@@ -55,7 +55,7 @@ local function createHearts(stroke, filled)
 
 		local quality = {}
 		if modes[i] == "mesh" then
-			quality = {tove.newRigidTesselator(4)}
+			quality = {"rigid", 4}
 		end
 
 		heart:setDisplay(modes[i], unpack(quality))
