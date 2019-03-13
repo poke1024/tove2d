@@ -87,6 +87,13 @@ function Graphics:clear()
 	lib.GraphicsClear(self._ref)
 end
 
+local function attachTesselator(display, usage)
+	if display.mode == "mesh" then
+		display.tesselator = createTesselator(usage, unpack(display.quality))
+	end
+	return display
+end
+
 local function makeDisplay(mode, quality, usage)
 	local clonedQuality = quality
 	if type(quality) == "table" then
@@ -94,8 +101,8 @@ local function makeDisplay(mode, quality, usage)
 	else
 		quality = quality or 1
 	end
-	return {mode = mode, quality = clonedQuality,
-		tesselator = createTesselator(usage, unpack(quality))}
+	return attachTesselator({mode = mode, quality = clonedQuality,
+		tesselator = nil}, usage)
 end
 
 function Graphics:setName(name)
@@ -268,8 +275,7 @@ function Graphics:setUsage(what, usage)
 		if what == "points" then
 			self._usage["triangles"] = usage
 		end
-		self._display.tesselator = createTesselator(
-			self._usage, unpack(self._display.quality))
+		attachTesselator(self._display, self._usage)
 	end
 end
 
