@@ -271,7 +271,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 		}
 
 		for (int i = 0; i < n; i++) {
-			int k = flattener.flatten(
+			const int k = flattener.flatten(
 				path->getSubpath(i), fill, fillIndex0 + index);
 
 			if (k == 0) {
@@ -287,7 +287,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 				// needs to be second here; otherwise the vertices ptr
 				// might get invalidated by a realloc in line->vertices.
 
-				auto vertex = line->vertices(
+				auto output = line->vertices(
 					lineIndex0 + lineBase + index * verticesPerSegment,
 					k * verticesPerSegment);
 
@@ -296,24 +296,36 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 				int previous = find_unequal_backward(vertices, k, k);
 				int next = find_unequal_forward(vertices, 0, k);
+				int numSegments = (next - (previous + 1) + k) % k;
 
 				for (int j = 0; j < k; j++) {
 					if (j == next) {
 						previous = next - 1;
 						next = find_unequal_forward(vertices, j, k);
+						numSegments = (next - (previous + 1) + k) % k;
 					}
 
 					const float x0 = vertices[previous].x;
 					const float y0 = vertices[previous].y;
 
-					const float x1 = vertices[j].x;
-					const float y1 = vertices[j].y;
+					const float x1E = vertices[j].x;
+					const float y1E = vertices[j].y;
 
-					const float x2 = vertices[next].x;
-					const float y2 = vertices[next].y;
+					const float x2E = vertices[next].x;
+					const float y2E = vertices[next].y;
 
-					float dx21 = x2 - x1;
-					float dy21 = y2 - y1;
+					float dx21 = x2E - x1E;
+					float dy21 = y2E - y1E;
+
+					const int segmentIndex = (j - (previous + 1) + k) % k;
+					const float segmentT1 = segmentIndex / (float)numSegments;
+					const float segmentT2 = (segmentIndex + 1) / (float)numSegments;
+
+					const float x2 = x1E + dx21 * segmentT2;
+					const float y2 = y1E + dy21 * segmentT2;
+					const float x1 = x1E + dx21 * segmentT1;
+					const float y1 = y1E + dy21 * segmentT1;
+
 					const float d21 = std::sqrt(dx21 * dx21 + dy21 * dy21);
 					dx21 /= d21;
 					dy21 /= d21;
@@ -342,41 +354,41 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 						if ((mx * mx + my * my) * miterLimitSquared < 1.0f) {
 							// use bevel
 							if (wind < 0.0f) {
-								vertex->x = x1 - ox;
-								vertex->y = y1 - oy;
+								output->x = x1 - ox;
+								output->y = y1 - oy;
 							} else {
-								vertex->x = x1 + ox;
-								vertex->y = y1 + oy;
+								output->x = x1 + ox;
+								output->y = y1 + oy;
 							}
 						} else {
 							float l = lineOffset / (mx * n10x + my * n10y);
 							l = l * (wind < 0.0f ? -1.0f : 1.0f);
 
-							vertex->x = x1 + l * mx;
-							vertex->y = y1 + l * my;
+							output->x = x1 + l * mx;
+							output->y = y1 + l * my;
 						}
-						vertex++;
+						output++;
 					}
 
 					// outer
-					vertex->x = x1 - ox;
-					vertex->y = y1 - oy;
-					vertex++;
+					output->x = x1 - ox;
+					output->y = y1 - oy;
+					output++;
 
 					// inner
-					vertex->x = x1 + ox;
-					vertex->y = y1 + oy;
-					vertex++;
+					output->x = x1 + ox;
+					output->y = y1 + oy;
+					output++;
 
 					// outer
-					vertex->x = x2 - ox;
-					vertex->y = y2 - oy;
-					vertex++;
+					output->x = x2 - ox;
+					output->y = y2 - oy;
+					output++;
 
 					// inner
-					vertex->x = x2 + ox;
-					vertex->y = y2 + oy;
-					vertex++;
+					output->x = x2 + ox;
+					output->y = y2 + oy;
+					output++;
 				}
 			}
 

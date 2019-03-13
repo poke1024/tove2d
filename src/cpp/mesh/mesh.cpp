@@ -273,41 +273,36 @@ void Submesh::triangulateFixedLine(
 
 	for (int t = 0; t < numSubpaths; t++) {
 		const bool closed = path->getSubpath(t)->isClosed();
+		const bool skipped = !closed && miter ? 1 : 0;
 
 		const int numVertices = path->getSubpathSize(t, flattener);
 		if (numVertices < 2) {
 			tove::report::warn("cannot render line with less than 2 vertices.");
 			continue;
 		}
-		const int numSegments = numVertices - 1;
+		const int numSegments = numVertices - (closed ? 0 : 1);
+		const int numIndices = (miter ? 5 : 4) * numSegments - skipped;
 
-		uint16_t *indices;
-		const int num0 = 4 * numSegments + (numSegments - 1) * (miter ? 1 : 0);
-		const int numIndices = num0 + (closed ? 2 + (miter ? 1 : 0) : 0);
+		uint16_t *indices0;
 
 		if (true) { //mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
 			// this only happens for compound (flat) meshes and
 			// multiple subpaths (we don't want them connected).
 			tempIndices.resize(numIndices);
-			indices = tempIndices.data();
+			indices0 = tempIndices.data();
 		} else {
 			// we have our own separate mesh just for lines. use triangle strips.
-			indices = mTriangles.allocate(
+			indices0 = mTriangles.allocate(
 				TRIANGLES_STRIP, numIndices);
 		}
 
-		int j = i0 + (miter ? 1 : 0);
-		for (int i = 0; i < num0; i++) {
+		uint16_t *indices = indices0;
+		int j = i0 + skipped;
+		for (int i = 0; i < numIndices; i++) {
 			*indices++ = j++;
 		}
 
-		if (closed) {
-			if (miter) {
-				*indices++ = i0; // miter point
-			}
-			*indices++ = i0 + 0;
-			*indices++ = i0 + 1;
-		}
+		assert(indices - indices0 == numIndices);
 
 		if (!tempIndices.empty()) {
 			const int triangleCount = numIndices - 2;
