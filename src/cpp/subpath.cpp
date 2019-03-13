@@ -1055,6 +1055,7 @@ bool Subpath::animate(const SubpathRef &a, const SubpathRef &b, float t) {
 			nsvg.closed = b->nsvg.closed;
 		}
 
+		changed(CHANGED_POINTS);
 		return false;
 	} else {
 		const int n = nptsA;

@@ -57,6 +57,11 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 			fillIndex, lineIndex);
 	}
 
+	if (&fill != &line) {
+		fill->clip(fillIndex);
+	}
+	line->clip(lineIndex);
+
 	endTesselate();
 
 	return updated;

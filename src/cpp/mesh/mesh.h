@@ -28,12 +28,12 @@ class Submesh;
 class AbstractMesh : public Referencable {
 protected:
 	void *mVertices;
-	uint32_t mVertexCount;
+	int32_t mVertexCount;
 	const uint16_t mStride;
 	std::map<SubmeshId, Submesh*> mSubmeshes;
 	mutable std::vector<ToveVertexIndex> mCoalescedTriangles;
 
-	void reserve(uint32_t n);
+	void reserve(int32_t n);
 
 public:
 	AbstractMesh(uint16_t stride);
@@ -46,6 +46,10 @@ public:
 	void copyIndexData(
 		ToveVertexIndex *indices,
 		int32_t indexCount) const;
+
+	inline void clip(int n) {
+		mVertexCount = std::min(mVertexCount, n);
+	}
 
 	inline Vertices vertices(int from, int n) {
 		if (from + n > mVertexCount) {

@@ -122,7 +122,7 @@ void AbstractMesh::copyIndexData(
 	}
 }
 
-void AbstractMesh::reserve(uint32_t n) {
+void AbstractMesh::reserve(int32_t n) {
 	if (n > mVertexCount) {
 		mVertexCount = n;
 	    mVertices = realloc(
