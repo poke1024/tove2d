@@ -47,6 +47,8 @@ private:
 
 	void set(const NSVGshape *shape);
 
+	void animateLineDash(const PathRef &a, const PathRef &b, float t);
+
 public:
 	NSVGshape nsvg;
 
@@ -89,7 +91,10 @@ public:
 
 	bool areColorsSolid() const;
 
-	void setLineDash(const float *dashes, int count);
+	void setLineDash(const float *dashes, const int count);
+	inline float getLineDashOffset() const {
+		return nsvg.strokeDashOffset;
+	}
 	void setLineDashOffset(float offset);
 
 	inline void setLineColor(const PaintRef &color) {

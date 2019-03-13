@@ -348,26 +348,48 @@ void Path::setName(const char *name) {
 	this->name = name;
 }
 
-void Path::setLineDash(const float *dashes, int count) {
+void Path::setLineDash(const float *dashes, const int count) {
+	if (count == 0 && nsvg.strokeDashCount == 0) {
+		return;
+	}
+
 	float sum = 0;
 	for (int i = 0; i < count; i++) {
 		sum += dashes[i];
 	}
 	if (sum <= 1e-6f) {
-		count = 0;
+		if (nsvg.strokeDashCount != 0) {
+			nsvg.strokeDashCount = 0;
+			geometryChanged();
+		}
+		return;
 	}
 
-	nsvg.strokeDashCount = std::min(count, nsvg::maxDashes());
-	for (int i = 0; i < count; i++) {
-		nsvg.strokeDashArray[i] = dashes[i];
+	bool changed = false;
+	const int n = std::min(count, nsvg::maxDashes());
+
+	if (nsvg.strokeDashCount != n) {
+		nsvg.strokeDashCount = n;
+		changed = true;
+	}
+	for (int i = 0; i < n; i++) {
+		const float d = dashes[i];
+		if (nsvg.strokeDashArray[i] != d) {
+			nsvg.strokeDashArray[i] = d;
+			changed = true;
+		}
 	}
 
-	geometryChanged();
+	if (changed) {
+		geometryChanged();
+	}
 }
 
 void Path::setLineDashOffset(float offset) {
-	nsvg.strokeDashOffset = offset;
-	geometryChanged();
+	if (offset != nsvg.strokeDashOffset) {
+		nsvg.strokeDashOffset = offset;
+		geometryChanged();
+	}
 }
 
 void Path::setOpacity(float opacity) {
@@ -528,6 +550,46 @@ void Path::setFillRule(ToveFillRule rule) {
 	}
 }
 
+void Path::animateLineDash(const PathRef &a, const PathRef &b, float t) {
+	const float s = 1.0f - t;
+
+	setLineDashOffset(a->getLineDashOffset() * s + b->getLineDashOffset() * t);
+
+	if (a->nsvg.strokeDashCount == b->nsvg.strokeDashCount) {
+		const int n = a->nsvg.strokeDashCount;
+		bool changed = false;
+
+		if (n != nsvg.strokeDashCount) {
+			nsvg.strokeDashCount = n;
+			changed = true;		
+		}
+		for (int i = 0; i < n; i++) {
+			const float dash = a->nsvg.strokeDashArray[i] * s +
+				b->nsvg.strokeDashArray[i] * t;
+
+			if (dash != nsvg.strokeDashArray[i]) {
+				nsvg.strokeDashArray[i] = dash;
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			geometryChanged();
+		}
+	} else {
+		setLineDash(nullptr, 0);
+
+		if (tove::report::warnings()) {
+			std::ostringstream message;
+			message << "cannot animate over line dash sizes " <<
+				a->nsvg.strokeDashCount << " <-> " <<
+				b->nsvg.strokeDashCount << " in path "
+				<< (pathIndex + 1) << ".";
+			tove::report::warn(message.str().c_str());
+		}
+	}	
+}
+
 void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	const int n = a->subpaths.size();
 	if (n != b->subpaths.size()) {
@@ -584,7 +646,14 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	} else {
 		setLineColor(PaintRef());
 	}
-	setLineWidth(a->getLineWidth() * (1 - t) + b->getLineWidth() * t);
+
+	const float s = 1.0f - t;
+
+	setLineWidth(a->getLineWidth() * s + b->getLineWidth() * t);
+	setMiterLimit(a->getMiterLimit() * s + b->getMiterLimit() * t);
+	animateLineDash(a, b, t);
+
+	setOpacity(a->getOpacity() * s + b->getOpacity() * t);
 }
 
 PathRef Path::clone() const {
