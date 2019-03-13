@@ -43,6 +43,9 @@ function AbstractMesh:updateTriangles()
 	local mesh = self._mesh
 	if mesh ~= nil then
 		local indexCount = lib.MeshGetIndexCount(self._tovemesh)
+		if indexCount < 1 then
+			return
+		end
 		local size = indexCount * indexSize
 
 		if size ~= self._idatasize then
