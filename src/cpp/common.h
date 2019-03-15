@@ -41,6 +41,7 @@ BEGIN_TOVE_NAMESPACE
 END_TOVE_NAMESPACE
 
 #include "../thirdparty/clipper.hpp"
+#include "../thirdparty/polypartition/src/polypartition.h"
 
 #if _MSC_VER
 #define M_PI 3.1415926535897932384626433832795

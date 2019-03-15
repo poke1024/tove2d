@@ -14,7 +14,6 @@
 
 #include "../graphics.h"
 #include "paint.h"
-#include "../../thirdparty/polypartition.h"
 
 BEGIN_TOVE_NAMESPACE
 

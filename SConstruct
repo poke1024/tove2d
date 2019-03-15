@@ -30,7 +30,7 @@ sources = [
 	"src/cpp/gpux/geometry_feed.cpp",
 	"src/cpp/shader/gen.cpp",
 	"src/thirdparty/clipper.cpp",
-	"src/thirdparty/polypartition.cpp",
+	"src/thirdparty/polypartition/src/polypartition.cpp",
 	"src/cpp/warn.cpp"]
 
 env = Environment()

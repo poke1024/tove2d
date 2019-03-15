@@ -13,7 +13,6 @@
 #define __TOVE_MESH_UTILS 1
 
 #include "../common.h"
-#include "../../thirdparty/polypartition.h"
 
 BEGIN_TOVE_NAMESPACE
 

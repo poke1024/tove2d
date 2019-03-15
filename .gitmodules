@@ -1,3 +1,6 @@
 [submodule "src/thirdparty/nanosvg"]
 	path = src/thirdparty/nanosvg
 	url = https://github.com/poke1024/nanosvg
+[submodule "src/thirdparty/polypartition"]
+	path = src/thirdparty/polypartition
+	url = https://github.com/poke1024/polypartition

@@ -14,7 +14,6 @@
 
 #include "../common.h"
 #include "utils.h"
-#include "../../thirdparty/polypartition.h"
 #include <vector>
 
 BEGIN_TOVE_NAMESPACE

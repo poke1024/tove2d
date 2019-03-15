@@ -15,7 +15,6 @@
 #include "partition.h"
 #include "../interface.h"
 #include "../utils.h"
-#include "../../thirdparty/polypartition.h"
 
 BEGIN_TOVE_NAMESPACE
 
