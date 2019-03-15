@@ -19,11 +19,11 @@ BEGIN_TOVE_NAMESPACE
 
 #define NANOSVG_IMPLEMENTATION
 #define NANOSVG_ALL_COLOR_KEYWORDS
-#include "../thirdparty/nanosvg.h"
+#include "../thirdparty/nanosvg/src/nanosvg.h"
 
 #define NSVG__FIXSHIFT 14
 #define NANOSVGRAST_IMPLEMENTATION
-#include "../thirdparty/nanosvgrast.h"
+#include "../thirdparty/nanosvg/src/nanosvgrast.h"
 
 namespace nsvg {
 

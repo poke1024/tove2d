@@ -1,0 +1,3 @@
+[submodule "src/thirdparty/nanosvg"]
+	path = src/thirdparty/nanosvg
+	url = https://github.com/poke1024/nanosvg

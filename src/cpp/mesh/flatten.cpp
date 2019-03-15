@@ -13,7 +13,6 @@
 #include <cmath>
 #include "mesh.h"
 #include "../utils.h"
-#include "../../thirdparty/nanosvg.h"
 #include "turtle.h"
 #include "../path.h"
 #include "../subpath.h"
