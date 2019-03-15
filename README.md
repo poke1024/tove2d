@@ -9,7 +9,7 @@ TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL'
 * offers a substantial subset of SVG
 * built for realtime animation
 * uses OpenGL ES 
-* about 512K in binary size
+* about 600K in binary size
 
 ## Capabilities
 Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games. Here's what you can expect from TÖVE's different renderers:
@@ -45,6 +45,15 @@ I've written up the essential stuff in these four sections:
 * [The Demos](docs/Demos.md)
 * [Choosing Renderers](docs/Renderers.md)
 * [Animating Things](docs/Animation.md)
+
+## Building Yourself
+
+```
+git clone --recurse-submodules https://github.com/poke1024/tove2d
+cd tove2d
+scons
+love demos/hearts
+```
 
 ## License
 TÖVE is licensed under the MIT license.
