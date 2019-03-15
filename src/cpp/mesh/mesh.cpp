@@ -234,16 +234,16 @@ void Submesh::clearTriangles() {
 	mTriangles.clear();
 }
 
-static void stripToList(
-	const uint16_t *in,
+static void stripRangeToList(
+	int index,
 	uint16_t *out,
 	int triangleCount) {
 
 	if (triangleCount > 0) {
-		uint16_t i0 = *in++;
-		uint16_t i1 = *in++;
+		int i0 = index++;
+		int i1 = index++;
 		for (int i = 0; i < triangleCount; i++) {
-			const uint16_t i2 = *in++;
+			const int i2 = index++;
 			if (i & 1) {
 				*out++ = i1;
 				*out++ = i0;
@@ -260,59 +260,47 @@ static void stripToList(
 }
 
 void Submesh::triangulateFixedLine(
-	int v0,
-	bool miter,
+	const int firstVertexIndex,
+	const bool miter,
 	const PathRef &path,
 	const RigidFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
-	int i0 = ToLoveVertexMapIndex(v0);
-	std::vector<uint16_t> tempIndices;
+	int i0 = ToLoveVertexMapIndex(firstVertexIndex);
+	const int indicesPerVertex = miter ? 5 : 4;
 
 	mTriangles.clear();
 
 	for (int t = 0; t < numSubpaths; t++) {
-		const bool closed = path->getSubpath(t)->isClosed();
-		const bool skipped = !closed && miter ? 1 : 0;
-
 		const int numVertices = path->getSubpathSize(t, flattener);
 		if (numVertices < 2) {
 			tove::report::warn("cannot render line with less than 2 vertices.");
-			continue;
-		}
-		const int numSegments = numVertices - (closed ? 0 : 1);
-		const int numIndices = (miter ? 5 : 4) * numSegments - skipped;
-
-		uint16_t *indices0;
-
-		if (true) { //mTriangles.hasMode(TRIANGLES_LIST) || numSubpaths > 1) {
-			// this only happens for compound (flat) meshes and
-			// multiple subpaths (we don't want them connected).
-			tempIndices.resize(numIndices);
-			indices0 = tempIndices.data();
 		} else {
-			// we have our own separate mesh just for lines. use triangle strips.
-			indices0 = mTriangles.allocate(
-				TRIANGLES_STRIP, numIndices);
+			const bool closed = path->getSubpath(t)->isClosed();
+			const bool skipped = !closed && miter ? 1 : 0;
+
+			const int numSegments = numVertices - (closed ? 0 : 1);
+			const int numIndices = indicesPerVertex * numSegments - skipped;
+
+			const int firstIndex = i0 + skipped;
+
+			if (mTriangles.hasMode(TRIANGLES_STRIP)) {
+				// we have our own separate mesh just for lines. use triangle strips.
+				uint16_t *indices = mTriangles.allocate(
+					TRIANGLES_STRIP, numIndices);
+
+				for (int i = 0, j = firstIndex; i < numIndices; i++) {
+					*indices++ = j++;
+				}
+			} else {
+				const int triangleCount = numIndices - 2;
+
+				stripRangeToList(firstIndex, mTriangles.allocate(
+					TRIANGLES_LIST, triangleCount), triangleCount);
+			}
 		}
 
-		uint16_t *indices = indices0;
-		int j = i0 + skipped;
-		for (int i = 0; i < numIndices; i++) {
-			*indices++ = j++;
-		}
-
-		assert(indices - indices0 == numIndices);
-
-		if (!tempIndices.empty()) {
-			const int triangleCount = numIndices - 2;
-			assert(tempIndices.size() - 2 == triangleCount);
-
-			stripToList(tempIndices.data(), mTriangles.allocate(
-				TRIANGLES_LIST, triangleCount), triangleCount);
-		}
-
-		i0 += (miter ? 5 : 4) * numVertices; // advance vertex index
+		i0 += numVertices * indicesPerVertex;
 	}
 }
 
