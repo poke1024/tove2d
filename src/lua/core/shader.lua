@@ -159,13 +159,12 @@ end
 
 function MeshShader:draw(...)
 	local linkdata = self.linkdata
-
-	lg.setShader(linkdata.shader)
 	local mesh = linkdata.mesh:getMesh()
 	if mesh ~= nil then
+		lg.setShader(linkdata.shader)
 		lg.draw(mesh, ...)
+		lg.setShader(nil)
 	end
-	lg.setShader(nil)
 end
 
 
