@@ -125,6 +125,7 @@ void AbstractMesh::copyIndexData(
 void AbstractMesh::reserve(int32_t n) {
 	if (n > mVertexCount) {
 		mVertexCount = n;
+
 	    mVertices = realloc(
 	    	mVertices,
 			nextpow2(mVertexCount) * mStride);
@@ -259,15 +260,73 @@ static void stripRangeToList(
 	}
 }
 
-void Submesh::triangulateFixedLine(
-	const int firstVertexIndex,
+#if TOVE_RT_CLIP_PATH
+static uint16_t *reducedOverlapTriangles(
+	const int subpathVertex,
+	const int numVertices,
 	const bool miter,
+	const bool closed,
+	const int stride,
+	uint16_t *data) {
+
+	if (numVertices < 1) {
+		return data;
+	}
+
+	for (int edge = 0; edge < 2; edge++) {
+		int middle = subpathVertex + (miter ? 1 : 0);
+		int outer = middle + (edge == 0 ? 2 : 1);
+
+		// outer
+		if (closed) {
+			const int last = stride * (numVertices - 1);
+
+			// bevel
+			*data++ = outer + last;
+			*data++ = middle + last;
+			*data++ = outer;
+
+			*data++ = middle + last;
+			*data++ = middle;
+			*data++ = outer;
+
+			/**data++ = outer;
+			*data++ = middle;
+			*data++ = outer + 2;*/
+		}
+
+		for (int i = 0; i < numVertices - 1; i++) {
+			if (i > 0) {
+				// bevel
+				*data++ = outer; outer += stride - 2;
+				*data++ = middle;
+				*data++ = outer;
+			}
+
+			*data++ = middle; middle += stride;
+			*data++ = middle;
+			*data++ = outer;
+
+			*data++ = outer; outer += 2;
+			*data++ = middle;
+			*data++ = outer;
+		}
+	}
+
+	return data;
+}
+#endif
+
+void Submesh::triangulateFixedResolutionLine(
+	const int pathVertex,
+	const bool miter,
+	const bool reduceOverlap,
+	const int verticesPerSegment,
 	const PathRef &path,
 	const RigidFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
-	int i0 = ToLoveVertexMapIndex(firstVertexIndex);
-	const int indicesPerVertex = miter ? 5 : 4;
+	int subpathVertex = ToLoveVertexMapIndex(pathVertex);
 
 	mTriangles.clear();
 
@@ -280,11 +339,16 @@ void Submesh::triangulateFixedLine(
 			const bool skipped = !closed && miter ? 1 : 0;
 
 			const int numSegments = numVertices - (closed ? 0 : 1);
-			const int numIndices = indicesPerVertex * numSegments - skipped;
+			const int numIndices = verticesPerSegment * numSegments - skipped;
 
-			const int firstIndex = i0 + skipped;
+			const int firstIndex = subpathVertex + skipped;
 
 			if (mTriangles.hasMode(TRIANGLES_STRIP)) {
+				if (reduceOverlap) {
+					tove::report::warn("internal error. reduce-overlap on tri strip.");
+					break;
+				}
+
 				// we have our own separate mesh just for lines. use triangle strips.
 				uint16_t *indices = mTriangles.allocate(
 					TRIANGLES_STRIP, numIndices);
@@ -292,19 +356,34 @@ void Submesh::triangulateFixedLine(
 				for (int i = 0, j = firstIndex; i < numIndices; i++) {
 					*indices++ = j++;
 				}
-			} else {
+			} else if (!reduceOverlap) {
 				const int triangleCount = numIndices - 2;
 
 				stripRangeToList(firstIndex, mTriangles.allocate(
 					TRIANGLES_LIST, triangleCount), triangleCount);
+			} else {
+#if TOVE_RT_CLIP_PATH
+				// reduced overlap variant.
+
+				const int n = 2 * (3 * (numVertices - 1) - 1 + (closed ? 3 - 1 : 0));
+
+				uint16_t *data = mTriangles.allocate(TRIANGLES_LIST, n);
+
+				uint16_t *end = reducedOverlapTriangles(
+					subpathVertex, numVertices, miter, closed, verticesPerSegment, data);
+
+				assert((end - data) == n * 3);
+#else
+				assert(false);
+#endif
 			}
 		}
 
-		i0 += numVertices * indicesPerVertex;
+		subpathVertex += numVertices * verticesPerSegment;
 	}
 }
 
-void Submesh::triangulateFixedFill(
+void Submesh::triangulateFixedResolutionFill(
 	const int vertexIndex0,
 	const PathRef &path,
 	const RigidFlattener &flattener,

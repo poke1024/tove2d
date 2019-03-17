@@ -118,14 +118,16 @@ public:
 		ToveHoles holes);
 
 	// used by fixed flattener.
-	void triangulateFixedFill(
+	void triangulateFixedResolutionFill(
 		const int vertexIndex0,
 		const PathRef &path,
 		const RigidFlattener &flattener,
 		ToveHoles holes);
-	void triangulateFixedLine(
-		int v0,
-		bool miter,
+	void triangulateFixedResolutionLine(
+		const int pathVertex,
+		const bool miter,
+		const bool reduceOverlap,
+		const int verticesPerSegment,
 		const PathRef &path,
 		const RigidFlattener &flattener);
 

@@ -25,6 +25,7 @@
 #endif
 
 #define TOVE_GPUX_MESH_BAND 1
+#define TOVE_RT_CLIP_PATH 0
 #define TOVE_DEBUG 0
 
 #include "interface.h"

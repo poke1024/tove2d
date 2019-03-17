@@ -264,6 +264,9 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 	const float miterLimit = path->getMiterLimit();
 	const bool miter = path->getLineJoin() == TOVE_LINEJOIN_MITER &&
 		miterLimit > 0.0f;
+	const bool reduceOverlap = false;
+
+	const int verticesPerSegment = 4 + (miter ? 1 : 0) + (reduceOverlap ? 1 : 0);
 
 	// in case of stroke-only paths, we still produce the fill vertices for
 	// computing the stroke vertices, but then skip fill triangulation.
@@ -284,17 +287,15 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 			}
 
 			if (hasStroke) {
-				// const bool closed = path->getSubpath(i)->isClosed();
-				const int verticesPerSegment = miter ? 5 : 4;
+				const bool closed = path->getSubpath(i)->isClosed();
 				const float miterLimitSquared = miterLimit * miterLimit;
 
 				// note: for compound mode, the call to fill->vertices
 				// needs to be second here; otherwise the vertices ptr
 				// might get invalidated by a realloc in line->vertices.
 
-				auto output = line->vertices(
-					lineIndex0 + lineBase + index * verticesPerSegment,
-					k * verticesPerSegment);
+				const int subpathLineVertex = lineIndex0 + lineBase + index * verticesPerSegment;
+				auto out = line->vertices(subpathLineVertex, k * verticesPerSegment);
 
 				const auto vertices = fill->vertices(
 					fillIndex0 + index, k);
@@ -322,6 +323,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 					float dx21 = x2E - x1E;
 					float dy21 = y2E - y1E;
 
+#if 1
 					const int segmentIndex = (j - (previous + 1) + k) % k;
 					const float segmentT1 = segmentIndex / (float)numSegments;
 					const float segmentT2 = (segmentIndex + 1) / (float)numSegments;
@@ -330,6 +332,10 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 					const float y2 = y1E + dy21 * segmentT2;
 					const float x1 = x1E + dx21 * segmentT1;
 					const float y1 = y1E + dy21 * segmentT1;
+#else
+					const float x1 = x1E, y1 = y1E;
+					const float x2 = x2E, y2 = y2E;
+#endif
 
 					const float d21 = std::sqrt(dx21 * dx21 + dy21 * dy21);
 					dx21 /= d21;
@@ -337,7 +343,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 					const float ox = -dy21 * lineOffset;
 					const float oy = dx21 * lineOffset;
-
+	
 					if (miter) {
 						float dx10 = x1 - x0;
 						float dy10 = y1 - y0;
@@ -355,46 +361,37 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 						const float my = (n10y + n21y) * 0.5f;
 
 						const float wind = -n21y * n10x - n21x * -n10y;
+						const float windSign = std::copysign(1.0f, wind);
 
 						if ((mx * mx + my * my) * miterLimitSquared < 1.0f) {
-							// use bevel
-							if (wind < 0.0f) {
-								output->x = x1 - ox;
-								output->y = y1 - oy;
-							} else {
-								output->x = x1 + ox;
-								output->y = y1 + oy;
-							}
+							*out = vec2(x1 + ox * windSign, y1 + oy * windSign); // use bevel
 						} else {
-							float l = lineOffset / (mx * n10x + my * n10y);
-							l = l * (wind < 0.0f ? -1.0f : 1.0f);
-
-							output->x = x1 + l * mx;
-							output->y = y1 + l * my;
+							const float l = (lineOffset / (mx * n10x + my * n10y)) * windSign;
+							*out = vec2(x1 + l * mx, y1 + l * my);
 						}
-						output++;
+						out++;
 					}
 
-					// outer
-					output->x = x1 - ox;
-					output->y = y1 - oy;
-					output++;
+#if TOVE_RT_CLIP_PATH
+					if (reduceOverlap) {
+						*out++ = vec2(x1, y1);
+					}
+#endif
 
-					// inner
-					output->x = x1 + ox;
-					output->y = y1 + oy;
-					output++;
+					*out++ = vec2(x1 - ox, y1 - oy);
+					*out++ = vec2(x1 + ox, y1 + oy);
 
-					// outer
-					output->x = x2 - ox;
-					output->y = y2 - oy;
-					output++;
-
-					// inner
-					output->x = x2 + ox;
-					output->y = y2 + oy;
-					output++;
+					*out++ = vec2(x2 - ox, y2 - oy);
+					*out++ = vec2(x2 + ox, y2 + oy);
 				}
+
+#if TOVE_RT_CLIP_PATH
+				if (reduceOverlap) {
+					unoverlap(
+						line->vertices(subpathLineVertex, k * verticesPerSegment),
+						k, verticesPerSegment, miter);
+				}
+#endif
 			}
 
 			index += k;
@@ -415,7 +412,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 	if (shape->fill.type != NSVG_PAINT_NONE) {
 		if (update & UPDATE_MESH_TRIANGLES) {
-			fillSubmesh->triangulateFixedFill(
+			fillSubmesh->triangulateFixedResolutionFill(
 				fillIndex0, path, flattener, holes);
 		}
 		if (update & (UPDATE_MESH_COLORS | UPDATE_MESH_VERTICES)) {
@@ -423,14 +420,12 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 		}
 	}
 
-	const int verticesPerSegment = miter ? 5 : 4;
-
 	if (hasStroke) {
 		const int v0 = lineIndex0 + lineBase;
 
 		if (update & UPDATE_MESH_TRIANGLES) {
-			lineSubmesh->triangulateFixedLine(
-				v0, miter, path, flattener);
+			lineSubmesh->triangulateFixedResolutionLine(
+				v0, miter, reduceOverlap, verticesPerSegment, path, flattener);
 		}
 		if (update & (UPDATE_MESH_COLORS | UPDATE_MESH_VERTICES)) {
 			line->setLineColor(path, v0, index * verticesPerSegment);
