@@ -78,6 +78,7 @@ enum {
 	CHANGED_BOUNDS = 32,
 	CHANGED_EXACT_BOUNDS = 64,
 	CHANGED_RECREATE = 128,
+	CHANGED_INITIAL = 256,
 	CHANGED_ANYTHING = 255,
 	CHANGED_COLORS = CHANGED_FILL_STYLE | CHANGED_LINE_STYLE
 };
@@ -232,7 +233,8 @@ typedef struct {
 	float strokeWidth;
 	float miterLimit;
 	int8_t fillRule;
-	bool fragmentShaderStrokes;
+	bool fragmentShaderLine;
+	bool opaqueLine;
 	ToveLineRun *lineRuns;
 
 	float *lookupTable[2];

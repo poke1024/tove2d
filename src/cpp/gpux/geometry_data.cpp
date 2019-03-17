@@ -29,7 +29,8 @@ GeometryData::GeometryData(
 	data.numCurves = 0;
 	data.bounds = nullptr;
     data.strokeWidth = 0;
-	data.fragmentShaderStrokes = fragmentShaderStrokes;
+	data.fragmentShaderLine = fragmentShaderStrokes;
+	data.opaqueLine = true;
 
 	// lookup table size: each curve can produce 2 regular
 	// bounds (e.g. top, bottom) and 2 additional roots per

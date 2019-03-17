@@ -109,6 +109,11 @@ public:
 		return nsvg.opacity;
 	}
 
+
+	inline bool hasOpaqueLine() const {
+		return nsvg.opacity >= 1.0f && lineColor && lineColor->isOpaque();
+	}
+
 	void setOpacity(float opacity);
 
 	void set(const PathRef &path, const nsvg::Transform &transform);

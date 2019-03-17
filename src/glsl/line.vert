@@ -15,7 +15,7 @@
 uniform sampler2D curves;
 uniform int max_curves;
 uniform int num_curves;
-uniform int draw_joins;
+uniform int draw_mode;
 uniform int curve_index;
 uniform int segments_per_curve;
 
@@ -109,10 +109,16 @@ vec2 drawline(vec4 mesh_position) {
 vec4 do_vertex(vec4 mesh_position) {
     vec2 q;
 
-    if (draw_joins != 0) {
-        q = drawjoin(mesh_position);
-    } else {
-        q = drawline(mesh_position);
+    switch (draw_mode) {
+        case 0:
+            q = drawline(mesh_position);
+            break;
+        case 1:
+            q = drawjoin(mesh_position);
+            break;
+        default:
+            q = mesh_position.xy;
+            break;
     }
 
     raw_vertex_pos = q;

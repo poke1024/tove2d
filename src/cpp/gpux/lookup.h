@@ -118,7 +118,7 @@ public:
 
         int z = 0;
 
-        if (data.fragmentShaderStrokes && padding > 0.0) {
+        if (data.fragmentShaderLine && padding > 0.0) {
             const float y0 = i->y;
             *ylookup++ = y0 - padding;
             finish(y0 - padding, y0, active, yptr, z++);
@@ -159,7 +159,7 @@ public:
             } else {
                 y1 = y0;
 
-                if (data.fragmentShaderStrokes && padding > 0.0) {
+                if (data.fragmentShaderLine && padding > 0.0) {
                     y1 += padding;
                 }
             }

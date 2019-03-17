@@ -22,6 +22,10 @@ static void extractColor(ToveRGBA &rgba, uint32_t c) {
 	rgba.a = ((c >> 24) & 0xff) / 255.0;
 }
 
+inline bool isOpaqueColor(uint32_t c) {
+	return ((c >> 24) & 0xff) >= 0xff;
+}
+
 static void extractColor(ToveRGBA &rgba, uint32_t color, float opacity) {
 	uint32_t c;
 	if (opacity < 1.0f) {
@@ -66,6 +70,10 @@ void Color::cloneTo(PaintRef &target, const nsvg::Transform &transform) {
 void Color::store(NSVGpaint &paint) {
 	paint.type = NSVG_PAINT_COLOR;
 	paint.color = color;
+}
+
+bool Color::isOpaque() const {
+	return isOpaqueColor(color);
 }
 
 void Color::getRGBA(ToveRGBA &rgba, float opacity) const {
@@ -197,6 +205,17 @@ void AbstractGradient::transform(const nsvg::Transform &transform) {
 	changed();
 }
 
+bool AbstractGradient::isOpaque() const {
+	const int n = nsvg->nstops;
+	const auto *stops = nsvg->stops;
+	for (int i = 0; i < n; i++) {
+		if (!isOpaqueColor(stops[i].color)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void AbstractGradient::setNumColorStops(int numStops) {
 	const size_t size = getRecordSize(numStops);
 	nsvg = static_cast<NSVGgradient*>(realloc(nsvg, nextpow2(size)));
@@ -204,7 +223,6 @@ void AbstractGradient::setNumColorStops(int numStops) {
 		throw std::bad_alloc();
 	}
 	nsvg->nstops = numStops;
-
 }
 
 void AbstractGradient::addColorStop(float offset, float r, float g, float b, float a) {

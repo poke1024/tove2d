@@ -216,11 +216,13 @@ local function newComputeFeedData(path, quality, debug)
 	local data = lib.FeedGetData(link)
 
 	lib.FeedBeginUpdate(link)
+
 	local fillShader = nil
-	if fragLine or data.color.fill.style then
+	if fragLine or data.color.fill.style > 0 then
 		fillShader = newGeometryFillShader(
-			data, fragLine, meshBand, debug or false);
+			data, fragLine, meshBand, debug or false)
 	end
+
 	local lineShader
 	if fragLine then
 		lineShader = fillShader

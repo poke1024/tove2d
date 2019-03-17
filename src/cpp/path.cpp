@@ -71,6 +71,10 @@ void Path::_setLineColor(const PaintRef &color) {
 		return;
 	}
 
+	if ((lineColor.get() != nullptr) != (color.get() != nullptr)) {
+		changed(CHANGED_LINE_ARGS);
+	}
+
 	if (lineColor) {
 		lineColor->removeObserver(this);
 	}
@@ -493,11 +497,10 @@ void Path::setLineWidth(float width) {
 	const float oldWidth = nsvg.strokeWidth;
 	if (width != oldWidth) {
 		nsvg.strokeWidth = width;
-		if ((oldWidth > 0.0) == (width > 0.0)) {
-			changed(CHANGED_POINTS | CHANGED_LINE_ARGS);
-		} else {
+		if ((oldWidth > 0.0) != (width > 0.0)) {
 			geometryChanged();
 		}
+		changed(CHANGED_POINTS | CHANGED_LINE_ARGS);
 	}
 }
 

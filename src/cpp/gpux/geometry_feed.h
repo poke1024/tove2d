@@ -21,7 +21,6 @@ class GeometryFeed : public Observer {
 private:
 	const PathRef path;
 	ToveChangeFlags changes;
-	bool initialUpdate;
 
 	const int maxCurves;
 	const int maxSubPaths;

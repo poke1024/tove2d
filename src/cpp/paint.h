@@ -33,6 +33,7 @@ public:
 	virtual void transform(const nsvg::Transform &transform) { }
 
 	virtual bool isGradient() const = 0;
+	virtual bool isOpaque() const = 0;
 	virtual void store(NSVGpaint &paint) = 0;
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) = 0;
@@ -84,6 +85,8 @@ public:
 	virtual bool isGradient() const {
 		return false;
 	}
+
+	virtual bool isOpaque() const;
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a) {
 	}
@@ -165,6 +168,8 @@ public:
 	virtual bool isGradient() const {
 		return true;
 	}
+
+	virtual bool isOpaque() const;
 
 	virtual void addColorStop(float offset, float r, float g, float b, float a);
 

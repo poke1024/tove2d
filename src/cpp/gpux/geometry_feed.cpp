@@ -89,7 +89,7 @@ static void queryLUT(
 }
 
 int GeometryFeed::buildLUT(int dim, const int ncurves) {
-	const bool hasFragLine = geometryData.fragmentShaderStrokes;
+	const bool hasFragLine = geometryData.fragmentShaderLine;
 	const float lineWidth = geometryData.strokeWidth;
 
 	auto e = fillEvents.begin();
@@ -439,10 +439,9 @@ GeometryFeed::GeometryFeed(
 #if TOVE_GPUX_MESH_BAND
 	bands.resize(geometryData.lookupTableSize);
 #endif
-	initialUpdate = true;
 
 	path->addObserver(this);
-	changes = 0;
+	changes = CHANGED_LINE_STYLE | CHANGED_INITIAL;
 }
 
 GeometryFeed::~GeometryFeed() {
@@ -454,28 +453,30 @@ GeometryFeed::~GeometryFeed() {
 }
 
 ToveChangeFlags GeometryFeed::beginUpdate() {
-	if (!initialUpdate && (changes & CHANGED_GEOMETRY)) {
+	if ((changes & (CHANGED_GEOMETRY | CHANGED_INITIAL)) == CHANGED_GEOMETRY) {
 		changes = 0;
 		return CHANGED_RECREATE;
 	}
 
-	if ((enableFragmentShaderStrokes && path->hasStroke()) !=
-		geometryData.fragmentShaderStrokes) {
-		return CHANGED_RECREATE;
-	}
+	if (changes & (CHANGED_LINE_ARGS | CHANGED_INITIAL)) {
+		if ((enableFragmentShaderStrokes && path->hasStroke()) !=
+			geometryData.fragmentShaderLine) {
+			return CHANGED_RECREATE;
+		}
 
-	const float lineWidth = lineColorData.style > 0 ?
-		std::max(path->getLineWidth(), 1.0f) : 0.0f;
-	geometryData.strokeWidth = lineWidth;
+		const float lineWidth = lineColorData.style > 0 ?
+			std::max(path->getLineWidth(), 1.0f) : 0.0f;
+		geometryData.strokeWidth = lineWidth;
 
-	switch (path->getLineJoin()) {
-		case TOVE_LINEJOIN_BEVEL:
-		case TOVE_LINEJOIN_ROUND: // not supported.
-			geometryData.miterLimit = 0;
-			break;
-		case TOVE_LINEJOIN_MITER:
-			geometryData.miterLimit = path->getMiterLimit();
-			break;
+		switch (path->getLineJoin()) {
+			case TOVE_LINEJOIN_BEVEL:
+			case TOVE_LINEJOIN_ROUND: // not supported.
+				geometryData.miterLimit = 0;
+				break;
+			case TOVE_LINEJOIN_MITER:
+				geometryData.miterLimit = path->getMiterLimit();
+				break;
+		}
 	}
 
 	geometryData.fillRule = path->getFillRule();
@@ -484,11 +485,16 @@ ToveChangeFlags GeometryFeed::beginUpdate() {
 }
 
 ToveChangeFlags GeometryFeed::endUpdate() {
-	changes &= (CHANGED_POINTS | CHANGED_LINE_ARGS);
-	if (changes == 0 && !initialUpdate) {
+	if ((changes & CHANGED_LINE_STYLE) && !(geometryData.fragmentShaderLine)) {
+		geometryData.opaqueLine = path->hasOpaqueLine();
+	}
+
+	changes &= CHANGED_POINTS | CHANGED_LINE_ARGS | CHANGED_INITIAL;
+	if (changes == 0) {
 		return 0;
 	}
 
+#if TOVE_DEBUG
 	assert(path->getNumCurves() <= maxCurves);
 
 	assert(geometryData.lookupTable[0] != nullptr);
@@ -503,6 +509,7 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 	assert(geometryData.curvesTextureRowBytes >=
 		geometryData.curvesTextureSize[0] * 2);
 	assert(geometryData.curvesTextureSize[1] == maxCurves);
+#endif
 
 	// build curve data
 
@@ -523,7 +530,7 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 			lineRuns++;
 		}
 
-		if (initialUpdate || true) { // FIXME: check for subpath changes
+		if (true) { // FIXME: check for subpath changes
 			for (int j = 0; j < n; j++) {
 				assert(curveIndex < maxCurves);
 				if (t->computeShaderCurveData(
@@ -565,7 +572,7 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 		}
 	}
 
-	if (geometryData.fragmentShaderStrokes && lineColorData.style > 0) {
+	if (geometryData.fragmentShaderLine && lineColorData.style > 0) {
 		const float lineWidth = geometryData.strokeWidth;
 		bounds[0] -= lineWidth;
 		bounds[1] -= lineWidth;
@@ -588,8 +595,6 @@ ToveChangeFlags GeometryFeed::endUpdate() {
 #endif
 
 	updateLookupTableMeta(geometryData.lookupTableMeta);
-
-	initialUpdate = false;
 
 	const ToveChangeFlags returnedChanges = changes;
 	changes = 0;

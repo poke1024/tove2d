@@ -1009,7 +1009,7 @@ bool Subpath::computeShaderCurveData(
 	}
 	curveTexturesData += 4;
 
-	if (shaderData->fragmentShaderStrokes) {
+	if (shaderData->fragmentShaderLine) {
 		curveData.storeRoots(curveTexturesData);
 		curveTexturesData += 4;
 	}

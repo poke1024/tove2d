@@ -39,12 +39,19 @@ local function sendColor(shader, uniform, rgba)
 	shader:send(uniform, {rgba.r, rgba.g, rgba.b, rgba.a})
 end
 
-local function sendLUT(feed, shader)
+local function makeSendLUT(feed, shader)
+	local bounds = feed.boundsByteData
 	local lutX, lutY = unpack(feed.lookupTableByteData)
 	local n = feed.data.lookupTableMeta.n
-	shader:send("lutX", lutX, 0, ffi.sizeof("float[?]", n[0]))
-	shader:send("lutY", lutY, 0, ffi.sizeof("float[?]", n[1]))
-	shader:send("tablemeta", feed.lookupTableMetaByteData)
+	local floatSize = ffi.sizeof("float[?]", 1)
+	local meta = feed.lookupTableMetaByteData
+
+	return function()
+		shader:send("bounds", bounds)
+		shader:send("lutX", lutX, 0, n[0] * floatSize)
+		shader:send("lutY", lutY, 0, n[1] * floatSize)
+		shader:send("tablemeta", meta)
+	end
 end
 
 local function sendLineArgs(shader, data)
@@ -283,13 +290,14 @@ end
 local function makeDrawLine(feed)
 	local lineShader = feed.lineShader
 	local geometry = feed.data
+	local lg = love.graphics
 
 	local lineMesh = love.graphics.newMesh(
 		{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
 	local lineJoinMesh = love.graphics.newMesh(
 		{{0, 0}, {1, -1}, {1, 1}, {-1, -1}, {-1, 1}}, "strip")
 
-	return function(...)
+	local drawLine = function(...)
 		local lineRuns = geometry.lineRuns
 		if lineRuns == nil then
 			return
@@ -306,12 +314,35 @@ local function makeDrawLine(feed)
 			lineShader:send("curve_index", run.curveIndex)
 			lineShader:send("num_curves", numCurves)
 
-			lineShader:send("draw_joins", 0)
+			lineShader:send("draw_mode", 0)
 			lg.drawInstanced(lineMesh, numInstances, ...)
 
-			lineShader:send("draw_joins", 1)
+			lineShader:send("draw_mode", 1)
 			lg.drawInstanced(lineJoinMesh,
 				numCurves - (run.isClosed and 0 or 1), ...)
+		end
+	end
+
+	local bounds = ffi.cast("ToveBounds*", geometry.bounds)
+
+	local drawTransparentLine = function(...)
+		local border = geometry.strokeWidth + geometry.miterLimit * 2
+		lg.stencil(drawLine, "replace", 1)
+		lg.setStencilTest("greater", 0)
+		local x0, y0 = bounds.x0, bounds.y0
+		lineShader:send("draw_mode", 2)
+		lg.rectangle("fill",
+			x0 - border, y0 - border,
+			bounds.x1 - x0 + 2 * border,
+			bounds.y1 - y0 + 2 * border)
+		lg.setStencilTest()
+	end
+	
+	return function(...)
+		if geometry.opaqueLine then
+			drawLine(...)
+		else
+			drawTransparentLine()
 		end
 	end
 end
@@ -357,12 +388,15 @@ function GeometrySend:endInit(lineStyle)
 
 	if self.bands == nil then
 		if fillShader ~= nil then
-			sendLUT(self, fillShader)
-			fillShader:send("bounds", self.boundsByteData)
+			self._sendUniforms = makeSendLUT(self, fillShader)
+		else
+			self._sendUniforms = function() end
 		end
 	else
-		self.bands:update()
+		self._sendUniforms = function() self.bands:update() end
 	end
+
+	self._sendUniforms()
 
 	if fillShader ~= nil then
 		fillShader:send("lists", listsTexture)
@@ -380,16 +414,10 @@ end
 
 function GeometrySend:updateUniforms(flags)
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
-		local fillShader = self.fillShader
-
-		if self.bands == nil and fillShader~= nil then
-			sendLUT(self, fillShader)
-			fillShader:send("bounds", self.boundsByteData)
-		else
-			self.bands:update()
-		end
+		self._sendUniforms()
 
 		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 then
+			local fillShader = self.fillShader
 			local lineShader = self.lineShader
 
 			if lineShader ~= nil then
