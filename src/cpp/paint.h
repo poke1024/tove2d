@@ -131,7 +131,7 @@ protected:
 	NSVGgradient *nsvg;
 	mutable bool sorted;
 	NSVGgradient *nsvgInverse;
-	float xformInverse[6];
+	nsvg::Matrix3x2 xformInverse;
 
 	static inline size_t getRecordSize(int nstops) {
 		return sizeof(NSVGgradient) + (nstops - 1) * sizeof(NSVGgradientStop);
@@ -194,15 +194,13 @@ public:
 	}
 
 	virtual void getGradientMatrix(float *m, float scale) const {
-		const float *xform = xformInverse;
+		m[0] = xformInverse[0] / scale;
+		m[1] = xformInverse[2] / scale;
+		m[2] = xformInverse[4];
 
-		m[0] = xform[0] / scale;
-		m[1] = xform[2] / scale;
-		m[2] = xform[4];
-
-		m[3] = xform[1] / scale;
-		m[4] = xform[3] / scale;
-		m[5] = xform[5];
+		m[3] = xformInverse[1] / scale;
+		m[4] = xformInverse[3] / scale;
+		m[5] = xformInverse[5];
 	}
 
 	virtual bool animate(const PaintRef &a, const PaintRef &b, float t);

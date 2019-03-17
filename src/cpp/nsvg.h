@@ -51,6 +51,50 @@ int maxDashes();
 
 void curveBounds(float *bounds, float *curve);
 
+class Matrix3x2 {
+	double m_val[6];
+
+public:
+	inline Matrix3x2() {
+	}
+
+	inline Matrix3x2(const float *m) {
+		load(m);
+	}
+
+	inline Matrix3x2 &operator=(const Matrix3x2& m) {
+		std::memcpy(m_val, m.m_val, sizeof(m_val));
+		return *this;
+	}
+
+	inline void load(const float *m) {
+		for (int i = 0; i < 6; i++) {
+			m_val[i] = m[i];
+		}
+	}
+
+	inline void store(float *m) const {
+		for (int i = 0; i < 6; i++) {
+			m[i] = m_val[i];
+		}
+	}
+
+	inline double operator[](int i) const {
+		return m_val[i];
+	}
+
+	void setIdentity();
+
+	Matrix3x2 inverse() const;
+
+#if TOVE_DEBUG
+	friend inline std::ostream &operator<<(std::ostream &os, const Matrix3x2 &m) {
+		os << tove::debug::xform<double>(m.m_val);
+		return os;
+	}
+#endif
+};
+
 void xformInverse(float *a, float *b);
 void xformIdentity(float *m);
 

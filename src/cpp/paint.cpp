@@ -121,7 +121,7 @@ NSVGgradient *AbstractGradient::getInverseNSVGgradient() {
 		return nullptr;
 	}
 	std::memcpy(nsvgInverse, nsvg, size);
-	std::memcpy(nsvgInverse->xform, xformInverse, 6 * sizeof(float));
+	xformInverse.store(nsvgInverse->xform);
 	return nsvgInverse;
 }
 
@@ -137,7 +137,7 @@ AbstractGradient::AbstractGradient(int nstops) :
 	nsvg->nstops = nstops;
 
 	nsvg::xformIdentity(nsvg->xform);
-	nsvg::xformIdentity(xformInverse);
+	xformInverse.setIdentity();
 	nsvg->spread = 0;
 	nsvg->fx = 0;
 	nsvg->fy = 0;
@@ -155,8 +155,8 @@ AbstractGradient::AbstractGradient(const NSVGgradient *gradient) :
 	}
 	std::memcpy(nsvg, gradient, size);
 
-	std::memcpy(xformInverse, gradient->xform, 6 * sizeof(float));
-	nsvg::xformInverse(nsvg->xform, xformInverse);
+	xformInverse.load(gradient->xform);
+	xformInverse.inverse().store(nsvg->xform);
 
 	sorted = true;
 }
@@ -171,7 +171,7 @@ AbstractGradient::AbstractGradient(const AbstractGradient &gradient) :
 		return;
 	}
 	std::memcpy(nsvg, gradient.nsvg, size);
-	std::memcpy(xformInverse, gradient.xformInverse, 6 * sizeof(float));
+	xformInverse = gradient.xformInverse;
 	sorted = gradient.sorted;
 }
 
@@ -193,15 +193,14 @@ void AbstractGradient::set(const AbstractGradient *source) {
 	}
 	std::memcpy(nsvg, source->nsvg, size);
 	sorted = source->sorted;
-
-	std::memcpy(xformInverse, source->xformInverse, 6 * sizeof(float));
-
+	xformInverse = source->xformInverse;
+		
 	changed();
 }
 
 void AbstractGradient::transform(const nsvg::Transform &transform) {
 	transform.transformGradient(nsvg);
-	nsvg::xformInverse(xformInverse, nsvg->xform);
+	xformInverse = nsvg::Matrix3x2(nsvg->xform).inverse();
 	changed();
 }
 
@@ -276,9 +275,9 @@ bool AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 		}
 	}
 	if (xformIsAnimated) {
-		nsvg::xformInverse(xformInverse, xform);
+		xformInverse = nsvg::Matrix3x2(xform).inverse();
 	} else if (gradA != this) {
-		std::memcpy(xformInverse, gradA->xformInverse, sizeof(xformInverse));
+		xformInverse = gradA->xformInverse;
 	}
 	nsvg->fx = nsvgA->fx * s + nsvgB->fx * t;
 	nsvg->fy = nsvgA->fy * s + nsvgB->fy * t;
@@ -305,10 +304,10 @@ bool AbstractGradient::animate(const PaintRef &a, const PaintRef &b, float t) {
 #if TOVE_DEBUG
 std::ostream &AbstractGradient::dump(std::ostream &os) {
 	os << "xform:" << std::endl;
-	os << tove::debug::xform(nsvg->xform);
+	os << tove::debug::xform<float>(nsvg->xform);
 
 	os << "xform inverse:" << std::endl;
-	os << tove::debug::xform(xformInverse);
+	os << xformInverse;
 
 	tove::debug::save_ios_fmt fmt(os);
 	os << std::fixed << std::setprecision(2);
@@ -353,7 +352,7 @@ LinearGradient::LinearGradient(float x1, float y1, float x2, float y2) :
 	xform[0] = dy; xform[1] = -dx;
 	xform[2] = dx; xform[3] = dy;
 	xform[4] = x1; xform[5] = y1;
-	nsvg::xformInverse(xformInverse, xform);
+	xformInverse = nsvg::Matrix3x2(xform).inverse();
 }
 
 void LinearGradient::getGradientParameters(ToveGradientParameters &p) {
@@ -391,7 +390,7 @@ RadialGradient::RadialGradient(float cx, float cy, float fx, float fy, float r) 
 	xform[4] = cx; xform[5] = cy;
 	nsvg->fx = fx / r;
 	nsvg->fy = fy / r;
-	nsvg::xformInverse(xformInverse, xform);
+	xformInverse = nsvg::Matrix3x2(xform).inverse();
 }
 
 void RadialGradient::getGradientParameters(ToveGradientParameters &p) {

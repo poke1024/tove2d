@@ -101,11 +101,12 @@ public:
 	}
 };
 
+template<typename T>
 class xform {
-	const float * const matrix;
+	const T * const matrix;
 
 public:
-	xform(const float *matrix) : matrix(matrix) {
+	xform(const T *matrix) : matrix(matrix) {
 	}
 
 	friend std::ostream &operator<<(std::ostream &os, const xform &m) {

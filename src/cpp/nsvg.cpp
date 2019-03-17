@@ -95,6 +95,30 @@ void curveBounds(float *bounds, float *curve) {
 	nsvg__curveBounds(bounds, curve);
 }
 
+void Matrix3x2::setIdentity() {
+	double *t = m_val;
+	t[0] = 1.0f; t[1] = 0.0f;
+	t[2] = 0.0f; t[3] = 1.0f;
+	t[4] = 0.0f; t[5] = 0.0f;
+}
+
+Matrix3x2 Matrix3x2::inverse() const {
+	Matrix3x2 result;
+	double *inv = result.m_val;
+	const double *t = m_val;
+
+	// adapted from nanosvg.
+	const double det = t[0] * t[3] - t[2] * t[1];
+	inv[0] = (t[3] / det);
+	inv[2] = (-t[2] / det);
+	inv[4] = ((t[2] * t[5] - t[3] * t[4]) / det);
+	inv[1] = (-t[1] / det);
+	inv[3] = (t[0] / det);
+	inv[5] = ((t[1] * t[4] - t[0] * t[5]) / det);
+
+	return result;
+}
+
 void xformInverse(float *a, float *b) {
 	nsvg__xformInverse(a, b);
 }
@@ -245,14 +269,14 @@ void Transform::multiply(const Transform &t) {
 void Transform::transformGradient(NSVGgradient* grad) const {
 #if TOVE_DEBUG
 	std::cout << "transformGradient [original]" << std::endl;
-	std::cout << tove::debug::xform(grad->xform);
+	std::cout << tove::debug::xform<float>(grad->xform);
 #endif
 
 	nsvg__xformMultiply(grad->xform, const_cast<float*>(&matrix[0]));
 
 #if TOVE_DEBUG
 	std::cout << "transformGradient [transformed]" << std::endl;
-	std::cout << tove::debug::xform(grad->xform);
+	std::cout << tove::debug::xform<float>(grad->xform);
 #endif
 }
 
