@@ -3,8 +3,8 @@
 *.o
 .sconsign.dblite
 /src/cpp/version.cpp
+/src/glsl/*.inc
 /godot/tovegd/src
 /lib
 /tove
 .vscode
-

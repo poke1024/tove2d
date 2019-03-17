@@ -1,4 +1,3 @@
-w << R"GLSL(
 // *****************************************************************
 // TÖVE - Animated vector graphics for LÖVE.
 // https://github.com/poke1024/tove2d
@@ -119,4 +118,3 @@ vec4 do_vertex(vec4 mesh_position) {
     raw_vertex_pos = q;
     return vec4(q, mesh_position.zw);
 }
-)GLSL";

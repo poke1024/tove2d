@@ -1,4 +1,3 @@
-w << R"GLSL(
 // *****************************************************************
 // TÖVE - Animated vector graphics for LÖVE.
 // https://github.com/poke1024/tove2d
@@ -509,4 +508,3 @@ vec4 do_color(vec2 textureUV) {
 	discard;
 #endif
 }
-)GLSL";

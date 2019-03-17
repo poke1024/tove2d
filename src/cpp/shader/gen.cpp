@@ -303,7 +303,7 @@ vec4 do_vertex(vec4 vertex_pos) {
 	w.computeLineColor(fragLine ? data->color.line.style : 0);
 	w.computeFillColor(data->color.fill.style);
 
-	#include "glsl/fill.inc"
+	#include "../../glsl/fill.frag.inc"
 
 	w.endFragmentShader();
 
@@ -321,7 +321,7 @@ varying vec2 raw_vertex_pos;
 		data->geometry.curvesTextureSize[0] << "\n";
 
 	w.beginVertexShader();
-	#include "glsl/line.inc"
+	#include "../../glsl/line.vert.inc"
 	w.endVertexShader();
 
 	w.beginFragmentShader();
