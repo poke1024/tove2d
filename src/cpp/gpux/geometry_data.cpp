@@ -65,11 +65,18 @@ GeometryData::GeometryData(
     data.listsTextureFormat = "rgba8";
 
     data.curvesTexture = nullptr;
+#if 1
+	// for some reason, using a texture width of 12 for the "curves"
+	// texture has problems in texture lookup in the shader on some
+	// drivers (e.g. NVidia). use 16 all the time.
+	data.curvesTextureSize[0] = div4(16);
+#else
 	if (fragmentShaderStrokes) {
 		data.curvesTextureSize[0] = div4(16);
 	} else {
 		data.curvesTextureSize[0] = div4(12);
 	}
+#endif
     data.curvesTextureSize[1] = maxCurves;
 	if (sizeof(gpu_float_t) == sizeof(float)) {
 	    data.curvesTextureFormat = "rgba32f";
