@@ -50,6 +50,7 @@ END_TOVE_NAMESPACE
 
 #include "shared.h"
 #include "tovedebug.h"
+#include "../thirdparty/fp16/include/fp16.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -59,20 +60,19 @@ inline void store_gpu_float(float &p, float x) {
 	p = x;
 }
 
-#if __clang__
+#if defined(__clang__)
 inline void store_gpu_float(uint16_t &p, float x) {
 	*reinterpret_cast<__fp16*>(&p) = x;
 }
-#elif __GNUC__
+#elif defined(__GNUC__)
 #include <x86intrin.h>
 inline void store_gpu_float(uint16_t &p, float x) {
 	p = _cvtss_sh(x, 0);
 }
 #else
-#include "../thirdparty/half/include/half.hpp"
+#pragma message ("non-intrinsic fp16 conversion.")
 inline void store_gpu_float(uint16_t &p, float x) {
-	half_float::half y(x);
-	p = *(uint16_t*)&y;
+	p = fp16_ieee_from_fp32_value(x);
 }
 #endif
 

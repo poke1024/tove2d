@@ -52,6 +52,8 @@ else:
 
 	env["CCFLAGS"] = CCFLAGS
 
+env["CPPPATH"] = "src/thirdparty/fp16/include"
+
 # prepare git hash based version string.
 
 import subprocess

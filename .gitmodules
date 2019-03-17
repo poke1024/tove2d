@@ -4,3 +4,6 @@
 [submodule "src/thirdparty/polypartition"]
 	path = src/thirdparty/polypartition
 	url = https://github.com/poke1024/polypartition
+[submodule "src/thirdparty/fp16"]
+	path = src/thirdparty/fp16
+	url = https://github.com/Maratyszcza/FP16
