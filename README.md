@@ -63,10 +63,12 @@ love demos/hearts
 On Windows:
 
 ```
+git clone --recurse-submodules https://github.com/poke1024/tove2d
+cd tove2d
 setup.bat /C
 ```
 
-Take a look inside `setup.cmd` to learn more about installing a compiler environment.
+Take a look inside `setup.bat` to learn more about installing a compiler environment.
 
 ## License
 TÖVE is licensed under the MIT license.
