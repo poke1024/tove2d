@@ -1,6 +1,7 @@
 .DS_Store
 *.os
 *.o
+*.obj
 .sconsign.dblite
 /src/cpp/version.cpp
 /src/glsl/*.inc

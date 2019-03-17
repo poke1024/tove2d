@@ -46,7 +46,12 @@ I've written up the essential stuff in these four sections:
 * [Choosing Renderers](docs/Renderers.md)
 * [Animating Things](docs/Animation.md)
 
-## Building Yourself
+Note: on Windows, in order to run the demos, you need to call `setup.bat` once (this
+will fix the links to the lib and asset folders, so you can run e.g. `love demos/blob`).
+
+## Building TÖVE Yourself
+
+On Linux and macOS:
 
 ```
 git clone --recurse-submodules https://github.com/poke1024/tove2d
@@ -54,6 +59,14 @@ cd tove2d
 scons
 love demos/hearts
 ```
+
+On Windows:
+
+```
+setup.bat /C
+```
+
+Take a look inside `setup.cmd` to learn more about installing a compiler environment.
 
 ## License
 TÖVE is licensed under the MIT license.
