@@ -73,8 +73,8 @@ void Color::getRGBA(ToveRGBA &rgba, float opacity) const {
 }
 
 bool Color::animate(const PaintRef &a, const PaintRef &b, float t) {
-	if (a->getType() == NSVG_PAINT_COLOR &&
-		b->getType() == NSVG_PAINT_COLOR) {
+	if (a->getType() == PAINT_SOLID &&
+		b->getType() == PAINT_SOLID) {
 		
 		color = lerpColor(
 			static_cast<Color*>(a.get())->color,
