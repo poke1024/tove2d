@@ -160,7 +160,7 @@ function MeshBands:initData()
 	end
 end
 
-function MeshBands:createMeshes()
+function MeshBands:createMeshes(fillShader)
 	local data = self.data
 
 	self.meshes[1] = love.graphics.newMesh(
@@ -187,7 +187,7 @@ function MeshBands:createMeshes()
 		lg.draw(self.meshes[2], ...)
 	end
 
-	return function(fillShader, ...)
+	return function(...)
 		lg.stencil(drawUnsafeBands, "replace", 1)
 	
 		lg.setShader(fillShader)
@@ -229,6 +229,7 @@ local function newGeometrySend(fillShader, lineShader, data, meshBand)
 	return setmetatable({
 		fillShader = fillShader,
 		lineShader = lineShader,
+		numLineSegments = 0,
 		data = data,
 		bands = meshBand and newMeshBands(data) or nil,
 		boundsByteData = nil,
@@ -279,32 +280,40 @@ function GeometrySend:beginInit()
 	end
 end
 
-local function drawLine(linkdata, ...)
-	local geometry = linkdata.data.geometry
-	local lineRuns = geometry.lineRuns
-	if lineRuns == nil then
-		return
+local function makeDrawLine(feed)
+	local lineShader = feed.lineShader
+	local geometry = feed.data
+
+	local lineMesh = love.graphics.newMesh(
+		{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
+	local lineJoinMesh = love.graphics.newMesh(
+		{{0, 0}, {1, -1}, {1, 1}, {-1, -1}, {-1, 1}}, "strip")
+
+	return function(...)
+		local lineRuns = geometry.lineRuns
+		if lineRuns == nil then
+			return
+		end
+
+		lg.setShader(lineShader)
+
+		local numSegments = feed.numLineSegments
+		for i = 0, geometry.numSubPaths - 1 do
+			local run = lineRuns[i]
+			local numCurves = run.numCurves
+			local numInstances = numSegments * numCurves
+
+			lineShader:send("curve_index", run.curveIndex)
+			lineShader:send("num_curves", numCurves)
+
+			lineShader:send("draw_joins", 0)
+			lg.drawInstanced(lineMesh, numInstances, ...)
+
+			lineShader:send("draw_joins", 1)
+			lg.drawInstanced(lineJoinMesh,
+				numCurves - (run.isClosed and 0 or 1), ...)
+		end
 	end
-
-	lg.setShader(lineShader)
-
-	local feed = linkdata.geometryFeed
-	local lineMesh = feed.lineMesh
-	local lineJoinMesh = feed.lineJoinMesh
-	local numSegments = linkdata.numSegments
-	for i = 0, geometry.numSubPaths - 1 do
-		local run = lineRuns[i]
-		local numCurves = run.numCurves
-		local numInstances = numSegments * numCurves
-		lineShader:send("curve_index", run.curveIndex)
-		lineShader:send("num_curves", numCurves)
-		lineShader:send("draw_joins", 0)
-		lg.drawInstanced(lineMesh, numInstances, ...)
-		lineShader:send("draw_joins", 1)
-		lg.drawInstanced(lineJoinMesh,
-			numCurves - (run.isClosed and 0 or 1), ...)
-	end
-
 end
 
 function GeometrySend:endInit(lineStyle)
@@ -321,40 +330,44 @@ function GeometrySend:endInit(lineStyle)
 	local lineShader = self.lineShader
 	local data = self.data
 
-	if self.bands == nil then
-		local mesh = love.graphics.newMesh(
-			{{"VertexPosition", "float", 2}},
-			{{0, 0}, {0, 1}, {1, 0}, {1, 1}}, "strip")
-
-		local lg = love.graphics
-
-		self.drawFill = function(fillShader, ...)
-			lg.setShader(fillShader)
-			lg.draw(mesh, ...)
-		end
+	if fillShader == nil then
+		self.drawFill = function() end
 	else
-		self.drawFill = self.bands:createMeshes()
+		if self.bands == nil then
+			local mesh = love.graphics.newMesh(
+				{{"VertexPosition", "float", 2}},
+				{{0, 0}, {0, 1}, {1, 0}, {1, 1}}, "strip")
+
+			local lg = love.graphics
+
+			self.drawFill = function(...)
+				lg.setShader(fillShader)
+				lg.draw(mesh, ...)
+			end
+		else
+			self.drawFill = self.bands:createMeshes(fillShader)
+		end
 	end
 
 	if fillShader ~= lineShader and lineShader ~= nil then
-		self.lineMesh = love.graphics.newMesh(
-			{{0, -1}, {0, 1}, {1, -1}, {1, 1}}, "strip")
-		self.lineJoinMesh = love.graphics.newMesh(
-			{{0, 0}, {1, -1}, {1, 1}, {-1, -1}, {-1, 1}}, "strip")
-
-		self.drawLine = function(...)
-		end
+		self.drawLine = makeDrawLine(self)
+	else
+		self.drawLine = function() end
 	end
 
 	if self.bands == nil then
-		sendLUT(self, fillShader)
-		fillShader:send("bounds", self.boundsByteData)
+		if fillShader ~= nil then
+			sendLUT(self, fillShader)
+			fillShader:send("bounds", self.boundsByteData)
+		end
 	else
 		self.bands:update()
 	end
 
-	fillShader:send("lists", listsTexture)
-	fillShader:send("curves", curvesTexture)
+	if fillShader ~= nil then
+		fillShader:send("lists", listsTexture)
+		fillShader:send("curves", curvesTexture)
+	end
 
 	if lineShader ~= fillShader and lineShader ~= nil then
 		lineShader:send("curves", curvesTexture)
@@ -368,9 +381,8 @@ end
 function GeometrySend:updateUniforms(flags)
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local fillShader = self.fillShader
-		local lineShader = self.lineShader
 
-		if self.bands == nil then
+		if self.bands == nil and fillShader~= nil then
 			sendLUT(self, fillShader)
 			fillShader:send("bounds", self.boundsByteData)
 		else
@@ -378,9 +390,11 @@ function GeometrySend:updateUniforms(flags)
 		end
 
 		if bit.band(flags, lib.CHANGED_LINE_ARGS) ~= 0 then
+			local lineShader = self.lineShader
+
 			if lineShader ~= nil then
 				sendLineArgs(lineShader, self.data)
-			else
+			elseif fillShader ~= nil then
 				sendLineArgs(fillShader, self.data)
 			end
 		end
