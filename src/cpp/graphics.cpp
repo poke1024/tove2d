@@ -215,8 +215,8 @@ void Graphics::initialize(float width, float height) {
 	nsvg.width = width;
 	nsvg.height = height;
 
-	strokeColor = tove_make_shared<Color>(0.25, 0.25, 0.25);
-	fillColor = tove_make_shared<Color>(0.95, 0.95, 0.95);
+	strokeColor = tove_make_shared<Color>(0.25f, 0.25f, 0.25f);
+	fillColor = tove_make_shared<Color>(0.95f, 0.95f, 0.95f);
 
 	strokeWidth = 3.0;
 	strokeDashOffset = 0.0;

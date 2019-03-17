@@ -409,10 +409,10 @@ PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 		} break;
 		case NSVG_PAINT_COLOR: {
 			return tove_make_shared<Color>(
-				(paint.color & 0xff) / 255.0,
-				((paint.color >> 8) & 0xff) / 255.0,
-				((paint.color >> 16) & 0xff) / 255.0,
-				((paint.color >> 24) & 0xff) / 255.0);
+				(paint.color & 0xff) / 255.0f,
+				((paint.color >> 8) & 0xff) / 255.0f,
+				((paint.color >> 16) & 0xff) / 255.0f,
+				((paint.color >> 24) & 0xff) / 255.0f);
 		} break;
 		case NSVG_PAINT_LINEAR_GRADIENT: {
 			return tove_make_shared<LinearGradient>(paint.gradient);
