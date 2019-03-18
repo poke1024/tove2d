@@ -187,6 +187,10 @@ public:
 		return nsvg.stroke.type > 0 && nsvg.strokeWidth > 0.0f;
 	}
 
+	inline bool hasFill() const {
+		return nsvg.fill.type > 0;
+	}
+
 	inline int getIndex() const {
 		return pathIndex;
 	}

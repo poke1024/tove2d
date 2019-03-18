@@ -100,19 +100,30 @@ private:
 
 	template<typename Get>
 	void computeBounds(float *bounds, const Get &get) {
-	    for (int i = 0; i < paths.size(); i++) {
-	        const float *pathBounds = get(paths[i]);
-	        if (i == 0) {
-	            for (int j = 0; j < 4; j++) {
-	                bounds[j] = pathBounds[j];
-	            }
-	        } else {
-	            bounds[0] = std::min(bounds[0], pathBounds[0]);
-	            bounds[1] = std::min(bounds[1], pathBounds[1]);
-	            bounds[2] = std::max(bounds[2], pathBounds[2]);
-	            bounds[3] = std::max(bounds[3], pathBounds[3]);
-	        }
+		int k = 0;
+		const int n = paths.size();
+	    for (int i = 0; i < n; i++) {
+			const PathRef &p = paths[i];
+			if (p->hasFill() || p->hasStroke()) {
+				const float *pathBounds = get(p);
+				if (k++ == 0) {
+					for (int j = 0; j < 4; j++) {
+						bounds[j] = pathBounds[j];
+					}
+				} else {
+					bounds[0] = std::min(bounds[0], pathBounds[0]);
+					bounds[1] = std::min(bounds[1], pathBounds[1]);
+					bounds[2] = std::max(bounds[2], pathBounds[2]);
+					bounds[3] = std::max(bounds[3], pathBounds[3]);
+				}
+			}
 	    }
+		if (k == 0) {
+			bounds[0] = 0.0f;
+			bounds[1] = 0.0f;
+			bounds[2] = 0.0f;
+			bounds[3] = 0.0f;
+		}
 	}
 
 public:
