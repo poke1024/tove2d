@@ -216,7 +216,7 @@ ClipperLib::Paths AdaptiveTesselator::toClipPath(
 			std::make_move_iterator(t.fill.begin()),
 			std::make_move_iterator(t.fill.end()));
 	}
-	return std::move(flattened);
+	return flattened;
 }
 
 RigidTesselator::RigidTesselator(

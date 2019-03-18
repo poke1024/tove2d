@@ -37,6 +37,7 @@
 
 BEGIN_TOVE_NAMESPACE
 #define NANOSVG_CPLUSPLUS 1
+#define NANOSVGRAST_CPLUSPLUS 1
 #include "../thirdparty/nanosvg/src/nanosvg.h"
 #include "../thirdparty/nanosvg/src/nanosvgrast.h"
 END_TOVE_NAMESPACE
