@@ -220,12 +220,12 @@ void Submesh::addClipperPaths(
 
 	TPPLPartition partition;
 	std::list<TPPLPoly> triangles;
-	if (partition.Triangulate_MONO(&polys, &triangles) == 0) {
+	//if (partition.Triangulate_MONO(&polys, &triangles) == 0) {
 		if (partition.Triangulate_EC(&polys, &triangles) == 0) {
 			triangulationFailed(polys);
 			return;
 		}
-	}
+	//}
 
 	mTriangles.add(triangles);
 #endif
@@ -493,12 +493,12 @@ void Submesh::triangulateFixedResolutionFill(
 		std::list<TPPLPoly> triangles;
 		TPPLPoly &p = *i;
 
-		if (partition.Triangulate_MONO(&p, &triangles) == 0) {
+		//if (partition.Triangulate_MONO(&p, &triangles) == 0) {
 			if (partition.Triangulate_EC(&p, &triangles) == 0) {
 				triangulationFailed(polys);
 				continue;
 			}
-		}
+		//}
 
 		triangulation->triangles.add(triangles);
 	}
