@@ -7,3 +7,6 @@
 [submodule "src/thirdparty/fp16"]
 	path = src/thirdparty/fp16
 	url = https://github.com/Maratyszcza/FP16
+[submodule "src/thirdparty/robin-map"]
+	path = src/thirdparty/robin-map
+	url = https://github.com/Tessil/robin-map

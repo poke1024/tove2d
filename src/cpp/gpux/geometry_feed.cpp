@@ -83,7 +83,7 @@ static void queryLUT(
 
 		const uint8_t *list = base + rowBytes * i;
 		while (*list != SENTINEL_END) {
-			result[*list++] = true;
+			result.insert(*list++);
 		}
 	}
 }
@@ -187,8 +187,7 @@ int GeometryFeed::buildLUT(int dim, const int ncurves) {
 				queryLUT(&strokeShaderData, dim, y0, y1, strokeCurves);
 
 				bool hasStrokeSentinel = false;
-				for (const auto &i : strokeCurves) {
-					const int curveIndex = i.first;
+				for (const auto curveIndex : strokeCurves) {
 					if (active.find(curveIndex) == active.end()) {
 						if (!hasStrokeSentinel) {
 							*list++ = SENTINEL_STROKES;
@@ -421,7 +420,7 @@ GeometryFeed::GeometryFeed(
 	lineColorData(lineColorData),
 	fillEventsLUT(maxCurves, geometryData, IGNORE_FILL),
 	strokeEventsLUT(maxCurves, strokeShaderData, IGNORE_LINE),
-	strokeCurves(256, -1),
+	strokeCurves(4),
 	allocData(maxCurves, maxSubPaths,
 		enableFragmentShaderStrokes && path->hasStroke(), geometryData),
 	allocStrokeData(maxCurves, maxSubPaths, true, strokeShaderData),

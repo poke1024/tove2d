@@ -12,7 +12,7 @@
 #ifndef __TOVE_SHADER_LOOKUP
 #define __TOVE_SHADER_LOOKUP 1
 
-#include "../../thirdparty/HashMap.h"
+#include "../../thirdparty/robin-map/include/tsl/robin_set.h"
 #include <vector>
 
 #include "curve_data.h"
@@ -38,19 +38,7 @@ enum {
 
 class LookupTable {
 public:
-    struct Hash {
-        size_t operator()(int x) const {
-            return x;
-        }
-    };
-
-    struct Equal {
-        bool operator()(int lhs, int rhs) const {
-            return lhs == rhs;
-        }
-    };
-
-	typedef rigtorp::HashMap<int16_t, bool, Hash, Equal> CurveSet;
+	typedef tsl::robin_set<uint8_t> CurveSet;
 
 private:
 	ToveShaderGeometryData &_data;
@@ -60,7 +48,7 @@ private:
 
 public:
     LookupTable(int maxCurves, ToveShaderGeometryData &data, int ignore) :
-		active(256, -1),
+		active(4),
         _maxCurves(maxCurves),
         _data(data),
         _ignore(ignore) {
@@ -131,7 +119,7 @@ public:
             while (j != end && j->y == y0) {
                 switch (j->t) {
 					case EVENT_ENTER:
-                    	active[j->curve] = true;
+                    	active.insert(j->curve);
 						break;
 					case EVENT_EXIT:
                     	active.erase(j->curve);
@@ -146,8 +134,7 @@ public:
 
             int k = 0;
             assert(active.size() <= _maxCurves);
-            for (const auto &a : active) {
-				const int curve = a.first;
+            for (const auto curve : active) {
 				if ((extended[curve].ignore & ignore) == 0) {
 					yptr[k++] = curve;
 				}
