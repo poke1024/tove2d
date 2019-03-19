@@ -32,11 +32,7 @@ GraphicsRef Graphics::createFromSVG(
 
 	GraphicsRef graphics;
 	if (svg) {
-		const nsvg::Env env; // important
-
-		char *mutableSVG = strdup(svg);
-		NSVGimage *image = nsvgParse(mutableSVG, units, dpi);
-		free(mutableSVG);
+		NSVGimage *image = nsvg::parseSVG(svg, units, dpi);
 
 		graphics = tove_make_shared<Graphics>(image);
 		nsvgDelete(image);

@@ -20,29 +20,7 @@ BEGIN_TOVE_NAMESPACE
 
 namespace nsvg {
 
-class Env {
-	const char* previousLocale;
-
-public:
-	inline Env() {
-		// setting the locale here is important! nsvg relies
-		// on sscanf to parse floats and units in the svg and
-		// this will break with non-en locale (same with strtof).
-
-		// sometimes, on non-English systems, "42.5%" would get
-		// parsed as "42.0", with a unit of ".5%", which messed
-		// everything up. setting the locale here fixes this.
-
-	    previousLocale = setlocale(LC_NUMERIC, nullptr);
-	    setlocale(LC_NUMERIC, "en_US.UTF-8");
-	}
-
-	inline ~Env() {
-		if (previousLocale) {
-		    setlocale(LC_NUMERIC, previousLocale);
-		}
-	}
-};
+NSVGimage *parseSVG(const char *svg, const char *units, float dpi);
 
 uint32_t makeColor(float r, float g, float b, float a);
 uint32_t applyOpacity(uint32_t color, float opacity);

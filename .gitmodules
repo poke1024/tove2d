@@ -10,3 +10,6 @@
 [submodule "src/thirdparty/robin-map"]
 	path = src/thirdparty/robin-map
 	url = https://github.com/Tessil/robin-map
+[submodule "src/thirdparty/tinyxml2"]
+	path = src/thirdparty/tinyxml2
+	url = https://github.com/leethomason/tinyxml2

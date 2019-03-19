@@ -11,6 +11,10 @@
 
 #include "nsvg.h"
 #include "utils.h"
+
+#include "../thirdparty/robin-map/include/tsl/robin_map.h"
+#include "../thirdparty/tinyxml2/tinyxml2.h"
+
 #if TOVE_DEBUG
 #include <iostream>
 #endif
@@ -29,6 +33,199 @@ namespace nsvg {
 
 thread_local NSVGparser *_parser = nullptr;
 thread_local NSVGrasterizer *rasterizer = nullptr;
+
+// scoping the locale should no longer be necessary.
+#define NSVG_SCOPE_LOCALE 0
+
+class NanoSVGEnvironment {
+	const char* previousLocale;
+
+public:
+	inline NanoSVGEnvironment() {
+		// setting the locale here is important! nsvg relies
+		// on sscanf to parse floats and units in the svg and
+		// this will break with non-en locale (same with strtof).
+
+		// sometimes, on non-English systems, "42.5%" would get
+		// parsed as "42.0", with a unit of ".5%", which messed
+		// everything up. setting the locale here fixes this.
+
+#if NSVG_SCOPE_LOCALE
+	    previousLocale = setlocale(LC_NUMERIC, nullptr);
+	    setlocale(LC_NUMERIC, "en_US.UTF-8");
+#endif
+	}
+
+	inline ~NanoSVGEnvironment() {
+#if NSVG_SCOPE_LOCALE
+		if (previousLocale) {
+		    setlocale(LC_NUMERIC, previousLocale);
+		}
+#endif
+	}
+};
+
+namespace bridge {
+
+typedef void (*StartElementCallback)(void* ud, const char* el, const char** attr);
+typedef void (*EndElementCallback)(void* ud, const char* el);
+
+struct hash_cstr {
+	// a simple, fast FNV-1a hash for C-style strings
+	inline size_t operator()(const char *s) const {
+		uint64_t h = 0xcbf29ce484222325;
+		int c;
+		while ((c = *s++) != '\0') {
+			h ^= c;
+			h *= 0x100000001b3;
+		}
+		return h;
+	}
+};
+
+struct equal_cstr {
+	inline bool operator()(const char *a, const char *b) const {
+		return strcmp(a, b) == 0;
+	}
+};
+
+class NanoSVGVisitor : public tinyxml2::XMLVisitor {
+	using XMLDocument = tinyxml2::XMLDocument;
+	using XMLElement = tinyxml2::XMLElement;
+	using XMLAttribute = tinyxml2::XMLAttribute;
+
+	StartElementCallback mStartElement;
+	EndElementCallback mEndElement;
+	void *mUserData;
+	const XMLDocument *mCurrentDocument;
+
+	typedef tsl::robin_map<
+		const char*,
+		const XMLElement*,
+		hash_cstr,
+		equal_cstr,
+		std::allocator<std::pair<const char*, const XMLElement*>>,
+		true /* store hash */> ElementsMap;
+	std::unique_ptr<ElementsMap> mElementsById;
+
+	void gatherIds(const XMLElement *parent) {
+		const XMLElement *child = parent->FirstChildElement();
+		while (child) {
+			gatherIds(child);
+
+			const char *id = child->Attribute("id");
+			if (id) {
+				mElementsById->insert(ElementsMap::value_type(id, child));
+			}
+			child = child->NextSiblingElement();
+		}
+	}
+
+
+	const XMLElement *lookupById(const char *id) {
+		if (!mElementsById.get()) {
+			assert(mCurrentDocument);
+			mElementsById.reset(new ElementsMap);
+			gatherIds(mCurrentDocument->RootElement());
+		}
+
+		const auto it = mElementsById->find(id);
+		if (it != mElementsById->end()) {
+			return it->second;
+		} else {
+			return nullptr;
+		}
+	}
+
+
+public:
+	NanoSVGVisitor(
+		StartElementCallback startElement,
+		EndElementCallback endElement,
+		void *userdata) :
+
+		mStartElement(startElement),
+		mEndElement(endElement),
+		mUserData(userdata) {
+
+	}
+
+    virtual bool VisitEnter(const XMLDocument &doc) {
+    	mCurrentDocument = doc.ToDocument();
+        return true;
+    }
+
+    virtual bool VisitExit(const XMLDocument &doc) {
+    	mCurrentDocument = nullptr;
+        return true;
+    }
+
+    virtual bool VisitEnter(const XMLElement &element, const XMLAttribute *firstAttribute) {
+    	if (strcmp(element.Name(), "use") == 0) {
+    		const char *href = element.Attribute("href");
+			if (!href) {
+				href = element.Attribute("xlink:href");
+			}
+			if (href) {
+				const char *s = href;
+				while (isspace(*s)) {
+					s++;
+				}
+				if (*s == '#') {
+					const XMLElement *referee = lookupById(s + 1);
+					if (referee) {
+						referee->Accept(this);
+					}
+				}
+			}
+    	} else {
+			const char *attr[NSVG_XML_MAX_ATTRIBS];
+			int numAttr = 0;
+
+			const XMLAttribute *attribute = firstAttribute;
+			while (attribute && numAttr < NSVG_XML_MAX_ATTRIBS - 3) {
+				attr[numAttr++] = attribute->Name();
+				attr[numAttr++] = attribute->Value();
+
+				attribute = attribute->Next();
+			}
+
+			attr[numAttr++] = 0;
+			attr[numAttr++] = 0;	
+
+	    	mStartElement(mUserData, element.Name(), attr);
+    	}
+
+        return true;
+    }
+
+    virtual bool VisitExit(const XMLElement& element) {
+    	mEndElement(mUserData, element.Name());
+        return true;
+    }
+};
+
+int parseSVG(
+	char* input,
+	void (*startelCb)(void* ud, const char* el, const char** attr),
+	void (*endelCb)(void* ud, const char* el),
+	void (*contentCb)(void* ud, const char* s),
+	void* ud) {
+
+	tinyxml2::XMLDocument doc;
+	doc.Parse(input);
+	NanoSVGVisitor visitor(startelCb, endelCb, ud);
+	return doc.Accept(&visitor) ? 1 : 0;
+}
+
+} // bridge
+
+NSVGimage *parseSVG(const char *svg, const char *units, float dpi) {
+	const NanoSVGEnvironment env;
+	// we know that our own bridge::parseSVG won't destroy the svg input
+	// text, so it's safe to const_cast here.
+	return nsvgParseEx(const_cast<char*>(svg), units, dpi, bridge::parseSVG);
+}
 
 NSVGrasterizer *getRasterizer(
 	const ToveRasterizeSettings *settings) {
@@ -128,7 +325,7 @@ void xformIdentity(float *m) {
 }
 
 NSVGimage *parsePath(const char *d) {
-	const Env env; // important
+	const NanoSVGEnvironment env;
 
 	NSVGparser *parser = getNSVGparser();
 

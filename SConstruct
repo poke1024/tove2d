@@ -32,6 +32,7 @@ sources = [
 	"src/cpp/shader/gen.cpp",
 	"src/thirdparty/clipper.cpp",
 	"src/thirdparty/polypartition/src/polypartition.cpp",
+	"src/thirdparty/tinyxml2/tinyxml2.cpp",
 	"src/cpp/warn.cpp"]
 
 if env["PLATFORM"] == 'win32':

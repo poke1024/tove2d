@@ -9,7 +9,7 @@ TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL'
 * offers a substantial subset of SVG
 * built for realtime animation
 * uses OpenGL ES 
-* about 600K in binary size
+* < 1 MB in binary size
 
 ## Capabilities
 Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games. Here's what you can expect from TÖVE's different renderers:
