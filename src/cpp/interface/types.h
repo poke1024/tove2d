@@ -69,6 +69,11 @@ typedef enum {
 	TOVE_HOLES_CCW
 } ToveHoles;
 
+typedef enum {
+	TOVE_HANDLE_FREE,
+	TOVE_HANDLE_ALIGNED
+} ToveHandle;
+
 enum {
 	CHANGED_FILL_STYLE = 1,
 	CHANGED_LINE_STYLE = 2,

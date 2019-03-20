@@ -448,28 +448,32 @@ int Subpath::mould(float globalt, float x, float y) {
 	return curve;
 }
 
-inline void polar(float x, float y, float ox, float oy,
-	float &phi, float &mag) {
+inline float polar(
+	float x, float y,
+	float ox, float oy,
+	float *phi = nullptr) {
+
 	const float dx = x - ox;
 	const float dy = y - oy;
-	phi = std::atan2(dy, dx);
-	mag = std::sqrt(dx * dx + dy * dy);
+	if (phi) {
+		*phi = std::atan2(dy, dx);
+	}
+	return std::sqrt(dx * dx + dy * dy);
 }
 
-static void mirrorControlPoint(float qx, float qy,
-	float px, float py, float p0x, float p0y, float *cp1) {
-	float oldphi, oldmag;
-	polar(qx, qy, p0x, p0y, oldphi, oldmag);
-	float newphi, newmag;
-	polar(px, py, p0x, p0y, newphi, newmag);
+static void alignHandle(
+	float px, float py,
+	float p0x, float p0y,
+	float *cp1) {
 
-	float cp1phi, cp1mag;
-	polar(cp1[0], cp1[1], p0x, p0y, cp1phi, cp1mag);
+	float newphi;
+	const float newmag = polar(px, py, p0x, p0y, &newphi);
 
-	cp1phi = cp1phi + (newphi - oldphi);
+	const float cp1mag = polar(cp1[0], cp1[1], p0x, p0y);
 
-	cp1[0] = p0x + std::cos(cp1phi) * cp1mag;
-	cp1[1] = p0y + std::sin(cp1phi) * cp1mag;
+	const float alignedPhi = newphi + M_PI;
+	cp1[0] = p0x + std::cos(alignedPhi) * cp1mag;
+	cp1[1] = p0y + std::sin(alignedPhi) * cp1mag;
 }
 
 void Subpath::makeFlat(int k, int dir) {
@@ -622,7 +626,7 @@ void Subpath::makeSmooth(int k, int dir, float a) {
 	changed(CHANGED_POINTS);
 }
 
-void Subpath::move(int k, float x, float y) {
+void Subpath::move(int k, float x, float y, ToveHandle handle) {
 	const bool closed = isClosed();
 	const int n = nsvg.npts - (closed ? 1 : 0);
 
@@ -686,19 +690,18 @@ void Subpath::move(int k, float x, float y) {
 		}
 	} else {
 		// moving a control point.
-		const float qx = pts[2 * k + 0];
-		const float qy = pts[2 * k + 1];
-
 		pts[2 * k + 0] = x;
 		pts[2 * k + 1] = y;
 
-		const int knot = (t == 1) ? k - 1 : k + 1;
-		const int opposite = (t == 1) ? k - 2 : k + 2;
+		if (handle == TOVE_HANDLE_ALIGNED) {
+			const int knot = (t == 1) ? k - 1 : k + 1;
+			const int opposite = (t == 1) ? k - 2 : k + 2;
 
-		if (closed || (opposite >= 0 && opposite < n)) {
-			float *p0 = &pts[2 * ((knot + n) % n)];
-			float *cp1 = &pts[2 * ((opposite + n) % n)];
-			mirrorControlPoint(qx, qy, x, y, p0[0], p0[1], cp1);
+			if (closed || (opposite >= 0 && opposite < n)) {
+				float *p0 = &pts[2 * ((knot + n) % n)];
+				float *cp1 = &pts[2 * ((opposite + n) % n)];
+				alignHandle(x, y, p0[0], p0[1], cp1);
+			}
 		}
 	}
 

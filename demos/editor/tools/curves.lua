@@ -142,7 +142,7 @@ function PointsWidget:draw(gtransform)
 	end)
 end
 
-function PointsWidget:createDragPointFunc()
+function PointsWidget:createDragPointFunc(handle)
 	local transform = self.object.transform
 	local graphics = self.object.graphics
 	local dragging = self.dragging
@@ -150,7 +150,7 @@ function PointsWidget:createDragPointFunc()
 	local modify = function(x, y)
 		local mx, my = transform:inverseTransformPoint(x, y)
 		local traj = graphics.paths[dragging.path].subpaths[dragging.traj]
-		traj:move(dragging.pt, mx, my)
+		traj:move(dragging.pt, mx, my, handle)
 	end
 
 	return function(x, y)
@@ -218,7 +218,8 @@ function PointsWidget:mousedown(gx, gy, gs, button)
 			return true
 		end
 	end) then
-		return self:createDragPointFunc()
+		local m = love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt")
+		return self:createDragPointFunc(m and "free" or "aligned")
 	end
 
 	self.selected = nil

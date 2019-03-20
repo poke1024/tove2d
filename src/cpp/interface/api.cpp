@@ -454,8 +454,8 @@ void SubpathMakeSmooth(ToveSubpathRef subpath, int k, int dir, float a) {
 	deref(subpath)->makeSmooth(k - 1, dir, a);
 }
 
-void SubpathMove(ToveSubpathRef subpath, int k, float x, float y) {
-	return deref(subpath)->move(k - 1, x, y);
+void SubpathMove(ToveSubpathRef subpath, int k, float x, float y, ToveHandle handle) {
+	return deref(subpath)->move(k - 1, x, y, handle);
 }
 
 void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,

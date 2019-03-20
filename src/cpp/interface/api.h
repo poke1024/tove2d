@@ -53,7 +53,7 @@ EXPORT int SubpathMould(ToveSubpathRef subpath, float t, float x, float y);
 EXPORT bool SubpathIsLineAt(ToveSubpathRef subpath, int k, int dir);
 EXPORT void SubpathMakeFlat(ToveSubpathRef subpath, int k, int dir);
 EXPORT void SubpathMakeSmooth(ToveSubpathRef subpath, int k, int dir, float a);
-EXPORT void SubpathMove(ToveSubpathRef subpath, int k, float x, float y);
+EXPORT void SubpathMove(ToveSubpathRef subpath, int k, float x, float y, ToveHandle handle);
 EXPORT void SubpathCommit(ToveSubpathRef subpath);
 EXPORT void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 	float a, float b, float c, float d, float e, float f);

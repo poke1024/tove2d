@@ -110,7 +110,7 @@ public:
     void removeCurve(int curve);
     void remove(int from, int n);
     int mould(float t, float x, float y);
-    void move(int k, float x, float y);
+    void move(int k, float x, float y, ToveHandle handle);
 
     void makeFlat(int k, int dir);
     void makeSmooth(int k, int dir, float a = 0.5);

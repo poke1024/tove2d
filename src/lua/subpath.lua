@@ -87,11 +87,19 @@ end
 Subpath.insertCurveAt = lib.SubpathInsertCurveAt
 Subpath.removeCurve = lib.SubpathRemoveCurve
 Subpath.mould = lib.SubpathMould
-Subpath.move = lib.SubpathMove
 Subpath.commit = lib.SubpathCommit
 Subpath.moveTo = lib.SubpathMoveTo
 Subpath.lineTo = lib.SubpathLineTo
 Subpath.curveTo = lib.SubpathCurveTo
+
+local handles = {
+	free = lib.TOVE_HANDLE_FREE,
+	aligned = lib.TOVE_HANDLE_ALIGNED
+}
+
+function Subpath:move(k, x, y, h)
+	lib.SubpathMove(self, k, x, y, h and handles[h] or lib.TOVE_HANDLE_FREE)
+end
 
 function Subpath:arc(x, y, r, a1, a2, ccw)
 	lib.SubpathArc(self, x, y, r, a1, a2, ccw or false)
