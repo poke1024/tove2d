@@ -357,19 +357,35 @@ void SubpathSetPoints(ToveSubpathRef subpath, const float *pts, int npts) {
 }
 
 float SubpathGetCurveValue(ToveSubpathRef subpath, int curve, int index) {
-	return deref(subpath)->getCurveValue(curve, index);
+	auto s = deref(subpath);
+	if (s) {
+		return s->getCurveValue(curve, index);
+	} else {
+		return 0.0f;
+	}
 }
 
 void SubpathSetCurveValue(ToveSubpathRef subpath, int curve, int index, float value) {
-	deref(subpath)->setCurveValue(curve, index, value);
+	auto s = deref(subpath);
+	if (s) {
+		s->setCurveValue(curve, index, value);
+	}
 }
 
 float SubpathGetPtValue(ToveSubpathRef subpath, int index, int dim) {
-	return deref(subpath)->getPointValue(index, dim);
+	auto s = deref(subpath);
+	if (s) {
+		return s->getPointValue(index, dim);
+	} else {
+		return 0.0f;
+	}
 }
 
 void SubpathSetPtValue(ToveSubpathRef subpath, int index, int dim, float value) {
-	deref(subpath)->setPointValue(index, dim, value);
+	auto s = deref(subpath);
+	if (s) {
+		s->setPointValue(index, dim, value);
+	}
 }
 
 void SubpathInvert(ToveSubpathRef subpath) {
