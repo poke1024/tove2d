@@ -42,9 +42,6 @@ GraphicsRef Graphics::createFromSVG(
 	return graphics;
 }
 
-// note: only this case supports clip paths.
-//computeClipPaths(meshifier); FIXME
-
 void Graphics::rasterize(
 	uint8_t *pixels,
 	int width, int height, int stride,
@@ -125,6 +122,9 @@ void Clip::compute(const AbstractTesselator &tess) {
 void ClipSet::link() {
 	for (int i = 1; i < clips.size(); i++) {
 		clips[i - 1]->setNext(clips[i]);
+	}
+	if (clips.size() > 0) {
+		clips[clips.size() - 1]->setNext(nullptr);
 	}
 }
 

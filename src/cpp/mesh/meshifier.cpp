@@ -112,6 +112,8 @@ void AdaptiveTesselator::beginTesselate(
 	AbstractTesselator::beginTesselate(graphics, scale);
 
 	flattener->configure(scale);
+
+	graphics->computeClipPaths(*this);
 }
 
 bool AdaptiveTesselator::hasFixedSize() const {
@@ -208,7 +210,7 @@ ClipperLib::Paths AdaptiveTesselator::toClipPath(
 			t.fill, path->getClipperFillType());
 
 		if (paths.size() == 1) {
-			return std::move(t.fill);
+			return t.fill;
 		}
 
 		flattened.insert(
