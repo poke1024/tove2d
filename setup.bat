@@ -13,7 +13,7 @@ if [%1]==[/C] (
 	scons.py
 )
 
-set demos=blob editor fillrule hearts renderers tesselation zoom debug-gpux
+set demos=alpha blob clippath editor fillrule hearts renderers tesselation zoom
 
 cd /D "%~dp0"
 for %%d in (%demos%) do  (
