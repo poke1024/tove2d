@@ -98,6 +98,7 @@ class NanoSVGVisitor : public tinyxml2::XMLVisitor {
 	EndElementCallback mEndElement;
 	void *mUserData;
 	const XMLDocument *mCurrentDocument;
+	bool mSkipDefs;
 
 	typedef tsl::robin_map<
 		const char*,
@@ -121,7 +122,6 @@ class NanoSVGVisitor : public tinyxml2::XMLVisitor {
 		}
 	}
 
-
 	const XMLElement *lookupById(const char *id) {
 		if (!mElementsById.get()) {
 			assert(mCurrentDocument);
@@ -137,7 +137,6 @@ class NanoSVGVisitor : public tinyxml2::XMLVisitor {
 		}
 	}
 
-
 public:
 	NanoSVGVisitor(
 		StartElementCallback startElement,
@@ -146,12 +145,23 @@ public:
 
 		mStartElement(startElement),
 		mEndElement(endElement),
-		mUserData(userdata) {
+		mUserData(userdata),
+		mSkipDefs(false) {
 
 	}
 
     virtual bool VisitEnter(const XMLDocument &doc) {
     	mCurrentDocument = doc.ToDocument();
+
+		// always handle <defs> tags first
+		mSkipDefs = false;
+		const XMLElement *defs = doc.RootElement()->FirstChildElement("defs");
+		while (defs) {
+			defs->Accept(this);
+			defs = defs->NextSiblingElement("defs");
+		}
+		mSkipDefs = true;
+
         return true;
     }
 
@@ -161,6 +171,12 @@ public:
     }
 
     virtual bool VisitEnter(const XMLElement &element, const XMLAttribute *firstAttribute) {
+    	if (mSkipDefs && strcmp(element.Name(), "defs") == 0 &&
+			element.Parent() == mCurrentDocument->RootElement()) {
+			
+			// already handled in l VisitEnter(const XMLDocument &doc)
+			return true;
+		}
     	if (strcmp(element.Name(), "use") == 0) {
     		const char *href = element.Attribute("href");
 			if (!href) {
