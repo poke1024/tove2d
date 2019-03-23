@@ -38,15 +38,15 @@ sources = [
 if env["PLATFORM"] == 'win32':
 	env["CCFLAGS"] = ' /EHsc '
 	if not GetOption('tovedebug'):
-		env["CCFLAGS"] += ' /O1 /Oy /Oi /fp:fast '
+		env["CCFLAGS"] += ' /O2 /fp:fast '
 		env["LINKFLAGS"] = ' /OPT:REF '
 else:
-	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations '
+	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations -march=haswell '
 
 	if GetOption('tovedebug'):
 		CCFLAGS += '-g '
 	else:
-		CCFLAGS += '-O2 '
+		CCFLAGS += '-O3 '
 
 	if env["PLATFORM"] == 'posix':
 		CCFLAGS += ' -mf16c '
