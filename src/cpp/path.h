@@ -24,7 +24,7 @@ private:
 	bool newSubpath;
 	std::vector<SubpathRef> subpaths;
 #ifdef NSVG_CLIP_PATHS
-	std::vector<NSVGclipPathIndex> clipIndices;
+	std::vector<TOVEclipPathIndex> clipIndices;
 #endif
 
 	PaintRef fillColor;
@@ -200,7 +200,7 @@ public:
 	}
 
 #ifdef NSVG_CLIP_PATHS
-	const std::vector<NSVGclipPathIndex> &getClipIndices() {
+	const std::vector<TOVEclipPathIndex> &getClipIndices() {
 		return clipIndices;
 	}
 #endif

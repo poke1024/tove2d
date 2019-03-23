@@ -97,6 +97,8 @@ struct CachedPaint {
 	void init(const NSVGpaint &paint, float opacity);
 };
 
+const ToveRasterizeSettings *getDefaultRasterizeSettings();
+
 bool shapeStrokeBounds(float *bounds, const NSVGshape *shape,
 	float scale, const ToveRasterizeSettings *settings);
 

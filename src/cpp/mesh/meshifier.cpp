@@ -74,11 +74,11 @@ static void clip(
 	ClipperPaths &subject) {
 
 #ifdef NSVG_CLIP_PATHS
-	const std::vector<NSVGclipPathIndex> &clipIndices =
+	const std::vector<TOVEclipPathIndex> &clipIndices =
 		path->getClipIndices();
 
 	if (!clipIndices.empty()) {
-		for (NSVGclipPathIndex i : clipIndices) {
+		for (TOVEclipPathIndex i : clipIndices) {
 			ClipperLib::Clipper c;
 			c.AddPaths(
 				subject,

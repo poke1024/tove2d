@@ -89,8 +89,20 @@ local function _noCache()
 end
 
 create.texture = function(self)
+	local quality = self._display.quality
+	local settings = ffi.new("ToveRasterizeSettings")
+	lib.DefaultRasterizeSettings(settings)
+
+	if quality[1] == "fast" then
+		settings.quality = 0
+	elseif (quality[1] or "best") == "best" then
+		settings.quality = 1
+	else
+		error("illegal texture quality " .. tostring(quality[1]))
+	end
+
 	local imageData, x0, y0, x1, y1, resolution =
-		self:rasterize("default")
+		self:rasterize("default", settings)
 
 	if imageData == nil then
 		return {

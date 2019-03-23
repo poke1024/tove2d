@@ -99,7 +99,7 @@ static void copyPaths(
 }
 
 #ifdef NSVG_CLIP_PATHS
-Clip::Clip(NSVGclipPath *clipPath) {
+Clip::Clip(TOVEclipPath *clipPath) {
     std::memset(&nsvg, 0, sizeof(nsvg));
     copyFromNSVG(nullptr, &nsvg.shapes, paths, clipPath->shapes);
     nsvg.index = clipPath->index;
@@ -247,7 +247,7 @@ Graphics::Graphics(const NSVGimage *image) :
 
 #ifdef NSVG_CLIP_PATHS
     std::vector<ClipRef> clips;
-    NSVGclipPath *clipPath = image->clipPaths;
+    TOVEclipPath *clipPath = image->clipPaths;
     while (clipPath) {
         clips.push_back(tove_make_shared<Clip>(clipPath));
         clipPath = clipPath->next;

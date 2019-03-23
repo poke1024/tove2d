@@ -152,6 +152,7 @@ typedef struct {
 typedef struct {
 	float tessTolerance;
 	float distTolerance;
+	unsigned int quality;
 } ToveRasterizeSettings;
 
 typedef struct {

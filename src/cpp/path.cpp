@@ -135,7 +135,7 @@ void Path::set(const NSVGshape *shape) {
 		std::memcpy(
 			nsvg.clip.index,
 			shape->clip.index,
-			shape->clip.count * sizeof(NSVGclipPathIndex));
+			shape->clip.count * sizeof(TOVEclipPathIndex));
 	}
 #endif
 

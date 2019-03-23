@@ -33,6 +33,7 @@ namespace nsvg {
 
 thread_local NSVGparser *_parser = nullptr;
 thread_local NSVGrasterizer *rasterizer = nullptr;
+thread_local ToveRasterizeSettings defaultSettings = {-1.0f, -1.0f, 0};
 
 // scoping the locale should no longer be necessary.
 #define NSVG_SCOPE_LOCALE 0
@@ -243,30 +244,45 @@ NSVGimage *parseSVG(const char *svg, const char *units, float dpi) {
 	return nsvgParseEx(const_cast<char*>(svg), units, dpi, bridge::parseSVG);
 }
 
-NSVGrasterizer *getRasterizer(
-	const ToveRasterizeSettings *settings) {
-
-	static float defaultTessTol;
-	static float defaultDistTol;
-
+static NSVGrasterizer *ensureRasterizer() {
 	if (!rasterizer) {
 		rasterizer = nsvgCreateRasterizer();
+	}
+	return rasterizer;
+}
+
+const ToveRasterizeSettings *getDefaultRasterizeSettings() {
+
+	if (defaultSettings.tessTolerance < 0.0f) {
+		rasterizer = ensureRasterizer();
 		if (!rasterizer) {
 			return nullptr;
 		}
-		// skipping nsvgDeleteRasterizer(rasterizer)
 
-		defaultTessTol = rasterizer->tessTol;
-		defaultDistTol = rasterizer->distTol;
+		defaultSettings.tessTolerance = rasterizer->tessTol;
+		defaultSettings.distTolerance = rasterizer->distTol;
+		defaultSettings.quality = 1; //1;
 	}
 
-	if (settings) {
-		rasterizer->tessTol = settings->tessTolerance;
-		rasterizer->distTol = settings->distTolerance;
-	} else {
-		rasterizer->tessTol = defaultTessTol;
-		rasterizer->distTol = defaultDistTol;
+	return &defaultSettings;
+}
+
+static NSVGrasterizer *getRasterizer(
+	const ToveRasterizeSettings *settings) {
+
+	rasterizer = ensureRasterizer();
+	if (!rasterizer) {
+		return nullptr;
 	}
+	// skipping nsvgDeleteRasterizer(rasterizer)
+
+	if (!settings) {
+		settings = getDefaultRasterizeSettings();
+	}
+
+	rasterizer->tessTol = settings->tessTolerance;
+	rasterizer->distTol = settings->distTolerance;
+	rasterizer->quality = settings->quality;
 
 	rasterizer->nedges = 0;
 	rasterizer->npoints = 0;
@@ -369,7 +385,7 @@ float *pathArcTo(float *cpx, float *cpy, float *args, int &npts) {
 
 void CachedPaint::init(const NSVGpaint &paint, float opacity) {
 	NSVGcachedPaint cache;
-	nsvg__initPaint(&cache, const_cast<NSVGpaint*>(&paint), opacity);
+	nsvg__initPaint(&cache, const_cast<NSVGpaint*>(&paint), opacity, 0, nullptr);
 
 	type = cache.type;
 	spread = cache.spread;

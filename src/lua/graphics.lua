@@ -336,6 +336,8 @@ end
 
 function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
+		settings = height -- second arg
+
 		local resolution = self._resolution * tove._highdpi
 		local x0, y0, x1, y1 = self:computeAABB("high")
 
@@ -353,7 +355,7 @@ function Graphics:rasterize(width, height, tx, ty, scale, settings)
 			resolution * (y1 - y0),
 			-x0 * resolution,
 			-y0 * resolution,
-			resolution), x0, y0, x1, y1, resolution
+			resolution, settings), x0, y0, x1, y1, resolution
 	end
 
 	width = math.ceil(width)

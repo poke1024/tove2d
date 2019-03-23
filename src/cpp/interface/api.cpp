@@ -62,6 +62,14 @@ void SetReportLevel(ToveReportLevel l) {
 }
 
 
+void DefaultRasterizeSettings(ToveRasterizeSettings *settings) {
+	const ToveRasterizeSettings *def = nsvg::getDefaultRasterizeSettings();
+	if (def) {
+		*settings = *def;
+	}
+}
+
+
 TovePaintType PaintGetType(TovePaintRef paint) {
 	return deref(paint)->getType();
 }

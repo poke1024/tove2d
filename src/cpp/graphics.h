@@ -24,7 +24,7 @@ typedef SharedPtr<Clip> ClipRef;
 
 class Clip : public Referencable {
 public:
-	Clip(NSVGclipPath *path);
+	Clip(TOVEclipPath *path);
 	Clip(const ClipRef &source, const nsvg::Transform &transform);
 
 	inline void setNext(ClipRef clip) {
@@ -33,7 +33,7 @@ public:
 
 	void compute(const AbstractTesselator &tess);
 
-	NSVGclipPath nsvg;
+	TOVEclipPath nsvg;
 	std::vector<PathRef> paths;
 	ClipperLib::Paths computed;
 };
@@ -49,7 +49,7 @@ public:
 	}
 	ClipSet(const ClipSet &source, const nsvg::Transform &t);
 
-	NSVGclipPath *getHead() const {
+	TOVEclipPath *getHead() const {
 		return clips.size() > 0 ? &clips[0]->nsvg : nullptr;
 	}
 
