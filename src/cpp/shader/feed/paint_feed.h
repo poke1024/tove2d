@@ -75,19 +75,24 @@ protected:
 					if (gradient.matrix) {
 						float *m = gradient.matrix;
 
-						m[0] = 1;
+						// use a mat3(0) matrix here to map all coords
+						// to (0, 0). this allows us to only init the
+						// first row in the texture below - otherwise
+						// we'd have to fill full colorTextureHeight
+
+						m[0] = 0;
 						m[1] = 0;
 						m[2] = 0;
 
 						m[3] = 0;
-						m[4] = 1;
+						m[4] = 0;
 						m[5] = 0;
 
-						const int rows = ShaderWriter::getMatrixRows();
+						const int rows = gradient.matrixRows;
 						if (rows >= 3) { // i.e. mat3x3
 							m[6] = 0;
 							m[7] = 0;
-							m[8] = 1;
+							m[8] = 0;
 
 							if (rows == 4) { // i.e. mat3x4
 								m[9] = 0;
@@ -98,18 +103,17 @@ protected:
 					}
 
 					if (gradient.arguments) {
-						gradient.arguments->x = 0;
-						gradient.arguments->y = 0;
-						gradient.arguments->z = 0;
-						gradient.arguments->w = 0;
+						*gradient.arguments = 0.0f;
 					}
 
-					*(uint32_t*)gradient.colorsTexture = nsvg::makeColor(
+					const uint32_t color = nsvg::applyOpacity(nsvg::makeColor(
 						paintData.rgba.r,
 						paintData.rgba.g,
 						paintData.rgba.b,
-						paintData.rgba.a
-					);
+						paintData.rgba.a), opacity);
+
+					uint8_t *texture = gradient.colorsTexture;
+					*(uint32_t*)texture = color;
 				}
 			}
 
@@ -122,7 +126,9 @@ protected:
 
 		NSVGgradient *g = paint->getNSVGgradient();
 		assert(g);
-		if (SPECIAL_CASE_2 && gradient.numColors <= 2) {
+		if (SPECIAL_CASE_2 && gradient.numColors <= 2 &&
+			gradient.colorTextureHeight == gradient.numColors) {
+			
 			assert(g->nstops == gradient.numColors);
 			for (int i = 0; i < gradient.numColors; i++) {
 				*(uint32_t*)texture = nsvg::applyOpacity(
@@ -135,7 +141,8 @@ protected:
 				NSVG_PAINT_LINEAR_GRADIENT : NSVG_PAINT_RADIAL_GRADIENT;
 			nsvgPaint.gradient = g;
 
-			assert(gradient.numColors == 256);
+			assert(gradient.numColors == 256 &&
+				gradient.colorTextureHeight == 256);
 
 			nsvg::CachedPaint cached(texture, textureRowBytes, 256);
 			cached.init(nsvgPaint, opacity);
@@ -145,13 +152,7 @@ protected:
 		paint->getGradientMatrix(gradient.matrix, scale);
 
 		if (gradient.arguments) {
-			float s = 0.5f / gradient.colorTextureHeight;
-
-			gradient.arguments->x =
-				(style == PAINT_RADIAL_GRADIENT) ? 1.0f : 0.0f;
-			gradient.arguments->y = 1.0f;
-			gradient.arguments->z = s;
-			gradient.arguments->w = 1.0f - 2.0f * s;
+			*gradient.arguments = (style == PAINT_RADIAL_GRADIENT) ? 1.0f : 0.0f;
 		}
 
 		return true;
@@ -223,6 +224,7 @@ public:
 
 	void bind(const ToveGradientData &data, int i) {
 		const int size = 3 * ShaderWriter::getMatrixRows();
+
 		paintData.gradient.matrix = data.matrix + i * size;
 		paintData.gradient.arguments = &data.arguments[i];
 		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;

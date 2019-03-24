@@ -60,7 +60,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 		alloc.numPaints, alloc.numColors, "rgba8")
 	local colorsTexture = lg.newImage(imageData)
 	local argumentsData = love.data.newByteData(
-		alloc.numPaints * ffi.sizeof("ToveVec4"))
+		alloc.numPaints * ffi.sizeof("float"))
 	local gradientData = ffi.new("ToveGradientData")
 	gradientData.matrix = matrixData:getPointer()
 	gradientData.matrixRows = env.matrows
@@ -79,6 +79,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 	paintShader:send("matrix", matrixData)
 	paintShader:send("arguments", argumentsData)
 	paintShader:send("colors", colorsTexture)
+	paintShader:send("cstep", 0.5 / gradientData.colorTextureHeight)
 
 	lib.GraphicsClearChanges(graphics._ref)
 

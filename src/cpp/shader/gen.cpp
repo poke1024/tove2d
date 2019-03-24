@@ -196,8 +196,8 @@ const char *GetPaintShaderCode(int numPaints) {
 
 	w << R"GLSL(
 varying vec2 gradient_pos;
-varying vec3 gradient_scale;
-varying vec2 texture_pos;
+flat varying vec3 gradient_scale;
+flat varying vec2 texture_pos;
 )GLSL";
 
 	w.beginVertexShader();
@@ -210,13 +210,14 @@ varying vec2 texture_pos;
 
 	w << R"GLSL(
 uniform MATRIX matrix[NUM_PAINTS];
-uniform vec4 arguments[NUM_PAINTS];
+uniform float arguments[NUM_PAINTS];
+uniform float cstep;
 
 vec4 do_vertex(vec4 vertex_pos) {
 	int i = int(VertexPaint);
-	vec4 vertex_arg = arguments[i];
+
 	gradient_pos = (matrix[i] * vec3(vertex_pos.xy, 1)).xy;
-	gradient_scale = vertex_arg.zwx;
+	gradient_scale = vec3(cstep, 1.0f - 2.0f * cstep, arguments[i]);
 
 	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
 	y = gradient_scale.x + gradient_scale.y * y;
@@ -234,14 +235,15 @@ vec4 do_vertex(vec4 vertex_pos) {
 uniform sampler2D colors;
 
 vec4 do_color(vec2 _1) {
+	// encourage texture prefetch via texture_pos; for solid colors and
+	// many linear gradients, texture_pos == texture_pos_exact.
+	vec4 c = TEXEL(colors, texture_pos);
+
+	// now for the adjust coordinate.
 	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
 	y = gradient_scale.x + gradient_scale.y * y;
 
 	vec2 texture_pos_exact = vec2(texture_pos.x, y);
-	// ensure texture prefetch via texture_pos; for solid colors and
-	// many linear gradients, texture_pos == texture_pos_exact.
-	vec4 c = TEXEL(colors, texture_pos);
-
 	return TEXEL(colors, texture_pos_exact);
 }
 )GLSL";

@@ -199,10 +199,10 @@ typedef struct {
 } TovePaintColorAllocation;
 
 typedef struct {
-	int16_t numColors; // to be removed
+	int16_t numColors;
 	int8_t matrixRows;
 	float *matrix;
-	ToveVec4 *arguments;
+	float *arguments;
 	uint8_t *colorsTexture;
 	int16_t colorsTextureRowBytes;
 	int16_t colorTextureHeight;

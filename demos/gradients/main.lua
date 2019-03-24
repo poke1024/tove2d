@@ -13,15 +13,17 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow(0.5)
-	for i, mode in ipairs {"texture", "texture"} do
+	for i, mode in ipairs {"texture", "texture", "mesh"} do
 		local graphics = newGraphics()
 		local quality = {}
 		if i == 1 then
 			quality = {"fast"}
-			desc = "fast"
-		else
+			desc = "tex fast"
+		elseif i == 2 then
 			quality = {"best"}
-			desc = "best (default)"
+			desc = "tex best (default)"
+		else
+			desc ="mesh"
 		end
 		graphics:setDisplay(mode, unpack(quality))
 		local r = flow:add(desc, graphics)
@@ -33,7 +35,7 @@ end
 load(love.filesystem.read("gradients.svg"))
 
 function love.draw()
-	tovedemo.draw("Texture Gradients.")
+	tovedemo.draw("Gradients.")
 	flow:draw()
 end
 
