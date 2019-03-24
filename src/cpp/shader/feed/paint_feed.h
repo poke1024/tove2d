@@ -68,51 +68,55 @@ protected:
 
 		if (style < PAINT_LINEAR_GRADIENT) {
 			if (style == PAINT_SOLID) {
-				//ToveRGBA old = paintData.rgba;
+
+				// always fill paintData.rgba, even if we don't
+				// have a texture. this is used in gpux, for
+				// handing over solid colors (see ColorSend:endInit).
+				// (regression test: line in gpux blob).
 				paint->getRGBA(paintData.rgba, opacity);
 
-				if (gradient.arguments) {
-					if (gradient.matrix) {
-						float *m = gradient.matrix;
+				float *m = gradient.matrix;
+				if (m) {
+					// use a mat3(0) matrix here to map all coords
+					// to (0, 0). this allows us to only init the
+					// first row in the texture below - otherwise
+					// we'd have to fill full colorsTextureHeight
 
-						// use a mat3(0) matrix here to map all coords
-						// to (0, 0). this allows us to only init the
-						// first row in the texture below - otherwise
-						// we'd have to fill full colorTextureHeight
+					m[0] = 0;
+					m[1] = 0;
+					m[2] = 0;
 
-						m[0] = 0;
-						m[1] = 0;
-						m[2] = 0;
+					m[3] = 0;
+					m[4] = 0;
+					m[5] = 0;
 
-						m[3] = 0;
-						m[4] = 0;
-						m[5] = 0;
+					const int rows = gradient.matrixRows;
+					if (rows >= 3) { // i.e. mat3x3
+						m[6] = 0;
+						m[7] = 0;
+						m[8] = 0;
 
-						const int rows = gradient.matrixRows;
-						if (rows >= 3) { // i.e. mat3x3
-							m[6] = 0;
-							m[7] = 0;
-							m[8] = 0;
-
-							if (rows == 4) { // i.e. mat3x4
-								m[9] = 0;
-								m[10] = 0;
-								m[11] = 0;
-							}
+						if (rows == 4) { // i.e. mat3x4
+							m[9] = 0;
+							m[10] = 0;
+							m[11] = 0;
 						}
 					}
+				}
 
-					if (gradient.arguments) {
-						*gradient.arguments = 0.0f;
-					}
+				float *arguments = gradient.arguments;
+				if (arguments) {
+					*arguments = 0.0f;
+				}
 
-					const uint32_t color = nsvg::applyOpacity(nsvg::makeColor(
+				uint8_t *texture = gradient.colorsTexture;
+				if (texture) {
+					const uint32_t color = nsvg::makeColor(
 						paintData.rgba.r,
 						paintData.rgba.g,
 						paintData.rgba.b,
-						paintData.rgba.a), opacity);
+						paintData.rgba.a);
 
-					uint8_t *texture = gradient.colorsTexture;
 					*(uint32_t*)texture = color;
 				}
 			}
@@ -120,14 +124,15 @@ protected:
 			return true;
 		}
 
-		assert(gradient.colorsTexture);
+		assert(gradient.colorsTexture != nullptr);
 		uint8_t *texture = gradient.colorsTexture;
 		const int textureRowBytes = gradient.colorsTextureRowBytes;
 
 		NSVGgradient *g = paint->getNSVGgradient();
 		assert(g);
+
 		if (SPECIAL_CASE_2 && gradient.numColors <= 2 &&
-			gradient.colorTextureHeight == gradient.numColors) {
+			gradient.colorsTextureHeight == gradient.numColors) {
 			
 			assert(g->nstops == gradient.numColors);
 			for (int i = 0; i < gradient.numColors; i++) {
@@ -142,7 +147,7 @@ protected:
 			nsvgPaint.gradient = g;
 
 			assert(gradient.numColors == 256 &&
-				gradient.colorTextureHeight == 256);
+				gradient.colorsTextureHeight == 256);
 
 			nsvg::CachedPaint cached(texture, textureRowBytes, 256);
 			cached.init(nsvgPaint, opacity);
@@ -223,13 +228,13 @@ public:
 	}
 
 	void bind(const ToveGradientData &data, int i) {
-		const int size = 3 * ShaderWriter::getMatrixRows();
+		const int size = 3 * data.matrixRows;
 
 		paintData.gradient.matrix = data.matrix + i * size;
 		paintData.gradient.arguments = &data.arguments[i];
 		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;
 		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;
-		paintData.gradient.colorTextureHeight = data.colorTextureHeight;
+		paintData.gradient.colorsTextureHeight = data.colorsTextureHeight;
 
 		update(getColor(), path->getOpacity());
 	}

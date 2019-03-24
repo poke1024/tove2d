@@ -67,7 +67,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 	gradientData.arguments = argumentsData:getPointer()
 	gradientData.colorsTexture = imageData:getPointer()
 	gradientData.colorsTextureRowBytes = imageData:getSize() / alloc.numColors
-	gradientData.colorTextureHeight = imageData:getHeight()
+	gradientData.colorsTextureHeight = imageData:getHeight()
 	lib.FeedBind(link, gradientData)
 	local paintShader = newPaintShader(alloc.numPaints)
 	colorsTexture:setFilter("nearest", "linear")
@@ -79,7 +79,7 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 	paintShader:send("matrix", matrixData)
 	paintShader:send("arguments", argumentsData)
 	paintShader:send("colors", colorsTexture)
-	paintShader:send("cstep", 0.5 / gradientData.colorTextureHeight)
+	paintShader:send("cstep", 0.5 / gradientData.colorsTextureHeight)
 
 	lib.GraphicsClearChanges(graphics._ref)
 

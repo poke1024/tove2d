@@ -205,7 +205,7 @@ typedef struct {
 	float *arguments;
 	uint8_t *colorsTexture;
 	int16_t colorsTextureRowBytes;
-	int16_t colorTextureHeight;
+	int16_t colorsTextureHeight;
 } ToveGradientData;
 
 typedef struct {
