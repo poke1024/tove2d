@@ -92,11 +92,31 @@ create.texture = function(self)
 	local quality = self._display.quality
 	local settings = ffi.new("ToveRasterizeSettings")
 	lib.DefaultRasterizeSettings(settings)
+	local palette  -- keep until rasterized
 
 	if quality[1] == "fast" then
-		settings.quality = 0
+		settings.quality.flags = 0
 	elseif (quality[1] or "best") == "best" then
-		settings.quality = 1
+		settings.quality.flags = 1
+	elseif quality[1] == "retro" then
+		settings.quality.flags = 1
+		local size
+		if quality[2] == nil then
+			size = 16
+			palette = lib.DefaultRetroPalette()
+		else
+			size = #quality[2]
+			palette = ffi.new("uint8_t[?]", size * 3)
+			local i = 0
+			for _, c in ipairs(quality[2]) do
+				palette[i] = c[1] * 255
+				palette[i + 1] = c[2] * 255
+				palette[i + 2] = c[3] * 255
+				i = i + 3
+			end
+		end 
+		settings.quality.palette.size = size
+		settings.quality.palette.colors = palette
 	else
 		error("illegal texture quality " .. tostring(quality[1]))
 	end
