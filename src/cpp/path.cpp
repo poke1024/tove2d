@@ -653,6 +653,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	const float s = 1.0f - t;
 
 	setLineWidth(a->getLineWidth() * s + b->getLineWidth() * t);
+	setLineJoin(t < 0.5f ? a->getLineJoin() : b->getLineJoin());
 	setMiterLimit(a->getMiterLimit() * s + b->getMiterLimit() * t);
 	animateLineDash(a, b, t);
 
