@@ -27,6 +27,18 @@
 
 BEGIN_TOVE_NAMESPACE
 
+PaintIndices::PaintIndices(Graphics *graphics) {
+	const int n = graphics->getNumPaths();
+	paints.reserve(n);
+
+	PaintIndex it;
+	for (int i = 0; i < n; i++) {
+		paints.push_back(graphics->getPath(i)->createPaintIndices(it));
+	}
+
+	size = it;
+}
+
 GraphicsRef Graphics::createFromSVG(
 	const char *svg, const char *units, float dpi) {
 
@@ -59,13 +71,11 @@ static void copyFromNSVG(
     const NSVGshape *shapes) {
 
     const NSVGshape *shape = shapes;
-    int index = 0;
 	while (shape) {
 		PathRef path = tove_make_shared<Path>(shape);
 		if (observer) {
 			path->addObserver(observer);
 		}
-        path->setIndex(index++);
 		if (paths.empty()) {
 			*anchor = &path->nsvg;
 		} else {
@@ -82,13 +92,12 @@ static void copyPaths(
 	std::vector<PathRef> &paths,
 	const std::vector<PathRef> &sourcePaths) {
 
-	int index = 0;
-	while (index < sourcePaths.size()) {
-		PathRef path = tove_make_shared<Path>(sourcePaths[index].get());
+	const int n = sourcePaths.size();
+	for (int i = 0; i < n; i++) {
+		PathRef path = tove_make_shared<Path>(sourcePaths[i].get());
 		if (observer) {
 			path->addObserver(observer);
 		}
-		path->setIndex(index++);
 		if (paths.empty()) {
 			*anchor = &path->nsvg;
 		} else {
@@ -157,7 +166,6 @@ void Graphics::_appendPath(const PathRef &path) {
 		current()->setNext(path);
 	}
 
-    path->setIndex(paths.size());
 	path->clearNext();
 	paths.push_back(path);
 
@@ -330,19 +338,15 @@ void Graphics::setLineJoin(ToveLineJoin join) {
 }
 
 bool Graphics::areColorsSolid() {
-	return ensurePaintIndices().gradient == 0;
+	return getPaintIndices()->getNumGradients() == 0;
 }
 
-const PaintIndex &Graphics::ensurePaintIndices() {
-	if (changes & CHANGED_PAINT_INDICES) {
-		PaintIndex i;
-		for (const auto &path : paths) {
-			i = path->assignPaintIndices(i);
-		}
-		paintSize = i;
+PaintIndicesRef Graphics::getPaintIndices() {
+	if (paintIndices.get() == nullptr || (changes & CHANGED_PAINT_INDICES)) {
+		paintIndices = tove_make_shared<PaintIndices>(this);
 		changes &= ~CHANGED_PAINT_INDICES;
 	}
-	return paintSize;
+	return paintIndices;
 }
 
 void Graphics::fill() {
@@ -481,7 +485,7 @@ void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 		}
 	}
 	for (int i = 0; i < n; i++) {
-		paths[i]->animate(a->paths[i], b->paths[i], t);
+		paths[i]->animate(a->paths[i], b->paths[i], t, i);
 	}
 }
 

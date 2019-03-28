@@ -64,9 +64,15 @@ public:
 	void clearTriangles();
 
 	virtual void setLineColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 	virtual void setFillColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 
 	inline int getVertexCount() const {
 		return mVertexCount;
@@ -78,7 +84,7 @@ public:
 		std::memcpy(buffer, mVertices, size);
 	}
 
-	Submesh *submesh(const PathRef &path, int line);
+	Submesh *submesh(int pathIndex, int line);
 };
 
 class Submesh {
@@ -155,23 +161,37 @@ public:
 	ColorMesh();
 
 	virtual void setLineColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 	virtual void setFillColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 };
 
 class PaintMesh : public AbstractMesh {
 protected:
 	void setPaintIndex(
-		const PaintIndex &paintIndex, int vertexIndex, int vertexCount);
+		const PaintIndex &paintIndex,
+		const int vertexIndex,
+		const int vertexCount);
 
 public:
 	PaintMesh();
 
 	virtual void setLineColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 	virtual void setFillColor(
-		const PathRef &path, int vertexIndex, int vertexCount);
+		const PathRef &path,
+		const PathPaintInd &paint,
+		const int vertexIndex,
+		const int vertexCount);
 };
 
 END_TOVE_NAMESPACE

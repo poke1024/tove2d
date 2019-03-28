@@ -57,6 +57,12 @@ public:
 	}
 };
 
+struct PathPaintInd {
+	PaintIndex line;
+	PaintIndex fill;
+};
+
+
 class AbstractPaint : public Observable {
 protected:
 	void changed();

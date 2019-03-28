@@ -37,6 +37,8 @@ public:
 	virtual ToveMeshUpdateFlags pathToMesh(
 		ToveMeshUpdateFlags update,
 		const PathRef &path,
+		const int pathIndex,
+		const PathPaintInd &paint,
 		const MeshRef &fill,
 		const MeshRef &line,
 		int &fillIndex,
@@ -77,6 +79,8 @@ public:
 	virtual ToveMeshUpdateFlags pathToMesh(
 		ToveMeshUpdateFlags update,
 		const PathRef &path,
+		const int pathIndex,
+		const PathPaintInd &paint,
 		const MeshRef &fill,
 		const MeshRef &line,
 		int &fillIndex,
@@ -101,6 +105,8 @@ public:
 	virtual ToveMeshUpdateFlags pathToMesh(
 		ToveMeshUpdateFlags update,
 		const PathRef &path,
+		const int pathIndex,
+		const PathPaintInd &paint,
 		const MeshRef &fill,
 		const MeshRef &line,
 		int &fillIndex,

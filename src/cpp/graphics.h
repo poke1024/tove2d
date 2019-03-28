@@ -65,6 +65,28 @@ public:
 typedef SharedPtr<ClipSet> ClipSetRef;
 #endif
 
+class PaintIndices {
+	std::vector<PathPaintInd> paints;
+	PaintIndex size;
+
+public:
+	PaintIndices(Graphics *graphics);
+
+	inline const PathPaintInd &get(int i) const {
+		return paints[i];
+	}
+
+	inline int getNumPaints() const {
+		return size.paint;
+	}
+
+	inline int getNumGradients() const {
+		return size.gradient;
+	}
+};
+
+typedef SharedPtr<PaintIndices> PaintIndicesRef;
+
 class Graphics : public Referencable, public Observer {
 private:
 	std::vector<PathRef> paths;
@@ -89,6 +111,7 @@ private:
 	int fillRule;
 
 	ToveChangeFlags changes;
+	PaintIndicesRef paintIndices;
 
 	inline const PathRef &current() const {
 		return paths[paths.size() - 1];
@@ -155,7 +178,7 @@ public:
 	}
 
 	bool areColorsSolid();
-	const PaintIndex &ensurePaintIndices();
+	PaintIndicesRef getPaintIndices();
 
 	void setLineDash(const float *dashes, int count);
 

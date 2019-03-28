@@ -508,15 +508,21 @@ void Submesh::triangulateFixedResolutionFill(
 }
 
 void AbstractMesh::setLineColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paintInd,
+	const int vertexIndex,
+	const int vertexCount) {
 }
 
 void AbstractMesh::setFillColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paintInd,
+	const int vertexIndex,
+	const int vertexCount) {
 }
 
-Submesh *AbstractMesh::submesh(const PathRef &path, int line) {
-	const SubmeshId id = path->getIndex() * 2 + line;
+Submesh *AbstractMesh::submesh(int pathIndex, int line) {
+	const SubmeshId id = pathIndex * 2 + line;
 	const auto i = mSubmeshes.find(id);
 	if (i != mSubmeshes.end()) {
 		return i->second;
@@ -536,7 +542,11 @@ ColorMesh::ColorMesh() : AbstractMesh(sizeof(float) * 2 + 4) {
 }
 
 void ColorMesh::setLineColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paintInd,
+	const int vertexIndex,
+	const int vertexCount) {
+
 	MeshPaint paint;
 	NSVGshape *shape = path->getNSVG();
 	paint.initialize(shape->stroke, shape->opacity, 1.0f);
@@ -544,7 +554,11 @@ void ColorMesh::setLineColor(
 }
 
 void ColorMesh::setFillColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paintInd,
+	const int vertexIndex,
+	const int vertexCount) {
+
 	MeshPaint paint;
 	NSVGshape *shape = path->getNSVG();
 	paint.initialize(shape->fill, shape->opacity, 1.0f);
@@ -625,19 +639,27 @@ PaintMesh::PaintMesh() : AbstractMesh(sizeof(float) * 3) {
 }
 
 void PaintMesh::setLineColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paint,
+	const int vertexIndex,
+	const int vertexCount) {
 
-	setPaintIndex(path->getLinePaintIndex(), vertexIndex, vertexCount);
+	setPaintIndex(paint.line, vertexIndex, vertexCount);
 }
 
 void PaintMesh::setFillColor(
-	const PathRef &path, int vertexIndex, int vertexCount) {
+	const PathRef &path,
+	const PathPaintInd &paint,
+	const int vertexIndex,
+	const int vertexCount) {
 
-	setPaintIndex(path->getFillPaintIndex(), vertexIndex, vertexCount);
+	setPaintIndex(paint.fill, vertexIndex, vertexCount);
 }
 
 void PaintMesh::setPaintIndex(
-	const PaintIndex &paintIndex, int vertexIndex, const int vertexCount) {
+	const PaintIndex &paintIndex,
+	const int vertexIndex,
+	const int vertexCount) {
 
 	auto vertex = vertices(vertexIndex, vertexCount);
 	const uint32_t value = flip_endian(paintIndex.toBytes());

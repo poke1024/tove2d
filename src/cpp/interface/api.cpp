@@ -232,7 +232,7 @@ ToveSubpathRef PathGetSubpath(TovePathRef path, int i) {
 }
 
 void PathAnimate(TovePathRef path, TovePathRef a, TovePathRef b, float t) {
-	deref(path)->animate(deref(a), deref(b), t);
+	deref(path)->animate(deref(a), deref(b), t, 1);
 }
 
 int PathGetNumCurves(TovePathRef path) {
@@ -812,8 +812,10 @@ ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
 
 	deref(tess)->beginTesselate(deref(graphics).get(), 1.0f / extent);
 
+	PathPaintInd empty;
+
 	ToveMeshUpdateFlags result = deref(tess)->pathToMesh(
-		flags, deref(path),
+		flags, deref(path), 0, empty,
 		deref(fillMesh), deref(lineMesh), fillIndex, lineIndex);
 
 	deref(tess)->endTesselate();

@@ -100,14 +100,15 @@ bool Path::areColorsSolid() const {
 		nsvg.fill.type <= NSVG_PAINT_COLOR;
 }
 
-PaintIndex Path::assignPaintIndices(PaintIndex i) {
+PathPaintInd Path::createPaintIndices(PaintIndex &it) const {
+	PathPaintInd ind;
 	if (nsvg.stroke.type != NSVG_PAINT_NONE) {
-		paintIndices[0] = i.use(nsvg.stroke.type);
+		ind.line = it.use(nsvg.stroke.type);
 	}
 	if (nsvg.fill.type != NSVG_PAINT_NONE) {
-		paintIndices[1] = i.use(nsvg.fill.type);
+		ind.fill = it.use(nsvg.fill.type);
 	}
-	return i;
+	return ind;
 }
 
 void Path::set(const NSVGshape *shape) {
@@ -157,8 +158,7 @@ void Path::set(const NSVGshape *shape) {
 }
 
 Path::Path() :
-	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS),
-	pathIndex(-1) {
+	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
 	memset(&nsvg, 0, sizeof(nsvg));
 
@@ -182,14 +182,13 @@ Path::Path() :
 }
 
 Path::Path(const NSVGshape *shape) :
-	changes(0),
-	pathIndex(-1) {
+	changes(0) {
 
 	set(shape);
 	newSubpath = true;
 }
 
-Path::Path(const char *d) : changes(0), pathIndex(-1) {
+Path::Path(const char *d) : changes(0) {
 	NSVGimage *image = nsvg::parsePath(d);
 	set(image->shapes);
 	nsvgDelete(image);
@@ -198,8 +197,7 @@ Path::Path(const char *d) : changes(0), pathIndex(-1) {
 }
 
 Path::Path(const Path *path) :
-	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS),
-	pathIndex(-1) {
+	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
 	memset(&nsvg, 0, sizeof(nsvg));
 
@@ -567,7 +565,7 @@ void Path::setFillRule(ToveFillRule rule) {
 	}
 }
 
-void Path::animateLineDash(const PathRef &a, const PathRef &b, float t) {
+void Path::animateLineDash(const PathRef &a, const PathRef &b, float t, int pathIndex) {
 	const float s = 1.0f - t;
 
 	setLineDashOffset(a->getLineDashOffset() * s + b->getLineDashOffset() * t);
@@ -607,7 +605,7 @@ void Path::animateLineDash(const PathRef &a, const PathRef &b, float t) {
 	}	
 }
 
-void Path::animate(const PathRef &a, const PathRef &b, float t) {
+void Path::animate(const PathRef &a, const PathRef &b, float t, int pathIndex) {
 	const int n = a->subpaths.size();
 	if (n != b->subpaths.size()) {
 		if (tove::report::warnings()) {
@@ -669,7 +667,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t) {
 	setLineWidth(a->getLineWidth() * s + b->getLineWidth() * t);
 	setLineJoin(t < 0.5f ? a->getLineJoin() : b->getLineJoin());
 	setMiterLimit(a->getMiterLimit() * s + b->getMiterLimit() * t);
-	animateLineDash(a, b, t);
+	animateLineDash(a, b, t, pathIndex);
 
 	setOpacity(a->getOpacity() * s + b->getOpacity() * t);
 }

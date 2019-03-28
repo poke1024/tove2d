@@ -40,31 +40,31 @@ class ColorFeed : public AbstractFeed {
 private:
 	GraphicsRef graphics;
 	const float scale;
-	PaintIndex paintSize;
+	PaintIndicesRef paints;
 	std::vector<PaintFeed> feeds;
 
 public:
 	ColorFeed(const GraphicsRef &graphics, float scale) :
 		graphics(graphics),
 		scale(scale),
-		paintSize(graphics->ensurePaintIndices()) {
+		paints(graphics->getPaintIndices()) {
 
 		const int n = graphics->getNumPaths();
 		for (int i = 0; i < n; i++) {
 			const PathRef &path = graphics->getPath(i);
 			if (path->hasStroke()) {
-				feeds.emplace_back(path, scale, CHANGED_LINE_STYLE, 0);
+				feeds.emplace_back(path, scale, CHANGED_LINE_STYLE, paints->get(i).line);
 			}
 			if (path->hasFill()) {
-				feeds.emplace_back(path, scale, CHANGED_FILL_STYLE, 1);
+				feeds.emplace_back(path, scale, CHANGED_FILL_STYLE, paints->get(i).fill);
 			}
 		}
 
-		assert(feeds.size() == paintSize.paint);
+		assert(feeds.size() == paints->getNumPaints());
 	}
 
 	TovePaintColorAllocation getColorAllocation() const {
-		assert(paintSize.paint == graphics->ensurePaintIndices().paint);
+		assert(paints->getNumPaints() == graphics->getPaintIndices()->getNumPaints());
 
 		int numColors = 1;
 		for (const auto &feed : feeds) {
@@ -72,8 +72,8 @@ public:
 		}
 
 		return TovePaintColorAllocation{
-			int16_t(paintSize.paint),
-			int16_t(paintSize.gradient),
+			int16_t(paints->getNumPaints()),
+			int16_t(paints->getNumGradients()),
 			int16_t(numColors)};
 	}
 

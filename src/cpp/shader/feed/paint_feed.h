@@ -216,23 +216,22 @@ public:
 class PaintFeed : public PaintFeedBase {
 private:
 	TovePaintData _data;
-	const int paintWhat;
+	const PaintIndex paintIndex;
 
 public:
 	PaintFeed(const PaintFeed &feed) :
-		PaintFeedBase(feed.path, _data, feed.scale, feed.CHANGED_STYLE), paintWhat(feed.paintWhat) {
+		PaintFeedBase(feed.path, _data, feed.scale, feed.CHANGED_STYLE), paintIndex(feed.paintIndex) {
 	}
 
-	PaintFeed(const PathRef &path, float scale, ToveChangeFlags changed, int paintWhat) :
-		PaintFeedBase(path, _data, scale, changed), paintWhat(paintWhat) {
+	PaintFeed(const PathRef &path, float scale, ToveChangeFlags changed, const PaintIndex &paintIndex) :
+		PaintFeedBase(path, _data, scale, changed), paintIndex(paintIndex) {
 	}
 
 	void bindPaintIndices(const ToveGradientData &data) {
-		const PaintIndex &i = path->getPaintIndex(paintWhat);
 		const int size = 3 * data.matrixRows;
 
-		paintData.gradient.matrix = data.matrix + i.getGradientIndex() * size;
-		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i.getColorIndex();
+		paintData.gradient.matrix = data.matrix + paintIndex.getGradientIndex() * size;
+		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * paintIndex.getColorIndex();
 		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;
 		paintData.gradient.colorsTextureHeight = data.colorsTextureHeight;
 
