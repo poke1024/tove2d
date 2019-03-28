@@ -14,9 +14,9 @@ local function fillGradientData(gradient)
 
 	local matrixData = love.data.newByteData(env.matsize)
 	gradient.matrix = matrixData:getPointer()
-	gradient.arguments = nil
 
 	local imageData = love.image.newImageData(1, n, "rgba8")
+	gradient.numGradients = 1
 	gradient.colorsTexture = imageData:getPointer()
 	gradient.colorsTextureRowBytes = imageData:getSize() / n
 	gradient.colorsTextureHeight = n

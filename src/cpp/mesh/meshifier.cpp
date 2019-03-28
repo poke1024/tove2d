@@ -39,6 +39,8 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 		line->clear();
 	}
 
+	graphics->ensurePaintIndices();
+
 	const float *bounds = graphics->getBounds();
 	const float extent = std::max(
 		bounds[2] - bounds[0], bounds[3] - bounds[1]);
@@ -289,7 +291,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 			}
 
 			if (hasStroke) {
-				const bool closed = path->getSubpath(i)->isClosed();
+				// const bool closed = path->getSubpath(i)->isClosed();
 				const float miterLimitSquared = miterLimit * miterLimit;
 
 				// note: for compound mode, the call to fill->vertices

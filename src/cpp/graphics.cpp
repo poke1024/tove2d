@@ -227,7 +227,8 @@ void Graphics::initialize(float width, float height) {
 		bounds[i] = 0.0;
         exactBounds[i] = 0.0;
 	}
-    changes |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
+
+    changes |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS | CHANGED_PAINT_INDICES;
 }
 
 Graphics::Graphics() : changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
@@ -328,13 +329,20 @@ void Graphics::setLineJoin(ToveLineJoin join) {
 	strokeLineJoin = nsvg::nsvgLineJoin(join);
 }
 
-bool Graphics::areColorsSolid() const {
-    for (const auto &path : paths) {
-        if (!path->areColorsSolid()) {
-            return false;
-        }
-    }
-    return true;
+bool Graphics::areColorsSolid() {
+	return ensurePaintIndices().gradient == 0;
+}
+
+const PaintIndex &Graphics::ensurePaintIndices() {
+	if (changes & CHANGED_PAINT_INDICES) {
+		PaintIndex i;
+		for (const auto &path : paths) {
+			i = path->assignPaintIndices(i);
+		}
+		paintSize = i;
+		changes &= ~CHANGED_PAINT_INDICES;
+	}
+	return paintSize;
 }
 
 void Graphics::fill() {
@@ -488,7 +496,7 @@ void Graphics::computeClipPaths(const AbstractTesselator &tess) const {
 }
 
 void Graphics::clearChanges(ToveChangeFlags flags) {
-	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS);
+	flags &= ~(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS | CHANGED_PAINT_INDICES);
 	changes &= ~flags;
 }
 

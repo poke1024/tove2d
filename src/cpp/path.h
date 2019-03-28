@@ -31,8 +31,9 @@ private:
 	PaintRef lineColor;
 	std::string name;
 
-	int16_t pathIndex;
 	uint8_t changes;
+	int16_t pathIndex;
+	PaintIndex paintIndices[2];
 	float exactBounds[4];
 
 	inline const SubpathRef &current() const {
@@ -90,6 +91,19 @@ public:
 	}
 
 	bool areColorsSolid() const;
+	PaintIndex assignPaintIndices(PaintIndex i);
+
+	inline const PaintIndex &getLinePaintIndex() const {
+		return paintIndices[0];
+	}
+
+	inline const PaintIndex &getFillPaintIndex() const {
+		return paintIndices[1];
+	}
+
+	inline const PaintIndex &getPaintIndex(int what) const {
+		return paintIndices[what];
+	}
 
 	void setLineDash(const float *dashes, const int count);
 	inline float getLineDashOffset() const {

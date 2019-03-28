@@ -18,6 +18,45 @@
 
 BEGIN_TOVE_NAMESPACE
 
+
+class PaintIndex {
+public:
+	unsigned paint : 16;
+	unsigned gradient : 8;
+	unsigned which : 8;
+
+public:
+	inline PaintIndex() :
+		paint(0), gradient(0) {
+	}
+
+	inline PaintIndex(const PaintIndex &p, int8_t which) :
+		paint(p.paint), gradient(p.gradient), which(which) {
+	}
+
+	inline uint32_t toBytes() const {
+		return getColorIndex() | (uint32_t(getGradientIndex()) << 16) | (uint32_t(which) << 24);
+	}
+
+	inline int getColorIndex() const {
+		return paint;
+	}
+
+	inline int getGradientIndex() const {
+		// solids get an index of 0, gradients are 1-based.
+		return which > NSVG_PAINT_COLOR ? gradient + 1 : 0;
+	}
+
+	inline PaintIndex use(int type) {
+		const PaintIndex p(*this, type);
+		paint++;
+		if (type > NSVG_PAINT_COLOR) {
+			gradient++;
+		}
+		return p;
+	}
+};
+
 class AbstractPaint : public Observable {
 protected:
 	void changed();

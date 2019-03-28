@@ -45,7 +45,7 @@ protected:
 
 	int determineNumColors(const PaintRef &paint) const {
 		const TovePaintType style = (TovePaintType)paintData.style;
-		ToveGradientData &gradient = paintData.gradient;
+		//ToveGradientData &gradient = paintData.gradient;
 
 		if (style < PAINT_LINEAR_GRADIENT) {
 			return style == PAINT_SOLID ? 1 : 0;
@@ -75,40 +75,6 @@ protected:
 				// (regression test: line in gpux blob).
 				paint->getRGBA(paintData.rgba, opacity);
 
-				float *m = gradient.matrix;
-				if (m) {
-					// use a mat3(0) matrix here to map all coords
-					// to (0, 0). this allows us to only init the
-					// first row in the texture below - otherwise
-					// we'd have to fill full colorsTextureHeight
-
-					m[0] = 0;
-					m[1] = 0;
-					m[2] = 0;
-
-					m[3] = 0;
-					m[4] = 0;
-					m[5] = 0;
-
-					const int rows = gradient.matrixRows;
-					if (rows >= 3) { // i.e. mat3x3
-						m[6] = 0;
-						m[7] = 0;
-						m[8] = 0;
-
-						if (rows == 4) { // i.e. mat3x4
-							m[9] = 0;
-							m[10] = 0;
-							m[11] = 0;
-						}
-					}
-				}
-
-				float *arguments = gradient.arguments;
-				if (arguments) {
-					*arguments = 0.0f;
-				}
-
 				uint8_t *texture = gradient.colorsTexture;
 				if (texture) {
 					const uint32_t color = nsvg::makeColor(
@@ -131,7 +97,7 @@ protected:
 		NSVGgradient *g = paint->getNSVGgradient();
 		assert(g);
 
-		if (SPECIAL_CASE_2 && gradient.numColors <= 2 &&
+		if (SPECIAL_CASE_2 && gradient.numColors == 2 &&
 			gradient.colorsTextureHeight == gradient.numColors) {
 			
 			assert(g->nstops == gradient.numColors);
@@ -156,10 +122,6 @@ protected:
 		assert(gradient.matrix != nullptr);
 		paint->getGradientMatrix(gradient.matrix, scale);
 
-		if (gradient.arguments) {
-			*gradient.arguments = (style == PAINT_RADIAL_GRADIENT) ? 1.0f : 0.0f;
-		}
-
 		return true;
 	}
 
@@ -173,8 +135,8 @@ public:
 
 class PaintFeedBase : public AbstractPaintFeed, public Observer {
 protected:
-	const ToveChangeFlags CHANGED_STYLE;
 	const PathRef path;
+	const ToveChangeFlags CHANGED_STYLE;
 	bool changed;
 
 	inline const PaintRef &getColor() const {
@@ -227,18 +189,6 @@ public:
 		return paintData.gradient.numColors;
 	}
 
-	void bind(const ToveGradientData &data, int i) {
-		const int size = 3 * data.matrixRows;
-
-		paintData.gradient.matrix = data.matrix + i * size;
-		paintData.gradient.arguments = &data.arguments[i];
-		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i;
-		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;
-		paintData.gradient.colorsTextureHeight = data.colorsTextureHeight;
-
-		update(getColor(), path->getOpacity());
-	}
-
 	inline ToveChangeFlags beginUpdate() {
 		if (changed) {
 			changed = false;
@@ -266,14 +216,27 @@ public:
 class PaintFeed : public PaintFeedBase {
 private:
 	TovePaintData _data;
+	const int paintWhat;
 
 public:
 	PaintFeed(const PaintFeed &feed) :
-		PaintFeedBase(feed.path, _data, feed.scale, feed.CHANGED_STYLE) {
+		PaintFeedBase(feed.path, _data, feed.scale, feed.CHANGED_STYLE), paintWhat(feed.paintWhat) {
 	}
 
-	PaintFeed(const PathRef &path, float scale, ToveChangeFlags changed) :
-		PaintFeedBase(path, _data, scale, changed) {
+	PaintFeed(const PathRef &path, float scale, ToveChangeFlags changed, int paintWhat) :
+		PaintFeedBase(path, _data, scale, changed), paintWhat(paintWhat) {
+	}
+
+	void bindPaintIndices(const ToveGradientData &data) {
+		const PaintIndex &i = path->getPaintIndex(paintWhat);
+		const int size = 3 * data.matrixRows;
+
+		paintData.gradient.matrix = data.matrix + i.getGradientIndex() * size;
+		paintData.gradient.colorsTexture = 	data.colorsTexture + 4 * i.getColorIndex();
+		paintData.gradient.colorsTextureRowBytes = data.colorsTextureRowBytes;
+		paintData.gradient.colorsTextureHeight = data.colorsTextureHeight;
+
+		update(getColor(), path->getOpacity());
 	}
 };
 

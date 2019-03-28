@@ -731,8 +731,8 @@ TovePaintColorAllocation FeedGetColorAllocation(ToveFeedRef link) {
 	return deref(link)->getColorAllocation();
 }
 
-void FeedBind(ToveFeedRef link, const ToveGradientData *data) {
-	deref(link)->bind(*data);
+void FeedBindPaintIndices(ToveFeedRef link, const ToveGradientData *data) {
+	deref(link)->bindPaintIndices(*data);
 }
 
 void ReleaseFeed(ToveFeedRef link) {

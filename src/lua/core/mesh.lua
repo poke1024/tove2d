@@ -113,7 +113,7 @@ PaintMesh.__index = PaintMesh
 setmetatable(PaintMesh, {__index = AbstractMesh})
 PaintMesh._attributes = {
 	{"VertexPosition", "float", 2},
-	{"VertexPaint", "float", 1}}
+	{"VertexPaint", "byte", 4}}
 PaintMesh._vertexByteSize = 3 * floatSize
 
 tove.newPaintMesh = function(name, usage)

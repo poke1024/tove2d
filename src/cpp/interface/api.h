@@ -138,7 +138,7 @@ EXPORT ToveChangeFlags FeedBeginUpdate(ToveFeedRef link);
 EXPORT ToveChangeFlags FeedEndUpdate(ToveFeedRef link);
 EXPORT ToveShaderData *FeedGetData(ToveFeedRef link);
 EXPORT TovePaintColorAllocation FeedGetColorAllocation(ToveFeedRef link);
-EXPORT void FeedBind(ToveFeedRef link, const ToveGradientData *data);
+EXPORT void FeedBindPaintIndices(ToveFeedRef link, const ToveGradientData *data);
 EXPORT void ReleaseFeed(ToveFeedRef link);
 
 EXPORT ToveMeshRef NewMesh();
@@ -155,7 +155,7 @@ EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
 
 EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
-EXPORT const char *GetPaintShaderCode(int numPaints);
+EXPORT const char *GetPaintShaderCode(int numPaints, int numGradients);
 EXPORT const char *GetImplicitFillShaderCode(
 	const ToveShaderData *data, bool fragLine, bool meshBand, bool debug);
 EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);

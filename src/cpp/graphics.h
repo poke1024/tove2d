@@ -78,6 +78,7 @@ private:
 
 	PaintRef fillColor;
 	PaintRef strokeColor;
+	PaintIndex paintSize;
 
 	float strokeWidth;
 	std::vector<float> strokeDashes;
@@ -153,7 +154,8 @@ public:
 		fillColor = color;
 	}
 
-	bool areColorsSolid() const;
+	bool areColorsSolid();
+	const PaintIndex &ensurePaintIndices();
 
 	void setLineDash(const float *dashes, int count);
 
@@ -214,6 +216,9 @@ public:
 	inline void changed(ToveChangeFlags flags) {
 		if (flags & (CHANGED_GEOMETRY | CHANGED_POINTS | CHANGED_BOUNDS)) {
 			flags |= CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS;
+		}
+		if (flags & (CHANGED_GEOMETRY | CHANGED_LINE_ARGS | CHANGED_FILL_ARGS)) {
+			flags |= CHANGED_PAINT_INDICES;
 		}
 		changes |= flags;
 	}

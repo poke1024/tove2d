@@ -83,8 +83,10 @@ enum {
 	CHANGED_BOUNDS = 32,
 	CHANGED_EXACT_BOUNDS = 64,
 	CHANGED_RECREATE = 128,
-	CHANGED_INITIAL = 256,
-	CHANGED_ANYTHING = 255,
+	CHANGED_FILL_ARGS = 256,
+	CHANGED_INITIAL = 1024,
+	CHANGED_PAINT_INDICES = 2048,
+	CHANGED_ANYTHING = 511,
 	CHANGED_COLORS = CHANGED_FILL_STYLE | CHANGED_LINE_STYLE
 };
 
@@ -201,14 +203,15 @@ typedef struct {
 
 typedef struct {
 	int16_t numPaints;
+	int16_t numGradients;
 	int16_t numColors;
 } TovePaintColorAllocation;
 
 typedef struct {
+	int16_t numGradients;
 	int16_t numColors;
 	int8_t matrixRows;
 	float *matrix;
-	float *arguments;
 	uint8_t *colorsTexture;
 	int16_t colorsTextureRowBytes;
 	int16_t colorsTextureHeight;

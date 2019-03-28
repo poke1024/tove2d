@@ -46,6 +46,10 @@ void Path::_setFillColor(const PaintRef &color) {
 		return;
 	}
 
+	if ((fillColor.get() != nullptr) != (color.get() != nullptr)) {
+		changed(CHANGED_FILL_ARGS);
+	}
+
 	if (fillColor) {
 		fillColor->removeObserver(this);
 	}
@@ -94,6 +98,16 @@ void Path::_setLineColor(const PaintRef &color) {
 bool Path::areColorsSolid() const {
 	return nsvg.stroke.type <= NSVG_PAINT_COLOR &&
 		nsvg.fill.type <= NSVG_PAINT_COLOR;
+}
+
+PaintIndex Path::assignPaintIndices(PaintIndex i) {
+	if (nsvg.stroke.type != NSVG_PAINT_NONE) {
+		paintIndices[0] = i.use(nsvg.stroke.type);
+	}
+	if (nsvg.fill.type != NSVG_PAINT_NONE) {
+		paintIndices[1] = i.use(nsvg.fill.type);
+	}
+	return i;
 }
 
 void Path::set(const NSVGshape *shape) {

@@ -19,9 +19,6 @@ local function load(svg)
 		local quality = {}
 		if mode == "mesh" then
 			quality = {1000}
-			-- work around a current TOVE limitation with uniforms
-			-- and gradient shaders. use flat mesh for rendering.
-			graphics:setUsage("shaders", "avoid")
 		end
 		graphics:setDisplay(mode, unpack(quality))
 		flow:add(mode, graphics)

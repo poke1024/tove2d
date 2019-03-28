@@ -15,6 +15,7 @@
 #include "triangles.h"
 #include "paint.h"
 #include "utils.h"
+#include "../paint.h"
 #include <map>
 
 BEGIN_TOVE_NAMESPACE
@@ -162,7 +163,7 @@ public:
 class PaintMesh : public AbstractMesh {
 protected:
 	void setPaintIndex(
-		int paintIndex, int vertexIndex, int vertexCount);
+		const PaintIndex &paintIndex, int vertexIndex, int vertexCount);
 
 public:
 	PaintMesh();

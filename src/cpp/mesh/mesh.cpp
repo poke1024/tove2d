@@ -612,30 +612,38 @@ void ColorMesh::setColor(
 }
 
 
+inline uint32_t flip_endian(uint32_t x) {
+	const bool is_big_endian = (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100);
+	if (is_big_endian) {
+		return (x >> 24) | ((x << 8) & 0x00FF0000) | ((x >> 8) & 0x0000FF00) | (x << 24);
+	} else {
+		return x;
+	}
+}
+
 PaintMesh::PaintMesh() : AbstractMesh(sizeof(float) * 3) {
 }
 
 void PaintMesh::setLineColor(
 	const PathRef &path, int vertexIndex, int vertexCount) {
 
-	setPaintIndex(2 * path->getIndex() + 0, vertexIndex, vertexCount);
+	setPaintIndex(path->getLinePaintIndex(), vertexIndex, vertexCount);
 }
 
 void PaintMesh::setFillColor(
 	const PathRef &path, int vertexIndex, int vertexCount) {
 
-	setPaintIndex(2 * path->getIndex() + 1, vertexIndex, vertexCount);
+	setPaintIndex(path->getFillPaintIndex(), vertexIndex, vertexCount);
 }
 
 void PaintMesh::setPaintIndex(
-	int paintIndex, int vertexIndex, int vertexCount) {
+	const PaintIndex &paintIndex, int vertexIndex, const int vertexCount) {
 
 	auto vertex = vertices(vertexIndex, vertexCount);
-	const float value = paintIndex;
+	const uint32_t value = flip_endian(paintIndex.toBytes());
 
 	for (int i = 0; i < vertexCount; i++) {
-		float *p = reinterpret_cast<float*>(vertex.attr());
-		*p = value;
+		*reinterpret_cast<uint32_t*>(vertex.attr()) = value;
 		vertex++;
 	}
 }

@@ -189,35 +189,35 @@ void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows) {
 	tove::ShaderWriter::configure(language, matrixRows);
 }
 
-const char *GetPaintShaderCode(int numPaints) {
+const char *GetPaintShaderCode(int numPaints, int numGradients) {
 	tove::ShaderWriter w;
 
 	w.define("NUM_PAINTS", numPaints);
+	w.define("NUM_GRADIENTS", numGradients);
 
 	w << R"GLSL(
 varying vec2 gradient_pos;
 flat varying vec3 gradient_scale;
-flat varying vec2 texture_pos;
+varying vec2 texture_pos;
 )GLSL";
 
 	w.beginVertexShader();
 
-#if TOVE_TARGET == TOVE_TARGET_LOVE2D
-	w << "attribute float VertexPaint;\n";
-#elif TOVE_TARGET == TOVE_TARGET_GODOT
-	w.define("VertexPaint", "UV.x");
-#endif
-
 	w << R"GLSL(
-uniform MATRIX matrix[NUM_PAINTS];
-uniform float arguments[NUM_PAINTS];
+attribute vec4 VertexPaint;
+
+uniform MATRIX matrix[NUM_GRADIENTS + 1];
 uniform float cstep;
 
 vec4 do_vertex(vec4 vertex_pos) {
-	int i = int(VertexPaint);
+	ivec4 IntVertexPaint = ivec4(VertexPaint * 255.0f + vec4(0.4));
 
-	gradient_pos = (matrix[i] * vec3(vertex_pos.xy, 1)).xy;
-	gradient_scale = vec3(cstep, 1.0f - 2.0f * cstep, arguments[i]);
+	int i = IntVertexPaint.x + 256 * IntVertexPaint.y;
+	int g = IntVertexPaint.z;
+	int t = IntVertexPaint.w;
+
+	gradient_pos = (matrix[g] * vec3(vertex_pos.xy, 1)).xy;
+	gradient_scale = vec3(cstep, 1.0f - 2.0f * cstep, t == 3 ? 1 : 0);
 
 	float y = mix(gradient_pos.y, length(gradient_pos), gradient_scale.z);
 	y = gradient_scale.x + gradient_scale.y * y;

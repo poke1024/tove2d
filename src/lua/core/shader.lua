@@ -37,8 +37,8 @@ local function newGeometryLineShader(data)
 	return shader
 end
 
-local function newPaintShader(numPaints)
-	return lg.newShader(ffi.string(lib.GetPaintShaderCode(numPaints)))
+local function newPaintShader(numPaints, numGradients)
+	return lg.newShader(ffi.string(lib.GetPaintShaderCode(numPaints, numGradients)))
 end
 
 --!! import "feed.lua" as feed
@@ -55,21 +55,20 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 
 	local alloc = lib.FeedGetColorAllocation(link)
 	local matrixData = love.data.newByteData(
-		alloc.numPaints * env.matsize)
+		(1 + alloc.numGradients) * env.matsize)
 	local imageData = love.image.newImageData(
 		alloc.numPaints, alloc.numColors, "rgba8")
 	local colorsTexture = lg.newImage(imageData)
-	local argumentsData = love.data.newByteData(
-		alloc.numPaints * ffi.sizeof("float"))
 	local gradientData = ffi.new("ToveGradientData")
+	gradientData.numColors = alloc.numColors
+	gradientData.numGradients = alloc.numGradients
 	gradientData.matrix = matrixData:getPointer()
 	gradientData.matrixRows = env.matrows
-	gradientData.arguments = argumentsData:getPointer()
 	gradientData.colorsTexture = imageData:getPointer()
 	gradientData.colorsTextureRowBytes = imageData:getSize() / alloc.numColors
-	gradientData.colorsTextureHeight = imageData:getHeight()
-	lib.FeedBind(link, gradientData)
-	local paintShader = newPaintShader(alloc.numPaints)
+	gradientData.colorsTextureHeight = alloc.numColors
+	lib.FeedBindPaintIndices(link, gradientData)
+	local paintShader = newPaintShader(alloc.numPaints, alloc.numGradients)
 	colorsTexture:setFilter("nearest", "linear")
 	colorsTexture:setWrap("clamp", "clamp")
 
@@ -77,7 +76,6 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 
 	colorsTexture:replacePixels(imageData)
 	paintShader:send("matrix", matrixData)
-	paintShader:send("arguments", argumentsData)
 	paintShader:send("colors", colorsTexture)
 	paintShader:send("cstep", 0.5 / gradientData.colorsTextureHeight)
 
@@ -89,7 +87,6 @@ local function newMeshFeedData(name, graphics, tess, usage, resolution)
 		shader = paintShader,
 
 		matrixData = matrixData,
-		argumentsData = argumentsData,
 		imageData = imageData,
 		colorsTexture = colorsTexture
 	}
@@ -154,7 +151,6 @@ function MeshShader:update()
 		linkdata.colorsTexture:replacePixels(linkdata.imageData)
 		local shader = linkdata.shader
 		shader:send("matrix", linkdata.matrixData)
-		shader:send("arguments", linkdata.argumentsData)
 	end
 end
 
