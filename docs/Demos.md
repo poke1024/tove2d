@@ -70,5 +70,7 @@ TÖVE offers support for holes and fill rules for all of its renderers:
 
 ![](images/demos/fillrule.png)
 
+## Clip Path Demo
+For non-animated rendering, TÖVE is able to render complex clip paths in texture and mesh modes:
 
-
+![](images/demos/clippath.png)
