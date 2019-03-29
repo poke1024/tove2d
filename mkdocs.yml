@@ -1,0 +1,10 @@
+site_name: TÖVE
+nav:
+  - Graphics: graphics.md
+  - Collections: collections.md
+  - Colors: colors.md
+  - Tesselators: tesselators.md
+theme: readthedocs
+markdown_extensions:
+  - admonition
+  - fenced_code

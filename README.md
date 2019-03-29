@@ -8,8 +8,20 @@ TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL'
 * brings crisp vector graphics and SVGs to LÖVE
 * offers a substantial subset of SVG
 * built for realtime animation
-* uses OpenGL ES 
 * < 1 MB in binary size
+
+## Getting Started
+The most essential stuff is here:
+
+* [Getting Started](docs/tutorials/Getting_Started.md)
+* [The Demos](docs/tutorials/Demos.md)
+* [Choosing Renderers](docs/tutorials/Renderers.md)
+* [Animating Things](docs/tutorials/Animation.md)
+
+There are [beginnings of a documentation](https://poke1024.github.io/tove2d/).
+
+Note: on Windows, in order to run the demos, you need to call `setup.bat` once (this
+will fix the links to the lib and asset folders, so you can run e.g. `love demos/blob`).
 
 ## Capabilities
 Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games. Here's what you can expect from TÖVE's different renderers:
@@ -37,17 +49,6 @@ Do not expect TÖVE to produce print quality vector renderings. This is neither 
 * (4) for some shapes, hole polygons must not intersect non-hole polygons.
 
 Releases are available for macOS, Linux and Windows: https://github.com/poke1024/tove2d/releases.
-
-## Getting Started
-I've written up the essential stuff in these four sections:
-
-* [Getting Started](docs/Getting_Started.md)
-* [The Demos](docs/Demos.md)
-* [Choosing Renderers](docs/Renderers.md)
-* [Animating Things](docs/Animation.md)
-
-Note: on Windows, in order to run the demos, you need to call `setup.bat` once (this
-will fix the links to the lib and asset folders, so you can run e.g. `love demos/blob`).
 
 ## Building TÖVE Yourself
 
