@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Graphics - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Graphics";
+    var mkdocs_page_input_path = "graphics.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Graphics</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#overview">Overview</a></li>
+    
+
+    <li class="toctree-l2"><a href="#construction">Construction</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#tovenewgraphics">tove.newGraphics()</a></li>
+        
+            <li><a class="toctree-l3" href="#tovenewgraphicssvg-sizegraphicssize">tove.newGraphics(svg, [size:GraphicsSize])</a></li>
+        
+            <li><a class="toctree-l3" href="#tovenewgraphicspath_1-path_n-size">tove.newGraphics({path_1, ..., path_n}, [size])</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l2"><a href="#methods">Methods</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#clone-graphics">clone() : Graphics</a></li>
+        
+            <li><a class="toctree-l3" href="#clear">clear()</a></li>
+        
+            <li><a class="toctree-l3" href="#beginpath-path">beginPath() : Path</a></li>
+        
+            <li><a class="toctree-l3" href="#closepath">closePath()</a></li>
+        
+            <li><a class="toctree-l3" href="#beginsubpath-subpath">beginSubpath() : SubPath</a></li>
+        
+            <li><a class="toctree-l3" href="#closesubpath">closeSubpath()</a></li>
+        
+            <li><a class="toctree-l3" href="#getcurrentpath-path">getCurrentPath() : Path</a></li>
+        
+            <li><a class="toctree-l3" href="#movetox-y">moveTo(x, y)</a></li>
+        
+            <li><a class="toctree-l3" href="#linetox-y">lineTo(x, y)</a></li>
+        
+            <li><a class="toctree-l3" href="#curvetocpx1-cpy1-cpx2-cpy2-x-y">curveTo(cpx1, cpy1, cpx2, cpy2, x, y)</a></li>
+        
+            <li><a class="toctree-l3" href="#arcx-y-r-startangle-endangle-counterclockwise">arc(x, y, r, startAngle, endAngle, counterclockwise)</a></li>
+        
+            <li><a class="toctree-l3" href="#addpathpathpath">addPath(path:Path)</a></li>
+        
+            <li><a class="toctree-l3" href="#drawrectx-y-w-h-rx-ry">drawRect(x, y, w, h, [rx], [ry])</a></li>
+        
+            <li><a class="toctree-l3" href="#drawcirclex-y-r">drawCircle(x, y, r)</a></li>
+        
+            <li><a class="toctree-l3" href="#drawellipsex-y-rx-ry">drawEllipse(x, y, rx, ry)</a></li>
+        
+            <li><a class="toctree-l3" href="#setfillcolorcolor">setFillColor([color...])</a></li>
+        
+            <li><a class="toctree-l3" href="#setlinecolorcolor">setLineColor([color...])</a></li>
+        
+            <li><a class="toctree-l3" href="#setlinedashwidth_1-width_n">setLineDash(width_1, ..., width_n)</a></li>
+        
+            <li><a class="toctree-l3" href="#setlinedashoffsetoffset">setLineDashOffset(offset)</a></li>
+        
+            <li><a class="toctree-l3" href="#setlinewidthwidth">setLineWidth(width)</a></li>
+        
+            <li><a class="toctree-l3" href="#setmiterlimitlimit">setMiterLimit(limit)</a></li>
+        
+            <li><a class="toctree-l3" href="#fill">fill()</a></li>
+        
+            <li><a class="toctree-l3" href="#stroke">stroke()</a></li>
+        
+            <li><a class="toctree-l3" href="#computeaabbprecisionaabbprecisionx0-y0-x1-y1">computeAABB([precision:AABBPrecision]):x0, y0, x1, y1</a></li>
+        
+            <li><a class="toctree-l3" href="#getwidthprecisionaabbprecision">getWidth([precision:AABBPrecision])</a></li>
+        
+            <li><a class="toctree-l3" href="#getheightprecisionaabbprecision">getHeight([precision:AABBPrecision])</a></li>
+        
+            <li><a class="toctree-l3" href="#setdisplaymodedisplaymode-quality">setDisplay(mode:DisplayMode, [quality])</a></li>
+        
+            <li><a class="toctree-l3" href="#setdisplaytexture-quality">setDisplay("texture", [quality])</a></li>
+        
+            <li><a class="toctree-l3" href="#setdisplaymesh-tesselator">setDisplay("mesh", [tesselator...])</a></li>
+        
+            <li><a class="toctree-l3" href="#setdisplaygpux-lineshader-linequality">setDisplay("gpux", [lineShader], [lineQuality])</a></li>
+        
+            <li><a class="toctree-l3" href="#setusagewhatusagetarget-usageusage">setUsage(what:UsageTarget, usage:Usage)</a></li>
+        
+            <li><a class="toctree-l3" href="#setresolutionresolution">setResolution(resolution)</a></li>
+        
+            <li><a class="toctree-l3" href="#setorientationorientationorientation">setOrientation(orientation:Orientation)</a></li>
+        
+        </ul>
+    
+
+    <li class="toctree-l2"><a href="#attributes">Attributes</a></li>
+    
+
+    <li class="toctree-l2"><a href="#types">Types</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#graphicssize">GraphicsSize</a></li>
+        
+            <li><a class="toctree-l3" href="#aabbprecision">AABBPrecision</a></li>
+        
+            <li><a class="toctree-l3" href="#displaymode">DisplayMode</a></li>
+        
+            <li><a class="toctree-l3" href="#orientation">Orientation</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Graphics</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="overview">Overview</h1>
+<p><code>Graphics</code> is the main class for constructing and drawing things in TÖVE.</p>
+<p>A <code>Graphics</code> object knows about</p>
+<ul>
+<li>the things it should draw, and</li>
+<li>the quality with which things should get drawn.</li>
+</ul>
+<p>Each <code>Graphics</code> consists of a number of <code>Path</code>s.</p>
+<h1 id="construction">Construction</h1>
+<h3 id="tovenewgraphics">tove.newGraphics()</h3>
+<p>create an empty <code>Graphics</code> object for drawing into.</p>
+<h3 id="tovenewgraphicssvg-sizegraphicssize">tove.newGraphics(svg, [size:GraphicsSize])</h3>
+<p>create a <code>Graphics</code> from the given SVG string (the actual data, not the filename).</p>
+<h3 id="tovenewgraphicspath_1-path_n-size">tove.newGraphics({path_1, ..., path_n}, [size])</h3>
+<p>construct a <code>Graphics</code> from the given <code>Path</code> objects. <code>size</code> behaves as above.</p>
+<h1 id="methods">Methods</h1>
+<h3 id="clone-graphics">clone() : Graphics</h3>
+<p>creates a deep copy of this <code>Graphics</code> object.</p>
+<h3 id="clear">clear()</h3>
+<p>remove all <code>Path</code>s from this <code>Graphics</code>.</p>
+<h3 id="beginpath-path">beginPath() : Path</h3>
+<p>start a new <code>Path</code> for drawing (without closing the current <code>Path</code> and making it a loop).</p>
+<h3 id="closepath">closePath()</h3>
+<p>close the current <code>Path</code> (making it a loop). Ensuing drawing commands on this <code>Graphics</code> will open a new path.</p>
+<h3 id="beginsubpath-subpath">beginSubpath() : SubPath</h3>
+<p>inside the current <code>Path</code>, begin a new <code>Subpath</code> for drawing (without making the current <code>Subpath</code> a loop). Subsequent commands like <code>lineTo</code> will happen in that new <code>Subpath</code>.</p>
+<h3 id="closesubpath">closeSubpath()</h3>
+<p>inside the current <code>Path</code>, close the current <code>Subpath</code> (making it a loop). Ensuing drawing commands on this <code>Graphics</code> will draw to the same <code>Path</code> as before, but in a new <code>Subpath</code>. Use this if you want to draw holes.</p>
+<h3 id="getcurrentpath-path">getCurrentPath() : Path</h3>
+<p>return the current <code>Path</code>.</p>
+<h3 id="movetox-y">moveTo(x, y)</h3>
+<p>start a new <code>SubPath</code> and move the cursor to position <code>(x, y)</code>.</p>
+<h3 id="linetox-y">lineTo(x, y)</h3>
+<p>starting at the current position, draw a line to <code>(x, y)</code>.</p>
+<h3 id="curvetocpx1-cpy1-cpx2-cpy2-x-y">curveTo(cpx1, cpy1, cpx2, cpy2, x, y)</h3>
+<p>starting at the current position, draw a cubic bezier curve to <code>(x, y)</code>, using <code>(cpx1, cpy1)</code> and <code>(cpx2, cpy2)</code> as control points.</p>
+<h3 id="arcx-y-r-startangle-endangle-counterclockwise">arc(x, y, r, startAngle, endAngle, counterclockwise)</h3>
+<p>draw an arc with radius <code>r</code> from <code>startAngle</code> to <code>endAngle</code> going clockwise or counterclockwise (if <code>counterclockwise</code> is <code>true</code>).</p>
+<h3 id="addpathpathpath">addPath(path:Path)</h3>
+<p>append the given <code>path</code> to this <code>Graphics</code>.</p>
+<h3 id="drawrectx-y-w-h-rx-ry">drawRect(x, y, w, h, [rx], [ry])</h3>
+<p>draw a rectangle with <code>(x, y)</code> as the top left corner and with width <code>w</code> and height <code>w</code>. <code>rx</code> and <code>ry</code> specify the roundedness of the corners.</p>
+<h3 id="drawcirclex-y-r">drawCircle(x, y, r)</h3>
+<p>draw a circle centered at <code>(x, y)</code> with radius <code>r</code>.</p>
+<h3 id="drawellipsex-y-rx-ry">drawEllipse(x, y, rx, ry)</h3>
+<p>draw an ellipse centered at <code>(x, y)</code> with semi axes <code>rx</code> and <code>ry</code>.</p>
+<h3 id="setfillcolorcolor">setFillColor([color...])</h3>
+<p>set the fill to the given <a href="../colors/">color</a>.</p>
+<h3 id="setlinecolorcolor">setLineColor([color...])</h3>
+<p>set the line color to the given <a href="../colors/">color</a>.</p>
+<h3 id="setlinedashwidth_1-width_n">setLineDash(width_1, ..., width_n)</h3>
+<p>set the line dash to widths <code>width_1</code>, ..., <code>width_n</code>.</p>
+<h3 id="setlinedashoffsetoffset">setLineDashOffset(offset)</h3>
+<p>set the line dash offset to <code>offset</code>.</p>
+<h3 id="setlinewidthwidth">setLineWidth(width)</h3>
+<p>set the line width to <code>width</code>.</p>
+<h3 id="setmiterlimitlimit">setMiterLimit(limit)</h3>
+<p>set the miter limit (length at which miters are turned into bezels) to <code>limit</code>.</p>
+<h3 id="fill">fill()</h3>
+<p>add a fill to the current path.</p>
+<h3 id="stroke">stroke()</h3>
+<p>add a stroke (line) to the current path.</p>
+<h3 id="computeaabbprecisionaabbprecisionx0-y0-x1-y1">computeAABB([precision:AABBPrecision]):x0, y0, x1, y1</h3>
+<p>compute axis-aligned bounding box.</p>
+<h3 id="getwidthprecisionaabbprecision">getWidth([precision:AABBPrecision])</h3>
+<p>get <code>Graphics</code>'s width (how wide it is when drawn with scale 1).</p>
+<h3 id="getheightprecisionaabbprecision">getHeight([precision:AABBPrecision])</h3>
+<p>get <code>Graphics</code>'s height (how high it is when drawn with scale 1).</p>
+<h3 id="setdisplaymodedisplaymode-quality">setDisplay(mode:DisplayMode, [quality])</h3>
+<p>general form of the <code>setDisplay</code> method. see specific forms below.</p>
+<h3 id="setdisplaytexture-quality">setDisplay("texture", [quality])</h3>
+<p>when drawing this <code>Graphics</code>, use a texture drawn through a single quad. note that this display mode does not take a quality parameter. if you want to change the texture resolution, use <code>setResolution</code>.</p>
+<p><code>quality</code> is either <code>"best"</code> (default) or <code>"fast"</code>.</p>
+<h3 id="setdisplaymesh-tesselator">setDisplay("mesh", [tesselator...])</h3>
+<p>when rendering this <code>Graphics</code>, use a a mesh constructed using the specified <a href="../tesselators/">tesselator</a>. If no <code>tesselator</code> is given, a default one is picked based on the <code>Graphics</code> usage (see <code>setUsage</code>). If instead of a tesselator, a number is given, this number will specify a quality using the default tesselator for the configured usage.</p>
+<h3 id="setdisplaygpux-lineshader-linequality">setDisplay("gpux", [lineShader], [lineQuality])</h3>
+<p>when rendering this <code>Graphics</code>, use an experimental GPU-based approach (rendering implicit surfaces using shaders). <code>lineShader</code> is either <code>"fragment"</code> or <code>"vertex"</code>. <code>lineQuality</code> is a number between 0 and 1.</p>
+<h3 id="setusagewhatusagetarget-usageusage">setUsage(what:UsageTarget, usage:Usage)</h3>
+<h3 id="setresolutionresolution">setResolution(resolution)</h3>
+<p>indicates up to which scale this <code>Graphics</code> should look crisp when displaying it through a scale transform. </p>
+<p>For example, a <code>resolution</code> of <code>1</code> indicates that you intend to apply no scaling. A <code>resolution</code> of <code>3</code> indicates, that you intend to display the <code>Graphics</code> up to three times its normal size.</p>
+<p>In case of <code>texture</code> displays, this will simply scale the underlying image by the given factor, giving you an unpixelated image at the desired scale factor. For <code>mesh</code>, the tesselation is applied to the blown up vector data.</p>
+<p>Note that increasing <code>resolution</code> does not affect the output size when drawing. It only affects the underlying display quality.</p>
+<h3 id="setorientationorientationorientation">setOrientation(orientation:Orientation)</h3>
+<p>Ensure that the orientation of all <code>Subpath</code>s in this <code>Graphics</code> is the given <code>orientation</code>.</p>
+<h1 id="attributes">Attributes</h1>
+<p><code>paths</code></p>
+<p>gives you the <code>Path</code>s in this <code>Graphics</code> as a <a href="../collections/">collection</a>.</p>
+<h1 id="types">Types</h1>
+<h2 id="graphicssize">GraphicsSize</h2>
+<ul>
+<li><code>"copy"</code></li>
+<li><code>"auto"</code> (default)</li>
+<li><code>number</code></li>
+</ul>
+<h2 id="aabbprecision">AABBPrecision</h2>
+<ul>
+<li><code>"low"</code></li>
+<li><code>"high"</code></li>
+</ul>
+<p>The latter computation will exactly estimate certain line extensions like miters, but it will be much slower.</p>
+<h2 id="displaymode">DisplayMode</h2>
+<ul>
+<li><code>"texture"</code></li>
+<li><code>"mesh"</code></li>
+<li><code>"gpux"</code></li>
+</ul>
+<h2 id="orientation">Orientation</h2>
+<ul>
+<li><code>"cw"</code> specifies clockwise orientation.</li>
+<li><code>"ccw"</code> specifies counterclockwise orientation.</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../collections/" class="btn btn-neutral float-right" title="Collections">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="../collections/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

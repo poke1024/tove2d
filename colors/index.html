@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Colors - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Colors";
+    var mkdocs_page_input_path = "colors.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Colors</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#rgb">RGB</a></li>
+    
+
+    <li class="toctree-l2"><a href="#rgba">RGBA</a></li>
+    
+
+    <li class="toctree-l2"><a href="#hex-string">Hex String</a></li>
+    
+
+    <li class="toctree-l2"><a href="#paint-object">Paint Object</a></li>
+    
+
+    <li class="toctree-l2"><a href="#nothing">Nothing</a></li>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Colors</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p>All methods that take colors as parameters allow 5 different ways to specify colors.</p>
+<h1 id="rgb">RGB</h1>
+<p>Use <code>r, g, b</code> to specify the RGB color <code>(r, g, b)</code>.</p>
+<div class="admonition tip">
+<p><code>path:setFillColor(1, 0.5, 0.2)</code></p>
+</div>
+<h1 id="rgba">RGBA</h1>
+<p>Use <code>r, g, b, a</code> to specify the RGB color <code>(r, g, b)</code> with alpha value <code>a</code>.</p>
+<div class="admonition tip">
+<p><code>path:setFillColor(1, 0, 0.1, 0.5)</code></p>
+</div>
+<h1 id="hex-string">Hex String</h1>
+<div class="admonition tip">
+<p><code>path:setFillColor("#aabbcc")</code></p>
+</div>
+<h1 id="paint-object">Paint Object</h1>
+<p>use a preconstructed <code>Paint</code> object.</p>
+<div class="admonition tip">
+<p><code>local p = tove.newPaint{type="solid", color={0.5, 0.2, 0.1}}
+path:setFillColor(p)</code></p>
+</div>
+<h1 id="nothing">Nothing</h1>
+<p><code>nil</code> indicates that no color (e.g. no fill) should be used.</p>
+<div class="admonition tip">
+<p><code>path:setFillColor(nil)</code></p>
+</div>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tesselators/" class="btn btn-neutral float-right" title="Tesselators">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../collections/" class="btn btn-neutral" title="Collections"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../collections/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../tesselators/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

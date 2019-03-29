@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Getting Started - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Getting Started";
+    var mkdocs_page_input_path = "tutorials/Getting_Started.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Getting Started</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="getting-started">Getting Started</h1>
+<p>Some info to get you started.</p>
+<h2 id="installation">Installation</h2>
+<p>To install TÖVE, grab TÖVE's <a href="https://github.com/poke1024/tove2d/releases/download/1.0/tove.zip"><code>binaries</code></a> package and unzip it inside your LÖVE project (as a folder called <code>tove</code>). You should then be able to load TÖVE using <code>tove = require "tove"</code>.</p>
+<p>TÖVE's folder contains four files:</p>
+<ul>
+<li><code>init.lua</code>: a Lua library binding to love</li>
+<li><code>libTove.dll</code>: TÖVE library (for Windows)</li>
+<li><code>libTove.dylib</code>: TÖVE library (for macOS)</li>
+<li><code>libTove.so</code>: TÖVE library (for Linux)</li>
+</ul>
+<p>Since you're running only on one platform, you'd only need one of the binary files, but they are all included for convenience.</p>
+<h2 id="drawing-a-triangle">Drawing a Triangle</h2>
+<p>Let's draw a triangle.</p>
+<p>First import TÖVE as described above. Then create a <code>Graphics</code> instance, which is the main API for drawing in TÖVE:</p>
+<pre><code>local tove = require &quot;tove&quot;
+local myDrawing = tove.newGraphics()
+</code></pre>
+
+<p><code>Graphics</code> provides various functions of drawing and works similar to a canvas. Here comes our triangle:</p>
+<pre><code>myDrawing:moveTo(100, 100)
+myDrawing:lineTo(200, 250)
+myDrawing:lineTo(50, 220)
+myDrawing:fill()
+</code></pre>
+
+<p><code>moveTo</code> moves your drawing brush to an absolute position. <code>lineTo</code> then draws two lines. <code>fill</code> finally tells TÖVE to close the shape (i.e. supplement the missing third line) and fill it (with the current fill color).</p>
+<p>To see what we've drawn, we need to display the <code>Graphics</code>instance to the screen like this:</p>
+<pre><code>function love.draw()
+    myDrawing:draw()
+end
+</code></pre>
+
+<p>Now you should see the image below; note that the coordinates you put into the <code>moveTo</code> and <code>lineTo</code> earlier correspond to the position of the triangle on LÖVE screen.</p>
+<p><img alt="" src="../images/tutorial/white-triangle.jpg" /></p>
+<p>Wow, very impressive, no?</p>
+<p>Ok, you could indeed add some color by calling <code>setFillColor</code> before doing the <code>fill</code>:</p>
+<pre><code>myDrawing:setFillColor(0.8, 0.4, 0.6)
+myDrawing:fill()
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/purple-triangle.jpg" /></p>
+<p>Note: <code>setFillColor</code>  can take RGBA values, but you can also specify HTML colors , e.g. <code>setFillColor(#80AA20)</code>.</p>
+<p>At this point, you might wonder what TÖVE is about. All this can be done with LÖVE as well. So on to the next section:</p>
+<h2 id="curves-lines-and-gradients">Curves, lines and gradients</h2>
+<p>While TÖVE supports straight lines, curves are its real matter. Let's bend one side of our triangle by replacing the first <code>lineTo</code> from above with a <code>curveTo</code>, which will draw a cubic bezier curve:</p>
+<pre><code>myDrawing:moveTo(100, 100)
+myDrawing:curveTo(120, 100, 210, 200, 200, 250)
+myDrawing:lineTo(50, 220)
+myDrawing:setFillColor(0.8, 0.4, 0.6)
+myDrawing:fill()
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/curved-triangle.jpg" /></p>
+<p><code>curveTo</code> takes the positions of two control points (x1, y1, x2, y2) and one target point (x, y).  Together with the previous starting point this makes four points to define the cubic bezier curve.</p>
+<p>This is a good place to note that you can also use <code>drawCircle(x, y, r)</code>  and <code>drawEllipse(x, y, rx, ry)</code> to draw circles and ellipses, and <code>drawRect(x, y, w, h, rx, ry)</code> to draw (rounded) rectangles.</p>
+<p>Let's continue with our triangle. Adding a bluish stroke of line width 10 is as simple as appending this code:</p>
+<pre><code>myDrawing:setLineColor(0.2, 0.4, 0.6)
+myDrawing:setLineWidth(10)
+myDrawing:stroke()
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/curved-triangle-stroked.jpg" /></p>
+<p>Now, instead of a solid purple fill, let's use a linear gradient to make things more interesting:</p>
+<pre><code>local gradient = tove.newLinearGradient(120, 130, 140, 160)
+gradient:addColorStop(0, 0.8, 0.4, 0.6)
+gradient:addColorStop(1, 0.6, 0.2, 0.6)
+myDrawing:setFillColor(gradient)
+myDrawing:fill()
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/triangle-gradient.jpg" /></p>
+<h2 id="importing-svgs">Importing SVGs</h2>
+<p>Yes, you can import SVGs, and it's as simple as this:</p>
+<pre><code>local rabbit = love.filesystem.read(&quot;assets/rabbit.svg&quot;)
+local myRabbit = tove.newGraphics(rabbit, 200)
+
+function love.draw()
+    love.graphics.translate(250, 250)
+    myRabbit:draw()
+end
+</code></pre>
+
+<p>The call to <code>newGraphics</code> takes the actual SVG data that was loaded via <code>love.filesystem.read</code>. The optional second parameter, <code>200</code>,  tells TÖVE to prescale the graphics to 200 pixels. If this is omitted, the SVG's natural scaling will be used, which assumes you know its exact scaling.</p>
+<p><img alt="" src="../images/tutorial/rabbit-svg.jpg" /></p>
+<p>Note that after loading the SVG, TÖVE no longer cares whether it's dealing with an SVG or a manually constructed graphics (meaning you can change the renderer and so on).</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

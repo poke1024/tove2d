@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Setting Renderers - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Setting Renderers";
+    var mkdocs_page_input_path = "tutorials/Renderers.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Setting Renderers</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="setting-renderers">Setting Renderers</h1>
+<p>This section should give you some idea of why there are three different renderers in TÖVE, what they do, and when you want to change things.</p>
+<h2 id="the-renderers">The renderers</h2>
+<p>TÖVE provides three renderers to bring vector graphics to the screen: <code>texture</code>, <code>mesh</code> and <code>shader</code>:</p>
+<ul>
+<li><code>texture</code> is the default renderer. It gives high quality and high performance for static images that don't need animation or scaling. Internally, this is NanoSVG rendering to a texture.</li>
+<li><code>mesh</code> uses a triangle mesh to produce a tessellated version of the graphics, which is then drawn using a LÖVE Mesh. Scaling will not produce pixelation, but crisp straight edges. Using this renderer,  curves and colors can be animated efficiently.</li>
+<li><code>shader</code> is a purely shader-based renderer that gives high quality at different resolutions. It's a very complex shader and highly experimental. It allows for efficient animation of curves and colors.</li>
+</ul>
+<p>You can tell TÖVE which renderer to use by calling <code>Graphics:setDisplay(mode, quality)</code> on your <code>Graphics</code> instance, e.g. <code>myDrawing:setDisplay("mesh")</code>. The next call to <code>Graphics:draw()</code> will then honor that setting. The optional <code>quality</code> parameter is a render-dependent number that allows you to configure the level of detail for some renderers.</p>
+<p>Let's try this out. With the curved triangle from the Getting Started section, let's set a mesh renderer before drawing:</p>
+<pre><code> myDrawing:setDisplay(&quot;mesh&quot;)
+
+function love.draw()
+    myDrawing:draw()
+end
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/triangle-mesh-fine.jpg" /></p>
+<p>You might notice that the bottom right edge looks a bit edgy now. That's due to the mesh's default quality setting. To see that we're really dealing with a mesh, let's increase that effect by telling TÖVE to use even less triangles:</p>
+<pre><code> myDrawing:setDisplay(&quot;mesh&quot;, 100) -- specify the target resolution in pixels to define tesselation detail
+</code></pre>
+
+<p><img alt="" src="../images/tutorial/mesh-low.jpg" /></p>
+<p>One of the strengths of TÖVE is that choosing the display renderer is independent of building your geometry and colors.</p>
+<h2 id="which-renderer-is-right-for-me">Which renderer is right for me?</h2>
+<p>Here are some hints:</p>
+<p><code>texture</code> gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using <code>Graphics:setResolution</code> (this won't affect the display size, but you'll see that a resolution of <code>2</code> will allow you to scale the image by a factor of 2 without seeing pixelation).</p>
+<p><code>mesh</code> is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a LÖVE Mesh, which is efficient to draw, scale and animate.</p>
+<p><code>shader</code> can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).</p>
+<h2 id="setting-the-mesh-renderer-quality">Setting the mesh renderer quality</h2>
+<p>The quality setting in <code>Graphics:setDisplay</code>  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are <code>static</code> or <code>dynamic</code> (see the section on Animating Things).</p>
+<ul>
+<li>If your points are <code>static</code> (default), the quality is a number between 0 and 1, where 1 is the highest suggested quality (though you can go above 1). The renderer will produce an adaptive mesh tessellation, where some curves get many points and others (e.g. straight lines) few. Values below 0.1 trigger a special low quality tier that tries to produce a minimum of triangles.</li>
+<li>If your points are <code>dynamic</code> (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.</li>
+<li>In addition, you can always force fixed subdivision by specifying <code>tove.fixed(n)</code> as quality: each curve will then be segmented into exactly 2^n parts. Use this if you don't want adaptive subdivision for static point meshes.</li>
+</ul>
+<p>The second factor to mention here is the value set via <code>Graphics:setResolution</code>. TÖVE internally scales meshes before applying the quality settings. That means that setting a higher resolution will yield a higher quality with the same quality number. Imagine rendering the same image at a higher resolution and then scaling it down again for display. This is the effect you get by calling <code>setResolution</code> on meshes.</p>
+<h2 id="the-mesh-renderer-and-gradients">The mesh renderer and gradients</h2>
+<p>The mesh renderer automatically detects if you are using gradients or not. If not, it internally uses a flat mesh of vertices and colors. If you use gradients, it will use a shader implementation for the coloring.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

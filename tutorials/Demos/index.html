@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>The Demos - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "The Demos";
+    var mkdocs_page_input_path = "tutorials/Demos.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>The Demos</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-demos">The Demos</h1>
+<p>You might wonder at this point, what you gain with TÖVE over simply rasterizing your vector graphics to textures via an export step from your vector drawing software. It's flexibility.</p>
+<p>Let's take a quick look at some of <a href="https://github.com/poke1024/tove2d/tree/master/demos">TÖVE's demos</a>, as they explain a lot about the core ideas and capabilities of TÖVE.</p>
+<h2 id="running-the-demos">Running the Demos</h2>
+<p>Check out the whole repo from GitHub. To run the demos, the <code>lib</code> and <code>assets</code> folders need to be accessible from inside the demos.</p>
+<p>On macOS and Linux, the demos contain symbolic links, and all you need to do is to unzip TÖVE's lib into the repo's root like this:</p>
+<ul>
+<li>demos</li>
+<li>docs</li>
+<li>lib</li>
+<li>libTove.dylib</li>
+<li>...</li>
+<li>LICENSE</li>
+<li>...</li>
+</ul>
+<p>Then you can start one demo, e.g. the <code>zoom</code> demo, using:</p>
+<pre><code>cd demos/zoom
+love .
+</code></pre>
+
+<p>On Windows, the symbolic links don't work :-( So you need to unzip the <code>lib</code> into each demo folder. Also you need to copy the <code>demos/assets</code> folder inside the respective demo folder. Basically: replace the symlinks with the real stuff.</p>
+<h2 id="miniedit-demo">MiniEdit Demo</h2>
+<p>TÖVE comes with a mini editor that lets you explore all of TÖVE's features (different renderers and settings) interactively. You can drag and drop SVGs into the editor. It also has a demo mode that lets you benchmark performance:</p>
+<p><img alt="" src="../images/demos/miniedit.png" />
+<img alt="" src="../images/demos/miniedit2.png" /></p>
+<h2 id="zoom-demo">Zoom Demo</h2>
+<p>Scaling bitmaps produces blurriness or pixelation, scaling meshes produces straight crisp lines, while TÖVE's unique shader-based <code>curves</code> renderer will render crisp curves at many reasonable scales:</p>
+<p><img alt="" src="../images/demos/zoom.png" /></p>
+<h2 id="renderers-demo">Renderers Demo</h2>
+<p>Interactively zoom TÖVE's three renderers to inspect the quality:</p>
+<p><img alt="" src="../images/demos/renderers.png" /></p>
+<h2 id="tesselation-demo">Tesselation Demo</h2>
+<p>The <code>mesh</code> renderer's quality setting produces meshes of different detail and triangle count from the same SVG:</p>
+<p><img alt="" src="../images/demos/tess.png" /></p>
+<h2 id="blob-demo">Blob Demo</h2>
+<p>Animate between two SVGs using different renderers and qualities:</p>
+<p><img alt="" src="../images/demos/blob.png" /></p>
+<p>The SVGs have been exported as animation from one single timeline from Smith Micro Moho. As Moho uses one underlying geometry for all exported frame (defined on frame 1 in the timeline), all SVGs share the same path and point layout, which allows for interpolation in TÖVE.</p>
+<h2 id="hearts-demo">Hearts Demo</h2>
+<p>Procedurally animate geometry and colors (here: a linear gradient) through different renderers:</p>
+<p><img alt="" src="../images/demos/hearts.png" /></p>
+<p>The numbers displayed are times spent inside <code>love.graphics.draw</code> (might not be representative as more work might happen later in the  swap of the GL context).</p>
+<p>The <code>mesh</code> and <code>curves</code> renderers update existing GPU data structures like meshes and shader textures without recreating them, which allows for higher frame rates.</p>
+<p>This demo also illustrates why the <code>flatmesh</code> renderer is called as it's called: you see that it's not able to handle gradients very well.</p>
+<h2 id="fill-rule-demo">Fill Rule Demo</h2>
+<p>TÖVE offers support for holes and fill rules for all of its renderers:</p>
+<p><img alt="" src="../images/demos/fillrule.png" /></p>
+<h2 id="clip-path-demo">Clip Path Demo</h2>
+<p>For non-animated rendering, TÖVE is able to render complex clip paths in texture and mesh modes:</p>
+<p><img alt="" src="../images/demos/clippath.png" /></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

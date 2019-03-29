@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Animating Things - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Animating Things";
+    var mkdocs_page_input_path = "tutorials/Animation.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../../tesselators/">Tesselators</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Animating Things</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="animating-things">Animating Things</h1>
+<p>TÖVE is designed for animating stuff. Its focus is not on static vector graphics rendering, but on animated vector graphics for games.</p>
+<h2 id="animating-with-the-stage-api">Animating with the Stage API</h2>
+<p>Many animations can be achieved by moving, rotating and scaling certain fixed parts of a graphics. TÖVE offers the retained <code>Stage</code> API for simplifying these kind of animations.</p>
+<p>At the core is the <code>Shape</code> object. Each <code>Shape</code> holds a <code>Graphics</code> you can access. Each <code>Shape</code> knows about its own position, rotation and scale. You can change these at any time and  they will stay this way across frames until you change them again. So if you have objects on the screen and only want to move some of them, <code>Shape</code> might simplify your code.</p>
+<p>For drawing, <code>Shapes</code> need to added to a <code>Stage</code>. Here's an example:</p>
+<pre><code>local stage = tove.newStage()
+
+local shape = tove.newShape()
+shape.graphics:drawCircle(0, 0, 100)
+shape.graphics:setFillColor(0.7, 0.2, 0.3)
+shape.graphics:fill()
+
+-- add this shape to the stage. from now on
+-- it will get rendered with the stage.
+stage:addChild(shape)
+
+function love.draw()
+    -- change the position of our shape.
+    shape.x = love.mouse.getX()
+    shape.y = love.mouse.getY()
+
+    stage:draw()
+end
+</code></pre>
+
+<h2 id="flipbooks-and-animations">Flipbooks and Animations</h2>
+<p>Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this.</p>
+<p>First, there are flipbooks. These are prerendered distinct frames. Think of a sprite atlas being played back.</p>
+<p>Seconds, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames).</p>
+<p>The "blob" demo has code for both animation styles.</p>
+<h3 id="tweens">Tweens</h3>
+<p>For both flipbooks and animations, the first thing to do is to create a tween that gathers all the keyframes and durations, much like a timeline in an animation program.</p>
+<p>Tweens can be created from <code>Graphics</code> or from SVG text data like this:</p>
+<pre><code>svg1 = love.filesystem.read(&quot;frame1.svg&quot;)
+svg2 = love.filesystem.read(&quot;frame2.svg&quot;)
+
+tween = tove.newTween(svg1):to(svg2, 1)
+</code></pre>
+
+<p>The code above creates a tween of two frames, where the second frame happens one second after the other. You can add more frames by calling <code>to</code>. So,  <code>tove.newTween(svg1):to(svg2, 1):to(svg3, 5)</code> would create a tween that adds an additional frame 5 seconds after the second.</p>
+<p><code>to</code> takes an optional third parameter which allows you to ease the transition. It expects a one-parameter Lua function that maps (0, 1).</p>
+<h3 id="flipbooks">Flipbooks</h3>
+<p>Flipbooks consist of distinct prerendered frames. That means flipbooks have high quality but only a discrete time resolution.</p>
+<p>Creating a flipbook is easy:</p>
+<p><code>f = tove.newFlipbook(8, tween)</code></p>
+<p>This creates a flipbook with 8 frames per second, i.e. it prerenders the tween at this frame rate. You can animate this flipbook by calling <code>f:draw()</code> and by setting <code>f.t</code> for its current time (in tween time, i.e. this is not a frame number).</p>
+<p>You can also specify what kind of renderer you want to use for the distinct frames. <code>bitmap</code> is the default, but you can also choose <code>mesh</code> which will prerender your frames as adaptive meshes. You can also specify quality settings as optional follow-up parameters.</p>
+<h3 id="animations">Animations</h3>
+<p>Animations are frames interpolated and rendered in realtime. That means animations have a continuous time resolution but can also be expensive in terms of rendering.</p>
+<p>Animations are created like this:</p>
+<p><code>a = tove.newAnimation(tween, "mesh")</code></p>
+<p>As with flipbooks, you can use <code>a:draw()</code> to draw the current frame, and <code>a.t</code> to set the time.</p>
+<h3 id="looping">Looping</h3>
+<p>By default, animations and flipbooks interpolate as if they bounce forth and back. If you want to look your animation, make sure to transition to the first frame at the end of the tween. This indicates to TÖVE that you want a continuous interpolation from first to last:</p>
+<pre><code>tween = tove.newTween(svg1):to(svg2, 1):to(svg1, 1)
+</code></pre>
+
+<h3 id="a-technical-note">A Technical Note</h3>
+<p>If you're using animations with a mesh renderer, TÖVE will use a fixed resolution flattening and try to precalculate all triangulations. That means  that the quality will be lower than for adaptive meshes, but things should be fast.</p>
+<h2 id="procedural-animation-features">Procedural Animation Features</h2>
+<p>Sometimes you want even more flexibility for some kind of procedural animation:</p>
+<ul>
+<li>freely animate colors and gradients of a path in realtime</li>
+<li>freely animate a path by modifying its control points in realtime</li>
+</ul>
+<p>TÖVE can do this. Take a look at the "hearts" demo to see working code. Here are some hints:</p>
+<p>The first step to animate colors or points is to tell your <code>Graphics</code> instance about it: call <code>Graphics:setUsage</code> to animate <code>points</code> (the shape of your drawing) or <code>colors</code> (the fill or stroke color of your drawing) or both. </p>
+<pre><code>myDrawing:setUsage(&quot;points&quot;, &quot;dynamic&quot;) -- animate points
+myDrawing:setUsage(&quot;colors&quot;, &quot;dynamic&quot;) -- animate colors
+</code></pre>
+
+<p>Without doing this, TÖVE will not be able to animate your objects efficiently and things will be slow.</p>
+<p>Please note that TÖVE does not efficiently support animations that add or delete points.</p>
+<h2 id="animating-colors">Animating colors</h2>
+<p>Animating colors is easy. Here are two examples:</p>
+<h3 id="animating-by-re-setting-the-color">Animating by re-setting the color</h3>
+<p>To animate the triangle from the Getting Started section, you could do this:</p>
+<pre><code>function love.draw()
+    local t = love.timer.getTime() -- current time
+    local r, g, b = math.abs(math.sin(t)), 0.4, 0.2
+    myDrawing.paths[1]:setFillColor(tove.newColor(r, g, b))
+end
+</code></pre>
+
+<p>Note that we do not call <code>setFillColor</code> on the <code>Graphics</code> as that would only change the next new path we fill using <code>Graphics:fill()</code>.  As we actively want to change the color of an already existing  path, we need to grab that path using <code>myDrawing.paths[1]</code>.</p>
+<p>Of course, if you'd like the line color to change, you'd call <code>setLineColor</code> instead.</p>
+<h3 id="animating-by-changing-the-color">Animating by changing the color</h3>
+<p>A slightly different approach is changing the color itself:</p>
+<pre><code>local myColor = tove.newColor()
+myDrawing.paths[1]:setFillColor(myColor)
+
+function love.draw()
+    local r = math.abs(math.sin(love.timer.getTime()))
+    myColor:set(r, 0.4, 0.2)
+</code></pre>
+
+<p>RGB colors can be read and changed by either <code>set(r, g, b, a)</code> and <code>r, g, b, a = get()</code> or directly via attributes, e.g. <code>someColor.r = 0.3</code>.</p>
+<p>So the code above could also be written as:</p>
+<pre><code>local myColor = tove.newColor(0.0, 0.4, 0.2)
+myDrawing.paths[1]:setFillColor(myColor)
+
+function love.draw()
+    myColor.r = math.abs(math.sin(love.timer.getTime()))
+</code></pre>
+
+<h3 id="a-note-on-dependencies">A note on dependencies</h3>
+<p>TÖVE internally assumes that each object only has exactly one owner. For example, a color can only belong to one path; you cannot assign the same color to two paths, and then change it for both paths.</p>
+<p>As soon as you assign the same color to two paths, TÖVE will internally clone one of the colors.</p>
+<p>So what will happen in the case above is that only one path (the one with the uncloned color) would change its color.</p>
+<p>The same holds true for trajectories and paths, and paths and graphics. Keep that in mind when working with many different objects.</p>
+<h2 id="animating-shapes-with-commands">Animating shapes with Commands</h2>
+<p>Most drawing calls come return a command, that allows you to animate what you have just drawn.</p>
+<p>An example:</p>
+<pre><code>local shape = tove.newGraphics()
+shape.moveTo(10, 10)
+local myLineTo = shape.lineTo(100, 100)
+shape.moveTo(-50, 200)
+</code></pre>
+
+<p>At any point later in your code, you can now modify the <code>lineTo</code> command:</p>
+<pre><code>myLineTo.x = 200
+</code></pre>
+
+<p>This has the same effect as if you'd recreated the whole graphics with the modified <code>lineTo</code>,  but it's much faster - using mutable commands, TÖVE will animate stuff very efficiently (for example, for the mesh renderer, this boils down to a <code>Mesh:setVertices</code> call in LÖVE).</p>
+<p>The attribute names are <code>x</code> and <code>y</code> for <code>moveTo</code> and <code>lineTo</code>. For <code>curveTo</code> you also have <code>cp1x</code>, <code>cp1y</code>, <code>cp2x</code>, <code>cp2y</code>. You can read and write those properties.</p>
+<h2 id="directly-accessing-paths-and-curves">Directly Accessing Paths and Curves</h2>
+<p>Using  Command  is what you want to animate one path most of the time. Sometimes though want to have a broader access to your curve data. For example you might want to morph whole parts of a path. TÖVE let's you do this.</p>
+<p>Let's first talk about how TÖVE stores your curves and how it names things:</p>
+<ul>
+<li>A <code>Graphics</code> is a collection of <code>Path</code>s</li>
+<li>A <code>Path</code> is a collection of <code>Subpath</code>s (plus fill and stroke styles etc.)</li>
+<li>A <code>Subpath</code> consists of <code>Curve</code>s</li>
+<li>A <code>Curve</code> is a cubic bezier curve and consists of four control points</li>
+</ul>
+<p>With this scheme, you can access paths, subpaths and curves (all indices are 1-based):</p>
+<pre><code>local myCurve = myGraphics.paths[1].subpaths[2].curves[5]
+</code></pre>
+
+<p>Once you have picked a curve, you can modify its points by accessing its attributes <code>x0</code>, <code>y0</code>,  <code>cp1x</code>, <code>cp1y</code>, <code>cp2x</code>, <code>cp2y</code>, <code>x</code>, <code>y</code> (the latter 6 correspond to the parameters you'd pass to <code>Graphics:curveTo</code>). This works for reading and writing.</p>
+<p>For example, to animate the x target point of curve 1 of some graphics using your mouse, you might do this:</p>
+<pre><code>function love.draw()
+    myDrawing.paths[1].subpaths[1].curves[1].x = love.mouse.getX()
+    myDrawing:Draw()
+end
+</code></pre>
+
+<p>If you don't want to access curves, but the underlying points of all the subpath's curves as one continuous array, you can do it like this:</p>
+<pre><code> myGraphics.paths[1].subpaths[2].points[3].x
+ myGraphics.paths[1].subpaths[2].points[3].y
+</code></pre>
+
+<p>To find out how many paths, subpaths, curves or points you have, you can use the <code>count</code> attribute, e.g.:</p>
+<pre><code>myDrawing.paths.count -- number of paths
+myDrawing.paths[1].subpaths.count -- number of subpaths in path 1
+myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in path 1
+</code></pre>
+
+<h2 id="mesh-animation-caveats">Mesh Animation Caveats</h2>
+<p>If you're using the <code>mesh</code> renderer for animation, there are two specific things that can cause problems:</p>
+<ul>
+<li>Clean, oriented curves. Usually, things should just work. If not, here are some hints.</li>
+</ul>
+<p>TÖVE's automatically deals with obvious cases of point duplication (also during animation). Furthermore in dynamic points mesh mode, the default is to ignore orientation (i.e. no holes), which means your curve can be oriented in the wrong way and you will still see it.</p>
+<p>There might be situations where you want to clean or reorient your curves. TÖVE offers two functions. Note that cleaning will get you into problems when animating paths that need to have exactly the same point layout.</p>
+<pre><code>myGraphics:clean()
+myGraphics:setOrientation(&quot;ccw&quot;)
+</code></pre>
+
+<ul>
+<li>Triangulations.  TÖVE's animation system has a dynamic triangulation monitor that check whether it's current triangulation is still good or needs updating (which will usually happen due to sub shapes changing from convex to concave forms or vice versa). TÖVE also caches triangulations and tries to reuse them. Still, with procedural animation and complete freedom, you might end up in situations where many retriangulations happen, which is expensive on the CPU.</li>
+</ul>
+<p>You can disable automatic retriangulation by calling <code>myDrawing:setUsage("triangles", "static")</code>  after calling <code>myDrawing:setUsage("points", "dynamic")</code> (as the latter automatically always sets <code>triangles</code> to <code>dynamic</code>). This means TÖVE will stick with one triangulation (which can result in visual errors).  If you do this, be sure to use <code>graphics:cache()</code> to pick one good triangulation at the beginning that you define as suitable for all animation frames.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>
