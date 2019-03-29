@@ -13,7 +13,7 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	-- , "mesh"
+
 	for _, mode in ipairs {"texture", "mesh"} do
 		local graphics = newGraphics()
 		local quality = {}
@@ -28,7 +28,7 @@ end
 load(love.filesystem.read("local/house.svg"))
 
 function love.draw()
-	tovedemo.draw("Complex Clip Paths.")
+	tovedemo.draw("Complex Clipping.")
 	flow:draw()
 end
 

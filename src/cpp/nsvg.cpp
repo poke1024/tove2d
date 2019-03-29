@@ -159,6 +159,15 @@ public:
 		const XMLElement *defs = doc.RootElement()->FirstChildElement("defs");
 		while (defs) {
 			defs->Accept(this);
+
+			// we handle <clipPath>s separately, as nanosvg will ignore them
+			// inside the <defs> tag by default.
+			const XMLElement *clipPath = defs->FirstChildElement("clipPath");
+			while (clipPath) {
+				clipPath->Accept(this);
+				clipPath = clipPath->NextSiblingElement("clipPath");
+			}
+
 			defs = defs->NextSiblingElement("defs");
 		}
 		mSkipDefs = true;
@@ -172,11 +181,15 @@ public:
     }
 
     virtual bool VisitEnter(const XMLElement &element, const XMLAttribute *firstAttribute) {
+		if (strcmp(element.Name(), "mask") == 0) {
+			return false; // ignore
+		}
+
     	if (mSkipDefs && strcmp(element.Name(), "defs") == 0 &&
 			element.Parent() == mCurrentDocument->RootElement()) {
 			
-			// already handled in l VisitEnter(const XMLDocument &doc)
-			return true;
+			// already handled in VisitEnter(const XMLDocument &doc)
+			return false;
 		}
     	if (strcmp(element.Name(), "use") == 0) {
     		const char *href = element.Attribute("href");

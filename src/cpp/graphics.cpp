@@ -137,6 +137,13 @@ void ClipSet::link() {
 	}
 }
 
+ClipSet::ClipSet(const std::vector<ClipRef> &c) : clips(c) {
+	for (int i = 0; i < c.size(); i++) {
+		assert(c[i]->nsvg.index == i);
+	}
+	link();
+}
+
 ClipSet::ClipSet(const ClipSet &source, const nsvg::Transform &transform) {
 	const int numClips = source.clips.size();
 	clips.resize(numClips);
@@ -256,13 +263,16 @@ Graphics::Graphics(const NSVGimage *image) :
 
 #ifdef NSVG_CLIP_PATHS
     std::vector<ClipRef> clips;
-    TOVEclipPath *clipPath = image->clipPaths;
+    TOVEclipPath *clipPath = image->clip.instances;
     while (clipPath) {
         clips.push_back(tove_make_shared<Clip>(clipPath));
         clipPath = clipPath->next;
     }
+	std::sort(clips.begin(), clips.end(), [] (const ClipRef &a, const ClipRef &b) {
+		return a->nsvg.index < b->nsvg.index;
+	});
     clipSet = tove_make_shared<ClipSet>(clips);
-	nsvg.clipPaths = clipSet->getHead();
+	nsvg.clip.instances = clipSet->getHead();
 #endif
 }
 
@@ -455,7 +465,7 @@ void Graphics::set(const GraphicsRef &source, const nsvg::Transform &transform) 
 	} else {
 		clipSet = ClipSetRef();
 	}
-	nsvg.clipPaths = clipSet ? clipSet->getHead() : nullptr;
+	nsvg.clip.instances = clipSet ? clipSet->getHead() : nullptr;
 #endif
 }
 

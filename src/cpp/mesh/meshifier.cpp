@@ -455,6 +455,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 ClipperLib::Paths RigidTesselator::toClipPath(
 	const std::vector<PathRef> &paths) const {
 
+	// clipping is not supported with RididTesselator.
 	return ClipperPaths();
 }
 

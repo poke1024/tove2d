@@ -44,9 +44,7 @@ private:
 	void link();
 
 public:
-	ClipSet(const std::vector<ClipRef> &c) : clips(c) {
-		link();
-	}
+	ClipSet(const std::vector<ClipRef> &c);
 	ClipSet(const ClipSet &source, const nsvg::Transform &t);
 
 	TOVEclipPath *getHead() const {
