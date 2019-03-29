@@ -41,7 +41,11 @@ if env["PLATFORM"] == 'win32':
 		env["CCFLAGS"] += ' /O2 /fp:fast '
 		env["LINKFLAGS"] = ' /OPT:REF '
 else:
-	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations -march=haswell '
+	# might want to trigger these with additional options:
+	# -march=haswell
+	# -Wreorder -Wunused-variable
+
+	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations '
 
 	if GetOption('tovedebug'):
 		CCFLAGS += '-g '

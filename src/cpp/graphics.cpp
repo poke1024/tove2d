@@ -24,6 +24,7 @@
 #include "mesh/meshifier.h"
 #include "nsvg.h"
 #include <sstream>
+#include <algorithm>
 
 BEGIN_TOVE_NAMESPACE
 
