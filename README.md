@@ -1,4 +1,4 @@
-# TÖVE <img align="right" src="https://github.com/poke1024/tove2d/blob/master/docs/images/tovelogo.png" height="200">
+# TÖVE <img align="right" src="https://github.com/poke1024/tove2d/blob/master/docs/tutorials/images/tovelogo.png" height="200">
 Animated vector graphics for [LÖVE](https://love2d.org/).
 
 ## Description
