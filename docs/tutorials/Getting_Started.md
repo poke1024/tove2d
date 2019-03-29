@@ -2,7 +2,7 @@
 Some info to get you started.
 
 ## Installation
-To install TÖVE, grab TÖVE's [`binaries`](https://github.com/poke1024/tove2d/releases/download/1.0/tove.zip) package and unzip it inside your LÖVE project (as a folder called `tove`). You should then be able to load TÖVE using `tove = require "tove"`.
+To install TÖVE, grab TÖVE's [`binaries`](https://github.com/poke1024/tove2d/releases) package and unzip it inside your LÖVE project (as a folder called `tove`). You should then be able to load TÖVE using `tove = require "tove"`.
 
 TÖVE's folder contains four files:
 

@@ -20,6 +20,8 @@ The most essential stuff is here:
 
 There are [beginnings of a documentation](https://poke1024.github.io/tove2d/).
 
+There are [precompiled binaries](https://github.com/poke1024/tove2d/releases).
+
 Note: on Windows, in order to run the demos, you need to call `setup.bat` once (this
 will fix the links to the lib and asset folders, so you can run e.g. `love demos/blob`).
 
