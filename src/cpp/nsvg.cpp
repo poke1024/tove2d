@@ -275,6 +275,7 @@ const ToveRasterizeSettings *getDefaultRasterizeSettings() {
 		defaultSettings.tessTolerance = rasterizer->tessTol;
 		defaultSettings.distTolerance = rasterizer->distTol;
 		defaultSettings.quality.flags = 1;
+		defaultSettings.quality.noise = 5.0f / 255.0f;
 		defaultSettings.quality.palette.size = 0;
 		defaultSettings.quality.palette.colors = nullptr;
 	}
@@ -299,6 +300,7 @@ static NSVGrasterizer *getRasterizer(
 	rasterizer->distTol = settings->distTolerance;
 
 	rasterizer->quality.flags = settings->quality.flags;
+	rasterizer->quality.noise = settings->quality.noise;
 	rasterizer->quality.palette.size = settings->quality.palette.size;
 	rasterizer->quality.palette.colors = settings->quality.palette.colors;
 
