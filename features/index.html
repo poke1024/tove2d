@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Features - TÖVE</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Features";
+    var mkdocs_page_input_path = "features.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> TÖVE</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Features</a>
+    <ul class="subnav">
+            
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../graphics/">Graphics</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../collections/">Collections</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../colors/">Colors</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tesselators/">Tesselators</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../release-notes/">Release Notes</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">TÖVE</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Features</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p>Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games.</p>
+<p>Here's what you can expect from TÖVE's different renderers:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>texture</th>
+<th>mesh<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup></th>
+<th> mesh<sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup></th>
+<th>gpux</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Holes Support</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;<sup id="fnref:4"><a class="footnote-ref" href="#fn:4" rel="footnote">4</a></sup></td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Non-Zero Fill Rule</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Even-Odd Fill Rule</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Clip Paths</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CB;</td>
+</tr>
+<tr>
+<td>Solid Colors</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Linear Gradients</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Radial Gradients</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Thick Lines</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Non-Opaque Lines</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Miter Joins</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Bevel Joins</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+</tr>
+<tr>
+<td>Round Joins</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CF;<sup id="fnref:3"><a class="footnote-ref" href="#fn:3" rel="footnote">3</a></sup></td>
+</tr>
+<tr>
+<td>Line Dashes</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CB;</td>
+</tr>
+<tr>
+<td>Line Caps</td>
+<td>&#x25CF;</td>
+<td>&#x25CF;</td>
+<td>&#x25CB;</td>
+<td>&#x25CB;</td>
+</tr>
+</tbody>
+</table>
+<p><br/>
+Also note the number of OpenGL drawing calls/context switches:</p>
+<table>
+<thead>
+<tr>
+<th>texture</th>
+<th>mesh</th>
+<th>gpux</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 per <code>Graphics</code></td>
+<td>1 per <code>Graphics</code></td>
+<td>&gt;= 1 per <code>Path</code></td>
+</tr>
+</tbody>
+</table>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>if used as static mesh, i.e. building it once and not animating its shape.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>if used as animated mesh, i.e. when calling <code>setUsage</code> on "points" with "dynamic".&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>for some shapes, by using the <code>fragment</code> option for line rendering.&#160;<a class="footnote-backref" href="#fnref:3" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>for some shapes, hole polygons must not intersect non-hole polygons.&#160;<a class="footnote-backref" href="#fnref:4" rev="footnote" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../graphics/" class="btn btn-neutral float-right" title="Graphics">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="../graphics/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
