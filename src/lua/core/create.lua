@@ -98,7 +98,7 @@ create.texture = function(self)
 		settings.quality.flags = 0
 	elseif (quality[1] or "best") == "best" then
 		settings.quality.flags = 1
-		settings.quality.noise = quality[2] or (5.0 / 255.0)
+		settings.quality.noise = quality[2] or 0.01
 	elseif quality[1] == "retro" then
 		settings.quality.flags = 1
 		settings.quality.noise = quality[2] or 0
