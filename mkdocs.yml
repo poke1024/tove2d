@@ -1,10 +1,14 @@
 site_name: TÖVE
 nav:
+  - Features: features.md
   - Graphics: graphics.md
   - Collections: collections.md
   - Colors: colors.md
   - Tesselators: tesselators.md
+  - Release Notes: release-notes.md
 theme: readthedocs
 markdown_extensions:
   - admonition
   - fenced_code
+  - footnotes
+  - tables
