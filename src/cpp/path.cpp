@@ -731,6 +731,54 @@ void Path::intersect(float x1, float y1, float x2, float y2) const {
 	// return intersecter.get()
 }
 
+void Path::refine(int factor) {
+	for (const auto &subpath : subpaths) {
+		subpath->refine(factor);
+	}
+}
+
+void Path::rotate(ToveElementType what, int k) {
+	switch (what) {
+		case TOVE_SUBPATH: {
+			std::rotate(
+				subpaths.begin(),
+				subpaths.begin() + umod(k, subpaths.size()),
+				subpaths.end());
+		} break;
+		default: {
+			for (const auto &subpath : subpaths) {
+				subpath->rotate(what, k);
+			}	
+		} break;
+	}
+}
+
+bool Path::morphify(const std::vector<PathRef> &paths) {
+	if (paths.size() < 2) {
+		return false;
+	}
+
+	const int n = paths[0]->getNumSubpaths();
+	for (int i = 1; i < paths.size(); i++) {
+		if (paths[i]->getNumSubpaths() != n) {
+			return false;
+		}
+	}
+
+	std::vector<SubpathRef> subpaths;
+	subpaths.reserve(paths.size());
+
+	for (int j = 0; j < n; j++) {
+		subpaths.clear();
+		for (int i = 0; i < paths.size(); i++) {
+			subpaths.push_back(paths[i]->getSubpath(j));
+		}
+		Subpath::morphify(subpaths);
+	}
+
+	return true;
+}
+
 void Path::updateNSVG() {
 	updateBounds();
 

@@ -209,6 +209,13 @@ tove.init = function(path)
 		evenodd = lib.TOVE_FILLRULE_EVEN_ODD
 	}
 
+	tove.elements = {
+		curve = lib.TOVE_CURVE,
+		point = lib.TOVE_POINT,
+		subpath = lib.TOVE_SUBPATH,
+		path = lib.TOVE_PATH
+	}
+
 	local function findEnum(enums, value)
 		for k, v in pairs(enums) do
 			if v == value then

@@ -235,6 +235,10 @@ void PathAnimate(TovePathRef path, TovePathRef a, TovePathRef b, float t) {
 	deref(path)->animate(deref(a), deref(b), t, 1);
 }
 
+void PathRotate(TovePathRef path, ToveElementType what, int k) {
+	deref(path)->rotate(what, k);
+}
+
 int PathGetNumCurves(TovePathRef path) {
 	return deref(path)->getNumCurves();
 }
@@ -339,6 +343,10 @@ void PathSetLineJoin(TovePathRef path, ToveLineJoin join) {
 
 const char *PathGetId(TovePathRef path) {
 	return deref(path)->nsvg.id;
+}
+
+void PathRefine(TovePathRef path, int factor) {
+	deref(path)->refine(factor);
 }
 
 void ReleasePath(TovePathRef path) {
@@ -699,6 +707,19 @@ ToveLineJoin GraphicsGetLineJoin(ToveGraphicsRef graphics) {
 
 void GraphicsSetLineJoin(ToveGraphicsRef graphics, ToveLineJoin join) {
 	deref(graphics)->setLineJoin(join);
+}
+
+bool GraphicsMorphify(const ToveGraphicsRef *graphics, int n) {
+	std::vector<GraphicsRef> g;
+	g.reserve(n);
+	for (int i = 0; i < n; i++) {
+		g.push_back(deref(graphics[i]));
+	}
+	return Graphics::morphify(g);
+}
+
+void GraphicsRotate(ToveGraphicsRef graphics, ToveElementType what, int k) {
+	deref(graphics)->rotate(what, k);
 }
 
 void ReleaseGraphics(ToveGraphicsRef graphics) {

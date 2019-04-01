@@ -252,6 +252,8 @@ public:
 	void clearChanges(ToveChangeFlags flags);
 
 	void animate(const GraphicsRef &a, const GraphicsRef &b, float t);
+	static bool morphify(const std::vector<GraphicsRef> &graphics);
+	void rotate(ToveElementType what, int k);
 
 	void computeClipPaths(const AbstractTesselator &tess) const;
 

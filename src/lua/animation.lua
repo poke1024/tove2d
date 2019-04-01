@@ -18,14 +18,28 @@ local Tween = {}
 Tween.__index = Tween
 
 tove.newTween = function(graphics)
-	return setmetatable({_graphics0 = graphics, _to = {}, _duration = 0}, Tween)
+	return setmetatable({_graphics0 = graphics, _to = {}, _duration = 0, _morph = false}, Tween)
+end
+
+tove.newMorph = function(graphics)
+	local t = tove.newTween(graphics)
+	t._morph = true
+	return t
 end
 
 function Tween:to(graphics, duration, ease)
 	table.insert(self._to, {graphics = graphics, duration = duration, ease = ease or _linear})
 	self._duration = self._duration + duration
-
 	return self
+end
+
+local function morphify(graphics)
+	local n = #graphics
+	local refs = ffi.new("ToveGraphicsRef[?]", n)
+	for i, g in ipairs(graphics) do
+		refs[i - 1] = g._ref
+	end
+	lib.GraphicsMorphify(refs, n)
 end
 
 local function createGraphics(graphics)
@@ -55,19 +69,34 @@ tove.newFlipbook = function(fps, tween, ...)
 				duration = duration - 1
 			end
 		end
+
 		local g1 = createGraphics(keyframe.graphics)
 		local ease = keyframe.ease
-		for j = j0, duration do
+
+		-- for flipbooks, we can morph between pairs of
+		-- graphics (we don't need a global morph).
+		local ag0 = g0
+		local ag1 = g1
+		if j0 <= duration - 1 and tween._morph then
+			ag0 = ag0:clone()
+			ag1 = ag1:clone()
+			morphify({ag0, ag1})
+		end
+
+		for j = j0, duration - 1 do
 			if ease == "none" then
-				table.insert(frames, j < duration and g0 or g1)
-			else
+				table.insert(frames, g0)
+			else		
 				local inbetween = tove.newGraphics()
-				inbetween:animate(g0, g1, ease(j / duration))
+				inbetween:animate(ag0, ag1, ease(j / duration))
 				inbetween:setDisplay(unpack(display))
 				inbetween:cache()
+
 				table.insert(frames, inbetween)
 			end
 		end
+
+		table.insert(frames, g1)
 	end
 	return setmetatable({_fps = fps, _frames = frames, _duration = tween._duration, _t = 0, _i = 1}, Flipbook)
 end
@@ -122,6 +151,14 @@ tove.newAnimation = function(tween, ...)
 		graphics:animate(g, g, 0)
 		graphics:cache("keyframe")
 		table.insert(keyframes, keyframe)
+	end
+
+	if tween._morph then
+		local g = {}
+		for i, f in ipairs(keyframes) do
+			table.insert(g, f.graphics)
+		end
+		morphify(g)
 	end
 
 	return setmetatable({_keyframes = keyframes, _graphics = graphics,

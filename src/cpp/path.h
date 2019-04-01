@@ -145,6 +145,9 @@ public:
 	void setFillRule(ToveFillRule rule);
 
 	void animate(const PathRef &a, const PathRef &b, float t, int pathIndex);
+	void refine(int factor);
+	void rotate(ToveElementType what, int k);
+	static bool morphify(const std::vector<PathRef> &paths);
 
 	PathRef clone() const;
 

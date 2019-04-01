@@ -202,6 +202,10 @@ bind("setLineWidth", "GraphicsSetLineWidth")
 bind("setMiterLimit", "GraphicsSetMiterLimit")
 bind("setLineDashOffset", "GraphicsSetLineDashOffset")
 
+function Graphics:rotate(w, k)
+	lib.GraphicsRotate(tove.elements[w], k)
+end
+
 function Graphics:setLineColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
 	lib.GraphicsSetLineColor(self._ref, color._ref)

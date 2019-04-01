@@ -477,6 +477,49 @@ ToveChangeFlags Graphics::fetchChanges(ToveChangeFlags flags) {
 	return c;
 }
 
+bool Graphics::morphify(const std::vector<GraphicsRef> &graphics) {
+	if (graphics.size() < 2) {
+		return false;
+	}
+
+	const int n = graphics[0]->getNumPaths();
+	for (int i = 0; i < graphics.size(); i++) {
+		if (graphics[i]->getNumPaths() != n) {
+			return false;
+		}
+	}
+
+	std::vector<PathRef> paths;
+	paths.reserve(graphics.size());
+
+	for (int j = 0; j < n; j++) {
+		paths.clear();
+		for (int i = 0; i < graphics.size(); i++) {
+			paths.push_back(graphics[i]->getPath(j));
+		}
+		Path::morphify(paths);
+	}
+
+	return true;	
+}
+
+void Graphics::rotate(ToveElementType what, int k) {
+	switch (what) {
+		case TOVE_PATH: {
+			std::rotate(
+				paths.begin(),
+				paths.begin() + umod(k, paths.size()),
+				paths.end());
+		} break;
+
+		default: {
+			for (const auto &path : paths) {
+				path->rotate(what, k);
+			}
+		} break;
+	}
+}
+
 void Graphics::animate(const GraphicsRef &a, const GraphicsRef &b, float t) {
 	const int n = a->paths.size();
 	if (n != b->paths.size()) {

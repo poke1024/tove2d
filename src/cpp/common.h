@@ -117,6 +117,10 @@ inline int nextpow2(uint32_t v) {
 	return v;
 }
 
+inline int umod(int x, int n) {
+	return (x % n + n) % n;
+}
+
 typedef float coeff;
 
 END_TOVE_NAMESPACE

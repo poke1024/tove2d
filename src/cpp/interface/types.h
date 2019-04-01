@@ -31,6 +31,13 @@ typedef enum {
 	TOVE_GLSL3
 } ToveShaderLanguage;
 
+typedef enum {
+	TOVE_POINT,
+	TOVE_CURVE,
+	TOVE_SUBPATH,
+	TOVE_PATH
+} ToveElementType;
+
 typedef uint16_t ToveVertexIndex;
 
 typedef struct {

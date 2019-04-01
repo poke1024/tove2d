@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "path.h"
 #include "intersect.h"
+#include <algorithm>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -289,7 +290,7 @@ void Subpath::removeCurve(int curve) {
 
 	const int nc = ncurves(nsvg.npts);
 	curve -= 1;
-	curve = (curve % nc + nc) % nc;
+	curve = umod(curve, nc);
 
 	const int i = std::max(curve * 3, 0);
 	float *pts = nsvg.pts;
@@ -537,7 +538,7 @@ void Subpath::makeSmooth(int k, int dir, float a) {
 	const int n = nsvg.npts - (closed ? 1 : 0);
 
 	if (closed) {
-		k = (k % n + n) % n;
+		k = umod(k, n);
 	}
 
 	if (n < 3 || k < 0 || k >= n) {
@@ -631,7 +632,7 @@ void Subpath::move(int k, float x, float y, ToveHandle handle) {
 	const int n = nsvg.npts - (closed ? 1 : 0);
 
 	if (closed) {
-		k = (k % n + n) % n;
+		k = umod(k, n);
 	}
 
 	if (n < 3 || k < 0 || k >= n) {
@@ -709,6 +710,78 @@ void Subpath::move(int k, float x, float y, ToveHandle handle) {
 	changed(CHANGED_POINTS);
 }
 
+void Subpath::rotate(ToveElementType what, int k) {
+	float *pts = nsvg.pts;
+	const int n = nsvg.npts;
+	switch (what) {
+		case TOVE_CURVE: {
+			std::rotate(pts, pts + 2 * umod(3 * k, n), pts + 2 * n);
+			fixLoop();
+		} break;
+		case TOVE_POINT: {
+			std::rotate(pts, pts + 2 * umod(k, n), pts + 2 * n);
+			fixLoop();
+		} break;
+		default: {
+			// noop
+		} break;
+	}
+}
+
+void Subpath::refine(const int factor) {
+	if (factor < 2) {
+		return;
+	}
+	const int n = getNumCurves(false);
+	for (int j = n - 1; j >= 0; j--) {
+		for (int i = factor; i > 1; i--) {
+			const float dt = 1.0f / i;
+			insertCurveAt(j + 1 - dt);
+		}
+	}
+}
+
+int gcd(int m, int n) {
+	while(m) {
+		const int t = m;
+		m = n % m;
+		n = t;
+	}
+	return n;
+}
+ 
+inline int lcm(int m, int n) {
+	return m / gcd(m, n) * n;
+}
+ 
+int lcm(const std::vector<int> &n) {
+	if (n.size() < 2) {
+		return 0;
+	}
+	int x = n[0];
+	for (int i = 1; i < n.size(); i++) {
+		x = lcm(x, n[i]);
+	}
+	return x;
+}
+
+bool Subpath::morphify(const std::vector<SubpathRef> &subpaths) {
+	std::vector<int> n;
+	n.reserve(subpaths.size());
+	for (const auto &subpath : subpaths) {
+		const int m = subpath->getNumCurves(false);
+		if (m < 1) {
+			return false;
+		}
+		n.push_back(m);
+	}
+	const int common = lcm(n);
+	for (int i = 0; i < n.size(); i++) {
+		subpaths[i]->refine(common / n[i]);
+	}
+	return true;
+}
+
 void Subpath::setPoints(const float *pts, int npts, bool add_loop) {
 	const bool loop = add_loop && isClosed() && npts > 0;
 	const int n1 = npts + (loop ? 1 : 0);
@@ -729,9 +802,9 @@ bool Subpath::isCollinear(int u, int v, int w) const {
 	}
 	const float *pts = nsvg.pts;
 
-	u = (u % n + n) % n;
-	v = (v % n + n) % n;
-	w = (w % n + n) % n;
+	u = umod(u, n);
+	v = umod(v, n);
+	w = umod(w, n);
 
 	const float Ax = pts[2 * u + 0];
 	const float Ay = pts[2 * u + 1];
@@ -883,7 +956,7 @@ void Subpath::setCommandValue(int commandIndex, int what, float value) {
 void Subpath::setCommandDirty(int commandIndex) {
 	const int n = commands.size();
 	if (isClosed()) {
-		commandIndex = (commandIndex % n + n) % n;
+		commandIndex = umod(commandIndex, n);
 	}
 	if (commandIndex < 0 ||commandIndex >= n) {
 		return;
@@ -1177,7 +1250,7 @@ float Subpath::getPointValue(int index, int dim) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;
-		index = (index % n + n) % n;
+		index = umod(index, n);
 	}
 	if (index >= 0 && index < n && (dim & 1) == dim) {
 		commit();
@@ -1191,7 +1264,7 @@ void Subpath::setPointValue(int index, int dim, float value) {
 	int n = nsvg.npts;
 	if (isClosed()) {
 		n -= 1;
-		index = (index % n + n) % n;
+		index = umod(index, n);
 	}
 	if (index >= 0 && index < n && (dim & 1) == dim) {
 		commit();

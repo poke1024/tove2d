@@ -92,6 +92,8 @@ EXPORT void PathSet(TovePathRef path, TovePathRef source,
 EXPORT ToveLineJoin PathGetLineJoin(TovePathRef path);
 EXPORT void PathSetLineJoin(TovePathRef path, ToveLineJoin join);
 EXPORT const char *PathGetId(TovePathRef path);
+EXPORT void PathRefine(TovePathRef path, int factor);
+EXPORT void PathRotate(TovePathRef path, ToveElementType what, int k);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
@@ -130,6 +132,8 @@ EXPORT bool GraphicsAreColorsSolid(ToveGraphicsRef shape);
 EXPORT void GraphicsClearChanges(ToveGraphicsRef shape);
 EXPORT ToveLineJoin GraphicsGetLineJoin(ToveGraphicsRef shape);
 EXPORT void GraphicsSetLineJoin(ToveGraphicsRef shape, ToveLineJoin join);
+EXPORT bool GraphicsMorphify(const ToveGraphicsRef *graphics, int n);
+EXPORT void GraphicsRotate(ToveGraphicsRef graphics, ToveElementType what, int k);
 EXPORT void ReleaseGraphics(ToveGraphicsRef shape);
 
 EXPORT ToveFeedRef NewColorFeed(ToveGraphicsRef graphics, float scale);

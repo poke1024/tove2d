@@ -39,6 +39,7 @@ Path.getNumCurves = lib.PathGetNumCurves
 Path.getOpacity = lib.PathGetOpacity
 Path.setOpacity = lib.PathSetOpacity
 Path.inside = lib.PathIsInside
+Path.refine = lib.PathRefine
 
 function Path:beginSubpath()
 	return ffi.gc(lib.PathBeginSubpath(self), lib.ReleaseSubpath)
@@ -78,6 +79,10 @@ end
 
 function Path:animate(a, b, t)
 	lib.PathAnimate(self, a, b, t)
+end
+
+function Path:rotate(w, k)
+	lib.PathRotate(self, tove.elements[w], k)
 end
 
 function Path:nearest(x, y, max, min)

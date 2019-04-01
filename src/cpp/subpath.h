@@ -111,6 +111,10 @@ public:
     void remove(int from, int n);
     int mould(float t, float x, float y);
     void move(int k, float x, float y, ToveHandle handle);
+	void rotate(ToveElementType what, int k);
+
+	void refine(const int factor);
+	static bool morphify(const std::vector<SubpathRef> &subpaths);
 
     void makeFlat(int k, int dir);
     void makeSmooth(int k, int dir, float a = 0.5);
