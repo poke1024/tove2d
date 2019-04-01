@@ -11,12 +11,16 @@
 
 local Curve = {}
 Curve.__index = function (self, key)
+	local i = _attributes[key]
+	if i == nil then return nil end
 	return lib.SubpathGetCurveValue(
-		self.traj, self.curve, _attributes[key])
+		self.traj, self.curve, i)
 end
 Curve.__newindex = function (self, key, value)
+	local i = _attributes[key]
+	if i == nil then return nil end
 	return lib.SubpathSetCurveValue(
-		self.traj, self.curve, _attributes[key], value)
+		self.traj, self.curve, i, value)
 end
 
 local Curves = {}
