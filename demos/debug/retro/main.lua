@@ -19,11 +19,11 @@ local function load()
 
 	local svg2 = love.filesystem.read("grad.svg")
 	graphics = tove.newGraphics(svg2, 200)
-	graphics:setDisplay("texture", "retro")
+	graphics:setDisplay("texture", "retro", nil, 0.05)
 	flow:add("retro", graphics)
 
 	graphics = tove.newGraphics(svg2, 200)
-	graphics:setDisplay("texture", "retro", {{1, 1, 1}, {0, 0, 0}})
+	graphics:setDisplay("texture", "retro", {{1, 1, 1}, {0, 0, 0}}, 0.5)
 	flow:add("retro", graphics)
 end
 

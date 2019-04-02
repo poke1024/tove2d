@@ -101,7 +101,7 @@ create.texture = function(self)
 		settings.quality.noise = quality[2] or 0.01
 	elseif quality[1] == "retro" then
 		settings.quality.flags = 1
-		settings.quality.noise = quality[2] or 0
+		settings.quality.noise = quality[3] or 0
 		local size
 		if quality[2] == nil then
 			size = 16
