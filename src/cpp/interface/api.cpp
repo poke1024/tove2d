@@ -13,6 +13,7 @@
 #include "../references.h"
 #include "../path.h"
 #include "../graphics.h"
+#include "../palette.h"
 #include "../mesh/mesh.h"
 #include "../mesh/meshifier.h"
 #include "../mesh/flatten.h"
@@ -850,6 +851,15 @@ void TesselatorSetMaxSubdivisions(int subdivisions) {
 
 void ReleaseTesselator(ToveTesselatorRef tess) {
 	tesselators.release(tess);
+}
+
+
+TovePaletteRef NewPalette(const uint8_t *colors, int n) {
+	return palettes.publish(tove_make_shared<Palette>(colors, n));
+}
+
+void ReleasePalette(TovePaletteRef palette) {
+	palettes.release(palette);
 }
 
 

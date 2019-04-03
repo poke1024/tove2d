@@ -80,6 +80,10 @@ inline const TesselatorRef &deref(const ToveTesselatorRef &ref) {
 	DEREF(TesselatorRef)
 }
 
+inline const PaletteRef &deref(const TovePaletteRef &ref) {
+	DEREF(PaletteRef)
+}
+
 #undef DEREF
 
 References<Graphics, ToveGraphicsRef> shapes;
@@ -89,6 +93,7 @@ References<AbstractPaint, TovePaintRef> paints;
 References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;
 References<AbstractTesselator, ToveTesselatorRef> tesselators;
+References<Palette, TovePaletteRef> palettes;
 
 #endif // TOVE_TARGET_LOVE2D
 

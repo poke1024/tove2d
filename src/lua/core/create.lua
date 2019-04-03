@@ -102,23 +102,32 @@ create.texture = function(self)
 	elseif quality[1] == "retro" then
 		settings.quality.flags = 1
 		settings.quality.noise = quality[3] or 0
+
 		local size
 		if quality[2] == nil then
 			size = 16
-			palette = lib.DefaultRetroPalette()
+			local colors = lib.DefaultRetroPalette()
+			palette = ffi.gc(lib.NewPalette(colors, size), lib.ReleasePalette)
 		else
 			size = #quality[2]
-			palette = ffi.new("uint8_t[?]", size * 3)
+			local colors = ffi.new("uint8_t[?]", size * 3)
 			local i = 0
 			for _, c in ipairs(quality[2]) do
-				palette[i] = c[1] * 255
-				palette[i + 1] = c[2] * 255
-				palette[i + 2] = c[3] * 255
+				if type(c) == "table" then
+					colors[i] = c[1] * 255
+					colors[i + 1] = c[2] * 255
+					colors[i + 2] = c[3] * 255
+				elseif c:sub(1, 1) == '#' then
+					colors[i] = tonumber("0x" .. c:sub(2, 3))
+					colors[i + 1] = tonumber("0x" .. c:sub(4, 5))
+					colors[i + 2] = tonumber("0x" .. c:sub(6, 7))
+				end
 				i = i + 3
 			end
-		end 
-		settings.quality.palette.size = size
-		settings.quality.palette.colors = palette
+			palette = ffi.gc(lib.NewPalette(colors, size), lib.ReleasePalette)
+		end
+
+		settings.quality.palette = palette
 	else
 		error("illegal texture quality " .. tostring(quality[1]))
 	end

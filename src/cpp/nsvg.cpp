@@ -11,6 +11,7 @@
 
 #include "nsvg.h"
 #include "utils.h"
+#include "palette.h"
 
 #include "../thirdparty/robin-map/include/tsl/robin_map.h"
 #include "../thirdparty/tinyxml2/tinyxml2.h"
@@ -276,8 +277,7 @@ const ToveRasterizeSettings *getDefaultRasterizeSettings() {
 		defaultSettings.distTolerance = rasterizer->distTol;
 		defaultSettings.quality.flags = 1;
 		defaultSettings.quality.noise = 5.0f / 255.0f;
-		defaultSettings.quality.palette.size = 0;
-		defaultSettings.quality.palette.colors = nullptr;
+		defaultSettings.quality.palette.ptr = nullptr;
 	}
 
 	return &defaultSettings;
@@ -301,8 +301,7 @@ static NSVGrasterizer *getRasterizer(
 
 	rasterizer->quality.flags = settings->quality.flags;
 	rasterizer->quality.noise = settings->quality.noise;
-	rasterizer->quality.palette.size = settings->quality.palette.size;
-	rasterizer->quality.palette.colors = settings->quality.palette.colors;
+	rasterizer->quality.palette = settings->quality.palette.ptr;
 
 	rasterizer->nedges = 0;
 	rasterizer->npoints = 0;

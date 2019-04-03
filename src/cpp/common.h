@@ -27,6 +27,7 @@
 #define TOVE_GPUX_MESH_BAND 1
 #define TOVE_RT_CLIP_PATH 0
 #define TOVE_DEBUG 0
+#define TOVE_NANOFLANN 0
 
 #include "interface.h"
 #include "warn.h"
@@ -101,6 +102,9 @@ typedef SharedPtr<AbstractMesh> MeshRef;
 
 class AbstractFeed;
 typedef SharedPtr<AbstractFeed> FeedRef;
+
+class Palette;
+typedef SharedPtr<Palette> PaletteRef;
 
 inline int nextpow2(uint32_t v) {
 	// see https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

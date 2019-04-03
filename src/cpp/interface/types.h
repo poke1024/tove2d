@@ -134,6 +134,10 @@ typedef struct {
 	void *ptr;
 } ToveTesselatorRef;
 
+typedef struct {
+	void *ptr;
+} TovePaletteRef;
+
 typedef enum {
 	TOVE_REC_DEPTH,
 	TOVE_ANTIGRAIN,
@@ -164,10 +168,7 @@ typedef struct {
 	struct {
 		uint8_t flags;
 		float noise;
-		struct {
-			uint16_t size;
-			const uint8_t *colors;
-		} palette;
+		TovePaletteRef palette;
 	} quality;
 } ToveRasterizeSettings;
 

@@ -174,3 +174,6 @@ EXPORT ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
 	ToveMeshRef fillMesh, ToveMeshRef lineMesh, ToveMeshUpdateFlags flags);
 EXPORT void TesselatorSetMaxSubdivisions(int subdivisions);
 EXPORT void ReleaseTesselator(ToveTesselatorRef tess);
+
+EXPORT TovePaletteRef NewPalette(const uint8_t *colors, int n);
+EXPORT void ReleasePalette(TovePaletteRef palette);
