@@ -20,6 +20,7 @@
 #include "../shader/feed/color_feed.h"
 #include "../gpux/gpux_feed.h"
 #include <sstream>
+#include <vector>
 
 #if TOVE_TARGET == TOVE_TARGET_LOVE2D
 
@@ -63,37 +64,196 @@ void SetReportLevel(ToveReportLevel l) {
 }
 
 
-void DefaultRasterizeSettings(ToveRasterizeSettings *settings) {
-	const ToveRasterizeSettings *def = nsvg::getDefaultRasterizeSettings();
-	if (def) {
-		*settings = *def;
-	}
+TovePaletteRef NoPalette() {
+	return TovePaletteRef{nullptr};
 }
 
-const uint8_t *DefaultRetroPalette() {
-	// the wonderful PICO 8 palette, CC0-license
-	// see https://www.lexaloffle.com/pico-8.php?page=faq
+TovePaletteRef DefaultPalette(const char *name) {
+	static TovePaletteRef paletteRefs[2] = {nullptr, nullptr};
 
-	static const uint8_t palette[] = {
-		0, 0, 0, // black
-		29, 43, 83, // dark blue
-		126, 37, 83, // dark purple
-		0, 135, 81, // dark green
-		171, 82, 54, // brown
-		95, 87, 79, // dark gray
-		194, 195, 199, // light gray
-		255, 241, 232, // white
-		255, 0, 77, // red
-		255, 163, 0, // orange
-		255, 236, 39, // yellow
-		0, 228, 54, // green
-		41, 173, 255, // blue
-		131, 118, 156, // indigo
-		255, 119, 168, // pink
-		255, 204, 170 // peach
-	};
+	int index;
+	if (strcmp(name, "pico8") == 0) {
+		index = 0;
+	} else if (strcmp(name, "bw") == 0) {
+		index = 1;
+	} else {
+		index = 0;
+	}
 
-	return palette;
+	if (paletteRefs[index].ptr == nullptr) {
+		switch (index) {
+			case 0: {
+				// the wonderful PICO 8 palette, CC0-license
+				// see https://www.lexaloffle.com/pico-8.php?page=faq
+
+				static const uint8_t pico8_colors[] = {
+					0, 0, 0, // black
+					29, 43, 83, // dark blue
+					126, 37, 83, // dark purple
+					0, 135, 81, // dark green
+					171, 82, 54, // brown
+					95, 87, 79, // dark gray
+					194, 195, 199, // light gray
+					255, 241, 232, // white
+					255, 0, 77, // red
+					255, 163, 0, // orange
+					255, 236, 39, // yellow
+					0, 228, 54, // green
+					41, 173, 255, // blue
+					131, 118, 156, // indigo
+					255, 119, 168, // pink
+					255, 204, 170 // peach
+				};
+
+				PaletteRef palette = std::make_shared<Palette>(pico8_colors, 16);
+				paletteRefs[0] = palettes.publish(palette);
+			} break;
+
+			case 1: {
+				static const uint8_t bw_colors[] = {
+					255, 255, 255,
+					0, 0, 0
+				};
+
+				PaletteRef palette = std::make_shared<Palette>(bw_colors, 2);
+				paletteRefs[1] = palettes.publish(palette);
+			} break;
+		}
+	}
+
+	return paletteRefs[index];
+}
+
+class Bayer {
+	std::vector<float> matrix;
+	const int n;
+
+	void compute(const int n2, const int r) {
+		const int n = n2 >> 1;
+
+		if (n < 1) {
+			matrix[0] = 0;
+		} else {
+			compute(n, r);
+
+			float *m00 = matrix.data();
+			float *m10 = matrix.data() + n * r;
+			float *m01 = matrix.data() + n;
+			float *m11 = matrix.data() + n + n * r;
+
+			for (int y = 0; y < n; y++) {
+				int o = y * r;
+				for (int x = 0; x < n; x++, o++) {
+					const int z = 4 * m00[o];
+					m00[o] = z;
+					m10[o] = z + 3;
+					m01[o] = z + 2;
+					m11[o] = z + 1;
+				}
+			}
+		}
+	}
+
+
+public:
+	Bayer(const int n) : n(n) {
+		const int scale = n * n;
+		matrix.resize(scale);
+		compute(n, n);
+		// note that our M already is biased by -0.5
+		for (int i = 0; i < scale; i++) {
+			matrix[i] = matrix[i] / scale - 0.5f;
+		}
+	}
+
+	inline const float *get() const {
+		return matrix.data();
+	}
+};
+
+bool SetRasterizeSettings(
+	ToveRasterizeSettings *settings,
+	const char *algorithm,
+	TovePaletteRef palette,
+	float spread,
+	float noise) {
+
+	static std::map<std::string, std::function<ToveDither()>> algorithms;
+	if (algorithms.empty()) {
+		algorithms["fast"] = [] () {
+			return ToveDither{TOVE_DITHER_NONE, nullptr, 0, 0};
+		};
+		algorithms["bayer8"] = [] () {
+			static Bayer *bayer8 = nullptr;
+			if (!bayer8) bayer8 = new Bayer(8);
+			return ToveDither{TOVE_DITHER_ORDERED, bayer8->get(), 8, 8};
+		};
+		algorithms["bayer4"] = [] () {
+			static Bayer *bayer4 = nullptr;
+			if (!bayer4) bayer4 = new Bayer(4);
+			return ToveDither{TOVE_DITHER_ORDERED, bayer4->get(), 4, 4};
+		};
+		algorithms["bayer2"] = [] () {
+			static Bayer *bayer2 = nullptr;
+			if (!bayer2) bayer2 = new Bayer(2);
+			return ToveDither{TOVE_DITHER_ORDERED, bayer2->get(), 2, 2};
+		};
+		algorithms["floyd"] = [] () {
+			static const float floyd[] = {
+				0.0f,			0.0f,			7.0f / 16.0f,
+				3.0f / 16.0f,	5.0f / 16.0f,	1.0f / 16.0f
+			};
+
+			return ToveDither{TOVE_DITHER_DIFFUSION, floyd, 3, 2};
+		};
+		algorithms["atkinson"] = [] () {
+			static const float atkinson[] = {
+				0.0f,		0.0f,			0.0f,			1.0f / 8.0f,	1.0f / 8.0f,
+				0.0f,		1.0f / 8.0f,	1.0f / 8.0f,	1.0f / 8.0f,	0.0f,
+				0.0f,		0.0f,			1.0f / 8.0f,	0.0f,			0.0f
+			};
+
+			return ToveDither{TOVE_DITHER_DIFFUSION, atkinson, 5, 3};
+		};
+		algorithms["jarvis"] = [] () {
+			static const float jarvis[] = {
+				0.0f,			0.0f,			0.0f,			7.0f / 48.0f,	5.0f / 48.0f,
+				3.0f / 48.0f,	5.0f / 48.0f,	7.0f / 48.0f, 	5.0f / 48.0f, 	3.0f / 48.0f,
+				1.0f / 48.0f,	3.0f / 48.0f,	5.0f / 48.0f, 	3.0f / 48.0f,	1.0f / 48.0f
+			};
+
+			return ToveDither{TOVE_DITHER_DIFFUSION, jarvis, 5, 3};
+		};
+		algorithms["stucki"] = [] () {
+			static const float stucki[] = {
+				0.0f,			0.0f,			0.0f,			8.0f / 42.0f,	4.0f / 42.0f,
+				2.0f / 42.0f,	4.0f / 42.0f,	8.0f / 42.0f, 	4.0f / 42.0f, 	2.0f / 42.0f,
+				1.0f / 42.0f,	2.0f / 42.0f,	4.0f / 42.0f, 	2.0f / 42.0f,	1.0f / 42.0f
+			};
+
+			return ToveDither{TOVE_DITHER_DIFFUSION, stucki, 5, 3};
+		};
+	}
+	
+	*settings = *nsvg::getDefaultRasterizeSettings();
+
+	const auto it = algorithms.find(algorithm);
+	if (it != algorithms.end()) {
+		settings->quality.dither = it->second();
+	} else {
+		return false;
+	}
+
+	if (settings->quality.dither.type == TOVE_DITHER_ORDERED) {
+		settings->quality.dither.spread = spread * (256.0f / (deref(palette)->size() - 1));
+	} else {
+		settings->quality.dither.spread = spread;
+	}
+
+	settings->quality.palette = palette;
+	settings->quality.noise = noise;
+
+	return true;
 }
 
 

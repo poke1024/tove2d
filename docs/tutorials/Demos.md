@@ -74,3 +74,8 @@ TÖVE offers support for holes and fill rules for all of its renderers:
 For non-animated rendering, TÖVE is able to render complex clip paths in texture and mesh modes:
 
 ![](images/demos/clippath.png)
+
+## Retro Rasterization Demo
+For non-animated rasterization, TÖVE supports various dithering modes for rendering gradients with limited palettes:
+
+![](images/demos/retro.png)

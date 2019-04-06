@@ -34,7 +34,7 @@ namespace nsvg {
 
 thread_local NSVGparser *_parser = nullptr;
 thread_local NSVGrasterizer *rasterizer = nullptr;
-thread_local ToveRasterizeSettings defaultSettings = {-1.0f, -1.0f, 0};
+thread_local ToveRasterizeSettings defaultSettings = {-1.0f, -1.0f};
 
 // scoping the locale should no longer be necessary.
 #define NSVG_SCOPE_LOCALE 0
@@ -275,8 +275,14 @@ const ToveRasterizeSettings *getDefaultRasterizeSettings() {
 
 		defaultSettings.tessTolerance = rasterizer->tessTol;
 		defaultSettings.distTolerance = rasterizer->distTol;
-		defaultSettings.quality.flags = 1;
-		defaultSettings.quality.noise = 5.0f / 255.0f;
+
+		defaultSettings.quality.dither.type = TOVE_DITHER_NONE;
+		defaultSettings.quality.dither.matrix = nullptr;
+		defaultSettings.quality.dither.matrix_width = 0;
+		defaultSettings.quality.dither.matrix_height = 0;
+		defaultSettings.quality.dither.spread = 1.0f;
+		
+		defaultSettings.quality.noise = 0.0f;
 		defaultSettings.quality.palette.ptr = nullptr;
 	}
 
@@ -299,7 +305,12 @@ static NSVGrasterizer *getRasterizer(
 	rasterizer->tessTol = settings->tessTolerance;
 	rasterizer->distTol = settings->distTolerance;
 
-	rasterizer->quality.flags = settings->quality.flags;
+	rasterizer->quality.dither.type = TOVEdithering(settings->quality.dither.type);
+	rasterizer->quality.dither.matrix = settings->quality.dither.matrix;
+	rasterizer->quality.dither.matrix_width = settings->quality.dither.matrix_width;
+	rasterizer->quality.dither.matrix_height = settings->quality.dither.matrix_height;
+	rasterizer->quality.dither.spread = settings->quality.dither.spread;
+
 	rasterizer->quality.noise = settings->quality.noise;
 	rasterizer->quality.palette = settings->quality.palette.ptr;
 

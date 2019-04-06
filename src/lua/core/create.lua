@@ -91,28 +91,28 @@ end
 create.texture = function(self)
 	local quality = self._display.quality
 	local settings = ffi.new("ToveRasterizeSettings")
-	lib.DefaultRasterizeSettings(settings)
 	local palette  -- keep until rasterized
+	local mode = quality[1]
 
-	if quality[1] == "fast" then
-		settings.quality.flags = 0
-	elseif (quality[1] or "best") == "best" then
-		settings.quality.flags = 1
-		settings.quality.noise = quality[2] or 0.01
-	elseif quality[1] == "retro" then
-		settings.quality.flags = 1
-		settings.quality.noise = quality[3] or 0
-
+	if mode == "fast" then
+		lib.SetRasterizeSettings(settings, "fast", lib.NoPalette(), 1, 0)
+	elseif (mode or "best") == "best" then
+		local _, algo, spread, noise = unpack(quality)
+		lib.SetRasterizeSettings(
+			settings, algo or "jarvis", lib.NoPalette(),
+			spread or 1, noise or 0.01)
+	elseif mode == "retro" then
+		local _, ipal, algo, spread, noise = unpack(quality)
 		local size
-		if quality[2] == nil then
-			size = 16
-			local colors = lib.DefaultRetroPalette()
-			palette = ffi.gc(lib.NewPalette(colors, size), lib.ReleasePalette)
-		else
-			size = #quality[2]
+		if ipal == nil then
+			palette = lib.NoPalette()
+		elseif type(ipal) == "string" then
+			palette = lib.DefaultPalette(ipal)
+		elseif type(ipal) == "table" then
+			size = #ipal
 			local colors = ffi.new("uint8_t[?]", size * 3)
 			local i = 0
-			for _, c in ipairs(quality[2]) do
+			for _, c in ipairs(ipal) do
 				if type(c) == "table" then
 					colors[i] = c[1] * 255
 					colors[i + 1] = c[2] * 255
@@ -125,9 +125,14 @@ create.texture = function(self)
 				i = i + 3
 			end
 			palette = ffi.gc(lib.NewPalette(colors, size), lib.ReleasePalette)
+		else
+			palette = ipal
 		end
 
-		settings.quality.palette = palette
+		if not lib.SetRasterizeSettings(
+			settings, algo or "stucki", palette, spread or 1, noise or 0) then
+			error("illegal retro settings")
+		end
 	else
 		error("illegal texture quality " .. tostring(quality[1]))
 	end

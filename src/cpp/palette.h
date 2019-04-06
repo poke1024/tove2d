@@ -19,6 +19,13 @@
 
 BEGIN_TOVE_NAMESPACE
 
+struct RGBA {
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t a;
+};
+
 class Palette {
 private:
 #if TOVE_NANOFLANN
@@ -49,7 +56,7 @@ private:
 #endif
 
     std::vector<uint8_t> colors;
-    const int size;
+    const int _size;
 #if TOVE_NANOFLANN
     KDColors kdcolors;
     ColorIndex index;
@@ -61,9 +68,13 @@ public:
         return static_cast<PaletteRef*>(palette)->get();
     }
 
+    inline int size() const {
+        return _size;
+    }
+
     Palette(const uint8_t *c, const int n) :
         colors(n * 3),
-        size(n)
+        _size(n)
 #if TOVE_NANOFLANN
         , kdcolors(colors)
         , index(3, kdcolors, nanoflann::KDTreeSingleIndexAdaptorParams(24))
@@ -76,8 +87,8 @@ public:
 #endif
     }
 
-    inline uint32_t closest(const int r, const int g, const int b) const {
-        const int n = size;
+    inline RGBA closest(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) const {
+        const int n = _size;
         const uint8_t *best_p;
 #if TOVE_NANOFLANN
         if (n >= 128) {
@@ -90,7 +101,7 @@ public:
 #endif
             const uint8_t *p = colors.data();
 
-            long best_d = std::numeric_limits<long>::max();
+            int32_t best_d = std::numeric_limits<int32_t>::max();
             best_p = p;
 
             // brute force search. don't underestimate the speed of this. it's
@@ -98,11 +109,14 @@ public:
             // 128 colors, runtimes are rougly the same.
 
             for (int i = 0; i < n; i++, p += 3) {
-                const int32_t dr = r - p[0];
-                const int32_t dg = g - p[1];
-                const int32_t db = b - p[2];
+                const int16_t dr = r - int16_t(p[0]);
+                const int16_t dg = g - int16_t(p[1]);
+                const int16_t db = b - int16_t(p[2]);
 
-                const long d = dr * dr + dg * dg + db * db;
+                const int32_t d =
+                    int32_t(dr * dr) +
+                    int32_t(dg * dg) +
+                    int32_t(db * db);
                 if (d < best_d) {
                     best_d = d;
                     best_p = p;
@@ -112,10 +126,7 @@ public:
         }
 #endif
 
-        int cr = best_p[0];
-        int cg = best_p[1];
-        int cb = best_p[2];
-        return cr | (cg << 8) | (cb << 16);
+        return RGBA{best_p[0], best_p[1], best_p[2], a};
     }
 };
 

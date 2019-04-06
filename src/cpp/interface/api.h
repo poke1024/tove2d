@@ -2,8 +2,10 @@ EXPORT const char *GetVersion();
 EXPORT void SetReportFunction(ToveReportFunction f);
 EXPORT void SetReportLevel(ToveReportLevel l);
 
-EXPORT void DefaultRasterizeSettings(ToveRasterizeSettings *settings);
-EXPORT const uint8_t *DefaultRetroPalette();
+EXPORT TovePaletteRef NoPalette();
+EXPORT TovePaletteRef DefaultPalette(const char *name);
+EXPORT bool SetRasterizeSettings(ToveRasterizeSettings *settings, const char *algorithm,
+	TovePaletteRef palette, float spread, float noise);
 
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);

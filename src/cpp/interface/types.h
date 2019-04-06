@@ -162,11 +162,25 @@ typedef struct {
 	ToveHoles holes;
 } ToveTesselationSettings;
 
+typedef enum {
+	TOVE_DITHER_NONE = 0,
+	TOVE_DITHER_DIFFUSION = 1,
+	TOVE_DITHER_ORDERED = 2
+} ToveDitherType;
+
+typedef struct {
+	ToveDitherType type;
+	const float *matrix;
+	int16_t matrix_width;
+	int16_t matrix_height;
+	float spread;
+} ToveDither;
+
 typedef struct {
 	float tessTolerance;
 	float distTolerance;
 	struct {
-		uint8_t flags;
+		ToveDither dither;
 		float noise;
 		TovePaletteRef palette;
 	} quality;
