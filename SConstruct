@@ -45,7 +45,7 @@ else:
 	# -march=haswell
 	# -Wreorder -Wunused-variable
 
-	CCFLAGS = ' -std=c++11 -fvisibility=hidden -funsafe-math-optimizations '
+	CCFLAGS = ' -std=c++17 -fvisibility=hidden -funsafe-math-optimizations '
 
 	if GetOption('tovedebug'):
 		CCFLAGS += '-g '
