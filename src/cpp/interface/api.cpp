@@ -19,6 +19,7 @@
 #include "../mesh/flatten.h"
 #include "../shader/feed/color_feed.h"
 #include "../gpux/gpux_feed.h"
+#include "../../thirdparty/bluenoise.h"
 #include <sstream>
 #include <vector>
 
@@ -242,7 +243,30 @@ bool SetRasterizeSettings(
 			bayer = b->second;
 		}
 
-		settings->quality.dither = ToveDither{TOVE_DITHER_ORDERED, bayer->get(), n, n};
+		settings->quality.dither = ToveDither{
+			TOVE_DITHER_ORDERED, bayer->get(), n, n};
+	} else if (strncmp(algorithm, "blue", 4) == 0) {
+		// FIXME. this is too slow. need an API to
+		// pregenerate this.
+
+		static std::map<int, BlueNoise*> cached;
+		BlueNoise *noise;
+
+		const uint16_t n = std::atoi(&algorithm[4]);
+		if ((n & (n - 1)) != 0) { // not a power of 2?
+			return false;
+		}
+
+		const auto b = cached.find(n);
+		if (b == cached.end()) {
+			noise = new BlueNoise(n);
+			cached[n] = noise;
+		} else {
+			noise = b->second;
+		}
+
+		settings->quality.dither = ToveDither{
+			TOVE_DITHER_ORDERED, noise->get(), n, n};
 	} else {
 		return false;
 	}
