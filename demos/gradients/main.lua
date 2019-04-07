@@ -21,6 +21,11 @@ local function load(svg)
 			desc = "tex fast"
 		elseif i == 2 then
 			quality = {"best"}
+			
+			-- try these for some artistic effects:
+			--quality = {"best", 0.05}
+			--quality = {"best", 0, 100, "bayer8"}
+
 			desc = "tex best (default)"
 		else
 			desc ="mesh"

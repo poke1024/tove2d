@@ -183,21 +183,6 @@ bool SetRasterizeSettings(
 		algorithms["fast"] = [] () {
 			return ToveDither{TOVE_DITHER_NONE, nullptr, 0, 0};
 		};
-		algorithms["bayer8"] = [] () {
-			static Bayer *bayer8 = nullptr;
-			if (!bayer8) bayer8 = new Bayer(8);
-			return ToveDither{TOVE_DITHER_ORDERED, bayer8->get(), 8, 8};
-		};
-		algorithms["bayer4"] = [] () {
-			static Bayer *bayer4 = nullptr;
-			if (!bayer4) bayer4 = new Bayer(4);
-			return ToveDither{TOVE_DITHER_ORDERED, bayer4->get(), 4, 4};
-		};
-		algorithms["bayer2"] = [] () {
-			static Bayer *bayer2 = nullptr;
-			if (!bayer2) bayer2 = new Bayer(2);
-			return ToveDither{TOVE_DITHER_ORDERED, bayer2->get(), 2, 2};
-		};
 		algorithms["floyd"] = [] () {
 			static const float floyd[] = {
 				0.0f,			0.0f,			7.0f / 16.0f,
@@ -240,12 +225,34 @@ bool SetRasterizeSettings(
 	const auto it = algorithms.find(algorithm);
 	if (it != algorithms.end()) {
 		settings->quality.dither = it->second();
+	} else if (strncmp(algorithm, "bayer", 5) == 0) {
+		static std::map<int, Bayer*> cached;
+		Bayer *bayer;
+
+		const uint16_t n = std::atoi(&algorithm[5]);
+		if ((n & (n - 1)) != 0) { // not a power of 2?
+			return false;
+		}
+
+		const auto b = cached.find(n);
+		if (b == cached.end()) {
+			bayer = new Bayer(n);
+			cached[n] = bayer;
+		} else {
+			bayer = b->second;
+		}
+
+		settings->quality.dither = ToveDither{TOVE_DITHER_ORDERED, bayer->get(), n, n};
 	} else {
 		return false;
 	}
 
 	if (settings->quality.dither.type == TOVE_DITHER_ORDERED) {
-		settings->quality.dither.spread = spread * (256.0f / (deref(palette)->size() - 1));
+		if (palette.ptr) {
+			settings->quality.dither.spread = spread * (256.0f / (deref(palette)->size() - 1));
+		} else {
+			settings->quality.dither.spread = spread;
+		}
 	} else {
 		settings->quality.dither.spread = spread;
 	}

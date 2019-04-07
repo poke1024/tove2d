@@ -171,8 +171,8 @@ typedef enum {
 typedef struct {
 	ToveDitherType type;
 	const float *matrix;
-	int16_t matrix_width;
-	int16_t matrix_height;
+	uint16_t matrix_width;
+	uint16_t matrix_height;
 	float spread;
 } ToveDither;
 
