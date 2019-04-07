@@ -97,9 +97,9 @@ create.texture = function(self)
 	if mode == "fast" then
 		lib.SetRasterizeSettings(settings, "fast", lib.NoPalette(), 1, 0)
 	elseif (mode or "best") == "best" then
-		local _, algo, noise = unpack(quality)
+		local _, noise, spread, algo, palette = unpack(quality)
 		lib.SetRasterizeSettings(
-			settings, algo or "jarvis", lib.NoPalette(), 1, noise or 0.01)
+			settings, algo or "jarvis", palette or lib.NoPalette(), 1, noise or 0.01)
 	elseif mode == "retro" then
 		local _, ipal, algo, spread, noise = unpack(quality)
 		local size
