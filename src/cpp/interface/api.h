@@ -5,7 +5,8 @@ EXPORT void SetReportLevel(ToveReportLevel l);
 EXPORT TovePaletteRef NoPalette();
 EXPORT TovePaletteRef DefaultPalette(const char *name);
 EXPORT bool SetRasterizeSettings(ToveRasterizeSettings *settings, const char *algorithm,
-	TovePaletteRef palette, float spread, float noise);
+	TovePaletteRef palette, float spread, float noise, const float *noiseMatrix, int noiseMatrixSize);
+EXPORT bool GenerateBlueNoise(int s, float *m);
 
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);

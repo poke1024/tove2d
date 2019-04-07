@@ -95,11 +95,21 @@ create.texture = function(self)
 	local mode = quality[1]
 
 	if mode == "fast" then
-		lib.SetRasterizeSettings(settings, "fast", lib.NoPalette(), 1, 0)
+		lib.SetRasterizeSettings(settings, "fast", lib.NoPalette(), 1, 0, nil, 0)
 	elseif (mode or "best") == "best" then
 		local _, noise, spread, algo, palette = unpack(quality)
-		lib.SetRasterizeSettings(
-			settings, algo or "jarvis", palette or lib.NoPalette(), spread or 1, noise or 0.01)
+		local noiseData, noiseDataSize = nil,  0
+		if type(noise) == "table" then
+			local data, amount = unpack(noise)
+			noise = amount
+			noiseData = data:getPointer()
+			noiseDataSize = math.floor(math.sqrt(data:getSize() / ffi.sizeof("float")))
+		end
+		if not lib.SetRasterizeSettings(
+			settings, algo or "jarvis", palette or lib.NoPalette(), spread or 1,
+			noise or 0.01, noiseData, noiseDataSize) then
+			error(table.concat({"illegal rasterize settings:", unpack(quality)}, " "))
+		end
 	elseif mode == "retro" then
 		local _, ipal, algo, spread, noise = unpack(quality)
 		local size
@@ -129,8 +139,8 @@ create.texture = function(self)
 		end
 
 		if not lib.SetRasterizeSettings(
-			settings, algo or "stucki", palette, spread or 1, noise or 0) then
-			error("illegal retro settings")
+			settings, algo or "stucki", palette, spread or 1, noise or 0, nil, 0) then
+			error(table.concat({"illegal rasterize settings:", unpack(quality)}, " "))
 		end
 	else
 		error("illegal texture quality " .. tostring(quality[1]))

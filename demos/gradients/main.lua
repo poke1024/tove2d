@@ -23,8 +23,13 @@ local function load(svg)
 			quality = {"best"}
 			
 			-- try these for some artistic effects:
+			
 			--quality = {"best", 0.05}
+			
 			--quality = {"best", 0, 100, "bayer8"}
+
+			--blueNoise = tove.createBlueNoise(128)
+			--quality = {"best", {blueNoise, 50}, 1, "floyd"}
 
 			desc = "tex best (default)"
 		else

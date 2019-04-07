@@ -172,12 +172,24 @@ public:
 	}
 };
 
+bool GenerateBlueNoise(int s, float *m) {
+	if ((s & (s - 1)) != 0) { // not a power of 2?
+		return false;
+	}
+
+	BlueNoise noise(s);
+	std::memcpy(m, noise.get(), s * s * sizeof(float));
+	return true;
+}
+
 bool SetRasterizeSettings(
 	ToveRasterizeSettings *settings,
 	const char *algorithm,
 	TovePaletteRef palette,
 	float spread,
-	float noise) {
+	float noise,
+	const float *noiseMatrix,
+	int noiseMatrixSize) {
 
 	static std::map<std::string, std::function<ToveDither()>> algorithms;
 	if (algorithms.empty()) {
@@ -245,28 +257,6 @@ bool SetRasterizeSettings(
 
 		settings->quality.dither = ToveDither{
 			TOVE_DITHER_ORDERED, bayer->get(), n, n};
-	} else if (strncmp(algorithm, "blue", 4) == 0) {
-		// FIXME. this is too slow. need an API to
-		// pregenerate this.
-
-		static std::map<int, BlueNoise*> cached;
-		BlueNoise *noise;
-
-		const uint16_t n = std::atoi(&algorithm[4]);
-		if ((n & (n - 1)) != 0) { // not a power of 2?
-			return false;
-		}
-
-		const auto b = cached.find(n);
-		if (b == cached.end()) {
-			noise = new BlueNoise(n);
-			cached[n] = noise;
-		} else {
-			noise = b->second;
-		}
-
-		settings->quality.dither = ToveDither{
-			TOVE_DITHER_ORDERED, noise->get(), n, n};
 	} else {
 		return false;
 	}
@@ -282,7 +272,9 @@ bool SetRasterizeSettings(
 	}
 
 	settings->quality.palette = palette;
-	settings->quality.noise = noise;
+	settings->quality.noise.amount = noise;
+	settings->quality.noise.matrix = noiseMatrix;
+	settings->quality.noise.n = noiseMatrixSize;
 
 	return true;
 }

@@ -281,8 +281,10 @@ const ToveRasterizeSettings *getDefaultRasterizeSettings() {
 		defaultSettings.quality.dither.matrix_width = 0;
 		defaultSettings.quality.dither.matrix_height = 0;
 		defaultSettings.quality.dither.spread = 1.0f;
-		
-		defaultSettings.quality.noise = 0.0f;
+
+		defaultSettings.quality.noise.amount = 0.0f;
+		defaultSettings.quality.noise.matrix = nullptr;
+		defaultSettings.quality.noise.n = 0;
 		defaultSettings.quality.palette.ptr = nullptr;
 	}
 
@@ -311,7 +313,9 @@ static NSVGrasterizer *getRasterizer(
 	rasterizer->quality.dither.matrix_height = settings->quality.dither.matrix_height;
 	rasterizer->quality.dither.spread = settings->quality.dither.spread;
 
-	rasterizer->quality.noise = settings->quality.noise;
+	rasterizer->quality.noise.amount = settings->quality.noise.amount;
+	rasterizer->quality.noise.matrix = settings->quality.noise.matrix;
+	rasterizer->quality.noise.n = settings->quality.noise.n;
 	rasterizer->quality.palette = settings->quality.palette.ptr;
 
 	rasterizer->nedges = 0;

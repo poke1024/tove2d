@@ -225,6 +225,12 @@ tove.init = function(path)
 		error("illegal enum value")
 	end
 
+	tove.createBlueNoise = function(s)
+		local d = love.data.newByteData(ffi.sizeof("float[?]", s * s))
+		if not lib.GenerateBlueNoise(s, d:getPointer()) then d = nil end
+		return d
+	end
+
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand
 	--!! import "subpath.lua" as Subpath

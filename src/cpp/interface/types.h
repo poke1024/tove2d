@@ -181,7 +181,11 @@ typedef struct {
 	float distTolerance;
 	struct {
 		ToveDither dither;
-		float noise;
+		struct {
+			float amount;
+			const float *matrix;
+			int16_t n;
+		} noise;
 		TovePaletteRef palette;
 	} quality;
 } ToveRasterizeSettings;
