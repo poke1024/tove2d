@@ -163,6 +163,7 @@ create.texture = function(self)
 	return {
 		mesh = image,
 		draw = createDrawMesh(image, x0, y0, 1 / resolution),
+		warmup = function() end,
 		update = _updateBitmap,
 		updateQuality = function() return false end,
 		cache = _noCache
@@ -192,6 +193,7 @@ create.mesh = function(self)
 		return {
 			mesh = mesh,
 			draw = _makeDrawFlatMesh(mesh),
+			warmup = function() end,
 			update = _updateFlatMesh,
 			updateQuality = function() return false end,
 			cache = _cacheMesh
@@ -203,6 +205,11 @@ create.mesh = function(self)
 		return {
 			mesh = shader:getMesh(),
 			draw = function(...) shader:draw(...) end,
+			warmup = function()
+				if shader:warmup() then
+					return 1
+				end
+			end,
 			update = function() shader:update() end,
 			updateQuality = function() return false end,
 			cache = _cacheMesh
@@ -218,6 +225,13 @@ create.gpux = function(self)
 	return {
 		shaders = shaders,
 		draw = createDrawShaders(shaders),
+		warmup = function(...)
+			for i, s in ipairs(shaders) do
+				if s:warmup(...) then
+					return i / #shaders
+				end
+			end
+		end,
 		update = _updateShaders,
 		updateQuality = function(quality)
 			for _, s in ipairs(shaders) do

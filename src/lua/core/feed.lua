@@ -244,7 +244,23 @@ local function newGeometrySend(fillShader, lineShader, data, meshBand)
 		listsImageData = nil,
 		curvesImageData = nil,
 		lookupTableByteData = {nil, nil},
-		lookupTableMetaByteData = nil}, GeometrySend)
+		lookupTableMetaByteData = nil,
+		_warmup = false}, GeometrySend)
+end
+
+function GeometrySend:warmup()
+	if not self._warmup then
+		if self.fillShader ~= nil then
+			warmupShader(self.fillShader)
+		end
+		if self.lineShader ~= nil and self.lineShader ~= self.fillShader then
+			warmupShader(self.lineShader)
+		end
+		self._warmup = true
+		return true
+	else
+		return false
+	end
 end
 
 function GeometrySend:beginInit()

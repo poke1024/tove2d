@@ -338,6 +338,12 @@ function Graphics:draw(x, y, r, sx, sy)
 	self:_create().draw(x, y, r, sx, sy)
 end
 
+function Graphics:warmup(...)
+	local r = self:_create().warmup(...)
+	love.graphics.setShader()
+	return r
+end
+
 function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
 		settings = height -- second arg

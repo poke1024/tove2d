@@ -231,6 +231,13 @@ tove.init = function(path)
 		return d
 	end
 
+	local function warmupShader(shader)
+		love.graphics.setShader(shader)
+		-- the following is a bit of a hack to make love2d actually load
+		-- and compile the shader. it won't without the following line.
+		love.graphics.rectangle("fill", 0, 0, 0, 0)
+	end
+	
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand
 	--!! import "subpath.lua" as Subpath

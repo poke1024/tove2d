@@ -164,6 +164,9 @@ function MeshShader:draw(...)
 	end
 end
 
+function MeshShader:warmup(...)
+	warmupShader(self.linkdata.shader)
+end
 
 local function setLineQuality(linkData, lineQuality)
 	linkData.lineQuality = lineQuality
@@ -303,6 +306,10 @@ function ComputeShader:draw(...)
 	local feed = linkdata.geometryFeed
 	feed.drawFill(...)
 	feed.drawLine(...)
+end
+
+function ComputeShader:warmup(...)
+	return self.linkdata.geometryFeed:warmup(...)
 end
 
 function ComputeShader:debug(curve)
