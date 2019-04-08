@@ -638,7 +638,7 @@ struct Points {
 	}
 };
 
-void Subpath::saveCurvature() {
+ToveCurvature *Subpath::saveCurvature() {
 	float * const pts = nsvg.pts;
 	const bool closed = isClosed();
 
@@ -680,7 +680,7 @@ void Subpath::saveCurvature() {
 		const float l0 = vec2(dx0, dy0).magnitude() / m0;
 		const float l1 = vec2(dx1, dy1).magnitude() / m2;
 
-		Curvature &c = curvature[i];
+		ToveCurvature &c = curvature[i];
 
 		if (l0 + l1 < 1e-5) {
 			c.balance = 0;
@@ -724,6 +724,8 @@ void Subpath::saveCurvature() {
 		}
 #endif
 	}
+
+	return curvature.data();
 }
 
 bool Subpath::restoreCurvature() {
@@ -762,7 +764,7 @@ bool Subpath::restoreCurvature() {
 		float m0 = vec2(x1 - x0, y1 - y0).magnitude();
 		float m2 = vec2(x1 - x2, y1 - y2).magnitude();
 
-		const Curvature &c = curvature[i];
+		const ToveCurvature &c = curvature[i];
 
 		vec2 n0(x2 - x0, y2 - y0);
 

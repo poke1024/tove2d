@@ -317,3 +317,10 @@ typedef struct {
 typedef struct {
 	void *ptr;
 } ToveMeshRef;
+
+typedef struct {
+	float curvature;
+	float balance;
+	float angle1;
+	float angle2;
+} ToveCurvature;

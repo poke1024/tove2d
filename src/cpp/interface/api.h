@@ -64,7 +64,7 @@ EXPORT void SubpathMove(ToveSubpathRef subpath, int k, float x, float y, ToveHan
 EXPORT void SubpathCommit(ToveSubpathRef subpath);
 EXPORT void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 	float a, float b, float c, float d, float e, float f);
-EXPORT void SubpathSaveCurvature(ToveSubpathRef subpath);
+EXPORT ToveCurvature *SubpathSaveCurvature(ToveSubpathRef subpath);
 EXPORT void SubpathRestoreCurvature(ToveSubpathRef subpath);
 EXPORT void ReleaseSubpath(ToveSubpathRef subpath);
 

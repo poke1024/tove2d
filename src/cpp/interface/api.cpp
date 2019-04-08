@@ -711,8 +711,8 @@ void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 	deref(subpath)->set(deref(source), transform);
 }
 
-void SubpathSaveCurvature(ToveSubpathRef subpath) {
-	deref(subpath)->saveCurvature();
+ToveCurvature *SubpathSaveCurvature(ToveSubpathRef subpath) {
+	return deref(subpath)->saveCurvature();
 }
 
 void SubpathRestoreCurvature(ToveSubpathRef subpath) {

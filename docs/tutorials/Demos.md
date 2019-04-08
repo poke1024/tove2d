@@ -79,3 +79,8 @@ For non-animated rendering, TÖVE is able to render complex clip paths in textur
 For non-animated rasterization, TÖVE supports various dithering modes for rendering gradients with limited palettes:
 
 ![](images/demos/retro.png)
+
+## Warp Demo
+A demo allowing you to change shape and character of curves on any SVG using a brush-like interface:
+
+![](images/demos/warp.png)

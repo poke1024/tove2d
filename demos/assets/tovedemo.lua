@@ -15,6 +15,9 @@ love.window.setTitle("")
 
 tovedemo = {}
 
+tovedemo.largeFont = font
+tovedemo.smallFont = smallFont
+
 function tovedemo.draw(title, help)
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()

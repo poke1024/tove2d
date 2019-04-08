@@ -169,13 +169,16 @@ function Subpath:setPoints(...)
 end
 
 function Subpath:warp(f)
-	lib.SubpathSaveCurvature(self)
+	local c = lib.SubpathSaveCurvature(self)
 	local n = lib.SubpathGetNumPoints(self)
 	local p = lib.SubpathGetPointsPtr(self)
+	local j = 0
 	for i = 0, n - 1, 3 do
-		x, y = f(p[2 * i + 0], p[2 * i + 1])
+		x, y, curvature = f(p[2 * i + 0], p[2 * i + 1], c[j].curvature)
 		p[2 * i + 0] = x
 		p[2 * i + 1] = y
+		if curvature ~= nil then c[j].curvature = curvature end
+		j = j + 1
 	end
 	lib.SubpathFixLoop(self)
 	lib.SubpathRestoreCurvature(self)
