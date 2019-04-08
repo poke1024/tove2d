@@ -47,16 +47,34 @@ bool Partition::check(const Vertices &vertices) {
         int i = part.fail;
         int k = 0;
 
+        struct Points {
+            const Vertices &vertices;
+            const Indices &outline;
+
+        public:
+            inline Points(
+                const Vertices &vertices,
+                const Indices &outline) :
+                
+                vertices(vertices), 
+                outline(outline) {
+            }
+
+            inline const vec2 &operator[](const int i) const {
+                return vertices[outline[i]];
+            }
+        };
+
         do {
             assert(i >= 0 && i < n);
             const auto &p0 = vertices[outline[i]];
 
             const int i1 = find_unequal_forward(
-                vertices, outline.data(), i, n);
+                Points(vertices, outline), i, n);
             const auto &p1 = vertices[outline[i1]];
 
             const int i2 = find_unequal_forward(
-                vertices, outline.data(), i1, n);
+                 Points(vertices, outline), i1, n);
             const auto &p2 = vertices[outline[i2]];
 
             float area = cross(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);

@@ -117,14 +117,16 @@ inline bool unequal(
 	return dx * dx + dy * dy > 1e-5;
 }
 
+template<typename V>
 inline int find_unequal_backward(
-	const Vertices &vertices, int start, int n) {
+	const V &vertices, int start, int n) {
 	start = start % n;
-	const float x = vertices[start].x;
-	const float y = vertices[start].y;
+	const auto p0 = vertices[start];
+	const float x = p0.x;
+	const float y = p0.y;
 	for (int i = 1; i < n; i++) {
 		const int j = (start + n - i) % n;
-		const auto &p = vertices[j];
+		const auto p = vertices[j];
 		if (unequal(x, y, p.x, p.y)) {
 			return j;
 		}
@@ -132,46 +134,16 @@ inline int find_unequal_backward(
 	return (start + n - 1) % n;
 }
 
+template<typename V>
 inline int find_unequal_forward(
-	const Vertices &vertices, int start, int n) {
+	const V &vertices, int start, int n) {
 	start = start % n;
-	const float x = vertices[start].x;
-	const float y = vertices[start].y;
+	const auto p0 = vertices[start];
+	const float x = p0.x;
+	const float y = p0.y;
 	for (int i = 1; i < n; i++) {
 		const int j = (start + i) % n;
-		const auto &p = vertices[j];
-		if (unequal(x, y, p.x, p.y)) {
-			return j;
-		}
-	}
-	return (start + 1) % n;
-}
-
-inline int find_unequal_forward(
-	const Vertices &vertices, const TPPLPoly &poly, int start, int n) {
-	start = start % n;
-	const auto &s = vertices[poly[start].id];
-	const float x = s.x;
-	const float y = s.y;
-	for (int i = 1; i < n; i++) {
-		const int j = (start + i) % n;
-		const auto &p = vertices[poly[j].id];
-		if (unequal(x, y, p.x, p.y)) {
-			return j;
-		}
-	}
-	return (start + 1) % n;
-}
-
-inline int find_unequal_forward(
-	const Vertices &vertices, const uint16_t *indices, int start, int n) {
-	start = start % n;
-	const auto &s = vertices[indices[start]];
-	const float x = s.x;
-	const float y = s.y;
-	for (int i = 1; i < n; i++) {
-		const int j = (start + i) % n;
-		const auto &p = vertices[indices[j]];
+		const auto p = vertices[j];
 		if (unequal(x, y, p.x, p.y)) {
 			return j;
 		}

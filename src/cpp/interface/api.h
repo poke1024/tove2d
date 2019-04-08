@@ -30,6 +30,7 @@ EXPORT int SubpathGetNumPoints(ToveSubpathRef subpath);
 EXPORT bool SubpathIsClosed(ToveSubpathRef subpath);
 EXPORT void SubpathSetIsClosed(ToveSubpathRef subpath, bool closed);
 EXPORT float *SubpathGetPointsPtr(ToveSubpathRef subpath);
+EXPORT void SubpathFixLoop(ToveSubpathRef subpath);
 EXPORT void SubpathSetPoint(ToveSubpathRef subpath, int index, float x, float y);
 EXPORT void SubpathSetPoints(ToveSubpathRef subpath, const float *pts, int npts);
 EXPORT float SubpathGetCurveValue(ToveSubpathRef subpath, int curve, int index);

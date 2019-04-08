@@ -172,11 +172,12 @@ function Subpath:warp(f)
 	lib.SubpathSaveCurvature(self)
 	local n = lib.SubpathGetNumPoints(self)
 	local p = lib.SubpathGetPointsPtr(self)
-	for i = 0, n, 3 do
+	for i = 0, n - 1, 3 do
 		x, y = f(p[2 * i + 0], p[2 * i + 1])
 		p[2 * i + 0] = x
 		p[2 * i + 1] = y
 	end
+	lib.SubpathFixLoop(self)
 	lib.SubpathRestoreCurvature(self)
 end
 

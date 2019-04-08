@@ -574,6 +574,10 @@ float *SubpathGetPointsPtr(ToveSubpathRef subpath) {
 	return deref(subpath)->getPoints();
 }
 
+void SubpathFixLoop(ToveSubpathRef subpath) {
+	deref(subpath)->fixLoop();
+}
+
 /*void SubpathSetPoint(ToveSubpathRef subpath, int index, float x, float y) {
 	deref(subpath)->setPoint(index, x, y);
 }*/

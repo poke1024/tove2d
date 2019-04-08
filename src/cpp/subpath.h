@@ -76,8 +76,6 @@ private:
 
     bool isLoop() const;
 
-    void fixLoop();
-
     inline void ensureCurveData(uint8_t flags) const {
         if (dirty & flags) {
             updateCurveData(flags);
@@ -181,6 +179,7 @@ public:
     void setPointValue(int index, int dim, float value);
 
 	void setPoints(const float *pts, int npts, bool add_loop = true);
+    void fixLoop();
 
     bool isCollinear(int u, int v, int w) const;
     bool isLineAt(int k, int dir) const;

@@ -627,6 +627,17 @@ void Subpath::makeSmooth(int k, int dir, float a) {
 	changed(CHANGED_POINTS);
 }
 
+struct Points {
+	const float * const pts;
+	
+	inline Points(const float *pts) : pts(pts) {
+	}
+
+	inline vec2 operator[](const int i) const {
+		return vec2(pts[2 * (3 * i) + 0], pts[2 * (3 * i) + 1]);
+	}
+};
+
 void Subpath::saveCurvature() {
 	float * const pts = nsvg.pts;
 	const bool closed = isClosed();
@@ -635,9 +646,18 @@ void Subpath::saveCurvature() {
 	const int nc = ncurves(npts);
 	curvature.resize(nc);
 
+	int k0 = closed ? (find_unequal_backward(Points(pts), nc, nc) * 3) : 0;
+	int k2 = find_unequal_forward(Points(pts), 0, nc) * 3;
+
 	for (int i = 0, k1 = 0; i < nc; i++, k1 += 3) {
-		const int k0 = closed ? ((k1 + npts - 3) % npts) : std::max(0, k1 - 3);
-		const int k2 = closed ? (k1 + 3) % npts : std::min(k1 + 3, (nc - 1) * 3);
+		if (k1 == k2) {
+			k0 = k2 - 3;
+			k2 = find_unequal_forward(Points(pts), k1 / 3, nc) * 3;
+
+			if (!closed && k2 < k1) {
+				k2 = (nc - 1) * 3;
+			}
+		}
 
 		float x0 = pts[2 * k0 + 0];
 		float y0 = pts[2 * k0 + 1];
@@ -648,8 +668,8 @@ void Subpath::saveCurvature() {
 		float x2 = pts[2 * k2 + 0];
 		float y2 = pts[2 * k2 + 1];
 
-		float m0 = vec2(x1 - x0, y1 - y0).magnitude();
-		float m2 = vec2(x1 - x2, y1 - y2).magnitude();
+		const float m0 = vec2(x1 - x0, y1 - y0).magnitude();
+		const float m2 = vec2(x1 - x2, y1 - y2).magnitude();
 
 		const float dx0 = pts[2 * (k0 + 2) + 0] - x1;
 		const float dy0 = pts[2 * (k0 + 2) + 1] - y1;
@@ -662,13 +682,47 @@ void Subpath::saveCurvature() {
 
 		Curvature &c = curvature[i];
 
+		if (l0 + l1 < 1e-5) {
+			c.balance = 0;
+			c.curvature = 0;
+			c.angle1 = 0;
+			c.angle2 = 0;
+			continue;
+		}
+
 		c.balance = (l0 + l0) / (l0 + l1);
 		c.curvature = (l0 + l1) / 2;
 
 		const vec2 nr(y2 - y0, x2 - x0);
 
-		c.angle1 = vec2(dy0, dx0).angle(nr);
-		c.angle2 = vec2(dy1, dx1).angle(nr);
+		if (std::abs(nr.magnitude()) < 1e-5) {
+			c.angle1 = std::atan2(dy0, dx0);
+			c.angle2 = std::atan2(dy1, dx1);
+		} else {
+			c.angle1 = vec2(dy0, dx0).angle(nr);
+			c.angle2 = vec2(dy1, dx1).angle(nr);
+		}
+
+#if 0
+		// debug code. assert invariance.
+
+		const vec2 n0(x2 - x0, y2 - y0);
+		const vec2 n = n0 * (c.curvature / n0.magnitude());
+
+		const vec2 v0 = n.rotated(c.angle1) * (m0 * c.balance);
+		float ex = pts[2 * (k0 + 2) + 0] - (x1 + v0.x);
+		float ey = pts[2 * (k0 + 2) + 1] - (y1 + v0.y);
+		if (vec2(ex, ey).magnitude() > 0.1) {
+			printf("error in %p %d\n", this, i);
+		}
+
+		const vec2 v1 = n.rotated(c.angle2) * (m2 * (2.0f - c.balance));
+		ex = pts[2 * (k1 + 1) + 0] - (x1 + v1.x);
+		ey = pts[2 * (k1 + 1) + 1] - (y1 + v1.y);
+		if (vec2(ex, ey).magnitude() > 0.1) {
+			printf("error in %p %d\n", this, i);
+		}
+#endif
 	}
 }
 
@@ -683,9 +737,18 @@ bool Subpath::restoreCurvature() {
 		return false;
 	}
 
+	int k0 = closed ? (find_unequal_backward(Points(pts), nc, nc) * 3) : 0;
+	int k2 = find_unequal_forward(Points(pts), 0, nc) * 3;
+
 	for (int i = 0, k1 = 0; i < nc; i++, k1 += 3) {
-		const int k0 = closed ? ((k1 + npts - 3) % npts) : std::max(0, k1 - 3);
-		const int k2 = closed ? (k1 + 3) % npts : std::min(k1 + 3, (nc - 1) * 3);
+		if (k1 == k2) {
+			k0 = k2 - 3;
+			k2 = find_unequal_forward(Points(pts), k1 / 3, nc) * 3;
+
+			if (!closed && k2 < k1) {
+				k2 = (nc - 1) * 3;
+			}
+		}
 
 		float x0 = pts[2 * k0 + 0];
 		float y0 = pts[2 * k0 + 1];
@@ -701,7 +764,12 @@ bool Subpath::restoreCurvature() {
 
 		const Curvature &c = curvature[i];
 
-		const vec2 n0(x2 - x0, y2 - y0);
+		vec2 n0(x2 - x0, y2 - y0);
+
+		if (std::abs(n0.magnitude()) < 1e-5) {
+			n0 = vec2(1, 0);
+		}
+
 		const vec2 n = n0 * (c.curvature / n0.magnitude());
 
 		const vec2 v0 = n.rotated(c.angle1) * (m0 * c.balance);
