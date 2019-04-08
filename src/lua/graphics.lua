@@ -378,6 +378,13 @@ function Graphics:animate(a, b, t)
 	lib.GraphicsAnimate(self._ref, a._ref, b._ref, t or 0)
 end
 
+function Graphics:warp(f)
+	local paths = self.paths
+    for i = 1, paths.count do
+		paths[i]:warp(f)
+	end
+end
+
 local orientations = {
 	cw = lib.TOVE_ORIENTATION_CW,
 	ccw = lib.TOVE_ORIENTATION_CCW

@@ -29,7 +29,7 @@ EXPORT int SubpathGetNumCurves(ToveSubpathRef subpath);
 EXPORT int SubpathGetNumPoints(ToveSubpathRef subpath);
 EXPORT bool SubpathIsClosed(ToveSubpathRef subpath);
 EXPORT void SubpathSetIsClosed(ToveSubpathRef subpath, bool closed);
-EXPORT const float *SubpathGetPointsPtr(ToveSubpathRef subpath);
+EXPORT float *SubpathGetPointsPtr(ToveSubpathRef subpath);
 EXPORT void SubpathSetPoint(ToveSubpathRef subpath, int index, float x, float y);
 EXPORT void SubpathSetPoints(ToveSubpathRef subpath, const float *pts, int npts);
 EXPORT float SubpathGetCurveValue(ToveSubpathRef subpath, int curve, int index);
@@ -63,6 +63,8 @@ EXPORT void SubpathMove(ToveSubpathRef subpath, int k, float x, float y, ToveHan
 EXPORT void SubpathCommit(ToveSubpathRef subpath);
 EXPORT void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 	float a, float b, float c, float d, float e, float f);
+EXPORT void SubpathSaveCurvature(ToveSubpathRef subpath);
+EXPORT void SubpathRestoreCurvature(ToveSubpathRef subpath);
 EXPORT void ReleaseSubpath(ToveSubpathRef subpath);
 
 EXPORT TovePathRef NewPath(const char *d);

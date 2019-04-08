@@ -570,7 +570,7 @@ void SubpathSetIsClosed(ToveSubpathRef subpath, bool closed) {
 	deref(subpath)->setIsClosed(closed);
 }
 
-const float *SubpathGetPointsPtr(ToveSubpathRef subpath) {
+float *SubpathGetPointsPtr(ToveSubpathRef subpath) {
 	return deref(subpath)->getPoints();
 }
 
@@ -705,6 +705,14 @@ void SubpathSet(ToveSubpathRef subpath, ToveSubpathRef source,
 
 	nsvg::Transform transform(a, b, c, d, e, f);
 	deref(subpath)->set(deref(source), transform);
+}
+
+void SubpathSaveCurvature(ToveSubpathRef subpath) {
+	deref(subpath)->saveCurvature();
+}
+
+void SubpathRestoreCurvature(ToveSubpathRef subpath) {
+	deref(subpath)->restoreCurvature();
 }
 
 

@@ -81,6 +81,13 @@ function Path:animate(a, b, t)
 	lib.PathAnimate(self, a, b, t)
 end
 
+function Path:warp(f)
+	local subpaths = self.subpaths
+	for i = 1, subpaths.count do
+		subpaths[i]:warp(f)
+	end
+end
+
 function Path:rotate(w, k)
 	lib.PathRotate(self, tove.elements[w], k)
 end

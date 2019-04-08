@@ -22,6 +22,13 @@
 
 BEGIN_TOVE_NAMESPACE
 
+struct Curvature {
+	float curvature;
+	float balance;
+	float angle1;
+	float angle2;
+};
+
 class Subpath : public Observable, public std::enable_shared_from_this<Subpath> {
 private:
 	struct Command {
@@ -46,6 +53,7 @@ private:
 
 	mutable std::vector<Command> commands;
     mutable std::vector<CurveData> curves;
+	std::vector<Curvature> curvature;
 	mutable uint8_t dirty;
 
 	float *addPoints(int n, bool allowClosedEdit = false);
@@ -118,6 +126,9 @@ public:
 
     void makeFlat(int k, int dir);
     void makeSmooth(int k, int dir, float a = 0.5);
+
+	void saveCurvature();
+	bool restoreCurvature();
 
 	inline float getCurveValue(int curve, int index) const {
         commit();
@@ -193,7 +204,7 @@ public:
 		return nsvg.npts;
 	}
 
-	inline const float *getPoints() const {
+	inline float *getPoints() const {
 		commit();
 		return nsvg.pts;
 	}

@@ -627,6 +627,98 @@ void Subpath::makeSmooth(int k, int dir, float a) {
 	changed(CHANGED_POINTS);
 }
 
+void Subpath::saveCurvature() {
+	float * const pts = nsvg.pts;
+	const bool closed = isClosed();
+
+	const int npts = nsvg.npts;
+	const int nc = ncurves(npts);
+	curvature.resize(nc);
+
+	for (int i = 0, k1 = 0; i < nc; i++, k1 += 3) {
+		const int k0 = closed ? ((k1 + npts - 3) % npts) : std::max(0, k1 - 3);
+		const int k2 = closed ? (k1 + 3) % npts : std::min(k1 + 3, (nc - 1) * 3);
+
+		float x0 = pts[2 * k0 + 0];
+		float y0 = pts[2 * k0 + 1];
+
+		float x1 = pts[2 * k1 + 0];
+		float y1 = pts[2 * k1 + 1];
+
+		float x2 = pts[2 * k2 + 0];
+		float y2 = pts[2 * k2 + 1];
+
+		float m0 = vec2(x1 - x0, y1 - y0).magnitude();
+		float m2 = vec2(x1 - x2, y1 - y2).magnitude();
+
+		const float dx0 = pts[2 * (k0 + 2) + 0] - x1;
+		const float dy0 = pts[2 * (k0 + 2) + 1] - y1;
+
+		const float dx1 = pts[2 * (k1 + 1) + 0] - x1;
+		const float dy1 = pts[2 * (k1 + 1) + 1] - y1;
+
+		const float l0 = vec2(dx0, dy0).magnitude() / m0;
+		const float l1 = vec2(dx1, dy1).magnitude() / m2;
+
+		Curvature &c = curvature[i];
+
+		c.balance = (l0 + l0) / (l0 + l1);
+		c.curvature = (l0 + l1) / 2;
+
+		const vec2 nr(y2 - y0, x2 - x0);
+
+		c.angle1 = vec2(dy0, dx0).angle(nr);
+		c.angle2 = vec2(dy1, dx1).angle(nr);
+	}
+}
+
+bool Subpath::restoreCurvature() {
+	float * const pts = nsvg.pts;
+	const bool closed = isClosed();
+
+	const int npts = nsvg.npts;
+	const int nc = ncurves(npts);
+
+	if (curvature.size() != nc) {
+		return false;
+	}
+
+	for (int i = 0, k1 = 0; i < nc; i++, k1 += 3) {
+		const int k0 = closed ? ((k1 + npts - 3) % npts) : std::max(0, k1 - 3);
+		const int k2 = closed ? (k1 + 3) % npts : std::min(k1 + 3, (nc - 1) * 3);
+
+		float x0 = pts[2 * k0 + 0];
+		float y0 = pts[2 * k0 + 1];
+
+		float x1 = pts[2 * k1 + 0];
+		float y1 = pts[2 * k1 + 1];
+
+		float x2 = pts[2 * k2 + 0];
+		float y2 = pts[2 * k2 + 1];
+
+		float m0 = vec2(x1 - x0, y1 - y0).magnitude();
+		float m2 = vec2(x1 - x2, y1 - y2).magnitude();
+
+		const Curvature &c = curvature[i];
+
+		const vec2 n0(x2 - x0, y2 - y0);
+		const vec2 n = n0 * (c.curvature / n0.magnitude());
+
+		const vec2 v0 = n.rotated(c.angle1) * (m0 * c.balance);
+		pts[2 * (k0 + 2) + 0] = x1 + v0.x;
+		pts[2 * (k0 + 2) + 1] = y1 + v0.y;
+
+		const vec2 v1 = n.rotated(c.angle2) * (m2 * (2.0f - c.balance));
+		pts[2 * (k1 + 1) + 0] = x1 + v1.x;
+		pts[2 * (k1 + 1) + 1] = y1 + v1.y;
+	}
+
+	fixLoop();
+	changed(CHANGED_POINTS);
+
+	return true;
+}
+
 void Subpath::move(int k, float x, float y, ToveHandle handle) {
 	const bool closed = isClosed();
 	const int n = nsvg.npts - (closed ? 1 : 0);
