@@ -110,7 +110,7 @@ function Graphics:setName(name)
 end
 
 function Graphics:clone()
-	local ref = lib.CloneGraphics(self._ref)
+	local ref = lib.CloneGraphics(self._ref, true)
 	local d = self._display
 	local g = setmetatable({
 		_ref = ref,

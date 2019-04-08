@@ -725,8 +725,8 @@ ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi) {
 	return shapes.publish(Graphics::createFromSVG(svg, units, dpi));
 }
 
-ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics) {
-	return shapes.publish(tove_make_shared<Graphics>(deref(graphics)));
+ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics, bool deep) {
+	return shapes.publish(tove_make_shared<Graphics>(deref(graphics).get(), deep));
 }
 
 TovePathRef GraphicsBeginPath(ToveGraphicsRef graphics) {

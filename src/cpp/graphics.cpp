@@ -277,7 +277,9 @@ Graphics::Graphics(const NSVGimage *image) :
 #endif
 }
 
-Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
+Graphics::Graphics(const Graphics *graphics, bool clonePaths) :
+	changes(graphics->changes) {
+	
 	initialize(graphics->nsvg.width, graphics->nsvg.height);
 
 	strokeColor = graphics->strokeColor;
@@ -293,7 +295,11 @@ Graphics::Graphics(const GraphicsRef &graphics) : changes(graphics->changes) {
 	clipSet = graphics->clipSet;
 
 	for (const auto &path : graphics->paths) {
-		addPath(path);
+		if (clonePaths) {
+			addPath(std::make_shared<Path>(path.get()));
+		} else {
+			addPath(path);
+		}
 	}
 }
 

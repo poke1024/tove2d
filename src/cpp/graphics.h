@@ -157,7 +157,7 @@ public:
 	Graphics();
 	Graphics(const ClipSetRef &clipSet);
 	Graphics(const NSVGimage *image);
-	Graphics(const GraphicsRef &graphics);
+	Graphics(const Graphics *graphics, bool clonePaths);
 
 	inline ~Graphics() {
 		clear();

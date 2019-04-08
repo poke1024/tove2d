@@ -103,7 +103,7 @@ EXPORT void PathRotate(TovePathRef path, ToveElementType what, int k);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
-EXPORT ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics);
+EXPORT ToveGraphicsRef CloneGraphics(ToveGraphicsRef graphics, bool deep);
 EXPORT TovePathRef GraphicsBeginPath(ToveGraphicsRef graphics);
 EXPORT void GraphicsClosePath(ToveGraphicsRef graphics);
 EXPORT ToveSubpathRef GraphicsBeginSubpath(ToveGraphicsRef graphics);
