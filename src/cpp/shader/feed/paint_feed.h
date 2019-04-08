@@ -112,8 +112,7 @@ protected:
 				NSVG_PAINT_LINEAR_GRADIENT : NSVG_PAINT_RADIAL_GRADIENT;
 			nsvgPaint.gradient = g;
 
-			assert(gradient.numColors == 256 &&
-				gradient.colorsTextureHeight == 256);
+			assert(gradient.colorsTextureHeight == 256);
 
 			nsvg::CachedPaint cached(texture, textureRowBytes, 256);
 			cached.init(nsvgPaint, opacity);
