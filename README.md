@@ -61,7 +61,7 @@ TÖVE owes a lot to Mikko Mononen's excellent NanoSVG. Not only does TÖVE call 
 
 TÖVE's API was inspired by [EaselJS](https://www.createjs.com/easeljs) and [PlotDevice](https://plotdevice.io/PlotDevice).
 
-The rabbit you see in the tutorials and demos is from [Kenney](https://kenney.nl/). Other example art is by [Chris Hildenbrand](https://2dgameartguru.com/). The font in the demos is "amatic" by Vernon Adams. 
+The graphics you see in the tutorials and demos are by [Mike Mac](https://mikemac2d.itch.io), [Kenney](https://kenney.nl/) and [Chris Hildenbrand](https://2dgameartguru.com/). The font in the demos is "amatic" by Vernon Adams. 
 
 ## About the Name
 TÖVE is a portmanteau of **LÖVE**, **To**wards **Ve**ctor Graphics and **Tove** Jansson, the Swedish author and illustrator of the Moomins.

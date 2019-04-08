@@ -14,8 +14,8 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	for _, mode in ipairs {"texture", "mesh", "gpux"} do
-		local graphics = newGraphics()
+	for i, mode in ipairs {"texture", "mesh", "gpux"} do
+		local graphics = newGraphics(i)
 		local quality = {}
 		if mode == "mesh" then
 			quality = {200}
@@ -25,10 +25,25 @@ local function load(svg)
 	end
 end
 
-load(love.filesystem.read("assets/rabbit.svg"))
+load(love.filesystem.read("assets/monster_by_mike_mac.svg"))
 
 function love.draw()
 	tovedemo.draw("Renderers.")
+
+	-- on the first runs, display a progress on shader compilation.
+	startTime = love.timer.getTime()
+	while true do
+		progress = flow:warmup()
+		if progress == nil then
+			break
+		end
+		if love.timer.getTime() - startTime > 0.05 then
+			tovedemo.progress("Compiling Shaders.", progress * 100)
+			return
+		end
+	end
+	
+	tovedemo.attribution("Graphics by Mike Mac.")
 	flow:draw()
 end
 

@@ -37,6 +37,30 @@ function tovedemo.draw(title, help)
 	love.graphics.setColor(1, 1, 1)
 end
 
+function tovedemo.attribution(text)
+	local width = love.graphics.getWidth()
+	local height = love.graphics.getHeight()
+	love.graphics.setFont(smallFont)
+	love.graphics.setColor(0, 0, 0, 0.8)
+	love.graphics.print(text, width - smallFont:getWidth(text) - 20, height - 40)
+	love.graphics.setFont(font)
+	love.graphics.setColor(1, 1, 1)
+end
+
+function tovedemo.progress(text, progress)
+	local width = love.graphics.getWidth()
+	local height = love.graphics.getHeight()
+	
+	love.graphics.setColor(0, 0, 0, 0.5)
+	love.graphics.print(text, width / 2 - font:getWidth(text) / 2, height / 2 - 60)
+
+	love.graphics.setColor(1, 1, 1, 0.5)
+	love.graphics.circle("line", width / 2, height / 2 + 120, 100)
+	love.graphics.arc("fill", width / 2, height / 2 + 120, 100, 0, (progress / 100) * math.pi * 2)
+
+	love.graphics.setColor(1, 1, 1)
+end
+
 function tovedemo.newFont(size)
 	return love.graphics.newFont("assets/amatic/Amatic-Bold.ttf", size)
 end
@@ -47,7 +71,12 @@ local CoverFlow = {}
 CoverFlow.__index = CoverFlow
 
 function tovedemo.newCoverFlow(scale)
-	return setmetatable({items = {}, focus = 0, padding = 15, basescale = scale or 1}, CoverFlow)
+	return setmetatable({
+		items = {},
+		focus = 0,
+		padding = 15,
+		basescale = scale or 1,
+		_warming = {}}, CoverFlow)
 end
 
 function CoverFlow:add(name, item)
@@ -73,6 +102,39 @@ end
 
 function CoverFlow:setName(i, name)
 	self.items[i].name = name
+end
+
+function CoverFlow:warmup(...)
+	if self._warming == "done" then
+		return
+	end
+
+	if #self._warming == 0 then
+		for _, item in ipairs(self.items) do
+			if item.item:warmup(...) ~= nil then
+				table.insert(self._warming, item.item)
+			end
+		end	
+	end
+	if #self._warming > 0 then
+		local total = 0
+		local remaining = {}
+		for _, g in ipairs(self._warming) do
+			p = g:warmup(...)
+			if p ~= nil then
+				total = total + p
+				table.insert(remaining, g)
+			else
+				total = total + 1
+			end
+		end
+		local r = total / #self._warming
+		self._warming = remaining
+		return r
+	end
+
+	self._warming = "done"
+	return nil
 end
 
 function CoverFlow:draw()
@@ -106,6 +168,7 @@ function CoverFlow:draw()
 		love.graphics.translate(x, love.graphics.getHeight() / 2)
 		local s = (item.minsize + (item.maxsize - item.minsize) * (scale - 1)) / 200
 		love.graphics.scale(s * self.basescale)
+		item.mouse = {love.graphics.inverseTransformPoint(love.mouse.getX(), love.mouse.getY())}
 		item.item:draw(0, 0)
 		love.graphics.pop()
 

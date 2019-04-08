@@ -60,16 +60,15 @@ local function load()
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
 
-	local svg1 = love.filesystem.read("monster_by_mike_mac.svg")
-	graphics[1] = tove.newGraphics(svg1, 200)
+	local svg = love.filesystem.read("assets/monster_by_mike_mac.svg")
+
+	graphics[1] = tove.newGraphics(svg, 200)
 	flow:add("Fleja2003", graphics[1])
 
-	local svg2 = love.filesystem.read("monster_by_mike_mac.svg")
-	graphics[2] = tove.newGraphics(svg2, 200)
+	graphics[2] = tove.newGraphics(svg, 200)
 	flow:add("PICO8", graphics[2])
 
-	local svg3 = love.filesystem.read("monster_by_mike_mac.svg")
-	graphics[3] = tove.newGraphics(svg3, 200)
+	graphics[3] = tove.newGraphics(svg, 200)
 	flow:add("B/W", graphics[3])
 
 	updateGraphics()
@@ -82,8 +81,8 @@ function love.draw()
 	tovedemo.draw("Retro Rasterization.",
 		"\n[a]lgorithm: " .. algorithms[algorithmIndex] ..
 		"\ncolor [s]pread: " .. string.format("%.2f", spread) ..
-		"\n[n]oise: " .. string.format("%.3f", noise) ..
-		"\n\nGraphics by Mike Mac.")
+		"\n[n]oise: " .. string.format("%.3f", noise))
+	tovedemo.attribution("Graphics by Mike Mac.")
 	flow:draw()
 end
 
