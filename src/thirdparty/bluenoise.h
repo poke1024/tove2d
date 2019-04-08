@@ -18,6 +18,11 @@
     BSD-style license that can be found in the LICENSE.txt file.
 */
 
+#ifdef __linux__
+// fixes a nasty compilation problem under Ubuntu.
+#undef __SSE3__
+#endif
+
 #include <random>
 #include <algorithm>
 
