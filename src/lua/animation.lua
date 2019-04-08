@@ -170,21 +170,24 @@ Animation.__newindex = function(self, key, value)
 		local t = math.max(0, math.min(value, self._duration))
 		self._t = t
 		local f = self._keyframes
-		local lo = 0
-		local hi = #f
-		while lo < hi do
-			local mid = math.floor((lo + hi) / 2)
-			if f[mid + 1].offset < t then
-				lo = mid + 1
-			else
-				hi = mid
+		local n = #f
+		if n > 1 then
+			local lo = 0
+			local hi = n
+			while lo < hi do
+				local mid = math.floor((lo + hi) / 2)
+				if f[mid + 1].offset < t then
+					lo = mid + 1
+				else
+					hi = mid
+				end
 			end
+			lo = math.min(math.max(lo, 1), n)
+			local f0 = f[lo]
+			local f1 = f[lo + 1]
+			self._graphics:animate(f0.graphics, f1.graphics,
+				f1.ease((t - f0.offset) / f1.duration))
 		end
-		lo = math.min(math.max(lo, 1), #f - 1)
-		local f0 = f[lo]
-		local f1 = f[lo + 1]
-		self._graphics:animate(f0.graphics, f1.graphics,
-			f1.ease((t - f0.offset) / f1.duration))
 	end
 end
 
