@@ -21,8 +21,8 @@ end
 local AbstractMesh = {}
 AbstractMesh.__index = AbstractMesh
 
-function AbstractMesh:getVertexMap()
-	return self._mesh:getVertexMap()
+function AbstractMesh:getNumTriangles()
+	return lib.MeshGetIndexCount(self._tovemesh) / 3
 end
 
 function AbstractMesh:getUsage(what)

@@ -5,11 +5,12 @@ local tove = require "tove"
 require "assets/tovedemo"
 
 local function newInfoText(graphics, quality)
-	return "resolution " .. string.format("%d", quality) .. "\n" ..
-		tostring(graphics:getNumTriangles()) .. " triangles"
+	return "r " .. string.format("%d", quality) .. " / " ..
+		tostring(graphics:getNumTriangles()) .. " tris"
 end
 
 local flow
+local qualities = {50, 100, 200}
 
 local function load(svg)
 	-- makes a new graphics, prescaled to 200 px
@@ -19,7 +20,6 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	local qualities = {50, 100, 200}
 	for i = 1, 3 do
 		local graphics = newGraphics()
 		graphics:setDisplay("mesh", qualities[i])
@@ -28,10 +28,11 @@ local function load(svg)
 	end
 end
 
-load(love.filesystem.read("assets/rabbit.svg"))
+load(love.filesystem.read("assets/monster_3_by_mike_mac.svg"))
 
 function love.draw()
-	tovedemo.draw("Tesselation.")
+	tovedemo.draw("Tesselation.", "Use + / - to modify.")
+	tovedemo.attribution("Graphics by Mike Mac.")
 	flow:draw()
 end
 
@@ -47,7 +48,7 @@ function love.update(dt)
 			d = -1
 		end
 		if d ~= 0 then
-			qualities[focus] = math.max(0, qualities[focus] + 0.001 * d)
+			qualities[focus] = math.max(0, qualities[focus] + d)
 			local rabbit = flow:getItem(focus)
 			rabbit:setDisplay("mesh", qualities[focus])
 			flow:setName(focus, newInfoText(rabbit, qualities[focus]))

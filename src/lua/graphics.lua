@@ -328,7 +328,7 @@ end
 function Graphics:getNumTriangles()
 	self:_create()
 	if self._cache ~= nil and self._cache.mesh ~= nil then
-		return #self._cache.mesh:getVertexMap() / 3
+		return self._cache.mesh:getNumTriangles()
 	else
 		return 2
 	end
