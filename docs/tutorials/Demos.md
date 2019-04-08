@@ -26,8 +26,13 @@ love .
 
 On Windows, the symbolic links don't work :-( So you need to unzip the `lib` into each demo folder. Also you need to copy the `demos/assets` folder inside the respective demo folder. Basically: replace the symlinks with the real stuff.
 
+## Warp Demo
+A demo allowing you to change shape and character of curves on any SVG using a brush-like interface. Best of all, you can define various frames in this way and then animate between them using a mesh rendering:
+
+![](images/demos/warp.png)
+
 ## Renderers Demo
-Interactively zoom TÖVE's three renderers to inspect the quality:
+Interactively zoom TÖVE's three renderers to inspect the quality of each variant. Note that startup takes time due to the compilation of the `gpux` shaders:
 
 ![](images/demos/renderers.png)
 
@@ -59,11 +64,6 @@ The `mesh` and `gpux` renderers update existing GPU data structures like meshes 
 
 This demo illustrates two internal variants of the `mesh` renderer: one uses flat meshes (if no gradients are
 exist), the other uses shaders for gradient renderers. `mesh` automatically chooses the right internal variant.
-
-## Warp Demo
-A demo allowing you to change shape and character of curves on any SVG using a brush-like interface:
-
-![](images/demos/warp.png)
 
 ## Fill Rule Demo
 TÖVE offers support for holes and fill rules for all of its renderers:
