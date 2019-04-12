@@ -13,6 +13,7 @@
 #define __TOVE_MESH_TRIANGLES 1
 
 #include "partition.h"
+#include "area.h"
 #include "../interface.h"
 #include "../utils.h"
 
@@ -106,21 +107,30 @@ struct Triangulation {
 	inline Triangulation(ToveTrianglesMode mode) : triangles(mode) {
 	}
 
-	inline Triangulation(const std::list<TPPLPoly> &convex) :
+	inline Triangulation(
+		const std::list<TPPLPoly> &convex,
+		VanishingTriangles &&vanishing) :
+		
 		partition(convex),
 		triangles(TRIANGLES_LIST),
 		useCount(0),
-		keyframe(false) {
+		keyframe(false),
+		vanishing(vanishing) {
 	}
 
 	inline ToveTrianglesMode getMode() const {
 		return triangles.mode();
 	}
 
+	inline bool check(const Vertices &vertices) {
+		return vanishing.check(vertices) && partition.check(vertices);
+	}
+
 	Partition partition;
 	TriangleStore triangles;
 	uint64_t useCount;
 	bool keyframe;
+	VanishingTriangles vanishing;
 };
 
 class TriangleCache {

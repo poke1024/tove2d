@@ -10,15 +10,18 @@
  */
 
 #include "partition.h"
+#include "area.h"
 
 BEGIN_TOVE_NAMESPACE
 
 Partition::Partition(const std::list<TPPLPoly> &convex) {
     parts.reserve(convex.size());
 
+    int maxN = 0;
     for (auto i = convex.begin(); i != convex.end(); i++) {
         const TPPLPoly &poly = *i;
         const int n = poly.GetNumPoints();
+        maxN = std::max(maxN, n);
 
         Part part;
         part.outline.resize(n);
@@ -29,6 +32,8 @@ Partition::Partition(const std::list<TPPLPoly> &convex) {
 
         parts.push_back(part);
     }
+
+    tempPts.resize(maxN + 2);
 }
 
 bool Partition::check(const Vertices &vertices) {
@@ -65,38 +70,23 @@ bool Partition::check(const Vertices &vertices) {
             }
         };
 
-        do {
-            assert(i >= 0 && i < n);
-            const auto &p0 = vertices[outline[i]];
+        for (int k = 0; k < n; k++) {
+            tempPts[k] = vertices[outline[k]];
+        }
+        tempPts[k] = tempPts[0];
+        tempPts[k + 1] = tempPts[1];
 
-            const int i1 = find_unequal_forward(
-                Points(vertices, outline), i, n);
-            const auto &p1 = vertices[outline[i1]];
+        IsConvex isConvex;
+        computeFromAreas(tempPts.data(), n, isConvex);
 
-            const int i2 = find_unequal_forward(
-                 Points(vertices, outline), i1, n);
-            const auto &p2 = vertices[outline[i2]];
+        if (!isConvex) {
+            part.fail = i;
 
-            float area = cross(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
-
-            const float eps = 0.1;
-            if (area > eps) {
-                part.fail = i;
-
-                if (j != 0) {
-                    std::swap(parts[j], parts[0]);
-                }
-                return false;
+            if (j != 0) {
+                std::swap(parts[j], parts[0]);
             }
-
-            if (i1 > i) {
-                k += i1 - i;
-            } else {
-                k += (n - i) + i1;
-            }
-            i = i1;
-
-        } while (k < n);
+            return false;
+        }
     }
 
     return true;

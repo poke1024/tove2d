@@ -28,6 +28,7 @@ private:
 	};
 
 	std::vector<Part> parts;
+	std::vector<vec2> tempPts;
 
 public:
 	inline Partition() {

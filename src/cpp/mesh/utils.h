@@ -20,7 +20,11 @@ struct vec2 {
 	float x;
 	float y;
 
-	inline vec2(float x, float y) : x(x), y(y) { };
+	inline vec2() {
+	}
+
+	inline vec2(float x, float y) : x(x), y(y) {
+	}
 
 	inline float magnitude() const {
 		return std::sqrt(x * x + y * y);

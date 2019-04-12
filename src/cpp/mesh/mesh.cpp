@@ -48,6 +48,60 @@ inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
 	tove::report::warn("triangulation failed.");
 }
 
+bool SubpathCleaner::reduce() {
+	pts[n] = pts[0];
+	indices[n] = indices[0];
+
+	pts[n + 1] = pts[1];
+	indices[n + 1] = indices[1];
+
+	NonVanishingAreas nv(good.data());
+	computeFromAreas(pts.data(), n, nv);
+
+	int j = 0;
+	int skip = 0;
+
+	for (int i = 0; i < n; i++) {
+		if (skip > 0) {
+			skip -= 1;
+
+			continue;
+		} else if (!good[i]) {
+			skip = 1;
+
+			vanishing.add(
+				indices[i + 0],
+				indices[i + 1],
+				indices[i + 2]);
+
+			if (i == n - 1) {
+				continue;
+			}
+		}
+
+		pts[j] = pts[i];
+		indices[j] = indices[i];
+		j++;
+	}
+
+	if (j < n) {
+		n = j;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void SubpathCleaner::copyToPoly(TPPLPoly &poly) const {
+	poly.Init(n);
+	for (int i = 0; i < n; i++) {
+		poly[i].x = pts[i].x;
+		poly[i].y = pts[i].y;
+		poly[i].id = indices[i];
+	}
+}
+
+
 static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
 	switch (mode) {
 		case TOVE_HOLES_NONE:
@@ -432,50 +486,36 @@ void Submesh::triangulateFixedResolutionFill(
 	std::list<TPPLPoly> polys;
    	int vertexIndex = vertexIndex0;
 
+	int maxSubpathSize = 0;
+	int numTotalPoints = 0;
+	for (int i = 0; i < numSubpaths; i++) {
+		const int n = path->getSubpathSize(i, flattener);
+		numTotalPoints += n;
+		maxSubpathSize = std::max(maxSubpathSize, n);
+	}
+
+	mCleaner.init(maxSubpathSize, numTotalPoints);
+
 	for (int i = 0; i < numSubpaths; i++) {
 		const int n = path->getSubpathSize(i, flattener);
 		if (n < 3) {
+			vertexIndex += n;
 			continue;
 		}
 
 	   	const auto vertex = vertices(vertexIndex, n);
 
-		polys.push_back(TPPLPoly());
-		TPPLPoly &poly = polys.back();
-		poly.Init(n);
-
-		int written = 0;
-		for (int j = 0; j < n; ) {
-			// duplicate points are a very common issue that breaks the
-			// complete triangulation, that's why we special case here.
-			poly[written].x = vertex[j].x;
-			poly[written].y = vertex[j].y;
-			poly[written].id = vertexIndex + j;
-			written++;
-
-			const int next = find_unequal_forward(vertex, j, n);
-			if (next < j) {
-				break;
-			}
-			j = next;
-
-			if (j == n - 1 && !unequal(
-				vertex[0].x, vertex[0].y,
-				vertex[j].x, vertex[j].y)) {
-				break;
-			}
+		mCleaner.clear();
+		for (int j = 0; j < n; j++) {
+			mCleaner.add(vertex[j].x, vertex[j].y, vertexIndex + j);
 		}
+		mCleaner.clean();
+
 		vertexIndex += n;
 
-		if (written > 1 &&
-			poly[written - 1].x == poly[0].x &&
-			poly[written - 1].y == poly[0].y) {
-			written -= 1;
-		}
-
-		if (written < n) {
-			poly.Shrink(written);
-		}
+		polys.push_back(TPPLPoly());
+		TPPLPoly &poly = polys.back();
+		mCleaner.copyToPoly(poly);
 
 		applyHoles(holes, poly);
 	}
@@ -488,7 +528,8 @@ void Submesh::triangulateFixedResolutionFill(
 		return;
 	}
 
-	Triangulation *triangulation = new Triangulation(convex);
+	Triangulation *triangulation = new Triangulation(
+		convex, mCleaner.fetchVanishing());
 	for (auto i = convex.begin(); i != convex.end(); i++) {
 		std::list<TPPLPoly> triangles;
 		TPPLPoly &p = *i;

@@ -88,7 +88,8 @@ void TriangleCache::evict() {
 }
 
 bool TriangleCache::findCachedTriangulation(
-    const Vertices &vertices, bool &trianglesChanged) {
+    const Vertices &vertices,
+    bool &trianglesChanged) {
     
     const int n = triangulations.size();
     if (n == 0) {
@@ -96,7 +97,7 @@ bool TriangleCache::findCachedTriangulation(
     }
 
     assert(current < n);
-    if (triangulations[current]->partition.check(vertices)) {
+    if (triangulations[current]->check(vertices)) {
         triangulations[current]->useCount++;
         trianglesChanged = false;
         return true;
@@ -106,7 +107,7 @@ bool TriangleCache::findCachedTriangulation(
     for (int i = 1; i <= k; i++) {
         if (current + i < n) {
             const int forward = (current + i) % n;
-            if (triangulations[forward]->partition.check(vertices)) {
+            if (triangulations[forward]->check(vertices)) {
                 std::swap(
                     triangulations[(current + 1) % n],
                     triangulations[forward]);
@@ -119,7 +120,7 @@ bool TriangleCache::findCachedTriangulation(
 
         if (current - i >= 0) {
             const int backward = (current + n - i) % n;
-            if (triangulations[backward]->partition.check(vertices)) {
+            if (triangulations[backward]->check(vertices)) {
                 std::swap(
                     triangulations[(current + n - 1) % n],
                     triangulations[backward]);
