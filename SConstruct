@@ -38,7 +38,7 @@ sources = [
 if env["PLATFORM"] == 'win32':
 	env["CCFLAGS"] = ' /EHsc '
 	if not GetOption('tovedebug'):
-		env["CCFLAGS"] += ' /Oi /Ot /Oy /Ob2 /GF /Gy /fp:fast '
+		env["CCFLAGS"] += ' /Oi /Ot /Oy /Ob2 /GF /Gy /fp:fast /arch:AVX '
 		
 		# enabling /O2 (or /Og above) will crash demos/retro for some reason.
 		# env["CCFLAGS"] += ' /O2 /fp:fast '
