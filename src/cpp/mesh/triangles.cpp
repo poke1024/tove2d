@@ -150,10 +150,10 @@ bool TriangleCache::findCachedTriangulation(
         if (good) {
             const int duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::high_resolution_clock::now() - t0).count();
-            s << "found cached triangulation [" << current << "] in " <<
-                duration / 1000.0f << " μs for " << *name;
+            s << "[" << *name << "]" << " found cached triangulation [" << current << "] in " <<
+                duration / 1000.0f << " μs";
         } else {
-            s << "no cached triangulation for " << *name;
+            s << "[" << *name << "] no cached triangulation";
         }
         tove::report::report(s.str().c_str(), TOVE_REPORT_DEBUG);            
     }

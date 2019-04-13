@@ -437,7 +437,8 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 				const int duration = std::chrono::duration_cast<std::chrono::microseconds>(
 					std::chrono::high_resolution_clock::now() - t0).count();
 				std::ostringstream s;
-				s << "new fill triangulation took " << duration / 1000.0f << " ms for " << *fillSubmesh->getName();
+				s << "[" << *fillSubmesh->getName() << "] new fill triangulation took " <<
+					duration / 1000.0f << " ms";
 				tove::report::report(s.str().c_str(), TOVE_REPORT_DEBUG);
 			}			
 		}
