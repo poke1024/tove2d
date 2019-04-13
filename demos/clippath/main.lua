@@ -29,6 +29,7 @@ load(love.filesystem.read("local/house.svg"))
 
 function love.draw()
 	tovedemo.draw("Complex Clipping.")
+	tovedemo.attribution("Graphics by Chris Hildenbrand.")
 	flow:draw()
 end
 
