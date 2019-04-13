@@ -132,10 +132,10 @@ function MeshShader:update()
 		end
 		local updated = self.tess(linkdata.mesh._tovemesh, tessFlags)
 
+		linkdata.mesh:updateVertices()
 		if bit.band(updated, lib.UPDATE_MESH_TRIANGLES) ~= 0 then
 			linkdata.mesh:updateTriangles()
 		end
-		linkdata.mesh:updateVertices()
 	end
 
 	local link = linkdata.link

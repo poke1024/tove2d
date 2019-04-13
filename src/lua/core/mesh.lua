@@ -93,8 +93,8 @@ function AbstractMesh:getMesh()
 	self._mesh = mesh
 	self._vdata = love.data.newByteData(n * self._vertexByteSize)
 
-	self:updateTriangles()
 	self:updateVertices()
+	self:updateTriangles()
 
 	return mesh
 end
