@@ -149,8 +149,8 @@ bool TriangleCache::findCachedTriangulation(
         if (t->check(vertices)) {
             trianglesChanged = switchedTo > 0;
             good = true;
+            t->useCount++;
             if (trianglesChanged) {
-                t->useCount++;
                 makeCurrent(i);
             }
             break;
