@@ -67,6 +67,19 @@ TriangleCache::~TriangleCache() {
     }
 }
 
+void TriangleCache::add(Triangulation *t) {
+    if (t->partition.empty()) {
+        return;
+    }
+
+    if (triangulations.size() + 1 > cacheSize) {
+        evict();
+    }
+
+    t->useCount = 0;
+    triangulations.push_back(t);
+}
+
 void TriangleCache::evict() {
     uint64_t minCount = std::numeric_limits<uint64_t>::max();
     int minIndex = -1;
@@ -109,40 +122,25 @@ bool TriangleCache::findCachedTriangulation(
     bool good = false;
 
     if (triangulations[current]->check(vertices)) {
-        triangulations[current]->useCount++;
         trianglesChanged = false;
         good = true;
     } else {
-        const int k = std::max(current, n - current);
-        for (int i = 1; i <= k; i++) {
-            if (current + i < n) {
-                const int forward = (current + i) % n;
-                if (triangulations[forward]->check(vertices)) {
-                    std::swap(
-                        triangulations[(current + 1) % n],
-                        triangulations[forward]);
-                    current = (current + 1) % n;
-                    triangulations[current]->useCount++;
-                    trianglesChanged = true;
-                    good = true;
-                    break;
-                }
-            }
-
-            if (current - i >= 0) {
-                const int backward = (current + n - i) % n;
-                if (triangulations[backward]->check(vertices)) {
-                    std::swap(
-                        triangulations[(current + n - 1) % n],
-                        triangulations[backward]);
-                    current = (current + n - 1) % n;
-                    triangulations[current]->useCount++;
-                    trianglesChanged = true;
-                    good = true;
-                    break;
-                }
+        for (int i = 0; i < n; i++) {
+            if (i != current && triangulations[i]->check(vertices)) {
+                current = i;
+                trianglesChanged = true;
+                good = true;
+                break;
             }
         }
+    }
+
+    const int switchedTo = current;
+
+    if (trianglesChanged && good) {
+        triangulations[current]->useCount++;
+        std::swap(triangulations[0], triangulations[current]);
+        current = 0;
     }
 
     if (debug) {
@@ -150,8 +148,13 @@ bool TriangleCache::findCachedTriangulation(
         if (good) {
             const int duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::high_resolution_clock::now() - t0).count();
-            s << "[" << *name << "]" << " found cached triangulation [" << current << "] in " <<
-                duration / 1000.0f << " μs";
+            if (switchedTo == 0) {
+                s << "[" << *name << "]" << " verified triangulation in " <<
+                    duration / 1000.0f << " μs";
+            } else {
+                s << "[" << *name << "]" << " switched to cached triangulation [" << switchedTo << "] in " <<
+                    duration / 1000.0f << " μs";
+            }
         } else {
             s << "[" << *name << "] no cached triangulation";
         }

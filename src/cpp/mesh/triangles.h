@@ -154,17 +154,7 @@ public:
 
 	~TriangleCache();
 
-	inline void add(Triangulation *t) {
-		if (t->partition.empty()) {
-			return;
-		}
-
-		if (triangulations.size() + 1 > cacheSize) {
-			evict();
-		}
-
-		triangulations.insert(triangulations.begin() + current, t);
-	}
+	void add(Triangulation *t);
 
 	inline void setCacheSize(int size) {
 		cacheSize = std::max(cacheSize, size);
