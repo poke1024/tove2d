@@ -138,14 +138,20 @@ class TriangleCache {
 private:
 	NameRef name;
 	std::vector<Triangulation*> triangulations;
-	int current;
-	int cacheSize;
+
+	int16_t current;
+	int16_t cacheSize;
 
 	void evict();
 
 	inline Triangulation *currentTriangulation() const {
 		assert(current < triangulations.size());
 		return triangulations[current];
+	}
+
+	inline void moveToFront() {
+        std::swap(triangulations[0], triangulations[current]);
+        current = 0;
 	}
 
 public:
@@ -155,9 +161,9 @@ public:
 
 	~TriangleCache();
 
-	void add(Triangulation *t);
+	void addAndMakeCurrent(Triangulation *t);
 
-	inline void setCacheSize(int size) {
+	inline void setCacheSize(int16_t size) {
 		cacheSize = std::max(cacheSize, size);
 	}
 

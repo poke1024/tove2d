@@ -575,7 +575,7 @@ void Submesh::triangulateFixedResolutionFill(
 		triangulation->triangles.add(triangles);
 	}
 
-	mTriangles.add(triangulation.release());
+	mTriangles.addAndMakeCurrent(triangulation.release());
 #endif
 }
 

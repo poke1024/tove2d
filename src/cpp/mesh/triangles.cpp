@@ -91,7 +91,7 @@ TriangleCache::~TriangleCache() {
     }
 }
 
-void TriangleCache::add(Triangulation *t) {
+void TriangleCache::addAndMakeCurrent(Triangulation *t) {
     if (t->partition.empty()) {
         return;
     }
@@ -102,6 +102,9 @@ void TriangleCache::add(Triangulation *t) {
 
     t->useCount = 0;
     triangulations.push_back(t);
+
+    current = triangulations.size() - 1;
+    moveToFront();
 }
 
 void TriangleCache::evict() {
@@ -122,7 +125,7 @@ void TriangleCache::evict() {
     if (minIndex >= 0) {
         delete triangulations[minIndex];
         triangulations.erase(triangulations.begin() + minIndex);
-        current = std::min(current, (int)(triangulations.size() - 1));
+        current = std::min(current, int16_t(triangulations.size() - 1));
     }
 }
 
@@ -163,8 +166,7 @@ bool TriangleCache::findCachedTriangulation(
 
     if (trianglesChanged && good) {
         triangulations[current]->useCount++;
-        std::swap(triangulations[0], triangulations[current]);
-        current = 0;
+        moveToFront();
     }
 
     if (debug) {
