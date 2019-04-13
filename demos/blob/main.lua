@@ -4,15 +4,21 @@
 local tove = require "tove"
 require "assets/tovedemo"
 
-local svg1 = love.filesystem.read("gradient-circle_00001.svg")
-local svg2 = love.filesystem.read("gradient-circle_00002.svg")
+-- enable to see some stats on triangulation cache.
+--tove.setReportLevel("debug")
+
+local svg1 = love.filesystem.read("gradient-circle/gradient-circle_00001.svg")
+local svg2 = love.filesystem.read("gradient-circle/gradient-circle_00240.svg")
 
 local tween = tove.newTween(svg1):to(svg2, 1)
 
 local animations = {}
 
+local meshAnimation =  tove.newAnimation(tween, "mesh", "rigid", 2, "none")
+meshAnimation:setName("mesh")
+
 table.insert(animations, tove.newFlipbook(8, tween, "texture"))
-table.insert(animations, tove.newAnimation(tween, "mesh", "rigid", 2, "none"))
+table.insert(animations, meshAnimation)
 table.insert(animations, tove.newAnimation(tween, "gpux"))
 
 local flow = tovedemo.newCoverFlow(0.5)
