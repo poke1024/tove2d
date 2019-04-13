@@ -282,10 +282,11 @@ function ComputeShader:update()
 		return
 	end
 
+	local chg2 = lib.FeedEndUpdate(link)
+
 	linkdata.lineColorSend:updateUniforms(chg1, path)
 	linkdata.fillColorSend:updateUniforms(chg1, path)
 
-	local chg2 = lib.FeedEndUpdate(link)
 	linkdata.geometryFeed:updateUniforms(chg2)
 end
 
