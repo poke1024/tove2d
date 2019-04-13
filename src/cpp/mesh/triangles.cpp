@@ -86,8 +86,8 @@ void TriangleStore::_add(
 
 
 TriangleCache::~TriangleCache() {
-    for (int i = 0; i < triangulations.size(); i++) {
-        delete triangulations[i];
+    for (Triangulation *t : triangulations) {
+        delete t;
     }
 }
 
@@ -101,31 +101,27 @@ void TriangleCache::addAndMakeCurrent(Triangulation *t) {
     }
 
     t->useCount = 0;
-    triangulations.push_back(t);
-
-    current = triangulations.size() - 1;
-    moveToFront();
+    triangulations.push_front(t);
 }
 
 void TriangleCache::evict() {
     uint64_t minCount = std::numeric_limits<uint64_t>::max();
-    int minIndex = -1;
+    std::list<Triangulation*>::iterator candidate = triangulations.end();
 
-    for (int i = 0; i < triangulations.size(); i++) {
-        const Triangulation *t = triangulations[i];
+    for (auto i = triangulations.begin(); i != triangulations.end(); i++) {
+        const Triangulation *t = *i;
         if (!t->keyframe) {
             const uint64_t count = t->useCount;
             if (count < minCount) {
                 minCount = count;
-                minIndex = i;
+                candidate = i;
             }
         }
     }
 
-    if (minIndex >= 0) {
-        delete triangulations[minIndex];
-        triangulations.erase(triangulations.begin() + minIndex);
-        current = std::min(current, int16_t(triangulations.size() - 1));
+    if (candidate != triangulations.end()) {
+        delete *candidate;
+        triangulations.erase(candidate);
     }
 }
 
@@ -145,28 +141,21 @@ bool TriangleCache::findCachedTriangulation(
         t0 = std::chrono::high_resolution_clock::now();
     }
 
-    assert(current < n);
     bool good = false;
+    int switchedTo = 0;
 
-    if (triangulations[current]->check(vertices)) {
-        trianglesChanged = false;
-        good = true;
-    } else {
-        for (int i = 0; i < n; i++) {
-            if (i != current && triangulations[i]->check(vertices)) {
-                current = i;
-                trianglesChanged = true;
-                good = true;
-                break;
+    for (auto i = triangulations.begin(); i != triangulations.end(); i++) {
+        Triangulation *t = *i;
+        if (t->check(vertices)) {
+            trianglesChanged = switchedTo > 0;
+            good = true;
+            if (trianglesChanged) {
+                t->useCount++;
+                makeCurrent(i);
             }
+            break;
         }
-    }
-
-    const int switchedTo = current;
-
-    if (trianglesChanged && good) {
-        triangulations[current]->useCount++;
-        moveToFront();
+        switchedTo += 1;
     }
 
     if (debug) {

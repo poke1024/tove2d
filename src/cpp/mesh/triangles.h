@@ -137,26 +137,26 @@ struct Triangulation {
 class TriangleCache {
 private:
 	NameRef name;
-	std::vector<Triangulation*> triangulations;
+	std::list<Triangulation*> triangulations;
 
-	int16_t current;
 	int16_t cacheSize;
 
 	void evict();
 
 	inline Triangulation *currentTriangulation() const {
-		assert(current < triangulations.size());
-		return triangulations[current];
+		assert(!triangulations.empty());
+		return triangulations.front();
 	}
 
-	inline void moveToFront() {
-        std::swap(triangulations[0], triangulations[current]);
-        current = 0;
+	inline void makeCurrent(std::list<Triangulation*>::iterator i) {
+		if (i != triangulations.begin()) {
+			triangulations.splice(triangulations.begin(), triangulations, i, std::next(i));
+		}
 	}
 
 public:
 	inline TriangleCache(const NameRef &name) :
-		name(name), current(0), cacheSize(2) {
+		name(name), cacheSize(2) {
 	}
 
 	~TriangleCache();
@@ -168,18 +168,17 @@ public:
 	}
 
 	inline void cacheKeyFrame() {
-		if (triangulations.size() == 0) {
-			return;
+		if (!triangulations.empty()) {
+			currentTriangulation()->keyframe = true;
+			cacheSize += 1;
 		}
-		currentTriangulation()->keyframe = true;
-		cacheSize += 1;
 	}
 
 	inline bool hasMode(ToveTrianglesMode mode) {
 		if (triangulations.empty()) {
 			return false;
 		} else {
-			return triangulations[current]->getMode() == mode;
+			return currentTriangulation()->getMode() == mode;
 		}
 	}
 
@@ -187,7 +186,7 @@ public:
 		if (triangulations.empty()) {
 			triangulations.push_back(new Triangulation(mode));
 		} else {
-			assert(triangulations[current]->getMode() == mode);
+			assert(hasMode(mode));
 		}
 		return currentTriangulation()->triangles.allocate(n);
 	}
@@ -208,22 +207,22 @@ public:
 	}
 
 	inline void clear() {
-		if (current < triangulations.size()) {
-			triangulations[current]->triangles.clear();
+		if (!triangulations.empty()) {
+			currentTriangulation()->triangles.clear();
 		}
 	}
 
 	inline ToveTrianglesMode getIndexMode() const {
-		if (current < triangulations.size()) {
-			return triangulations[current]->triangles.mode();
+		if (!triangulations.empty()) {
+			return currentTriangulation()->triangles.mode();
 		} else {
 			return TRIANGLES_LIST;
 		}
 	}
 
 	inline int32_t getIndexCount() const {
-		if (current < triangulations.size()) {
-			return triangulations[current]->triangles.size();
+		if (!triangulations.empty()) {
+			return currentTriangulation()->triangles.size();
 		} else {
 			return 0;
 		}
@@ -233,8 +232,8 @@ public:
 		ToveVertexIndex *indices,
 		int32_t indexCount) const {
 
-		if (current < triangulations.size()) {
-			auto &t = triangulations[current]->triangles;
+		if (!triangulations.empty()) {
+			const auto &t = currentTriangulation()->triangles;
 			t.copy(indices, indexCount);
 		}
 	}
