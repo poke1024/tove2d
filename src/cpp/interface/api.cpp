@@ -957,16 +957,16 @@ void ReleaseFeed(ToveFeedRef link) {
 }
 
 
-ToveMeshRef NewMesh() {
-	return meshes.publish(tove_make_shared<Mesh>());
+ToveMeshRef NewMesh(ToveNameRef name) {
+	return meshes.publish(tove_make_shared<Mesh>(deref(name)));
 }
 
-ToveMeshRef NewColorMesh() {
-	return meshes.publish(tove_make_shared<ColorMesh>());
+ToveMeshRef NewColorMesh(ToveNameRef name) {
+	return meshes.publish(tove_make_shared<ColorMesh>(deref(name)));
 }
 
-ToveMeshRef NewPaintMesh() {
-	return meshes.publish(tove_make_shared<PaintMesh>());
+ToveMeshRef NewPaintMesh(ToveNameRef name) {
+	return meshes.publish(tove_make_shared<PaintMesh>(deref(name)));
 }
 
 int MeshGetVertexCount(ToveMeshRef mesh) {
@@ -991,8 +991,12 @@ void MeshCopyIndexData(ToveMeshRef mesh, void *buffer, int32_t size) {
 		size / sizeof(ToveVertexIndex));
 }
 
-void MeshCache(ToveMeshRef mesh, bool keyframe) {
-	deref(mesh)->cache(keyframe);
+void MeshCacheKeyFrame(ToveMeshRef mesh) {
+	deref(mesh)->cacheKeyFrame();
+}
+
+void MeshSetCacheSize(ToveMeshRef mesh, int size) {
+	deref(mesh)->setCacheSize(size);
 }
 
 void ReleaseMesh(ToveMeshRef mesh) {
@@ -1055,6 +1059,27 @@ TovePaletteRef NewPalette(const uint8_t *colors, int n) {
 
 void ReleasePalette(TovePaletteRef palette) {
 	palettes.release(palette);
+}
+
+
+ToveNameRef NewName(const char *s) {
+	return names.publish(tove_make_shared<std::string>(s != nullptr ? s : ""));
+}
+
+void ReleaseName(ToveNameRef name) {
+	names.release(name);
+}
+
+ToveNameRef CloneName(ToveNameRef name) {
+	return names.publish(tove_make_shared<std::string>(*deref(name)));
+}
+
+void NameSet(ToveNameRef name, const char *s) {
+	deref(name)->assign(s);
+}
+
+const char *NameCStr(ToveNameRef name) {
+	return deref(name)->c_str();
 }
 
 

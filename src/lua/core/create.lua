@@ -56,7 +56,7 @@ local function _updateFlatMesh(graphics)
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local mesh = graphics._cache.mesh
 		if mesh:getUsage("points") ~= "dynamic" then
-			tove.slow("static mesh points changed in " .. graphics._name)
+			tove.slow("static mesh points changed in " .. tove._str(graphics._name))
 		end
 		local tessFlags = lib.UPDATE_MESH_VERTICES
 		if graphics._usage["triangles"] == "dynamic" then
@@ -153,7 +153,8 @@ create.texture = function(self)
 		return {
 			draw = function() end,
 			update = _updateBitmap,
-			cache = _noCache
+			cacheKeyFrame = _noCache,
+			setCacheSize = _noCache
 		}
 	end
 
@@ -166,19 +167,24 @@ create.texture = function(self)
 		warmup = function() end,
 		update = _updateBitmap,
 		updateQuality = function() return false end,
-		cache = _noCache
+		cacheKeyFrame = _noCache,
+		setCacheSize = _noCache
 	}
 end
 
-local function _cacheMesh(data, ...)
-	data.mesh:cache(...)
+local function _cacheMeshKeyFrame(data)
+	data.mesh:cacheKeyFrame()
+end
+
+local function _setMeshCashSize(data, size)
+	data.mesh:setCacheSize(size)
 end
 
 create.mesh = function(self)
 	local display = self._display
 	local tsref = display.tesselator
 	local usage = self._usage
-	local name = self._name or "unnamed"
+	local name = self._name
 
 	local gref = self._ref
 	local tess = function(cmesh, flags)
@@ -196,7 +202,8 @@ create.mesh = function(self)
 			warmup = function() end,
 			update = _updateFlatMesh,
 			updateQuality = function() return false end,
-			cache = _cacheMesh
+			cacheKeyFrame = _cacheMeshKeyFrame,
+			setCacheSize = _setMeshCashSize
 		}
 	else
 		local shader = _shaders.newMeshShader(
@@ -212,7 +219,8 @@ create.mesh = function(self)
 			end,
 			update = function() shader:update() end,
 			updateQuality = function() return false end,
-			cache = _cacheMesh
+			cacheKeyFrame = _cacheMeshKeyFrame,
+			setCacheSize = _setMeshCashSize
 		}
 	end
 end
@@ -244,7 +252,8 @@ create.gpux = function(self)
 		debug = function(i, ...)
 			shaders[i]:debug(...)
 		end,
-		cache = _noCache
+		cacheKeyFrame = _noCache,
+		setCacheSize = _noCache
 	}
 end
 

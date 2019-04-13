@@ -84,6 +84,10 @@ inline const PaletteRef &deref(const TovePaletteRef &ref) {
 	DEREF(PaletteRef)
 }
 
+inline const NameRef &deref(const ToveNameRef &ref) {
+	DEREF(NameRef)
+}
+
 #undef DEREF
 
 References<Graphics, ToveGraphicsRef> shapes;
@@ -94,6 +98,7 @@ References<AbstractFeed, ToveFeedRef> shaderLinks;
 References<AbstractMesh, ToveMeshRef> meshes;
 References<AbstractTesselator, ToveTesselatorRef> tesselators;
 References<Palette, TovePaletteRef> palettes;
+References<std::string, ToveNameRef> names;
 
 #endif // TOVE_TARGET_LOVE2D
 

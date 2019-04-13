@@ -10,6 +10,8 @@
  */
 
 #include "triangles.h"
+#include <sstream>
+#include <chrono>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -96,43 +98,67 @@ bool TriangleCache::findCachedTriangulation(
         return false;
     }
 
+    const bool debug = tove::report::config.level <= TOVE_REPORT_DEBUG;
+
+    std::chrono::high_resolution_clock::time_point t0;
+    if (debug) {
+        t0 = std::chrono::high_resolution_clock::now();
+    }
+
     assert(current < n);
+    bool good = false;
+
     if (triangulations[current]->check(vertices)) {
         triangulations[current]->useCount++;
         trianglesChanged = false;
-        return true;
-    }
+        good = true;
+    } else {
+        const int k = std::max(current, n - current);
+        for (int i = 1; i <= k; i++) {
+            if (current + i < n) {
+                const int forward = (current + i) % n;
+                if (triangulations[forward]->check(vertices)) {
+                    std::swap(
+                        triangulations[(current + 1) % n],
+                        triangulations[forward]);
+                    current = (current + 1) % n;
+                    triangulations[current]->useCount++;
+                    trianglesChanged = true;
+                    good = true;
+                    break;
+                }
+            }
 
-    const int k = std::max(current, n - current);
-    for (int i = 1; i <= k; i++) {
-        if (current + i < n) {
-            const int forward = (current + i) % n;
-            if (triangulations[forward]->check(vertices)) {
-                std::swap(
-                    triangulations[(current + 1) % n],
-                    triangulations[forward]);
-                current = (current + 1) % n;
-                triangulations[current]->useCount++;
-                trianglesChanged = true;
-                return true;
+            if (current - i >= 0) {
+                const int backward = (current + n - i) % n;
+                if (triangulations[backward]->check(vertices)) {
+                    std::swap(
+                        triangulations[(current + n - 1) % n],
+                        triangulations[backward]);
+                    current = (current + n - 1) % n;
+                    triangulations[current]->useCount++;
+                    trianglesChanged = true;
+                    good = true;
+                    break;
+                }
             }
         }
-
-        if (current - i >= 0) {
-            const int backward = (current + n - i) % n;
-            if (triangulations[backward]->check(vertices)) {
-                std::swap(
-                    triangulations[(current + n - 1) % n],
-                    triangulations[backward]);
-                current = (current + n - 1) % n;
-                triangulations[current]->useCount++;
-                trianglesChanged = true;
-                return true;
-            }
-        }
     }
 
-    return false;
+    if (debug) {
+        std::ostringstream s;
+        if (good) {
+            const int duration = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::high_resolution_clock::now() - t0).count();
+            s << "found cached triangulation [" << current << "] in " <<
+                duration / 1000.0f << " μs for " << *name;
+        } else {
+            s << "no cached triangulation for " << *name;
+        }
+        tove::report::report(s.str().c_str(), TOVE_REPORT_DEBUG);            
+    }
+
+    return good;
 }
 
 END_TOVE_NAMESPACE

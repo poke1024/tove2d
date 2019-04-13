@@ -31,14 +31,17 @@ class AbstractMesh : public Referencable {
 protected:
 	void *mVertices;
 	int32_t mVertexCount;
+
+	const NameRef mName;
 	const uint16_t mStride;
+
 	std::map<SubmeshId, Submesh*> mSubmeshes;
 	mutable std::vector<ToveVertexIndex> mCoalescedTriangles;
 
 	void reserve(int32_t n);
 
 public:
-	AbstractMesh(uint16_t stride);
+	AbstractMesh(const NameRef &name, uint16_t stride);
 	virtual ~AbstractMesh();
 
 	ToveTrianglesMode getIndexMode() const;
@@ -60,7 +63,8 @@ public:
 		return Vertices(mVertices, mStride, from);
 	}
 
-	void cache(bool keyframe);
+	void cacheKeyFrame();
+	void setCacheSize(int size);
 	void clear();
 	void clearTriangles();
 
@@ -86,6 +90,10 @@ public:
 	}
 
 	Submesh *submesh(int pathIndex, int line);
+
+	inline const NameRef &getName() const {
+		return mName;
+	}
 };
 
 class SubpathCleaner {
@@ -147,12 +155,14 @@ public:
 
 class Submesh {
 private:
-	TriangleCache mTriangles;
 	AbstractMesh * const mMesh;
+	TriangleCache mTriangles;
 	SubpathCleaner mCleaner;
 
 public:
-	inline Submesh(AbstractMesh *mesh) : mMesh(mesh) {
+	inline Submesh(AbstractMesh *mesh) :
+		mMesh(mesh),
+		mTriangles(mesh->getName()) {
 	}
 
 	inline ToveTrianglesMode getIndexMode() const {
@@ -170,7 +180,8 @@ public:
 		mTriangles.copyIndexData(indices, indexCount);
 	}
 
-	void cache(bool keyframe);
+	void cacheKeyFrame();
+	void setCacheSize(int size);
 	void clearTriangles();
 
 	inline Vertices vertices(int from, int n) {
@@ -204,11 +215,15 @@ public:
 			vertices(0, mMesh->getVertexCount()),
 			trianglesChanged);
 	}
+
+	inline const NameRef &getName() const {
+		return mMesh->getName();
+	}
 };
 
 class Mesh : public AbstractMesh {
 public:
-	Mesh();
+	Mesh(const NameRef &name);
 };
 
 class ColorMesh : public AbstractMesh {
@@ -217,7 +232,7 @@ protected:
 		const MeshPaint &paint);
 
 public:
-	ColorMesh();
+	ColorMesh(const NameRef &name);
 
 	virtual void setLineColor(
 		const PathRef &path,
@@ -239,7 +254,7 @@ protected:
 		const int vertexCount);
 
 public:
-	PaintMesh();
+	PaintMesh(const NameRef &name);
 
 	virtual void setLineColor(
 		const PathRef &path,

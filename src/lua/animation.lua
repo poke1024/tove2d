@@ -90,7 +90,10 @@ tove.newFlipbook = function(fps, tween, ...)
 				local inbetween = tove.newGraphics()
 				inbetween:animate(ag0, ag1, ease(j / duration))
 				inbetween:setDisplay(unpack(display))
-				inbetween:cache()
+
+				-- you can create flipbooks with meshes. in this case,
+				-- this will precache all triangulations that occur.
+				inbetween:cacheKeyFrame()
 
 				table.insert(frames, inbetween)
 			end
@@ -139,7 +142,7 @@ tove.newAnimation = function(tween, ...)
 	do
 		local g = createGraphics(tween._graphics0)
 		graphics:animate(g, g, 0)
-		graphics:cache("keyframe")
+		graphics:cacheKeyFrame()
 		table.insert(keyframes, {graphics = g, offset = 0, duration = 0, ease = _linear})
 	end
 
@@ -149,7 +152,7 @@ tove.newAnimation = function(tween, ...)
 		offset = offset + keyframe.duration
 		keyframe.offset = offset
 		graphics:animate(g, g, 0)
-		graphics:cache("keyframe")
+		graphics:cacheKeyFrame()
 		table.insert(keyframes, keyframe)
 	end
 
@@ -207,4 +210,8 @@ end
 
 function Animation:debug(...)
 	self._graphics:debug(...)
+end
+
+function Animation:setCacheSize(s)
+	self._graphics:setCacheSize(s)
 end

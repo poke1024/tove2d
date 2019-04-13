@@ -4,6 +4,9 @@
 local tove = require "tove"
 require "assets/tovedemo"
 
+-- enable to see some stats on triangulation cache.
+-- tove.setReportLevel("debug")
+
 local function newHeart()
 	-- taken from: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes
 	local g = tove.newGraphics()
@@ -61,6 +64,14 @@ local function createHearts(stroke, filled)
 		heart:setDisplay(modes[i], unpack(quality))
 		heart:setUsage("points", "dynamic")
 		heart:setUsage("colors", "dynamic")
+
+		if modes[i] == "mesh" then
+			-- cache size config has to happen after setDisplay().
+			-- 10 is a heuristic value for this specific animation.
+			heart:setCacheSize(10)
+		end
+
+		heart:setName("heart" .. tostring(i))
 
 		names[i] = modes[i]
 		hearts[i] = {graphics = heart, animatedCurve = curve}

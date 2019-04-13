@@ -123,7 +123,10 @@ static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
 	}
 }
 
-AbstractMesh::AbstractMesh(uint16_t stride) : mStride(stride) {
+AbstractMesh::AbstractMesh(const NameRef &name, uint16_t stride) :
+	mName(name),
+	mStride(stride) {
+	
 	mVertices = nullptr;
 	mVertexCount = 0;
 }
@@ -186,9 +189,15 @@ void AbstractMesh::reserve(int32_t n) {
 	}
 }
 
-void AbstractMesh::cache(bool keyframe) {
+void AbstractMesh::cacheKeyFrame() {
 	for (auto submesh : mSubmeshes) {
-		submesh.second->cache(keyframe);
+		submesh.second->cacheKeyFrame();
+	}
+}
+
+void AbstractMesh::setCacheSize(int size) {
+	for (auto submesh : mSubmeshes) {
+		submesh.second->setCacheSize(size);
 	}
 }
 
@@ -206,8 +215,12 @@ void AbstractMesh::clearTriangles() {
 	}
 }
 
-void Submesh::cache(bool keyframe) {
-	mTriangles.cache(keyframe);
+void Submesh::cacheKeyFrame() {
+	mTriangles.cacheKeyFrame();
+}
+
+void Submesh::setCacheSize(int size) {
+	mTriangles.setCacheSize(size);
 }
 
 void Submesh::addClipperPaths(
@@ -575,11 +588,11 @@ Submesh *AbstractMesh::submesh(int pathIndex, int line) {
 }
 
 
-Mesh::Mesh() : AbstractMesh(sizeof(float) * 2) {
+Mesh::Mesh(const NameRef &name) : AbstractMesh(name, sizeof(float) * 2) {
 }
 
 
-ColorMesh::ColorMesh() : AbstractMesh(sizeof(float) * 2 + 4) {
+ColorMesh::ColorMesh(const NameRef &name) : AbstractMesh(name, sizeof(float) * 2 + 4) {
 }
 
 void ColorMesh::setLineColor(
@@ -676,7 +689,7 @@ inline uint32_t flip_endian(uint32_t x) {
 	}
 }
 
-PaintMesh::PaintMesh() : AbstractMesh(sizeof(float) * 3) {
+PaintMesh::PaintMesh(const NameRef &name) : AbstractMesh(name, sizeof(float) * 3) {
 }
 
 void PaintMesh::setLineColor(

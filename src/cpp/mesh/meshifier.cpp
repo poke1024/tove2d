@@ -12,6 +12,7 @@
 #include "../common.h"
 #include "meshifier.h"
 #include "mesh.h"
+#include <sstream>
 
 BEGIN_TOVE_NAMESPACE
 
@@ -422,8 +423,23 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 
 	if (shape->fill.type != NSVG_PAINT_NONE) {
 		if (update & UPDATE_MESH_TRIANGLES) {
+			const bool debug = tove::report::config.level <= TOVE_REPORT_DEBUG;
+
+			std::chrono::high_resolution_clock::time_point t0;
+			if (debug) {
+				t0 = std::chrono::high_resolution_clock::now();
+			}
+
 			fillSubmesh->triangulateFixedResolutionFill(
 				fillIndex0, path, flattener, holes);
+
+			if (debug) {
+				const int duration = std::chrono::duration_cast<std::chrono::microseconds>(
+					std::chrono::high_resolution_clock::now() - t0).count();
+				std::ostringstream s;
+				s << "new fill triangulation took " << duration / 1000.0f << " ms for " << *fillSubmesh->getName();
+				tove::report::report(s.str().c_str(), TOVE_REPORT_DEBUG);
+			}			
 		}
 		if (update & (UPDATE_MESH_COLORS | UPDATE_MESH_VERTICES)) {
 			fill->setFillColor(path, paint, fillIndex0, index);

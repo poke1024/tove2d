@@ -138,6 +138,10 @@ typedef struct {
 	void *ptr;
 } TovePaletteRef;
 
+typedef struct {
+	void *ptr;
+} ToveNameRef;
+
 typedef enum {
 	TOVE_REC_DEPTH,
 	TOVE_ANTIGRAIN,

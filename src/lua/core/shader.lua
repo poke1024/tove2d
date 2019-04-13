@@ -105,7 +105,7 @@ function MeshShader:getMesh()
 end
 
 function MeshShader:recreate()
-	tove.warn("full mesh recreation triggered in " .. self._name)
+	tove.warn("full mesh recreation triggered in " .. tove._str(self._name))
 	self.linkdata = newMeshFeedData(
 		self.name, self.graphics, self.tess, self.usage, self.resolution)
 end
@@ -121,7 +121,7 @@ function MeshShader:update()
 		return
 	elseif bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		if self.usage["points"] ~= "dynamic" then
-			tove.slow("static mesh points changed in " .. self._name)
+			tove.slow("static mesh points changed in " .. tove._str(self._name))
 			self:recreate()
 			return
 		end

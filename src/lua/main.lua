@@ -237,6 +237,10 @@ tove.init = function(path)
 		-- and compile the shader. it won't without the following line.
 		love.graphics.rectangle("fill", 0, 0, 0, 0)
 	end
+
+	tove._str = function(name)
+		return ffi.string(lib.NameCStr(name))
+	end
 	
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand

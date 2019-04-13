@@ -64,8 +64,12 @@ function AbstractMesh:updateTriangles()
 	end
 end
 
-function AbstractMesh:cache(mode)
-	lib.MeshCache(self._tovemesh, mode == "keyframe")
+function AbstractMesh:cacheKeyFrame()
+	lib.MeshCacheKeyFrame(self._tovemesh)
+end
+
+function AbstractMesh:setCacheSize(size)
+	lib.MeshSetCacheSize(self._tovemesh, size)
 end
 
 function AbstractMesh:getMesh()
@@ -100,7 +104,7 @@ PositionMesh._vertexByteSize = 2 * floatSize
 tove.newPositionMesh = function(name, usage)
 	return setmetatable({
 		_name = name,
-		_tovemesh = ffi.gc(lib.NewMesh(), lib.ReleaseMesh),
+		_tovemesh = ffi.gc(lib.NewMesh(name), lib.ReleaseMesh),
 		_mesh = nil,
 		_usage = usage or {},
 		_dynamic = usage["points"] == "dynamic",
@@ -119,7 +123,7 @@ PaintMesh._vertexByteSize = 3 * floatSize
 tove.newPaintMesh = function(name, usage)
 	return setmetatable({
 		_name = name,
-		_tovemesh = ffi.gc(lib.NewPaintMesh(), lib.ReleaseMesh),
+		_tovemesh = ffi.gc(lib.NewPaintMesh(name), lib.ReleaseMesh),
 		_mesh = nil,
 		_usage = usage or {},
 		_dynamic = usage["points"] == "dynamic",
@@ -136,7 +140,7 @@ ColorMesh._attributes = {
 ColorMesh._vertexByteSize = 2 * floatSize + 4
 
 tove.newColorMesh = function(name, usage, tess)
-	local cmesh = ffi.gc(lib.NewColorMesh(), lib.ReleaseMesh)
+	local cmesh = ffi.gc(lib.NewColorMesh(name), lib.ReleaseMesh)
 	tess(cmesh, -1)
 	return setmetatable({
 		_name = name, _tovemesh = cmesh, _mesh = nil,

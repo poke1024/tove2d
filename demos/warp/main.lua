@@ -66,6 +66,7 @@ function play()
 	end
 
 	animation = tove.newAnimation(tween, "mesh", "rigid", 3, "none")
+	animation:setCacheSize(10)
 	flow.items[1].item = animation
 end
 

@@ -34,6 +34,7 @@
 
 #include <memory>
 #include <limits>
+#include <string>
 #include <assert.h>
 
 BEGIN_TOVE_NAMESPACE
@@ -105,6 +106,8 @@ typedef SharedPtr<AbstractFeed> FeedRef;
 
 class Palette;
 typedef SharedPtr<Palette> PaletteRef;
+
+typedef SharedPtr<std::string> NameRef;
 
 inline int nextpow2(uint32_t v) {
 	// see https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2

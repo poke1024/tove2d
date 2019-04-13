@@ -151,9 +151,9 @@ EXPORT TovePaintColorAllocation FeedGetColorAllocation(ToveFeedRef link);
 EXPORT void FeedBindPaintIndices(ToveFeedRef link, const ToveGradientData *data);
 EXPORT void ReleaseFeed(ToveFeedRef link);
 
-EXPORT ToveMeshRef NewMesh();
-EXPORT ToveMeshRef NewColorMesh();
-EXPORT ToveMeshRef NewPaintMesh();
+EXPORT ToveMeshRef NewMesh(ToveNameRef name);
+EXPORT ToveMeshRef NewColorMesh(ToveNameRef name);
+EXPORT ToveMeshRef NewPaintMesh(ToveNameRef name);
 EXPORT int MeshGetVertexCount(ToveMeshRef mesh);
 EXPORT void MeshCopyVertexData(
 	ToveMeshRef mesh, void *buffer, int32_t size);
@@ -161,7 +161,8 @@ EXPORT ToveTrianglesMode MeshGetIndexMode(ToveMeshRef mesh);
 EXPORT int MeshGetIndexCount(ToveMeshRef mesh);
 EXPORT void MeshCopyIndexData(
 	ToveMeshRef mesh, void *buffer, int32_t size);
-EXPORT void MeshCache(ToveMeshRef mesh, bool keyframe);
+EXPORT void MeshCacheKeyFrame(ToveMeshRef mesh);
+EXPORT void MeshSetCacheSize(ToveMeshRef mesh, int size);
 EXPORT void ReleaseMesh(ToveMeshRef mesh);
 
 EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
@@ -183,3 +184,9 @@ EXPORT void ReleaseTesselator(ToveTesselatorRef tess);
 
 EXPORT TovePaletteRef NewPalette(const uint8_t *colors, int n);
 EXPORT void ReleasePalette(TovePaletteRef palette);
+
+EXPORT ToveNameRef NewName(const char *s);
+EXPORT void ReleaseName(ToveNameRef name);
+EXPORT ToveNameRef CloneName(ToveNameRef name);
+EXPORT void NameSet(ToveNameRef name, const char *s);
+EXPORT const char *NameCStr(ToveNameRef name);

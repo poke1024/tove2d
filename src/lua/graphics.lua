@@ -59,7 +59,7 @@ tove.newGraphics = function(data, size)
 		_display = {mode = "texture", quality = {}},
 		_resolution = 1,
 		_usage = newUsage(),
-		_name = name,
+		_name = ffi.gc(lib.NewName(name), lib.ReleaseName),
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	if type(data) == "table" then
 		for _, p in ipairs(data.paths) do
@@ -106,7 +106,7 @@ local function makeDisplay(mode, quality, usage)
 end
 
 function Graphics:setName(name)
-	self._name = name
+	lib.NameSet(self._name, name)
 end
 
 function Graphics:clone()
@@ -118,7 +118,7 @@ function Graphics:clone()
 		_display = makeDisplay(d.mode, d.quality, self._usage),
 		_resolution = self._resolution,
 		_usage = newUsage(),
-		_name = self._name,
+		_name = ffi.gc(lib.CloneName(self._name), lib.ReleaseName),
 		paths = setmetatable({_ref = ref}, Paths)}, Graphics)
 	for k, v in pairs(self._usage) do
 		g._usage[k] = v
@@ -287,9 +287,14 @@ function Graphics:clearCache()
 	self._cache = nil
 end
 
-function Graphics:cache(...)
+function Graphics:cacheKeyFrame()
 	self:_create()
-	self._cache.cache(self._cache, ...)
+	self._cache.cacheKeyFrame(self._cache)
+end
+
+function Graphics:setCacheSize(size)
+	self:_create()
+	self._cache.setCacheSize(self._cache, size)
 end
 
 function Graphics:set(arg, swl)

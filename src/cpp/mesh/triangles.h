@@ -135,6 +135,7 @@ struct Triangulation {
 
 class TriangleCache {
 private:
+	NameRef name;
 	std::vector<Triangulation*> triangulations;
 	int current;
 	int cacheSize;
@@ -147,9 +148,8 @@ private:
 	}
 
 public:
-	inline TriangleCache(int cacheSize = 2) :
-		current(0), cacheSize(cacheSize) {
-		assert(cacheSize >= 2);
+	inline TriangleCache(const NameRef &name) :
+		name(name), current(0), cacheSize(2) {
 	}
 
 	~TriangleCache();
@@ -166,11 +166,16 @@ public:
 		triangulations.insert(triangulations.begin() + current, t);
 	}
 
-	inline void cache(bool keyframe) {
+	inline void setCacheSize(int size) {
+		cacheSize = std::max(cacheSize, size);
+	}
+
+	inline void cacheKeyFrame() {
 		if (triangulations.size() == 0) {
 			return;
 		}
-		currentTriangulation()->keyframe = keyframe;
+		currentTriangulation()->keyframe = true;
+		cacheSize += 1;
 	}
 
 	inline bool hasMode(ToveTrianglesMode mode) {
