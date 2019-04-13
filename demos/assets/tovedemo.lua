@@ -68,6 +68,25 @@ function tovedemo.newFont(size)
 	return love.graphics.newFont("assets/amatic/Amatic-Bold.ttf", size)
 end
 
+function tovedemo.warmup(flow)
+	startTime = love.timer.getTime()
+
+	while true do
+		progress = flow:warmup()
+		if progress == nil then
+			break
+		end
+		if love.timer.getTime() - startTime > 0.05 then
+			if progress < 1 then
+				tovedemo.progress("Compiling Shaders.", progress * 100)
+				return false
+			end
+		end
+	end
+
+	return true
+end
+
 -- CoverFlow
 
 local CoverFlow = {}

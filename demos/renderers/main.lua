@@ -31,16 +31,8 @@ function love.draw()
 	tovedemo.draw("Renderers.")
 
 	-- on the first runs, display a progress on shader compilation.
-	startTime = love.timer.getTime()
-	while true do
-		progress = flow:warmup()
-		if progress == nil then
-			break
-		end
-		if love.timer.getTime() - startTime > 0.05 then
-			tovedemo.progress("Compiling Shaders.", progress * 100)
-			return
-		end
+	if not tovedemo.warmup(flow) then
+		return
 	end
 	
 	tovedemo.attribution("Graphics by Mike Mac.")
