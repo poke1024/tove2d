@@ -61,6 +61,12 @@ void TriangleStore::_add(
         }
     }
 
+    if (numBadTriangles > 0 && tove::report::config.level <= TOVE_REPORT_DEBUG) {
+        std::ostringstream s;
+        s << "skipped " << numBadTriangles << " bad triangles";
+        tove::report::report(s.str().c_str(), TOVE_REPORT_DEBUG);            
+    }
+
     mSize -= numBadTriangles * 3;
 }
 
