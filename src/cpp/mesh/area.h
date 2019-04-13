@@ -91,6 +91,10 @@ public:
 	inline void operator()(int i, float area) const {
 		result[i] = std::abs(area) > 1e-2f;
 	}
+
+	inline bool done() const {
+		return false;
+	}
 };
 
 class IsConvex {
@@ -107,6 +111,10 @@ public:
 	inline operator bool() const {
 		return _convex;
 	}
+
+	inline bool done() const {
+		return !_convex;
+	}
 };
 
 // SIMD-able.
@@ -119,22 +127,28 @@ static void computeFromAreas(const vec2 * const v, const int n, R &r) {
 	float ABy = ay - by;
 
 	#pragma clang loop vectorize(enable) interleave(enable)
-	for (int i = 0; i < n; i++) {
-		const float cx = v[i + 2].x;
-		const float cy = v[i + 2].y;
+	for (int i = 0; i < n; i += 8) {
+		for (int j = i; j < std::min(n, i + 8); j++) {
+			const float cx = v[j + 2].x;
+			const float cy = v[j + 2].y;
 
-		const float BCx = bx - cx;
-		const float BCy = by - cy;
+			const float BCx = bx - cx;
+			const float BCy = by - cy;
 
-		const float area = ABx * -BCy - ABy * -BCx;
+			const float area = ABx * -BCy - ABy * -BCx;
 
-		r(i, area);
+			r(j, area);
 
-		ABx = BCx;
-		ABy = BCy;
+			ABx = BCx;
+			ABy = BCy;
 
-		bx = cx;
-		by = cy;
+			bx = cx;
+			by = cy;
+		}
+
+		if (r.done()) {
+			break;
+		}
 	}
 }
 
