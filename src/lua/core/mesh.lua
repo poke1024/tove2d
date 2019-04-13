@@ -82,6 +82,11 @@ function AbstractMesh:getMesh()
 		return nil
 	end
 
+	local ni = lib.MeshGetIndexCount(self._tovemesh)
+	if ni < 1 then
+		return nil
+	end
+
 	local usage = self._dynamic and "dynamic" or "static"
 	local mesh = love.graphics.newMesh(
 		self._attributes, n, getTrianglesMode(self._tovemesh), usage)
