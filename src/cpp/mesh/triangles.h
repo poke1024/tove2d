@@ -83,7 +83,7 @@ public:
 		mSize = 0;
 	}
 
-	inline size_t size() const {
+	inline int32_t size() const {
 		return mSize;
 	}
 
@@ -95,6 +95,7 @@ public:
 		ToveVertexIndex *indices,
 		int32_t indexCount) const {
 
+		assert(indexCount >= mSize);
 		const int32_t n = std::min(mSize, indexCount);
 		if (n > 0) {
 			std::memcpy(indices, mTriangles,
