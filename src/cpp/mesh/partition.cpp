@@ -50,7 +50,6 @@ bool Partition::check(const Vertices &vertices) {
         const int n = outline.size();
 
         int i = part.fail;
-        int k = 0;
 
         struct Points {
             const Vertices &vertices;
@@ -73,8 +72,8 @@ bool Partition::check(const Vertices &vertices) {
         for (int k = 0; k < n; k++) {
             tempPts[k] = vertices[outline[k]];
         }
-        tempPts[k] = tempPts[0];
-        tempPts[k + 1] = tempPts[1];
+        tempPts[n] = tempPts[0];
+        tempPts[n + 1] = tempPts[1];
 
         IsConvex isConvex;
         computeFromAreas(tempPts.data(), n, isConvex);
