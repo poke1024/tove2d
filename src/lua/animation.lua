@@ -215,3 +215,7 @@ end
 function Animation:setCacheSize(s)
 	self._graphics:setCacheSize(s)
 end
+
+function Animation:setName(n)
+	self._graphics:setName(n)
+end
