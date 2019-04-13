@@ -95,12 +95,9 @@ public:
 class RigidTesselator : public AbstractTesselator {
 private:
 	const RigidFlattener flattener;
-	const ToveHoles holes;
 
 public:
-	RigidTesselator(
-		int subdivisions,
-		ToveHoles holes);
+	RigidTesselator(int subdivisions);
 
 	virtual ToveMeshUpdateFlags pathToMesh(
 		ToveMeshUpdateFlags update,

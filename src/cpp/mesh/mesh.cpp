@@ -101,26 +101,15 @@ void SubpathCleaner::copyToPoly(TPPLPoly &poly) const {
 	}
 }
 
-
-static void applyHoles(ToveHoles mode, TPPLPoly &poly) {
-	switch (mode) {
-		case TOVE_HOLES_NONE:
-			if (poly.GetOrientation() == TPPL_CW) {
-				poly.Invert();
-			}
-			break;
-		case TOVE_HOLES_CW:
-			if (poly.GetOrientation() == TPPL_CW) {
-				poly.SetHole(true);
-			}
-			break;
-		case TOVE_HOLES_CCW:
-			poly.Invert();
-			if (poly.GetOrientation() == TPPL_CW) {
-				poly.SetHole(true);
-			}
-			break;
+ClipperLib::Path SubpathCleaner::toClipperPath(IntVertexMap &m, float s) const {
+	ClipperLib::Path path;
+	path.reserve(n);
+	for (int i = 0; i < n; i++) {
+		const ClipperLib::IntPoint p(pts[i].x * s, pts[i].y * s);
+		m[p] = indices[i];
+		path.push_back(p);
 	}
+	return path;
 }
 
 AbstractMesh::AbstractMesh(const NameRef &name, uint16_t stride) :
@@ -225,8 +214,7 @@ void Submesh::setCacheSize(int size) {
 
 void Submesh::addClipperPaths(
 	const ClipperPaths &paths,
-	float scale,
-	ToveHoles holes) {
+	float scale) {
 
 #if DEBUG_EARCUT
 	using Point = std::array<float, 2>;
@@ -281,7 +269,10 @@ void Submesh::addClipperPaths(
 			poly[j].id = index++;
 		}
 
-		applyHoles(holes, poly);
+		if (poly.GetOrientation() == TPPL_CW) {
+			poly.SetHole(true);
+		}
+
 		polys.push_back(poly);
 	}
 
@@ -453,8 +444,7 @@ void Submesh::triangulateFixedResolutionLine(
 void Submesh::triangulateFixedResolutionFill(
 	const int vertexIndex0,
 	const PathRef &path,
-	const RigidFlattener &flattener,
-	const ToveHoles holes) {
+	const RigidFlattener &flattener) {
 
 	const int numSubpaths = path->getNumSubpaths();
 
@@ -496,7 +486,6 @@ void Submesh::triangulateFixedResolutionFill(
 		mapbox::earcut<ToveVertexIndex>(polygon);
 	mTriangles.add(indices, vertexIndex0);
 #else
-	std::list<TPPLPoly> polys;
    	int vertexIndex = vertexIndex0;
 
 	int maxSubpathSize = 0;
@@ -508,6 +497,10 @@ void Submesh::triangulateFixedResolutionFill(
 	}
 
 	mCleaner.init(maxSubpathSize, numTotalPoints);
+
+	IntVertexMap vertexMap;
+	const float clipperScale = 1000.0f;
+	ClipperLib::Paths clipperPaths;
 
 	for (int i = 0; i < numSubpaths; i++) {
 		const int n = path->getSubpathSize(i, flattener);
@@ -526,11 +519,36 @@ void Submesh::triangulateFixedResolutionFill(
 
 		vertexIndex += n;
 
+		clipperPaths.push_back(mCleaner.toClipperPath(
+			vertexMap, clipperScale));
+	}
+
+	ClipperLib::SimplifyPolygons(
+		clipperPaths, path->getClipperFillType());
+
+	std::list<TPPLPoly> polys;
+
+	for (const auto &path : clipperPaths) {
 		polys.push_back(TPPLPoly());
 		TPPLPoly &poly = polys.back();
-		mCleaner.copyToPoly(poly);
 
-		applyHoles(holes, poly);
+		const int n = path.size();
+		poly.Init(n);
+		for (int i = 0; i < n; i++) {
+			const auto &p = path[i];
+			poly[i].x = p.X / clipperScale;
+			poly[i].y = p.Y / clipperScale;
+			const auto it = vertexMap.find(p);
+			if (it != vertexMap.end()) {
+				poly[i].id = it->second;
+			} else {
+				poly[i].id = -1;
+			}
+		}
+
+		if (poly.GetOrientation() == TPPL_CW) {
+			poly.SetHole(true);
+		}
 	}
 
 	TPPLPartition partition;

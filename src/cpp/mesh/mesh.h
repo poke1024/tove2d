@@ -18,8 +18,31 @@
 #include "area.h"
 #include "../paint.h"
 #include <map>
+#include "../../thirdparty/robin-map/include/tsl/robin_map.h"
 
 BEGIN_TOVE_NAMESPACE
+
+struct hash_int_point {
+	// see http://szudzik.com/ElegantPairing.pdf
+	inline size_t operator()(const ClipperLib::IntPoint &p) const {
+		const auto x = p.X;
+		const auto y = p.Y;
+		return x >= y ? x * x + x + y : y * y + x;
+	}
+};
+
+struct equal_int_point {
+	inline bool operator()(const ClipperLib::IntPoint &a, const ClipperLib::IntPoint &b) const {
+		return a.X == b.X && a.Y == b.Y;
+	}
+};
+typedef tsl::robin_map<
+	ClipperLib::IntPoint,
+	ToveVertexIndex,
+	hash_int_point,
+	equal_int_point,
+	std::allocator<std::pair<ClipperLib::IntPoint, ToveVertexIndex*>>,
+	true /* store hash */> IntVertexMap;
 
 class RigidFlattener;
 
@@ -148,6 +171,8 @@ public:
 
 	void copyToPoly(TPPLPoly &poly) const;
 
+	ClipperLib::Path toClipperPath(IntVertexMap &m, float s) const;
+
 	inline VanishingTriangles &&fetchVanishing() {
 		return std::move(vanishing);
 	}
@@ -191,15 +216,13 @@ public:
 	// used by adaptive flattener.
 	void addClipperPaths(
 		const ClipperPaths &paths,
-		float scale,
-		ToveHoles holes);
+		float scale);
 
 	// used by fixed flattener.
 	void triangulateFixedResolutionFill(
 		const int vertexIndex0,
 		const PathRef &path,
-		const RigidFlattener &flattener,
-		ToveHoles holes);
+		const RigidFlattener &flattener);
 	void triangulateFixedResolutionLine(
 		const int pathVertex,
 		const bool miter,

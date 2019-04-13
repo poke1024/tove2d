@@ -148,7 +148,7 @@ void AdaptiveTesselator::renderStrokes(
 			paths.insert(paths.end(), holes.begin(), holes.end());
 			clip(graphics, path, paths);
 			submesh->addClipperPaths(
-				paths, flattener->getClipperScale(), TOVE_HOLES_CW);
+				paths, flattener->getClipperScale());
 		}
 		holes.clear();
 	}
@@ -185,9 +185,8 @@ ToveMeshUpdateFlags AdaptiveTesselator::pathToMesh(
 	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 		clip(graphics, path, t.fill);
 		const int index0 = fill->getVertexCount();
- 		// ClipperLib always gives us TOVE_HOLES_CW.
  		fill->submesh(pathIndex, 0)->addClipperPaths(
-			t.fill, flattener->getClipperScale(), TOVE_HOLES_CW);
+			t.fill, flattener->getClipperScale());
 		fill->setFillColor(path, paint, index0, fill->getVertexCount() - index0);
 	}
 
@@ -228,12 +227,9 @@ ClipperLib::Paths AdaptiveTesselator::toClipPath(
 	return flattened;
 }
 
-RigidTesselator::RigidTesselator(
-	int subdivisions,
-	ToveHoles holes) :
+RigidTesselator::RigidTesselator(int subdivisions) :
 
-	flattener(subdivisions, 0.0),
-	holes(holes) {
+	flattener(subdivisions, 0.0) {
 }
 
 ToveMeshUpdateFlags RigidTesselator::pathToMesh(
@@ -431,7 +427,7 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 			}
 
 			fillSubmesh->triangulateFixedResolutionFill(
-				fillIndex0, path, flattener, holes);
+				fillIndex0, path, flattener);
 
 			if (debug) {
 				const int duration = std::chrono::duration_cast<std::chrono::microseconds>(

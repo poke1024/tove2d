@@ -9,20 +9,14 @@
 -- All rights reserved.
 -- *****************************************************************
 
-local _holes = {
-	none = lib.TOVE_HOLES_NONE,
-	cw = lib.TOVE_HOLES_CW,
-	ccw = lib.TOVE_HOLES_CCW
-}
-
 tove.newAdaptiveTesselator = function(resolution, recursionLimit)
 	return ffi.gc(lib.NewAdaptiveTesselator(
 		resolution or 128, recursionLimit or 8), lib.ReleaseTesselator)
 end
 
-tove.newRigidTesselator = function(subdivisions, holes)
+tove.newRigidTesselator = function(subdivisions)
 	return ffi.gc(lib.NewRigidTesselator(
-		subdivisions, _holes[holes or "none"]), lib.ReleaseTesselator)
+		subdivisions), lib.ReleaseTesselator)
 end
 
 return function (usage, quality, ...)

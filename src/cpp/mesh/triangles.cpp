@@ -37,13 +37,31 @@ void TriangleStore::_add(
     const std::list<TPPLPoly> &triangles,
     bool isFinalSize) {
 
-    ToveVertexIndex *indices = allocate(triangles.size(), isFinalSize);
-    for (auto i = triangles.begin(); i != triangles.end(); i++) {
-        const TPPLPoly &poly = *i;
-        for (int j = 0; j < 3; j++) {
-            *indices++ = ToLoveVertexMapIndex(poly[j].id);
+    assert(mMode == TRIANGLES_LIST);
+
+    ToveVertexIndex *indices = allocate(
+        triangles.size(), isFinalSize);
+
+    int numBadTriangles = 0;
+
+    for (const auto &t : triangles) {
+        bool good = true;
+        for (int i = 0; i < 3; i++) {
+            const int index = t[i].id;
+            if (index < 0) {
+                good = false;
+                break;
+            }
+            indices[i] = ToLoveVertexMapIndex(index);
+        }
+        if (good) {
+            indices += 3;
+        } else {
+            numBadTriangles += 1;
         }
     }
+
+    mSize -= numBadTriangles * 3;
 }
 
 void TriangleStore::_add(

@@ -172,7 +172,7 @@ EXPORT const char *GetImplicitFillShaderCode(
 EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);
 
 EXPORT ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit);
-EXPORT ToveTesselatorRef NewRigidTesselator(int subdivisions, ToveHoles holes);
+EXPORT ToveTesselatorRef NewRigidTesselator(int subdivisions);
 EXPORT ToveTesselatorRef NewAntiGrainTesselator(const AntiGrainSettings *settings);
 EXPORT ToveMeshUpdateFlags TesselatorTessGraphics(ToveTesselatorRef tess,
 	ToveGraphicsRef graphics, ToveMeshRef mesh, ToveMeshUpdateFlags flags);

@@ -71,12 +71,6 @@ typedef enum {
 } ToveOrientation;
 
 typedef enum {
-	TOVE_HOLES_NONE,
-	TOVE_HOLES_CW,
-	TOVE_HOLES_CCW
-} ToveHoles;
-
-typedef enum {
 	TOVE_HANDLE_FREE,
 	TOVE_HANDLE_ALIGNED
 } ToveHandle;
@@ -163,7 +157,6 @@ typedef struct {
 	AntiGrainSettings antigrain;
 	float maximumError;
 	float clipperScale;
-	ToveHoles holes;
 } ToveTesselationSettings;
 
 typedef enum {

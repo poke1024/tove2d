@@ -1009,8 +1009,8 @@ ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit) {
 			DefaultCurveFlattener(resolution, recursionLimit))));
 }
 
-ToveTesselatorRef NewRigidTesselator(int subdivisions, ToveHoles holes) {
-	return tesselators.publish(tove_make_shared<RigidTesselator>(subdivisions, holes));
+ToveTesselatorRef NewRigidTesselator(int subdivisions) {
+	return tesselators.publish(tove_make_shared<RigidTesselator>(subdivisions));
 }
 
 ToveMeshUpdateFlags TesselatorTessGraphics(ToveTesselatorRef tess,
