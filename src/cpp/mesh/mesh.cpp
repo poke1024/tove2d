@@ -559,8 +559,8 @@ void Submesh::triangulateFixedResolutionFill(
 		return;
 	}
 
-	Triangulation *triangulation = new Triangulation(
-		convex, mCleaner.fetchVanishing());
+	std::unique_ptr<Triangulation> triangulation(new Triangulation(
+		convex, mCleaner.fetchVanishing()));
 	for (auto i = convex.begin(); i != convex.end(); i++) {
 		std::list<TPPLPoly> triangles;
 		TPPLPoly &p = *i;
@@ -575,7 +575,7 @@ void Submesh::triangulateFixedResolutionFill(
 		triangulation->triangles.add(triangles);
 	}
 
-	mTriangles.add(triangulation);
+	mTriangles.add(triangulation.release());
 #endif
 }
 
