@@ -20,6 +20,20 @@ local frames = {}
 local currentFrame = 1
 local animation = nil
 
+local function addFrame(i)
+	local graphics = flow.items[1].item
+	frames[i] = graphics:clone()
+end
+
+local function gotoFrame(i)
+	if frames[i] == nil then
+		addFrame(i)
+	end
+
+	flow.items[1].item = frames[i]
+	currentFrame = i
+end
+
 local function load(svg)
 	local graphics = tove.newGraphics(svg, 400)
 
@@ -31,12 +45,13 @@ local function load(svg)
 		graphics:setUsage("points", "dynamic")
 	end
 
-	frames[currentFrame] = graphics
-
 	flow = tovedemo.newCoverFlow(0.5)
 	local r = flow:add("", graphics)
 	r.minsize = 500
 	r.maxsize = 500
+
+	frames[currentFrame] = graphics
+	addFrame(2)
 end
 
 load(love.filesystem.read("assets/monster_2_by_mike_mac.svg"))
@@ -68,20 +83,6 @@ function play()
 	animation = tove.newAnimation(tween, "mesh", "rigid", 3, "none")
 	animation:setCacheSize(10)
 	flow.items[1].item = animation
-end
-
-local function gotoFrame(i)
-	local graphics = flow.items[1].item
-
-	if frames[i] ~= nil then
-		flow.items[1].item = frames[i]
-	else
-		graphics = graphics:clone()
-		frames[i] = graphics
-		flow.items[1].item = graphics	
-	end
-
-	currentFrame = i
 end
 
 function love.draw()
