@@ -156,7 +156,7 @@ EXPORT ToveMeshRef NewMesh(ToveNameRef name);
 EXPORT ToveMeshRef NewColorMesh(ToveNameRef name);
 EXPORT ToveMeshRef NewPaintMesh(ToveNameRef name);
 EXPORT int MeshGetVertexCount(ToveMeshRef mesh);
-EXPORT void MeshCopyVertexData(
+EXPORT void MeshSetVertexBuffer(
 	ToveMeshRef mesh, void *buffer, int32_t size);
 EXPORT ToveTrianglesMode MeshGetIndexMode(ToveMeshRef mesh);
 EXPORT int MeshGetIndexCount(ToveMeshRef mesh);
@@ -181,6 +181,7 @@ EXPORT ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
 	ToveGraphicsRef graphics, TovePathRef path,
 	ToveMeshRef fillMesh, ToveMeshRef lineMesh, ToveMeshUpdateFlags flags);
 EXPORT void TesselatorSetMaxSubdivisions(int subdivisions);
+EXPORT bool TesselatorHasFixedSize(ToveTesselatorRef tess);
 EXPORT void ReleaseTesselator(ToveTesselatorRef tess);
 
 EXPORT TovePaletteRef NewPalette(const uint8_t *colors, int n);

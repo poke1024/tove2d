@@ -113,16 +113,17 @@ ClipperLib::Path SubpathCleaner::toClipperPath(IntVertexMap &m, float s) const {
 }
 
 AbstractMesh::AbstractMesh(const NameRef &name, uint16_t stride) :
+	mVertices(nullptr),
+	mVertexCount(0),
+	mOwnsBuffer(true),
 	mName(name),
 	mStride(stride) {
-	
-	mVertices = nullptr;
-	mVertexCount = 0;
 }
 
 AbstractMesh::~AbstractMesh() {
-	if (mVertices) {
+	if (mOwnsBuffer && mVertices) {
 		free(mVertices);
+		mVertices = nullptr;
 	}
 	for (auto i : mSubmeshes) {
 		delete i.second;
@@ -168,8 +169,34 @@ void AbstractMesh::copyIndexData(
 	}
 }
 
+void AbstractMesh::setNewExternalVertexBuffer(
+	void *buffer,
+	size_t bufferByteSize) {
+
+	if (mVertices) {
+		std::memcpy(
+			buffer,
+			mVertices,
+			std::min(bufferByteSize, size_t(mVertexCount * mStride)));
+	}
+	
+	if (mOwnsBuffer && mVertices) {
+		free(mVertices);
+		mVertices = nullptr;
+	}
+
+	mVertices = buffer;
+	mVertexCount = bufferByteSize / mStride;
+	mOwnsBuffer = false;
+}
+
 void AbstractMesh::reserve(int32_t n) {
 	if (n > mVertexCount) {
+		if (!mOwnsBuffer) {
+			mVertices = nullptr;
+			mOwnsBuffer = true;
+		}
+
 		mVertexCount = n;
 
 	    mVertices = realloc(

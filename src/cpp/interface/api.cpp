@@ -977,8 +977,8 @@ int MeshGetVertexCount(ToveMeshRef mesh) {
 	return deref(mesh)->getVertexCount();
 }
 
-void MeshCopyVertexData(ToveMeshRef mesh, void *buffer, int32_t size) {
-	deref(mesh)->copyVertexData(buffer, size);
+void MeshSetVertexBuffer(ToveMeshRef mesh, void *buffer, int32_t size) {
+	deref(mesh)->setExternalVertexBuffer(buffer, size);
 }
 
 ToveTrianglesMode MeshGetIndexMode(ToveMeshRef mesh) {
@@ -1050,6 +1050,10 @@ ToveMeshUpdateFlags TesselatorTessPath(ToveTesselatorRef tess,
 
 void TesselatorSetMaxSubdivisions(int subdivisions) {
 	toveMaxFlattenSubdivisions = subdivisions;
+}
+
+bool TesselatorHasFixedSize(ToveTesselatorRef tess) {
+	return deref(tess)->hasFixedSize();
 }
 
 void ReleaseTesselator(ToveTesselatorRef tess) {

@@ -54,6 +54,7 @@ class AbstractMesh : public Referencable {
 protected:
 	void *mVertices;
 	int32_t mVertexCount;
+	bool mOwnsBuffer;
 
 	const NameRef mName;
 	const uint16_t mStride;
@@ -62,6 +63,9 @@ protected:
 	mutable std::vector<ToveVertexIndex> mCoalescedTriangles;
 
 	void reserve(int32_t n);
+
+	void setNewExternalVertexBuffer(
+		void *buffer, size_t bufferByteSize);
 
 public:
 	AbstractMesh(const NameRef &name, uint16_t stride);
@@ -106,10 +110,10 @@ public:
 		return mVertexCount;
 	}
 
-	inline void copyVertexData(void *buffer, size_t bufferByteSize) {
-		const size_t size = mStride * mVertexCount;
-		assert(bufferByteSize == size);
-		std::memcpy(buffer, mVertices, size);
+	inline void setExternalVertexBuffer(void *buffer, size_t bufferByteSize) {
+		if (buffer != mVertices) {
+			setNewExternalVertexBuffer(buffer, bufferByteSize);
+		}
 	}
 
 	Submesh *submesh(int pathIndex, int line);

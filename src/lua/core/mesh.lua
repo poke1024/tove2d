@@ -33,7 +33,7 @@ function AbstractMesh:updateVertices()
 	local mesh = self._mesh
 	if mesh ~= nil then
 		local vdata = self._vdata
-		lib.MeshCopyVertexData(
+		lib.MeshSetVertexBuffer(
 			self._tovemesh, vdata:getPointer(), vdata:getSize())
 		mesh:setVertices(vdata)
 	end
