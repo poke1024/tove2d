@@ -17,7 +17,7 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow()
-	for _, mode in ipairs {"mesh", "gpux"} do
+	for _, mode in ipairs {"texture", "mesh", "gpux"} do
 		local graphics = newGraphics()
 		local quality = {}
 		if mode == "gpux" then
@@ -38,7 +38,7 @@ end
 load(love.filesystem.read("shape.svg"))
 
 function love.draw()
-	tovedemo.draw("Complex Transparent Paths.")
+	tovedemo.draw("Intersecting Transparent Paths.")
 	flow:draw()
 end
 
