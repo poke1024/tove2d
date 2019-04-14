@@ -57,7 +57,7 @@ function tovedemo.progress(text, progress)
 	love.graphics.setColor(0, 0, 0, 0.5)
 	love.graphics.print(text, width / 2 - font:getWidth(text) / 2, height / 2 - 60)
 
-	love.graphics.setColor(1, 1, 1, 0.5)
+	love.graphics.setColor(0, 0, 0, 0.5 * (1 - progress / 100))
 	love.graphics.circle("line", width / 2, height / 2 + 120, 100)
 	love.graphics.arc("fill", width / 2, height / 2 + 120, 100, 0, (progress / 100) * math.pi * 2)
 
