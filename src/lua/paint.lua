@@ -14,7 +14,7 @@ local _attr = {r = 1, g = 2, b = 3, a = 4, rgba = 0}
 local Paint = {}
 Paint.__index = function (self, key)
 	if _attr[key] ~= nil then
-		local rgba = lib.ColorGet(self._ref, 1.0)
+		local rgba = lib.ColorGet(self, 1.0)
 		if key == "rgba" then
 			return {rgba.r, rgba.g, rgba.b, rgba.a}
 		else
@@ -37,11 +37,13 @@ local function fromRef(ref)
 	if ref.ptr == nil then
 		return nil
 	else
-		return setmetatable({_ref = ffi.gc(ref, lib.ReleasePaint)}, Paint)
+		return ffi.gc(ref, lib.ReleasePaint)
 	end
 end
 
 Paint._fromRef = fromRef
+
+ffi.metatype("TovePaintRef", Paint)
 
 local noColor = fromRef(lib.NewEmptyPaint())
 
@@ -69,11 +71,11 @@ end
 
 
 function Paint:get(opacity)
-	return unpackRGBA(lib.ColorGet(self._ref, opacity or 1))
+	return unpackRGBA(lib.ColorGet(self, opacity or 1))
 end
 
 function Paint:set(r, g, b, a)
-	lib.ColorSet(self._ref, r, g, b, a or 1)
+	lib.ColorSet(self, r, g, b, a or 1)
 end
 
 local paintTypes = {
@@ -84,7 +86,7 @@ local paintTypes = {
 }
 
 function Paint:getType()
-	local t = lib.PaintGetType(self._ref)
+	local t = lib.PaintGetType(self)
 	for name, enum in pairs(paintTypes) do
 		if t == enum then
 			return name
@@ -93,16 +95,16 @@ function Paint:getType()
 end
 
 function Paint:getNumColors()
-	return lib.PaintGetNumColors(self._ref)
+	return lib.PaintGetNumColors(self)
 end
 
 function Paint:getColorStop(i, opacity)
-	return lib.PaintGetColorStop(self._ref, i - 1, opacity or 1)
+	return lib.PaintGetColorStop(self, i - 1, opacity or 1)
 end
 
 function Paint:getGradientParameters()
-	local t = lib.PaintGetType(self._ref)
-	local v = lib.GradientGetParameters(self._ref).values
+	local t = lib.PaintGetType(self)
+	local v = lib.GradientGetParameters(self).values
 	if t == lib.PAINT_LINEAR_GRADIENT then
 		return v[0], v[1], v[2], v[3]
 	elseif t == lib.PAINT_RADIAL_GRADIENT then
@@ -111,11 +113,11 @@ function Paint:getGradientParameters()
 end
 
 function Paint:addColorStop(offset, r, g, b, a)
-	lib.GradientAddColorStop(self._ref, offset, r, g, b, a or 1)
+	lib.GradientAddColorStop(self, offset, r, g, b, a or 1)
 end
 
 function Paint:clone()
-	return lib.ClonePaint(self._ref)
+	return lib.ClonePaint(self)
 end
 
 local function exportGradientColors(paint)
@@ -135,7 +137,7 @@ local function importGradientColors(g, colors)
 end
 
 function Paint:serialize()
-	local t = lib.PaintGetType(self._ref)
+	local t = lib.PaintGetType(self)
 	if t == lib.PAINT_SOLID then
 		return {type = "solid", color = {self:get()}}
 	elseif t == lib.PAINT_LINEAR_GRADIENT then
@@ -171,7 +173,7 @@ tove.newShader = function(source)
 end
 
 Paint._wrap = function(r, g, b, a)
-	if getmetatable(r) == Paint then
+	if ffi.istype("TovePaintRef", r) then
 		return r
 	end
 	local t = type(r)

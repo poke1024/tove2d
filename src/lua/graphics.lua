@@ -186,7 +186,7 @@ end
 
 function Graphics:setFillColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
-	lib.GraphicsSetFillColor(self._ref, color._ref)
+	lib.GraphicsSetFillColor(self._ref, color)
 	return color
 end
 
@@ -208,7 +208,7 @@ end
 
 function Graphics:setLineColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
-	lib.GraphicsSetLineColor(self._ref, color._ref)
+	lib.GraphicsSetLineColor(self._ref, color)
 	return color
 end
 

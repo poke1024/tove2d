@@ -70,11 +70,11 @@ function Path:getLineColor()
 end
 
 function Path:setFillColor(r, g, b, a)
-	lib.PathSetFillColor(self, Paint._wrap(r, g, b, a)._ref)
+	lib.PathSetFillColor(self, Paint._wrap(r, g, b, a))
 end
 
 function Path:setLineColor(r, g, b, a)
-	lib.PathSetLineColor(self, Paint._wrap(r, g, b, a)._ref)
+	lib.PathSetLineColor(self, Paint._wrap(r, g, b, a))
 end
 
 function Path:animate(a, b, t)
