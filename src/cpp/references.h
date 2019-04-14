@@ -48,20 +48,27 @@ public:
 	}
 };
 
-#define DEREF(RefType)													\
-	{ const RefType &r = *static_cast<const RefType*>(ref.ptr); 		\
-	if (!r.get()) { tove::report::warn(#RefType " is nil"); } return r; }
+void encounteredNilRef(const char *typeName);
+
+template<typename T, typename R>
+inline const T &_deref(const R &ref) {
+	const T &p = *static_cast<const T*>(ref.ptr);
+	if (!p.get()) {
+		encounteredNilRef(typeid(T).name());
+	}
+	return p;
+}
 
 inline const GraphicsRef &deref(const ToveGraphicsRef &ref) {
-	DEREF(GraphicsRef)
+	return _deref<GraphicsRef>(ref);
 }
 
 inline const PathRef &deref(const TovePathRef &ref) {
-	DEREF(PathRef)
+	return _deref<PathRef>(ref);
 }
 
 inline const SubpathRef &deref(const ToveSubpathRef &ref) {
-	DEREF(SubpathRef)
+	return _deref<SubpathRef>(ref);
 }
 
 inline const PaintRef &deref(const TovePaintRef &ref) {
@@ -69,36 +76,34 @@ inline const PaintRef &deref(const TovePaintRef &ref) {
 }
 
 inline const FeedRef &deref(const ToveFeedRef &ref) {
-	DEREF(FeedRef)
+	return _deref<FeedRef>(ref);
 }
 
 inline const MeshRef &deref(const ToveMeshRef &ref) {
-	DEREF(MeshRef)
+	return _deref<MeshRef>(ref);
 }
 
 inline const TesselatorRef &deref(const ToveTesselatorRef &ref) {
-	DEREF(TesselatorRef)
+	return _deref<TesselatorRef>(ref);
 }
 
 inline const PaletteRef &deref(const TovePaletteRef &ref) {
-	DEREF(PaletteRef)
+	return _deref<PaletteRef>(ref);
 }
 
 inline const NameRef &deref(const ToveNameRef &ref) {
-	DEREF(NameRef)
+	return _deref<NameRef>(ref);
 }
 
-#undef DEREF
-
-References<Graphics, ToveGraphicsRef> shapes;
-References<Path, TovePathRef> paths;
-References<Subpath, ToveSubpathRef> trajectories;
-References<AbstractPaint, TovePaintRef> paints;
-References<AbstractFeed, ToveFeedRef> shaderLinks;
-References<AbstractMesh, ToveMeshRef> meshes;
-References<AbstractTesselator, ToveTesselatorRef> tesselators;
-References<Palette, TovePaletteRef> palettes;
-References<std::string, ToveNameRef> names;
+extern References<Graphics, ToveGraphicsRef> shapes;
+extern References<Path, TovePathRef> paths;
+extern References<Subpath, ToveSubpathRef> trajectories;
+extern References<AbstractPaint, TovePaintRef> paints;
+extern References<AbstractFeed, ToveFeedRef> shaderLinks;
+extern References<AbstractMesh, ToveMeshRef> meshes;
+extern References<AbstractTesselator, ToveTesselatorRef> tesselators;
+extern References<Palette, TovePaletteRef> palettes;
+extern References<std::string, ToveNameRef> names;
 
 #endif // TOVE_TARGET_LOVE2D
 
