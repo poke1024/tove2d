@@ -36,8 +36,8 @@ ToveMeshUpdateFlags AbstractTesselator::graphicsToMesh(
 	const int n = graphics->getNumPaths();
 
 	if (!hasFixedSize()) {
-		fill->clear();
-		line->clear();
+		fill->clear(true);
+		line->clear(true);
 	}
 
 	const auto paintIndices = graphics->getPaintIndices();

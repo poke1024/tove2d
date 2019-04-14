@@ -192,7 +192,13 @@ void AbstractMesh::setNewExternalVertexBuffer(
 
 void AbstractMesh::reserve(int32_t n) {
 	if (n > mVertexCount) {
+		void *previousBuffer = nullptr;
+		size_t previousCount = 0;
+
 		if (!mOwnsBuffer) {
+			previousBuffer = mVertices;
+			previousCount = mVertexCount;
+
 			mVertices = nullptr;
 			mOwnsBuffer = true;
 		}
@@ -202,6 +208,15 @@ void AbstractMesh::reserve(int32_t n) {
 	    mVertices = realloc(
 	    	mVertices,
 			nextpow2(mVertexCount) * mStride);
+
+		if (!mVertices) {
+			TOVE_FATAL("out of memory during vertex allocation");
+		}
+
+		if (previousBuffer) {
+			std::memcpy(
+				mVertices, previousBuffer, previousCount * mStride);
+		}
 	}
 }
 
@@ -217,8 +232,12 @@ void AbstractMesh::setCacheSize(int size) {
 	}
 }
 
-void AbstractMesh::clear() {
+void AbstractMesh::clear(bool ensureOwnBuffer) {
 	mVertexCount = 0;
+	if (ensureOwnBuffer && !mOwnsBuffer) {
+		mVertices = nullptr;
+		mOwnsBuffer = true;
+	}
 	for (auto submesh : mSubmeshes) {
 		delete submesh.second;
 	}

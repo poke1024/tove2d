@@ -92,7 +92,7 @@ public:
 
 	void cacheKeyFrame();
 	void setCacheSize(int size);
-	void clear();
+	void clear(bool ensureOwnBuffer = false);
 	void clearTriangles();
 
 	virtual void setLineColor(
