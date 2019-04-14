@@ -42,7 +42,7 @@ local function load(svg)
 		graphics:setResolution(500 / 400)
 	else
 		graphics:setDisplay("mesh", "rigid", 3, "none")
-		graphics:setUsage("points", "dynamic")
+		graphics:setUsage("points", "stream")
 	end
 
 	flow = tovedemo.newCoverFlow(0.5)

@@ -30,14 +30,14 @@ return function (usage, quality, ...)
 			error("tesselator must be \"rigid\" or \"adaptive\".")			
 		end
 	elseif t == "number" then
-		if usage["points"] == "dynamic" then
+		if usage["points"] ~= "static" then
 			return tove.newRigidTesselator(
 				math.log(quality) / math.log(2), "cw")
 		else
 			return tove.newAdaptiveTesselator(quality)
 		end
 	elseif t == "nil" then
-		if usage["points"] == "dynamic" then
+		if usage["points"] ~= "static" then
 			return tove.newRigidTesselator(4, "cw")
 		else
 			return tove.newAdaptiveTesselator(128)

@@ -55,11 +55,11 @@ local function _updateFlatMesh(graphics)
 
 	if bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
 		local mesh = graphics._cache.mesh
-		if mesh:getUsage("points") ~= "dynamic" then
+		if mesh:getUsage("points") == "static" then
 			tove.slow("static mesh points changed in " .. tove._str(graphics._name))
 		end
 		local tessFlags = lib.UPDATE_MESH_VERTICES
-		if graphics._usage["triangles"] == "dynamic" then
+		if graphics._usage["triangles"] ~= "static" then
 			tessFlags = bit.bor(tessFlags, lib.UPDATE_MESH_AUTO_TRIANGLES)
 		end
 		if mesh:retesselate(tessFlags) then

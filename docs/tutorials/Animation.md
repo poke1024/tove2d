@@ -100,13 +100,15 @@ TÖVE can do this. Take a look at the "hearts" demo to see working code. Here ar
 The first step to animate colors or points is to tell your `Graphics` instance about it: call `Graphics:setUsage` to animate `points` (the shape of your drawing) or `colors` (the fill or stroke color of your drawing) or both. 
 
 ```
-myDrawing:setUsage("points", "dynamic") -- animate points
-myDrawing:setUsage("colors", "dynamic") -- animate colors
+myDrawing:setUsage("points", "stream") -- animate points
+myDrawing:setUsage("colors", "stream") -- animate colors
 ```
 
 Without doing this, TÖVE will not be able to animate your objects efficiently and things will be slow.
 
 Please note that TÖVE does not efficiently support animations that add or delete points.
+
+You can also choose to use "dynamic" instead of "stream" if your shapes change frequently, but not on every frame (also see https://love2d.org/wiki/SpriteBatchUsage).
 
 ## Animating colors
 Animating colors is easy. Here are two examples:

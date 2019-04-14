@@ -120,14 +120,14 @@ function MeshShader:update()
 		self:recreate()
 		return
 	elseif bit.band(flags, lib.CHANGED_POINTS) ~= 0 then
-		if self.usage["points"] ~= "dynamic" then
+		if self.usage["points"] == "static" then
 			tove.slow("static mesh points changed in " .. tove._str(self._name))
 			self:recreate()
 			return
 		end
 
 		local tessFlags = lib.UPDATE_MESH_VERTICES
-		if self.usage["triangles"] == "dynamic" then
+		if self.usage["triangles"] ~= "static" then
 			tessFlags = bit.bor(tessFlags, lib.UPDATE_MESH_AUTO_TRIANGLES)
 		end
 		local updated = self.tess(linkdata.mesh._tovemesh, tessFlags)

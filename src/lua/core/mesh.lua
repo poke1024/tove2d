@@ -87,9 +87,8 @@ function AbstractMesh:getMesh()
 		return nil
 	end
 
-	local usage = self._dynamic and "dynamic" or "static"
 	local mesh = love.graphics.newMesh(
-		self._attributes, n, getTrianglesMode(self._tovemesh), usage)
+		self._attributes, n, getTrianglesMode(self._tovemesh), self:getMeshUsage())
 	self._mesh = mesh
 	self._vdata = love.data.newByteData(n * self._vertexByteSize)
 
@@ -106,13 +105,16 @@ setmetatable(PositionMesh, {__index = AbstractMesh})
 PositionMesh._attributes = {{"VertexPosition", "float", 2}}
 PositionMesh._vertexByteSize = 2 * floatSize
 
+function PositionMesh:getMeshUsage()
+	return self._usage.points or "static"
+end
+
 tove.newPositionMesh = function(name, usage)
 	return setmetatable({
 		_name = name,
 		_tovemesh = ffi.gc(lib.NewMesh(name), lib.ReleaseMesh),
 		_mesh = nil,
 		_usage = usage or {},
-		_dynamic = usage["points"] == "dynamic",
 		_vdata = nil}, PositionMesh)
 end
 
@@ -125,13 +127,16 @@ PaintMesh._attributes = {
 	{"VertexPaint", "byte", 4}}
 PaintMesh._vertexByteSize = 3 * floatSize
 
+function PaintMesh:getMeshUsage()
+	return self._usage.points or "static"
+end
+
 tove.newPaintMesh = function(name, usage)
 	return setmetatable({
 		_name = name,
 		_tovemesh = ffi.gc(lib.NewPaintMesh(name), lib.ReleaseMesh),
 		_mesh = nil,
 		_usage = usage or {},
-		_dynamic = usage["points"] == "dynamic",
 		_vdata = nil}, PaintMesh)
 end
 
@@ -144,13 +149,25 @@ ColorMesh._attributes = {
 	{"VertexColor", "byte", 4}}
 ColorMesh._vertexByteSize = 2 * floatSize + 4
 
+function ColorMesh:getMeshUsage()
+	local u = self._usage
+	local p = u.points
+	local c = u.colors
+	if p == "stream" or c == "stream" then
+		return "stream"
+	elseif p == "dynamic" or c == "dynamic" then
+		return "dynamic"
+	else
+		return "static"
+	end
+end
+
 tove.newColorMesh = function(name, usage, tess)
 	local cmesh = ffi.gc(lib.NewColorMesh(name), lib.ReleaseMesh)
 	tess(cmesh, -1)
 	return setmetatable({
 		_name = name, _tovemesh = cmesh, _mesh = nil,
 		_tess = tess, _usage = usage,
-		_dynamic = usage["points"] == "dynamic" or usage["colors"] == "dynamic",
 		_vdata = nil}, ColorMesh)
 end
 

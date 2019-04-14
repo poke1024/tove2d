@@ -39,13 +39,13 @@ Here are some hints:
 
 `mesh` is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a LÖVE Mesh, which is efficient to draw, scale and animate.
 
-`shader` can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).
+`gpux` can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).
 
 ## Setting the mesh renderer quality
-The quality setting in `Graphics:setDisplay`  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are `static` or `dynamic` (see the section on Animating Things).
+The quality setting in `Graphics:setDisplay`  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are `static`, `dynamic` or `stream` (see the section on Animating Things).
 
 * If your points are `static` (default), the quality is a number between 0 and 1, where 1 is the highest suggested quality (though you can go above 1). The renderer will produce an adaptive mesh tessellation, where some curves get many points and others (e.g. straight lines) few. Values below 0.1 trigger a special low quality tier that tries to produce a minimum of triangles.
-* If your points are `dynamic` (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.
+* If your points are `dynamic` or `stream` (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.
 * In addition, you can always force fixed subdivision by specifying `tove.fixed(n)` as quality: each curve will then be segmented into exactly 2^n parts. Use this if you don't want adaptive subdivision for static point meshes.
 
 The second factor to mention here is the value set via `Graphics:setResolution`. TÖVE internally scales meshes before applying the quality settings. That means that setting a higher resolution will yield a higher quality with the same quality number. Imagine rendering the same image at a higher resolution and then scaling it down again for display. This is the effect you get by calling `setResolution` on meshes.

@@ -134,8 +134,8 @@ tove.newAnimation = function(tween, ...)
 	end
 	local keyframes = {}
 	local graphics = tove.newGraphics()
-	graphics:setUsage("points", "dynamic")
-	graphics:setUsage("colors", "dynamic")
+	graphics:setUsage("points", "stream")
+	graphics:setUsage("colors", "stream")
 	graphics:setDisplay(unpack(display))
 	local offset = 0
 

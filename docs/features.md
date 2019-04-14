@@ -27,6 +27,6 @@ Also note the number of OpenGL drawing calls/context switches:
 | 1 per `Graphics`   | 1 per `Graphics`  | >= 1 per `Path` |
 
 [^1]: if used as static mesh, i.e. building it once and not animating its shape.
-[^2]: if used as animated mesh, i.e. when calling `setUsage` on "points" with "dynamic".
+[^2]: if used as animated mesh, i.e. when calling `setUsage` on "points" with "dynamic" or "stream".
 [^3]: for some shapes, by using the `fragment` option for line rendering.
 [^4]: for some shapes, hole polygons must not intersect non-hole polygons.

@@ -62,8 +62,8 @@ local function createHearts(stroke, filled)
 		end
 
 		heart:setDisplay(modes[i], unpack(quality))
-		heart:setUsage("points", "dynamic")
-		heart:setUsage("colors", "dynamic")
+		heart:setUsage("points", "stream")
+		heart:setUsage("colors", "stream")
 
 		if modes[i] == "mesh" then
 			-- cache size config has to happen after setDisplay().
