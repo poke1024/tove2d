@@ -13,7 +13,7 @@ local function load(svg)
 
 	-- just some glue code for presentation.
 	flow = tovedemo.newCoverFlow(0.5)
-	for i, mode in ipairs {"texture", "texture", "mesh"} do
+	for i, mode in ipairs {"texture", "texture", "mesh", "gpux"} do
 		local graphics = newGraphics()
 		local quality = {}
 		if i == 1 then
@@ -32,8 +32,10 @@ local function load(svg)
 			--quality = {"best", {blueNoise, 50}, 1, "floyd"}
 
 			desc = "tex best (default)"
-		else
+		elseif i == 3 then
 			desc ="mesh"
+		elseif i == 4 then
+			desc = "gpux"
 		end
 		graphics:setDisplay(mode, unpack(quality))
 		local r = flow:add(desc, graphics)
