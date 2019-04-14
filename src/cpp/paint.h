@@ -326,6 +326,76 @@ public:
 #endif
 };
 
+class PaintShader final : public AbstractPaint {
+	std::string code;
+
+public:
+	inline PaintShader(const std::string &code) : code(code) {
+	}
+
+	virtual void getGradientParameters(ToveGradientParameters &p) {
+	}
+
+	virtual PaintRef clone() const {
+		return tove_make_shared<PaintShader>(code);
+	}
+
+	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform) {
+		if (target && target->getType() == PAINT_SHADER) {
+			static_cast<PaintShader*>(target.get())->code = code;
+		} else {
+			target = clone();
+		}
+		target->transform(transform);
+	}
+
+	virtual TovePaintType getType() const {
+		return PAINT_SHADER;
+	}
+
+	virtual bool isGradient() const {
+		return false;
+	}
+
+	virtual bool isOpaque() const {
+		return false;
+	}
+
+	virtual void store(NSVGpaint &paint) {
+		paint.type = NSVG_PAINT_COLOR;
+		paint.color = 0;
+	}
+
+	virtual void addColorStop(float offset, float r, float g, float b, float a) {
+	}
+
+	virtual void setColorStop(int i, float offset, float r, float g, float b, float a) {
+	}
+
+	virtual float getColorStop(int i, ToveRGBA &rgba, float opacity) {
+		rgba.r = 0.0f;
+		rgba.g = 0.0f;
+		rgba.b = 0.0f;
+		rgba.a = 0.0f;
+		return 0.0f;
+	}
+	
+	virtual int getNumColorStops() const {
+		return 1;
+	}
+	virtual NSVGgradient *getNSVGgradient() const {
+		return nullptr;
+	}
+	virtual void getGradientMatrix(float *m, float scale) const {
+	}
+
+	virtual bool animate(const PaintRef &a, const PaintRef &b, float t) {
+		return false;
+	}
+
+	std::string getCode(const char *fname) const;
+};
+
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint);
 
 END_TOVE_NAMESPACE

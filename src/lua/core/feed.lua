@@ -99,7 +99,7 @@ end
 
 function ColorSend:beginInit()
 	local colorData = self.colorData
-	if colorData.style >= 2 then
+	if colorData.style >= lib.PAINT_LINEAR_GRADIENT then
 		self.gradientData = fillGradientData(colorData.gradient)
 	end
 end
@@ -115,9 +115,9 @@ function ColorSend:endInit(path)
 	local shader = self.shader
 	local uniforms = self.uniforms
 
-	if colorData.style == 1 then
+	if colorData.style == lib.PAINT_SOLID then
 		sendColor(shader, uniforms.color, colorData.rgba)
-	elseif colorData.style >= 2 then
+	elseif colorData.style >= lib.PAINT_LINEAR_GRADIENT then
 		shader:send(uniforms.colors, gradientData.texture)
 		shader:send(uniforms.matrix, gradientData.matrixData)
 		shader:send(uniforms.cscale, gradientData.cscale)
@@ -129,9 +129,9 @@ function ColorSend:updateUniforms(chg1, path)
 		local shader = self.shader
 		local uniforms = self.uniforms
 		local colorData = self.colorData
-		if colorData.style == 1 then
+		if colorData.style == lib.PAINT_SOLID then
 			sendColor(shader, uniforms.color, colorData.rgba)
-		elseif colorData.style >= 2 then
+		elseif colorData.style >= lib.PAINT_LINEAR_GRADIENT then
 			local gradientData = self.gradientData
 			reloadGradientTexture(gradientData)
 			shader:send(uniforms.matrix, gradientData.matrixData)
@@ -424,7 +424,7 @@ function GeometrySend:endInit(lineStyle)
 		lineShader:send("curves", curvesTexture)
 	end
 
-	if lineStyle >= 1 and lineShader ~= nil then
+	if lineStyle > 0 and lineShader ~= nil then
 		sendLineArgs(lineShader, data)
 	end
 end

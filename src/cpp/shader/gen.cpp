@@ -10,6 +10,7 @@
  */
 
 #include "../common.h"
+#include "../paint.h"
 #include "gen.h"
 
 BEGIN_TOVE_NAMESPACE
@@ -108,26 +109,48 @@ vec4 effect(vec4 _1, Image _2, vec2 texture_coords, vec2 _4) {
 #endif
 }
 
-void ShaderWriter::computeLineColor(int lineStyle) {
+void ShaderWriter::writePaintShader(
+	const TovePaintData &paint,
+	const char *fname,
+	const char *glslStyleDefine) {
+
+	assert(paint.shader);
+	std::string code = static_cast<PaintShader*>(paint.shader)->getCode(fname);
+	if (!code.empty()) {
+		out << "#define " << glslStyleDefine << " " << PAINT_SHADER << "\n";
+		out << code << "\n";
+	} else {
+		out << "#define " << glslStyleDefine << " "<< PAINT_NONE << "\n";
+	}
+}
+
+void ShaderWriter::computeLineColor(const TovePaintData &paint) {
+	const int lineStyle = paint.style;
+
+	if (lineStyle == PAINT_SHADER) {
+		writePaintShader(paint, "computeLineColor", "LINE_STYLE");
+		return;
+	}
+
 	out << "#define LINE_STYLE "<< lineStyle << "\n";
 	out << R"GLSL(
-#if LINE_STYLE == 1
+#if LINE_STYLE == )GLSL" << PAINT_SOLID << R"GLSL(
 uniform vec4 linecolor;
-#elif LINE_STYLE >= 2
+#elif LINE_STYLE >= )GLSL" << PAINT_LINEAR_GRADIENT << R"GLSL(
 uniform sampler2D linecolors;
 uniform MATRIX linematrix;
 uniform vec2 linecscale;
 #endif
 
-#if LINE_STYLE > 0
+#if LINE_STYLE > )GLSL" << PAINT_NONE << R"GLSL(
 vec4 computeLineColor(vec2 pos) {
-#if LINE_STYLE == 1
+#if LINE_STYLE == )GLSL" << PAINT_SOLID << R"GLSL(
 	return linecolor;
-#elif LINE_STYLE == 2
+#elif LINE_STYLE == )GLSL" << PAINT_LINEAR_GRADIENT << R"GLSL(
 	float y = (linematrix * vec3(pos, 1)).y;
 	y = linecscale.x + linecscale.y * y;
 	return TEXEL(linecolors, vec2(0.5, y));
-#elif LINE_STYLE == 3
+#elif LINE_STYLE == )GLSL" << PAINT_RADIAL_GRADIENT << R"GLSL(
 	float y = length((linematrix * vec3(pos, 1)).xy);
 	y = linecscale.x + linecscale.y * y;
 	return TEXEL(linecolors, vec2(0.5, y));
@@ -137,26 +160,33 @@ vec4 computeLineColor(vec2 pos) {
 )GLSL";
 }
 
-void ShaderWriter::computeFillColor(int fillStyle) {
-	out << "#define FILL_STYLE "<< fillStyle << "\n";
+void ShaderWriter::computeFillColor(const TovePaintData &paint) {
+	const int fillStyle = paint.style;
+
+	if (fillStyle == PAINT_SHADER) {
+		writePaintShader(paint, "computeFillColor", "FILL_STYLE");
+		return;
+	}
+
+	out << "#define FILL_STYLE " << fillStyle << "\n";
 	out << R"GLSL(
-#if FILL_STYLE == 1
+#if FILL_STYLE == )GLSL" << PAINT_SOLID << R"GLSL(
 uniform vec4 fillcolor;
-#elif FILL_STYLE >= 2
+#elif FILL_STYLE >= )GLSL" << PAINT_LINEAR_GRADIENT << R"GLSL(
 uniform sampler2D fillcolors;
 uniform MATRIX fillmatrix;
 uniform vec2 fillcscale;
 #endif
 
-#if FILL_STYLE > 0
+#if FILL_STYLE > )GLSL" << PAINT_NONE << R"GLSL(
 vec4 computeFillColor(vec2 pos) {
-#if FILL_STYLE == 1
+#if FILL_STYLE == )GLSL" << PAINT_SOLID << R"GLSL(
 	return fillcolor;
-#elif FILL_STYLE == 2
+#elif FILL_STYLE == )GLSL" << PAINT_LINEAR_GRADIENT << R"GLSL(
 	float y = (fillmatrix * vec3(pos, 1)).y;
 	y = fillcscale.x + fillcscale.y * y;
 	return TEXEL(fillcolors, vec2(0.5, y));
-#elif FILL_STYLE == 3
+#elif FILL_STYLE == )GLSL" << PAINT_RADIAL_GRADIENT << R"GLSL(
 	float y = length((fillmatrix * vec3(pos, 1)).xy);
 	y = fillcscale.x + fillcscale.y * y;
 	return TEXEL(fillcolors, vec2(0.5, y));
@@ -172,7 +202,7 @@ const char *ShaderWriter::getSourcePtr() {
 	for (auto i : defines) {
 		size_t pos = 0;
 	    while ((pos = source.find(i.first, pos)) != std::string::npos) {
-	         source.replace(pos, i.first.length(), i.second);
+	         source = source.replace(pos, i.first.length(), i.second);
 	         pos += i.second.length();
 	    }
 	}
@@ -302,8 +332,14 @@ vec4 do_vertex(vec4 vertex_pos) {
 	w << "#define CURVE_DATA_SIZE "<<
 		data->geometry.curvesTextureSize[0] << "\n";
 
-	w.computeLineColor(fragLine ? data->color.line.style : 0);
-	w.computeFillColor(data->color.fill.style);
+	if (fragLine) {
+		w.computeLineColor(data->color.line);
+	} else {
+		TovePaintData data;
+		data.style = 0;
+		w.computeLineColor(data);
+	}
+	w.computeFillColor(data->color.fill);
 
 	#include "../../glsl/fill.frag.inc"
 
@@ -327,7 +363,7 @@ varying vec2 raw_vertex_pos;
 	w.endVertexShader();
 
 	w.beginFragmentShader();
-	w.computeLineColor(data->color.line.style);
+	w.computeLineColor(data->color.line);
 	w << R"GLSL(
 vec4 do_color(vec2 _1) {
 	return computeLineColor(raw_vertex_pos);

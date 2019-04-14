@@ -11,6 +11,7 @@ EXPORT bool GenerateBlueNoise(int s, float *m);
 EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);
 EXPORT TovePaintRef NewEmptyPaint();
+EXPORT TovePaintRef NewShaderPaint(const char* s);
 EXPORT int PaintGetNumColors(TovePaintRef color);
 EXPORT ToveColorStop PaintGetColorStop(TovePaintRef color, int i, float opacity);
 EXPORT TovePaintRef NewColor(float r, float g, float b, float a);

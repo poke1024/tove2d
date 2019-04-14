@@ -166,6 +166,10 @@ tove.newPaint = function(p)
 	end
 end
 
+tove.newShader = function(source)
+	return fromRef(lib.NewShaderPaint(source))
+end
+
 Paint._wrap = function(r, g, b, a)
 	if getmetatable(r) == Paint then
 		return r

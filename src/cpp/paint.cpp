@@ -419,6 +419,23 @@ std::ostream &RadialGradient::dump(std::ostream &os) {
 #endif
 
 
+std::string PaintShader::getCode(const char *fname) const {
+	std::string s(code);
+	const std::string gname("COLOR");
+
+	const auto pos = s.find(gname);
+	if (pos == std::string::npos) {
+		tove::report::warn(
+			"could not find COLOR function in given shader.");
+		return std::string();
+	} else {
+		s = s.replace(pos, gname.length(), fname);
+	}
+
+	return s;
+}
+
+
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint) {
 	switch (paint.type) {
 		case NSVG_PAINT_NONE: {

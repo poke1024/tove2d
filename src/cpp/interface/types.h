@@ -50,8 +50,9 @@ typedef enum {
 	PAINT_UNDEFINED = -1,
 	PAINT_NONE = 0,
 	PAINT_SOLID = 1,
-	PAINT_LINEAR_GRADIENT = 2,
-	PAINT_RADIAL_GRADIENT = 3
+	PAINT_SHADER = 2,
+	PAINT_LINEAR_GRADIENT = 3,
+	PAINT_RADIAL_GRADIENT = 4
 } TovePaintType;
 
 typedef enum {
@@ -245,6 +246,7 @@ typedef struct {
 	int8_t style; // TovePaintType
 	ToveRGBA rgba;
 	ToveGradientData gradient;
+	void *shader;
 } TovePaintData;
 
 typedef struct {

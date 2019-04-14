@@ -292,6 +292,10 @@ TovePaintRef NewEmptyPaint() {
 	return paints.publishEmpty();
 }
 
+TovePaintRef NewShaderPaint(const char* s) {
+	return paints.publish(tove_make_shared<PaintShader>(s));
+}
+
 TovePaintRef NewColor(float r, float g, float b, float a) {
 	return paints.publish(tove_make_shared<Color>(r, g, b, a));
 }

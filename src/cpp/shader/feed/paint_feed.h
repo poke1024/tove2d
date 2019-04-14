@@ -23,6 +23,7 @@ class AbstractPaintFeed {
 protected:
 	TovePaintData &paintData;
 	const float scale;
+	PaintRef shader;
 
 protected:
 	static TovePaintType getStyle(const PaintRef &paint) {
@@ -172,6 +173,11 @@ public:
         const TovePaintType style = getStyle(color);
 		paintData.style = style;
 		paintData.gradient.numColors = determineNumColors(color);
+
+		if (style == PAINT_SHADER) {
+			shader = std::static_pointer_cast<PaintShader>(color);
+			paintData.shader = shader.get();
+		}
 	}
 
 	virtual ~PaintFeedBase() {
