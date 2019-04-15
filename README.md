@@ -8,7 +8,6 @@ TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL'
 * brings crisp vector graphics and SVGs to LÖVE
 * offers a substantial subset of SVG
 * built for realtime animation
-* < 1 MB in binary size
 * details: https://poke1024.github.io/tove2d/features
 
 ## Getting Started
