@@ -1,4 +1,4 @@
--- TÖVE Demo: Warping.
+﻿-- TÖVE Demo: Warping.
 -- (C) 2019 Bernhard Liebl, MIT license.
 
 -- Morphing is TÖVE's term for animating if the point/curve
@@ -107,6 +107,9 @@ end
 local mouse = nil
 
 function love.mousepressed(x, y, button)
+	if animation ~= nil then -- animating?
+		return
+	end
 	if button == 1 then
 		local what = clickToolsMenu(x, y)
 		if what == nil then
@@ -123,12 +126,18 @@ function love.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
+	if animation ~= nil then -- animating?
+		return
+	end
 	if button == 1 then
 		mouse = nil
 	end
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
+	if animation ~= nil then -- animating?
+		return
+	end
 	if flow.items[1].mouse == nil then
 		return
 	end
@@ -158,17 +167,23 @@ function love.mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.keypressed(key, scancode, isrepeat)
+	if key == "p" or key == "escape" then
+		play()
+	end
+
+	if animation ~= nil then -- animating?
+		return
+	end
 	local i = string.byte(key) - string.byte("0")
 	if i > 0 and i <= 9 then
 		gotoFrame(i)
 	end
-
-	if key == "p" or key == "escape" then
-		play()
-	end
 end
 
 function love.filedropped(file)
+	if animation ~= nil then -- animating?
+		return
+	end
 	file:open("r")
 	local svg = file:read()
 	file:close()
