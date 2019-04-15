@@ -1361,29 +1361,76 @@ void Subpath::invert() {
 
 void Subpath::clean(const float eps) {
 	commit();
+	const int n = nsvg.npts;
+
+	std::vector<float> cleaned;
+	cleaned.reserve(n * 2);
+
+	int copied = 0;
+	for (int i = 0; i + 4 <= n; i += 3) {
+		const float *pts = &nsvg.pts[i * 2];
+
+		const float dx = pts[0] - pts[6];
+		const float dy = pts[1] - pts[7];
+
+		if (dx * dx + dy * dy > eps) {
+			cleaned.insert(cleaned.end(), pts, pts + 6);
+		}
+		copied = i + 3;
+	}
+	cleaned.insert(cleaned.end(), &nsvg.pts[copied * 2], &nsvg.pts[n * 2]);
+
+	if (cleaned.size() < nsvg.npts * 2) {
+		nsvg.npts = cleaned.size() / 2;
+		std::memcpy(nsvg.pts, &cleaned[0], sizeof(float) * cleaned.size());
+
+		commands.clear();
+		changed(CHANGED_GEOMETRY);
+	}
+
+	/*commit();
 
 	const int n = nsvg.npts;
 	float * const pts = nsvg.pts;
 
 	SubpathCleaner cleaner;
 	cleaner.init(n);
-	for (int i = 0; i < n; i++) {
-		cleaner.add(pts[i * 2  + 0], pts[i * 2 + 1], 0);
-	}
-	const int newNPts = cleaner.clean(eps, false);
 
-	if (newNPts < nsvg.npts) {
-		nsvg.npts = newNPts;
-	
-		const auto &newPts = cleaner.getPoints();
-		for (int i = 0; i < newNPts; i++) {
-			pts[i * 2 + 0] = newPts[i].x;
-			pts[i * 2 + 1] = newPts[i].y;
+	int m = 0;
+	for (int i = 0; i + 4 <= n; i += 3) {
+		cleaner.add(pts[i * 2  + 0], pts[i * 2 + 1], i);
+		m++;
+	}
+	const int newM = cleaner.clean(eps, false);
+
+	const auto &newIndices = cleaner.getIndices();
+	std::vector<ToveVertexIndex> indices(newIndices);
+	indices.push_back(n + 10);
+
+	int k = 0;
+	m = 0;
+
+	for (int i = 0; i + 4 <= n; i += 3) {
+		if (indices[k] >= i + 3) {
+			// skip
+		} else {
+			for (int j = 0; j < 3; j++) {
+				pts[m * 2 + 0] = pts[(i + j) * 2 + 0];
+				pts[m * 2 + 1] = pts[(i + j) * 2 + 1];
+				m++;
+			}
+			while (indices[k] < i + 3) {
+				k++;
+			}
 		}
+	}
+
+	if (m < nsvg.npts) {
+		nsvg.npts = m;
 
 		commands.clear();
 		changed(CHANGED_GEOMETRY);
-	}
+	}*/
 }
 
 ToveOrientation Subpath::getOrientation() const {
