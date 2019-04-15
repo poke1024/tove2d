@@ -55,6 +55,9 @@ Points.__index = function (self, i)
 end
 
 
+--- A vector graphics subpath (trajectory).
+-- @classmod Subpath
+
 local Subpath = {}
 Subpath.__index = function(self, key)
 	if key == "curves" then

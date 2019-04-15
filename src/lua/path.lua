@@ -18,6 +18,9 @@ Subpaths.__index = function (self, i)
 	end
 end
 
+--- A vector graphics path.
+-- @classmod Path
+
 local Path = {}
 Path.__index = function (path, key)
 	if key == "subpaths" then

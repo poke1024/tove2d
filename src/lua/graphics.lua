@@ -29,6 +29,9 @@ Paths.__index = function (self, i)
 	end
 end
 
+--- A vector graphics.
+-- @classmod Graphics
+
 local Graphics = {}
 Graphics.__index = Graphics
 
@@ -43,6 +46,12 @@ local function newUsage()
 	return {points = "static", colors = "static"}
 end
 
+--- Create a new Graphics.
+-- @tparam string|{Path,...} data either an SVG string or a table of @{Path}s
+-- @tparam[opt] int|string size the size to scale the @{Graphics} to.
+-- Use "auto" (scale below 1024), "copy" (do not scale and use original size)
+-- or a number (the number of pixels to scale to).
+-- @treturn Graphics a new Graphics
 tove.newGraphics = function(data, size)
 	local svg = nil
 	if type(data) == "string" then
@@ -83,6 +92,8 @@ tove.newGraphics = function(data, size)
 	return graphics
 end
 
+--- Remove all @{Path}s.
+-- Effectively empties this @{Graphics} of all drawable content.
 function Graphics:clear()
 	lib.GraphicsClear(self._ref)
 end
@@ -105,10 +116,16 @@ local function makeDisplay(mode, quality, usage)
 		tesselator = nil}, usage)
 end
 
+--- Set name.
+-- That name will show up in error messages concering this @{Graphics}.
+-- @tparam string name new name of this @{Graphics}
 function Graphics:setName(name)
 	lib.NameSet(self._name, name)
 end
 
+--- Create a deep copy.
+-- This cloned copy will include copies of all @{Path}s.
+-- @treturn Graphics cloned @{Graphics}.
 function Graphics:clone()
 	local ref = lib.CloneGraphics(self._ref, true)
 	local d = self._display
@@ -126,18 +143,55 @@ function Graphics:clone()
 	return g
 end
 
+--- Start a fresh @{Path} for drawing.
+-- The previously active @{Path} will get closed but won't
+-- be made into loop. Subsequent drawing commands like @{lineTo}
+-- will draw into the newly started @{Path}.
+-- @treturn Path new active @{Path} in this @{Graphics}
+-- @usage
+-- g:moveTo(10, 10)
+-- g:lineTo(20, 15)
+-- g:lineTo(5, 0)
+-- g:beginPath()  -- do not connect lines above into a loop
+-- g:moveTo(50, 50)
+-- g:lineTo(60, 55)
 function Graphics:beginPath()
 	return ffi.gc(lib.GraphicsBeginPath(self._ref), lib.ReleasePath)
 end
+
+--- Close the current @{Path}, thereby creating a loop.
+-- Subsequent drawing commands like @{lineTo} will automatically
+-- start a fresh @{Path}.
+-- @function closePath
+-- @usage
+-- g:moveTo(10, 10)
+-- g:lineTo(20, 15)
+-- g:lineTo(5, 0)
+-- g:closePath() -- connect lines above into a loop
+
 bind("closePath", "GraphicsClosePath")
+
+--- Inside the current @{Path}, start a fresh @{Subpath}.
+-- The previously active @{Subpath} will not be made into a loop.
+-- Subsequent drawing commands like @{lineTo} will draw into the
+-- new @{Subpath} inside the same @{Path}.
 
 function Graphics:beginSubpath()
 	return ffi.gc(lib.GraphicsBeginSubpath(self._ref), lib.ReleaseSubpath)
 end
+
+--- Inside the current @{Path}, close the current @{Subpath}, thereby creating a loop.
+-- Subsequent drawing commands like @{lineTo} will automatically
+-- start a fresh @{Subpath} inside the same @{Path}. Use this
+-- method if you want to draw holes.
+
 function Graphics:closeSubpath()
 	lib.GraphicsCloseSubpath(self._ref, true)
 end
 bind("invertSubpath", "GraphicsInvertSubpath")
+
+--- Get the current @{Path} for drawing.
+-- @treturn Path the currently active @{Path} that gets drawn into.
 
 function Graphics:getCurrentPath()
 	return gcpath(lib.GraphicsGetCurrentPath(self._ref))
@@ -149,46 +203,114 @@ function Graphics:fetchChanges(flags)
 	return lib.GraphicsFetchChanges(self._ref, flags)
 end
 
+--- Move to position (x, y).
+-- Automatically starts a fresh @{Subpath} if necessary. 
+-- @tparam number x new x coordinate
+-- @tparam number y new y coordinate
+
 function Graphics:moveTo(x, y)
 	lib.GraphicsCloseSubpath(self._ref, false)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathMoveTo(t, x, y))
 end
 
+--- Draw a line to (x, y).
+-- @usage
+-- g:moveTo(10, 20)
+-- g:lineTo(5, 30)
+-- @tparam number x x coordinate of line's end position
+-- @tparam number y y coordinate of line's end position
+
 function Graphics:lineTo(x, y)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathLineTo(t, x, y))
 end
+
+--- Draw a cubic bezier curve to (x, y) using two control points.
+-- See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
+-- @usage
+-- g:moveTo(10, 20)
+-- g:curveTo(7, 5, 10, 3, 50, 30)
+-- @tparam number cp1x x coordinate of curve's first control point (P1)
+-- @tparam number cp1y y coordinate of curve's first control point (P1)
+-- @tparam number cp2x x coordinate of curve's second control point (P2)
+-- @tparam number cp2y y coordinate of curve's second control point (P2)
+-- @tparam number x x coordinate of curve's end position (P3)
+-- @tparam number y y coordinate of curve's end position (P3)
 
 function Graphics:curveTo(...)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathCurveTo(t, ...))
 end
 
-function Graphics:arc(x, y, r, a1, a2, ccw)
-	lib.SubpathArc(self:beginSubpath(), x, y, r, a1, a2, ccw or false)
+--- Draw an arc.
+-- @tparam number x x coordinate of centre of arc
+-- @tparam number y y coordinate of centre of arc
+-- @tparam number r radius of arc
+-- @tparam number startAngle angle at which to start drawing
+-- @tparam number endAngle angle at which to stop drawing
+-- @tparam bool ccw true if drawing between given angles is counterclockwise
+
+function Graphics:arc(x, y, r, startAngle, endAngle, ccw)
+	lib.SubpathArc(self:beginSubpath(), x, y, r, startAngle, endAngle, ccw or false)
 end
+
+--- Draw a rectangle.
+-- @tparam number x x coordinate of top left corner
+-- @tparam number y y coordinate of top left corner
+-- @tparam number w width
+-- @tparam number h height
+-- @tparam number rx horizontal roundness of corners
+-- @tparam number ry vertical roundness of corners
 
 function Graphics:drawRect(x, y, w, h, rx, ry)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathDrawRect(t, x, y, w, h or w, rx or 0, ry or 0))
 end
 
+--- Draw a circle.
+-- @tparam number x x coordinate of centre
+-- @tparam number y y coordinate of centre
+-- @tparam number r radius
+
 function Graphics:drawCircle(x, y, r)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathDrawEllipse(t, x, y, r, r))
 end
+
+--- Draw an ellipse.
+-- @tparam number x x coordinate of centre
+-- @tparam number y y coordinate of centre
+-- @tparam number rx horizontal radius
+-- @tparam number ry vertical radius
 
 function Graphics:drawEllipse(x, y, rx, ry)
 	local t = self:beginSubpath()
 	return newCommand(t, lib.SubpathDrawEllipse(t, x, y, rx, ry or rx))
 end
 
+--- Set fill color.
+-- Will affect subsequent calls to @{fill}.
+-- @usage
+-- g:setFillColor(0.8, 0, 0, 0.5)  -- transparent reddish
+-- g:setFillColor("#00ff00")  -- opaque green
+-- @tparam number|string|Paint|nil r red
+-- @tparam[optchain] number g green
+-- @tparam[optchain] number b blue
+-- @tparam[optchain] number a alpha
+
 function Graphics:setFillColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
 	lib.GraphicsSetFillColor(self._ref, color)
 	return color
 end
+
+--- Set line dash pattern.
+-- Takes a list of dash lengths. Will affect lines drawn with subsequent calls to @{stroke}.
+-- @usage
+-- g:setLineDash(0.5, 5.0, 1.5, 5.0)
+-- @tparam number width1 length of first dash
+-- @tparam number widthN length of last dash
 
 function Graphics:setLineDash(...)
 	local dashes = {...}
@@ -198,13 +320,48 @@ function Graphics:setLineDash(...)
 	return self
 end
 
+--- Set line width.
+-- Will affect lines drawn with subsequent calls to @{stroke}.
+-- @tparam number width new line width
+-- @function setLineWidth
+
 bind("setLineWidth", "GraphicsSetLineWidth")
+
+--- Set miter limit.
+-- Will affect lines drawn with calls to @{stroke}.
+-- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-miterlimit">
+-- description of miter limits</a>.
+-- @tparam number miterLimit new miter limit
+-- @function setMiterLimit
+
 bind("setMiterLimit", "GraphicsSetMiterLimit")
+
+--- Set line dash offset.
+-- Will affect lines drawn with calls to @{stroke}.
+-- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dashoffset">
+-- description of line dash offsets</a>.
+-- @tparam number offset new line dash offset
+-- @function setLineDashOffset
+
 bind("setLineDashOffset", "GraphicsSetLineDashOffset")
+
+--- Rotate elements.
+-- Will recusively left rotate elements in this @{Graphics} such that items
+-- found at index k will get moved to index 0.
+-- @tparam string w what to rotate (either "curve", "point", "subpath" or "path")
+-- @tparam int k how much to rotate
 
 function Graphics:rotate(w, k)
 	lib.GraphicsRotate(tove.elements[w], k)
 end
+
+--- Set line color.
+-- Will affect subsequent calls to @{stroke}.
+-- @see setFillColor
+-- @tparam number|string|Paint|nil r red
+-- @tparam[optchain] number g green
+-- @tparam[optchain] number b blue
+-- @tparam[optchain] number a alpha
 
 function Graphics:setLineColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
@@ -212,23 +369,68 @@ function Graphics:setLineColor(r, g, b, a)
 	return color
 end
 
+--- Add fill to shape.
+-- @usage
+-- g:moveTo(10, 20)
+-- g:curveTo(7, 5, 10, 3, 50, 30)
+-- g:fill()
+-- @see setFillColor
+-- @function fill
+
 bind("fill", "GraphicsFill")
+
+--- Add stroke to shape.
+-- g:moveTo(10, 20)
+-- g:curveTo(7, 5, 10, 3, 50, 30)
+-- g:stroke()
+-- @see setLineColor
+-- @function stroke
+
 bind("stroke", "GraphicsStroke")
+
+--- Compute bounding box.
+-- Note that "low" precision will not correctly compute certain line boundaries (miters),
+-- however it will be exact for fills and much faster than "high".
+-- @tparam[opt] string prec precision of bounding box: "high" (default) or "low" (faster)
+-- @treturn number x0 (left-most x)
+-- @treturn number y0 (top-most y)
+-- @treturn number x1 (right-most x)
+-- @treturn number y1 (bottom-most y)
 
 function Graphics:computeAABB(prec)
 	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 
+--- Get width.
+-- @tparam[opt] string prec precision: "high" (default) or "low" (faster)
+-- @treturn number width of contents in this @{Graphics}
+-- @see computeAABB
+
 function Graphics:getWidth(prec)
 	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.x1 - bounds.x0
 end
 
+--- Get height.
+-- @tparam[opt] string prec precision: "high" (default) or "low" (faster)
+-- @treturn number height of contents in this @{Graphics}
+-- @see computeAABB
+
 function Graphics:getHeight(prec)
 	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
 	return bounds.y1 - bounds.y0
 end
+
+--- Set display mode.
+-- Configures in detail how this @{Graphics} gets rendered to the
+-- screen when you call @{draw}. Note that this is a very expensive
+-- operation. You should only call it once for each @{Graphics} and
+-- never in your draw loop.
+-- @tparam string mode either one of "texture", "mesh" or "gpux"
+-- @tparam[opt] ... args detailed quality configuration for specified mode
+-- see @getDisplay
+-- see @getQuality
 
 function Graphics:setDisplay(mode, ...)
 	local quality = {...}
@@ -248,13 +450,28 @@ function Graphics:setDisplay(mode, ...)
 	self:setResolution(1)
 end
 
+--- Get display mode.
+-- @treturn string mode the current mode as set with @{setDisplay}.
+-- @treturn ... the detailed quality configuration as set with @{setDisplay}.
+-- @see setDisplay
+-- @see getQuality
+
 function Graphics:getDisplay()
 	return self._display.mode, unpack(self._display.quality)
 end
 
+--- Get display quality.
+-- @treturn ... the detailed quality configuration as set with @{setDisplay}.
+-- @see setDisplay
+-- @see getDisplay
+
 function Graphics:getQuality()
 	return unpack(self._display.quality)
 end
+
+--- Get usage.
+-- @treturn table a table containing the configured usage for each dimension as key, as set with @{setUsage}.
+-- @see setUsage
 
 function Graphics:getUsage()
 	return self._usage
@@ -266,6 +483,18 @@ function Graphics:setResolution(resolution)
 		self._resolution = resolution
 	end
 end
+
+--- Set usage.
+-- Indicates which elements of the @{Graphics} you want to change (i.e. animate) at runtime.
+-- Currently, this method only has an effect for display mode "mesh".
+-- Hint: to force meshes to not use shaders, use g:setUsage("shaders", "avoid").
+-- @usage
+-- g:setUsage("points", "stream") -- animate points on each frame
+-- g:setUsage("colors", "stream") -- animate colors on each frame
+-- @tparam string what either one of "points" or "colors"
+-- @tparam string usage usually either one of "static", "dynamic" or "stream" (see <a href="https://love2d.org/wiki/SpriteBatchUsage">love2d docs on mesh usage</a>)
+-- @see setDisplay
+-- @see getUsage
 
 function Graphics:setUsage(what, usage)
 	if what.__index == Graphics then
@@ -283,14 +512,40 @@ function Graphics:setUsage(what, usage)
 	end
 end
 
+--- Clear internal drawing cache.
+-- Recreates internal drawing objects (e.g. meshes). You shouldn't need this.
+-- Please note that this is NOT related to @{cacheKeyFrame}.
+
 function Graphics:clearCache()
 	self._cache = nil
 end
+
+--- Cache the current shape as key frame.
+-- In "mesh" display mode, indicate to TÖVE that the current shape of this
+-- @{Graphics} will recur in your animations as key frame. This allows TÖVE
+-- to precompute a triangulation for the current shape and reuse that later
+-- on. It also tells TÖVE to never evict this specific triangulation from
+-- its internal cache.
+-- @usage
+-- setKeyFrame1(g)
+-- g:cacheKeyFrame()
+-- setKeyFrame2(g)
+-- g:cacheKeyFrame()
+-- @see setCacheSize
 
 function Graphics:cacheKeyFrame()
 	self:_create()
 	self._cache.cacheKeyFrame(self._cache)
 end
+
+--- Set internal key frame cache size.
+-- Tell TÖVE how many triangulations to cache in "mesh" mode. This number
+-- should be high enough to allow TÖVE to never cache all necessary
+-- triangulations during an animation cycle. Obviously, this number
+-- depends on the shape and kind of your animation. Note that a
+-- high number will not automatically improve performance, as cache
+-- entries need to be checked and evaluated on each frame.
+-- @see cacheKeyFrame
 
 function Graphics:setCacheSize(size)
 	self:_create()
@@ -312,9 +567,25 @@ function Graphics:set(arg, swl)
 	end
 end
 
-function Graphics:transform(t)
-	self:set(tove.transformed(self, t))
+--- Transform this @{Graphics}.
+-- Also see <a href="https://love2d.org/wiki/love.math.newTransform">love.math.newTransform</a>.
+-- @usage
+-- g:transform(0, 0, 0, sx, sy)  -- scale by (sx, sy)
+-- @tparam number|Translation x move by x in x-axis, or a LÖVE <a href="https://love2d.org/wiki/Transform">Transform</a>
+-- @tparam[opt] number y move by y in y-axis
+-- @tparam[optchain] number angle applied rotation in radians
+-- @tparam[optchain] number sy scale factor in x
+-- @tparam[optchain] number sy scale factor in y
+-- @tparam[optchain] number ox x coordinate of origin
+-- @tparam[optchain] number oy y coordinate of origin
+-- @tparam[optchain] number kx skew in x-axis
+-- @tparam[optchain] number ky skew in y-axis
+
+function Graphics:transform(...)
+	self:set(tove.transformed(self, ...))
 end
+
+
 
 function Graphics:rescale(size, center)
 	local x0, y0, x1, y1 = self:computeAABB()
@@ -330,6 +601,9 @@ function Graphics:rescale(size, center)
 	end
 end
 
+--- Get number of triangles.
+-- @treturn int number of triangles involved in drawing this @{Graphics}.
+
 function Graphics:getNumTriangles()
 	self:_create()
 	if self._cache ~= nil and self._cache.mesh ~= nil then
@@ -339,15 +613,47 @@ function Graphics:getNumTriangles()
 	end
 end
 
+--- Draw to screen.
+-- The details of how the rendering happens can get configured through
+-- @{setDisplay}.
+-- @usage
+-- g:draw(120, 150, 0.1)  -- draw at (120, 150) with some rotation
+-- @tparam number x the x-axis position to draw at
+-- @tparam number y the y-axis position to draw at
+-- @tparam number r orientation in radians
+-- @tparam number sx scale factor in x
+-- @tparam number sy scale factor in y
+-- @see setDisplay
+
 function Graphics:draw(x, y, r, sx, sy)
 	self:_create().draw(x, y, r, sx, sy)
 end
 
-function Graphics:warmup(...)
-	local r = self:_create().warmup(...)
+--- Warm-up shaders.
+-- Instructs TÖVE to compile all shaders involved in drawing this
+-- @{Graphics} with the current display settings. On some platforms,
+-- compiling "gpux" shaders can take a long time. @{warmup} will quit
+-- after a certain time and allow you to display some progress info.
+-- In these cases you need to call it again until it returns nil.
+-- @treturn number|nil nil if all shaders were compiled, otherwise
+-- a number between 0 and 1 indicating percentage of shaders compiled
+-- so far.
+-- @see setDisplay
+
+function Graphics:warmup()
+	local r = self:_create().warmup()
 	love.graphics.setShader()
 	return r
 end
+
+--- Rasterize as bitmap.
+-- @tparam number|string width desired width in pixels, or "default" to use @{Graphics} internal size
+-- @tparam number height desired height in pixels
+-- @tparam[opt] number tx x-translation of content
+-- @tparam[optchain] number ty y-translation of content
+-- @tparam[optchain] number scale scale factor of content
+-- @tparam[optchain] nil settings internal quality settings, not yet public
+-- @treturn ImageData the rasterized image.
 
 function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
@@ -385,9 +691,27 @@ function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	return imageData
 end
 
+--- Animate between two @{Graphics}.
+-- Makes this @{Graphics} to an interpolated inbetween.
+-- @tparam Graphics a first graphics at t == 0
+-- @tparam Graphics b second graphics at t == 1
+-- @tparam number t interpolation (0 <= t <= 1)
+
 function Graphics:animate(a, b, t)
 	lib.GraphicsAnimate(self._ref, a._ref, b._ref, t or 0)
 end
+
+--- Warp points.
+-- Allows you to change the shape of a vector graphics in a way
+-- that animates well.
+-- The specified function applies a space mapping: it gets
+-- called for specific positions and returns new ones.
+-- TÖVE will call the function for non-control-points only
+-- and decide where to put control points itself based on
+-- an estimation of previous curve form. The curvature argument
+-- lets you estimate and change how curvy the shape is at a
+-- given (non-control) point.
+-- @tparam function f takes (x, y, curvature) and returns the same
 
 function Graphics:warp(f)
 	local paths = self.paths
@@ -401,13 +725,28 @@ local orientations = {
 	ccw = lib.TOVE_ORIENTATION_CCW
 }
 
+--- Set path orientation.
+-- @tparam string orientation "cw" for clockwise, "ccw" for counterclockwise
+
 function Graphics:setOrientation(orientation)
 	lib.GraphicsSetOrientation(self._ref, orientations[orientation])
 end
 
+--- Clean paths.
+-- Removes duplicate or collinear points which can cause problems
+-- with various algorithms (e.g. triangulation) in TÖVE. If you
+-- have messy vector input that you want to work with, this can be
+-- a good thing to do first after loading.
+-- @tparam number eps triangle area at which triangles get collapsed
+
 function Graphics:clean(eps)
 	lib.GraphicsClean(self._ref, eps or 0.0)
 end
+
+--- Check if inside.
+-- Returns true if the given point is inside the @{Graphics}'s shapes.
+-- @tparam number x x coordinate of tested point
+-- @tparam number y y coordinate of tested point
 
 function Graphics:hit(x, y)
 	local path = lib.GraphicsHit(self._ref, x, y)
