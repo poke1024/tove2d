@@ -11,6 +11,9 @@
 
 local _attr = {r = 1, g = 2, b = 3, a = 4, rgba = 0}
 
+--- Colors and gradients used in fills and lines.
+-- @classmod Paint
+
 local Paint = {}
 Paint.__index = function (self, key)
 	if _attr[key] ~= nil then
@@ -55,11 +58,36 @@ local newColor = function(r, g, b, a)
 	end
 end
 
+--- Create a new color.
+-- @tparam number r red
+-- @tparam number g green
+-- @tparam number b blue
+-- @tparam number a alpha
+
 tove.newColor = newColor
+
+--- Create a linear gradient.
+-- Initially the gradient will not contain any colors.
+-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/linearGradient">SVG documentation by Mozilla</a>.
+-- @tparam number x0 x coordinate of start point of gradient
+-- @tparam number y0 y coordinate of start point of gradient
+-- @tparam number x1 x coordinate of end point of gradient
+-- @tparam number y1 y coordinate of end point of gradient
+-- @see addColorStop
 
 tove.newLinearGradient = function(x0, y0, x1, y1)
 	return fromRef(lib.NewLinearGradient(x0, y0, x1, y1))
 end
+
+--- Create a radial gradient.
+-- Initially the gradient will not contain any colors.
+-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/radialGradient">SVG documentation by Mozilla</a>.
+-- @tparam number cx x coordinate of the end circle
+-- @tparam number cy y coordinate of the end circle
+-- @tparam number fx x coordinate of the start circle
+-- @tparam number fy y coordinate of the start circle
+-- @tparam number r radius of end circle
+-- @see addColorStop
 
 tove.newRadialGradient = function(cx, cy, fx, fy, r)
 	return fromRef(lib.NewRadialGradient(cx, cy, fx, fy, r))
@@ -69,21 +97,46 @@ local function unpackRGBA(rgba)
 	return rgba.r, rgba.g, rgba.b, rgba.a
 end
 
+--- Get RGBA components.
+-- If called on a gradient, this will not yield useful results.
+-- @tparam[opt] opacity opacity to apply on returned color
+-- @treturn r red
+-- @treturn g green
+-- @treturn b blue
+-- @treturn a alpha
 
 function Paint:get(opacity)
 	return unpackRGBA(lib.ColorGet(self, opacity or 1))
 end
 
+--- Set to RGBA.
+-- @tparam number r red
+-- @tparam number g green
+-- @tparam number b blue
+-- @tparam[opt] number a alpha
+
 function Paint:set(r, g, b, a)
 	lib.ColorSet(self, r, g, b, a or 1)
 end
+
+--- types of paint
+-- @table PaintType
+-- @field none empty paint (transparent)
+-- @field solid solid RGBA color
+-- @field linear linear gradient
+-- @field radial radial gradient
+-- @field shader custom shader
 
 local paintTypes = {
 	none = lib.PAINT_NONE,
 	solid = lib.PAINT_SOLID,
 	linear = lib.PAINT_LINEAR_GRADIENT,
-	radial = lib.PAINT_RADIAL_GRADIENT
+	radial = lib.PAINT_RADIAL_GRADIENT,
+	shader = lib.PAINT_SHADER
 }
+
+--- Query paint type.
+-- @treturn string one of the names in @{PaintType}
 
 function Paint:getType()
 	local t = lib.PaintGetType(self)
@@ -94,9 +147,18 @@ function Paint:getType()
 	end
 end
 
+--- Get number of colors.
+-- Interesting for gradients only.
+-- @treturn int number of colors in this paint.
+
 function Paint:getNumColors()
 	return lib.PaintGetNumColors(self)
 end
+
+--- Get i-th color stop.
+-- Use this to retrieve gradient's colors.
+-- @tparam int i 1-based index of color
+-- @tparam[opt] number opacity to apply on returned color
 
 function Paint:getColorStop(i, opacity)
 	return lib.PaintGetColorStop(self, i - 1, opacity or 1)
@@ -112,9 +174,19 @@ function Paint:getGradientParameters()
 	end
 end
 
+--- Add new color stop.
+-- @tparam number offset where to add this new color (0 <= offset <= 1)
+-- @tparam number r red
+-- @tparam number g green
+-- @tparam number b blue
+-- @tparam[opt] number a alpha
+
 function Paint:addColorStop(offset, r, g, b, a)
 	lib.GradientAddColorStop(self, offset, r, g, b, a or 1)
 end
+
+--- Clone.
+-- @return Paint cloned @{Paint}
 
 function Paint:clone()
 	return lib.ClonePaint(self)
@@ -171,6 +243,11 @@ end
 
 local _sent = {}
 tove._sent = _sent
+
+--- Send data to custom shader.
+-- see LÖVE's <a href="https://love2d.org/wiki/Shader:send">Shader:send</a>
+-- @tparam string k name of uniform
+-- @tparam ... data data to send
 
 function Paint:send(k, ...)
 	local args = lib.ShaderNextSendArgs(self)

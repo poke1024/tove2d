@@ -55,7 +55,7 @@ Points.__index = function (self, i)
 end
 
 
---- A vector graphics subpath (trajectory).
+--- A vector graphics subpath (trajectory). Usually lives inside a @{Path}.
 -- @classmod Subpath
 
 local Subpath = {}

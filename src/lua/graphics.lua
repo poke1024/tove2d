@@ -124,7 +124,7 @@ function Graphics:setName(name)
 end
 
 --- Create a deep copy.
--- This cloned copy will include copies of all @{Path}s.
+-- This cloned copy will include new copies of all @{Path}s.
 -- @treturn Graphics cloned @{Graphics}.
 function Graphics:clone()
 	local ref = lib.CloneGraphics(self._ref, true)
@@ -197,6 +197,11 @@ function Graphics:getCurrentPath()
 	return gcpath(lib.GraphicsGetCurrentPath(self._ref))
 end
 
+--- Add a @{Path}.
+-- The new @{Path} will be appended after other existing @{Path}s.
+-- @tparam Path @{Path} to append
+-- @function addPath
+
 bind("addPath", "GraphicsAddPath")
 
 function Graphics:fetchChanges(flags)
@@ -226,7 +231,7 @@ function Graphics:lineTo(x, y)
 	return newCommand(t, lib.SubpathLineTo(t, x, y))
 end
 
---- Draw a cubic bezier curve to (x, y) using two control points.
+--- Draw a cubic bezier curve to (x, y).
 -- See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
 -- @usage
 -- g:moveTo(10, 20)
@@ -348,8 +353,9 @@ bind("setLineDashOffset", "GraphicsSetLineDashOffset")
 --- Rotate elements.
 -- Will recusively left rotate elements in this @{Graphics} such that items
 -- found at index k will get moved to index 0.
--- @tparam string w what to rotate (either "curve", "point", "subpath" or "path")
+-- @tparam string w what to rotate: either "path", "subpath", "point" or "curve"
 -- @tparam int k how much to rotate
+-- @see Path:rotate
 
 function Graphics:rotate(w, k)
 	lib.GraphicsRotate(tove.elements[w], k)
@@ -580,6 +586,7 @@ end
 -- @tparam[optchain] number oy y coordinate of origin
 -- @tparam[optchain] number kx skew in x-axis
 -- @tparam[optchain] number ky skew in y-axis
+-- @see Path:transform
 
 function Graphics:transform(...)
 	self:set(tove.transformed(self, ...))
@@ -693,8 +700,8 @@ end
 
 --- Animate between two @{Graphics}.
 -- Makes this @{Graphics} to an interpolated inbetween.
--- @tparam Graphics a first graphics at t == 0
--- @tparam Graphics b second graphics at t == 1
+-- @tparam Graphics a @{Graphics} at t == 0
+-- @tparam Graphics b @{Graphics} at t == 1
 -- @tparam number t interpolation (0 <= t <= 1)
 
 function Graphics:animate(a, b, t)
@@ -712,6 +719,7 @@ end
 -- lets you estimate and change how curvy the shape is at a
 -- given (non-control) point.
 -- @tparam function f takes (x, y, curvature) and returns the same
+-- @see Path:warp
 
 function Graphics:warp(f)
 	local paths = self.paths
@@ -725,7 +733,7 @@ local orientations = {
 	ccw = lib.TOVE_ORIENTATION_CCW
 }
 
---- Set path orientation.
+--- Set orientation of all @{Subpath}s.
 -- @tparam string orientation "cw" for clockwise, "ccw" for counterclockwise
 
 function Graphics:setOrientation(orientation)
@@ -735,16 +743,15 @@ end
 --- Clean paths.
 -- Removes duplicate or collinear points which can cause problems
 -- with various algorithms (e.g. triangulation) in TÖVE. If you
--- have messy vector input that you want to work with, this can be
--- a good thing to do first after loading.
--- @tparam number eps triangle area at which triangles get collapsed
+-- have messy vector input, this can be a good first step after loading.
+-- @tparam[opt] number eps triangle area at which triangles get collapsed
 
 function Graphics:clean(eps)
-	lib.GraphicsClean(self._ref, eps or 0.0)
+	lib.GraphicsClean(self._ref, eps or 1e-2)
 end
 
 --- Check if inside.
--- Returns true if the given point is inside the @{Graphics}'s shapes.
+-- Returns true if the given point is inside any of the @{Graphics}'s @{Path}s.
 -- @tparam number x x coordinate of tested point
 -- @tparam number y y coordinate of tested point
 
@@ -766,6 +773,13 @@ function Graphics:shaders(gen)
 	return shaders
 end
 
+--- Set all colors to one.
+-- Will change all fills and line colors to the given color,
+-- making the @{Graphics} appear monochrome.
+-- @tparam number r red
+-- @tparam number g green
+-- @tparam number b blue
+
 function Graphics:setMonochrome(r, g, b)
 	local paths = self.paths
 	r = r or 1
@@ -780,10 +794,10 @@ function Graphics:setMonochrome(r, g, b)
     end
 end
 
-function Graphics:setAnchor(dx, dy, mode)
+function Graphics:setAnchor(dx, dy, prec)
 	dx = dx or 0
 	dy = dy or 0
-	local x0, y0, x1, y1 = self:computeAABB(mode)
+	local x0, y0, x1, y1 = self:computeAABB(prec)
 	local ox = ((dx <= 0 and x0 or x1) + (dx < 0 and x0 or x1)) / 2
 	local oy = ((dy <= 0 and y0 or y1) + (dy < 0 and y0 or y1)) / 2
 	self:set(tove.transformed(self, -ox, -oy))

@@ -9,6 +9,8 @@
 -- All rights reserved.
 -- *****************************************************************
 
+--- @module tove
+
 --!! include "license.lua"
 
 local basepath = (...) .. "/"
@@ -198,11 +200,24 @@ tove.init = function(path)
 
 	local bit = require("bit")
 
+	--- The visual approach with which lines are joined.
+	-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linejoin">Mozilla SVG documentation</a>.
+	-- @table LineJoin
+	-- @field miter Mitered (sharp) line joins
+	-- @field round Round line joins
+	-- @field bevel Bevel (flat) line joins
+
 	tove.lineJoins = {
 		miter = lib.TOVE_LINEJOIN_MITER,
 		round = lib.TOVE_LINEJOIN_ROUND,
 		bevel = lib.TOVE_LINEJOIN_BEVEL
 	}
+
+	--- The rule by which solidness in paths is defined.
+	-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule">Mozilla SVG documentation</a>
+	-- @table FillRule
+	-- @field nonzero Non-zero number of path crossings defines insideness
+	-- @field evenodd Odd number of path crossings defines insideness
 
 	tove.fillRules = {
 		nonzero = lib.TOVE_FILLRULE_NON_ZERO,
