@@ -291,6 +291,13 @@ const ToveRasterizeSettings *getDefaultRasterizeSettings() {
 	return &defaultSettings;
 }
 
+inline TOVEditherType convertToveDitherType(ToveDitherType t) {
+	static_assert(int(TOVE_DITHER_NONE) == int(TOVE_NSVG_DITHER_NONE));
+	static_assert(int(TOVE_DITHER_DIFFUSION) == int(TOVE_NSVG_DITHER_DIFFUSION));
+	static_assert(int(TOVE_DITHER_ORDERED) == int(TOVE_NSVG_DITHER_ORDERED));
+	return TOVEditherType(t);
+}
+
 static NSVGrasterizer *getRasterizer(
 	const ToveRasterizeSettings *settings) {
 
@@ -307,7 +314,7 @@ static NSVGrasterizer *getRasterizer(
 	rasterizer->tessTol = settings->tessTolerance;
 	rasterizer->distTol = settings->distTolerance;
 
-	rasterizer->quality.dither.type = TOVEdithering(settings->quality.dither.type);
+	rasterizer->quality.dither.type = convertToveDitherType(settings->quality.dither.type);
 	rasterizer->quality.dither.matrix = settings->quality.dither.matrix;
 	rasterizer->quality.dither.matrix_width = settings->quality.dither.matrix_width;
 	rasterizer->quality.dither.matrix_height = settings->quality.dither.matrix_height;
