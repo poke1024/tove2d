@@ -1091,7 +1091,11 @@ void NameSet(ToveNameRef name, const char *s) {
 }
 
 const char *NameCStr(ToveNameRef name) {
-	return deref(name)->c_str();
+	if (!name.ptr) {
+		return "noname";
+	} else {
+		return deref(name)->c_str();
+	}
 }
 
 
