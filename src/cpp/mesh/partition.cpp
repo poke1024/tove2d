@@ -25,9 +25,14 @@ Partition::Partition(const std::list<TPPLPoly> &convex) {
 
         Part part;
         part.outline.resize(n);
+        int m = 0;
         for (int j = 0; j < n; j++) {
-            part.outline[j] = poly[j].id;
+            const int v = poly[j].id;
+            if (v >= 0) {
+                part.outline[m++] = v;
+            }
         }
+        part.outline.resize(m);
         part.fail = 0;
 
         parts.push_back(part);
@@ -69,6 +74,7 @@ bool Partition::check(const Vertices &vertices) {
             }
         };
 
+        assert(tempPts.size() >= n + 2);
         for (int k = 0; k < n; k++) {
             tempPts[k] = vertices[outline[k]];
         }
