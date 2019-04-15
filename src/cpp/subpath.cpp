@@ -1179,7 +1179,7 @@ void Subpath::fixLoop() {
 }
 
 void Subpath::setIsClosed(bool closed) {
-	if (nsvg.closed == closed) {
+	if (bool(nsvg.closed) == closed) {
 		return;
 	}
 
