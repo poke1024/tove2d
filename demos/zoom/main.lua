@@ -23,6 +23,8 @@ local shaderRabbit = newRabbit()
 shaderRabbit:setDisplay("gpux")
 
 function love.draw()
+	tovedemo.drawBackground()
+
 	if not tovedemo.warmup(shaderRabbit) then
 		tovedemo.draw("Zoom.")
 		return
@@ -86,6 +88,6 @@ function love.draw()
 		end
 	end
 
-	tovedemo.draw("Zoom.")
+	tovedemo.drawForeground("Zoom.")
 	tovedemo.attribution("Graphics by Mike Mac.")
 end

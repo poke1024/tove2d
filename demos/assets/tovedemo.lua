@@ -18,12 +18,16 @@ tovedemo = {}
 tovedemo.largeFont = font
 tovedemo.smallFont = smallFont
 
-function tovedemo.draw(title, help)
+function tovedemo.drawBackground()
 	local width = love.graphics.getWidth()
 	local height = love.graphics.getHeight()
 	love.graphics.setBackgroundColor(0.722, 0.898, 0.988)
 	love.graphics.setColor(0, 0, 0, 0.2)
 	love.graphics.rectangle("fill", 0, 0, width, height / 2)
+	love.graphics.setColor(1, 1, 1)
+end
+
+function tovedemo.drawForeground(title, help)
 	love.graphics.setColor(0, 0, 0, 0.5)
 	love.graphics.setFont(font)
 	local x0 = logo:getWidth() * 0.25 + 20
@@ -38,6 +42,11 @@ function tovedemo.draw(title, help)
 	love.graphics.setColor(1, 1, 1, 0.5)
 	love.graphics.draw(logo, 10, 10, 0, 0.25, 0.25)
 	love.graphics.setColor(1, 1, 1)
+end
+
+function tovedemo.draw(title, help)
+	tovedemo.drawBackground()
+	tovedemo.drawForeground(title, help)
 end
 
 function tovedemo.attribution(text)
