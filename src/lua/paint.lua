@@ -100,10 +100,10 @@ end
 --- Get RGBA components.
 -- If called on a gradient, this will not yield useful results.
 -- @tparam[opt] opacity opacity to apply on returned color
--- @treturn r red
--- @treturn g green
--- @treturn b blue
--- @treturn a alpha
+-- @treturn number red
+-- @treturn number green
+-- @treturn number blue
+-- @treturn number alpha
 
 function Paint:get(opacity)
 	return unpackRGBA(lib.ColorGet(self, opacity or 1))
@@ -159,9 +159,15 @@ end
 -- Use this to retrieve gradient's colors.
 -- @tparam int i 1-based index of color
 -- @tparam[opt] number opacity to apply on returned color
+-- @treturn number offset
+-- @treturn number red
+-- @treturn number green
+-- @treturn number blue
+-- @treturn number alpha
 
 function Paint:getColorStop(i, opacity)
-	return lib.PaintGetColorStop(self, i - 1, opacity or 1)
+	local s = lib.PaintGetColorStop(self, i - 1, opacity or 1)
+	return s.offset, unpackRGBA(s.rgba)
 end
 
 function Paint:getGradientParameters()
