@@ -13,6 +13,7 @@
 #include "meshifier.h"
 #include "mesh.h"
 #include <sstream>
+#include <chrono>
 
 BEGIN_TOVE_NAMESPACE
 
