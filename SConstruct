@@ -37,7 +37,7 @@ sources = [
 	"src/cpp/warn.cpp"]
 
 if env["PLATFORM"] == 'win32':
-	env["CCFLAGS"] = ' /EHsc '
+	env["CCFLAGS"] = ' /EHsc /std:c++17 '
 	if not GetOption('tovedebug'):
 		env["CCFLAGS"] += ' /Oi /Ot /Oy /Ob2 /GF /Gy /fp:fast /arch:AVX '
 		
@@ -45,6 +45,10 @@ if env["PLATFORM"] == 'win32':
 		# env["CCFLAGS"] += ' /O2 /fp:fast '
 		
 		env["LINKFLAGS"] = ' /OPT:REF '
+	else:
+		env["CCFLAGS"] += ' /DEBUG:FULL '
+		env["LINKFLAGS"] = ' /DEBUG:FULL '
+
 else:
 	# might want to trigger these with additional options:
 	# -march=haswell
