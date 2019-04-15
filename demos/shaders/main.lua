@@ -18,25 +18,31 @@ local function newHeart()
 	return g
 end
 
+local fillShader
+local lineShader
+
 local function createHeart()
 	local heart = newHeart()
 
 	fillShader = tove.newShader([[
+		uniform float time;
+ 
 		vec4 COLOR(vec2 pos) {
-			vec2 r = mod(pos, vec2(20));
-			return length(r - vec2(10)) < 5 ? vec4(0, 0, 0, 0) : vec4(0.8, 0.2, 0.2, 1);
+			vec2 p = mod(pos, vec2(20));
+			float r = 5 + sin(time * 2 + pos.x * 0.01 + cos(time + pos.y * 0.2)) * 2;
+			return length(p - vec2(10)) < r ? vec4(0, 0, 0, 0) : vec4(0.8, 0.2, 0.2, 1);
 		}
-]])
+	]])
 
 	heart:setFillColor(fillShader)
 	heart:fill()
 	
 	lineShader = tove.newShader([[
 		vec4 COLOR(vec2 pos) {
-			vec2 r = mod(pos, vec2(20));
-			return abs(r.y - 10) < 5 ? vec4(0.5, 0, 0, 1) : vec4(0.9, 0, 0, 1);
+			vec2 p = mod(pos, vec2(20));
+			return abs(p.y - 10) < 5 ? vec4(0.5, 0, 0, 1) : vec4(0.9, 0, 0, 1);
 		}
-]])
+	]])
 
 	heart:setLineColor(lineShader)
 	heart:stroke()
@@ -50,6 +56,8 @@ local heart = createHeart()
 
 function love.draw()
 	tovedemo.draw("Custom Shaders.")
+
+	fillShader:send("time", love.timer.getTime())
 
 	heart:draw(
 		love.graphics.getWidth() / 2,

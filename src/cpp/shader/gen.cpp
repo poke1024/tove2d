@@ -112,23 +112,26 @@ vec4 effect(vec4 _1, Image _2, vec2 texture_coords, vec2 _4) {
 void ShaderWriter::writePaintShader(
 	const TovePaintData &paint,
 	const char *fname,
-	const char *glslStyleDefine) {
+	const char *glslStyleDefine,
+	uint32_t &embedded) {
 
 	assert(paint.shader);
-	std::string code = static_cast<PaintShader*>(paint.shader)->getCode(fname);
+	auto shader = static_cast<PaintShader*>(paint.shader);
+	std::string code = shader->getCode(fname);
 	if (!code.empty()) {
 		out << "#define " << glslStyleDefine << " " << PAINT_SHADER << "\n";
 		out << code << "\n";
+		embedded = shader->getId();
 	} else {
 		out << "#define " << glslStyleDefine << " "<< PAINT_NONE << "\n";
 	}
 }
 
-void ShaderWriter::computeLineColor(const TovePaintData &paint) {
+void ShaderWriter::computeLineColor(const TovePaintData &paint, uint32_t &embedded) {
 	const int lineStyle = paint.style;
 
 	if (lineStyle == PAINT_SHADER) {
-		writePaintShader(paint, "computeLineColor", "LINE_STYLE");
+		writePaintShader(paint, "computeLineColor", "LINE_STYLE", embedded);
 		return;
 	}
 
@@ -160,11 +163,11 @@ vec4 computeLineColor(vec2 pos) {
 )GLSL";
 }
 
-void ShaderWriter::computeFillColor(const TovePaintData &paint) {
+void ShaderWriter::computeFillColor(const TovePaintData &paint, uint32_t &embedded) {
 	const int fillStyle = paint.style;
 
 	if (fillStyle == PAINT_SHADER) {
-		writePaintShader(paint, "computeFillColor", "FILL_STYLE");
+		writePaintShader(paint, "computeFillColor", "FILL_STYLE", embedded);
 		return;
 	}
 
@@ -283,10 +286,12 @@ vec4 do_color(vec2 _1) {
 	return w.getSourcePtr();
 }
 
-const char *GetImplicitFillShaderCode(
+ToveShaderCode GetGPUXFillShaderCode(
 	const ToveShaderData *data, bool fragLine, bool meshBand, bool debug) {
 	
 	tove::ShaderWriter w;
+	ToveShaderCode code;
+	std::memset(&code, 0, sizeof(code));
 
 	w << R"GLSL(
 varying vec4 raw_vertex_pos;
@@ -333,23 +338,26 @@ vec4 do_vertex(vec4 vertex_pos) {
 		data->geometry.curvesTextureSize[0] << "\n";
 
 	if (fragLine) {
-		w.computeLineColor(data->color.line);
+		w.computeLineColor(data->color.line, code.embedded[0]);
 	} else {
 		TovePaintData data;
 		data.style = 0;
-		w.computeLineColor(data);
+		w.computeLineColor(data, code.embedded[0]);
 	}
-	w.computeFillColor(data->color.fill);
+	w.computeFillColor(data->color.fill, code.embedded[1]);
 
 	#include "../../glsl/fill.frag.inc"
 
 	w.endFragmentShader();
 
-	return w.getSourcePtr();
+	code.code = w.getSourcePtr();
+	return code;
 }
 
-const char *GetImplicitLineShaderCode(const ToveShaderData *data) {
+ToveShaderCode GetGPUXLineShaderCode(const ToveShaderData *data) {
 	tove::ShaderWriter w;
+	ToveShaderCode code;
+	std::memset(&code, 0, sizeof(code));
 
 	w << R"GLSL(
 varying vec2 raw_vertex_pos;
@@ -363,7 +371,7 @@ varying vec2 raw_vertex_pos;
 	w.endVertexShader();
 
 	w.beginFragmentShader();
-	w.computeLineColor(data->color.line);
+	w.computeLineColor(data->color.line, code.embedded[0]);
 	w << R"GLSL(
 vec4 do_color(vec2 _1) {
 	return computeLineColor(raw_vertex_pos);
@@ -371,5 +379,6 @@ vec4 do_color(vec2 _1) {
 )GLSL";
 	w.endFragmentShader();
 
-	return w.getSourcePtr();
+	code.code = w.getSourcePtr();
+	return code;
 }

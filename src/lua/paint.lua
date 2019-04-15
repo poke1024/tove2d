@@ -168,9 +168,28 @@ tove.newPaint = function(p)
 	end
 end
 
-tove.newShader = function(source)
-	return fromRef(lib.NewShaderPaint(source))
+
+local _sent = {}
+tove._sent = _sent
+
+function Paint:send(k, ...)
+	local args = lib.ShaderNextSendArgs(self)
+	_sent[args.id][k] = {args.version, {...}}
 end
+
+tove.newShader = function(source)
+	local function releaseShader(self)
+		local args = lib.ShaderNextSendArgs(self)
+		_sent[args.id] = nil
+		lib.ReleasePaint(self)
+	end
+	
+	local shader = lib.NewShaderPaint(source)
+	local args = lib.ShaderNextSendArgs(shader)
+	_sent[args.id] = {}
+	return ffi.gc(shader, releaseShader)
+end
+
 
 Paint._wrap = function(r, g, b, a)
 	if ffi.istype("TovePaintRef", r) then

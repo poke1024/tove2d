@@ -327,22 +327,27 @@ public:
 };
 
 class PaintShader final : public AbstractPaint {
-	std::string code;
+	std::string mCode;
+	ToveSendArgs mSendArgs;
 
 public:
-	inline PaintShader(const std::string &code) : code(code) {
+	inline PaintShader(const std::string &code) : mCode(code) {
+		static uint32_t nextId = 1;
+
+		mSendArgs.id = nextId++;
+		mSendArgs.version = 0;
 	}
 
 	virtual void getGradientParameters(ToveGradientParameters &p) {
 	}
 
 	virtual PaintRef clone() const {
-		return tove_make_shared<PaintShader>(code);
+		return tove_make_shared<PaintShader>(mCode);
 	}
 
 	virtual void cloneTo(PaintRef &target, const nsvg::Transform &transform) {
 		if (target && target->getType() == PAINT_SHADER) {
-			static_cast<PaintShader*>(target.get())->code = code;
+			static_cast<PaintShader*>(target.get())->mCode = mCode;
 		} else {
 			target = clone();
 		}
@@ -394,6 +399,15 @@ public:
 	}
 
 	std::string getCode(const char *fname) const;
+
+	inline const ToveSendArgs *nextSendArgs() {
+		mSendArgs.version += 1;
+		return &mSendArgs;
+	}
+
+	inline uint32_t getId() const {
+		return mSendArgs.id;
+	}
 };
 
 PaintRef NSVGpaintToPaint(const NSVGpaint &paint);

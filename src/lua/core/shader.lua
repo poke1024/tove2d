@@ -11,30 +11,66 @@
 
 local lg = love.graphics
 
-local function newGeometryFillShader(data, fragLine, meshBand, debug)
+local function createSendSync(shader, code, sync)
+	local embedded = code.embedded
+	local sent = {}
+	for i = 0, 1 do
+		local k = embedded[i]
+		if k ~= 0 then
+			table.insert(sent, tove._sent[k])
+		end
+	end
+	if #sent == 0 then
+		return sync
+	else
+		local version = 0
+		local max = math.max
+		return function()
+			local nversion = version
+			for _, s in ipairs(sent) do
+				for name, values in pairs(s) do
+					local v = values[1]
+					if v > version then
+						nversion = max(nversion, v)
+						shader:send(name, unpack(values[2]))
+					end
+				end
+			end
+			version = nversion
+			if sync ~= nil then
+				sync()
+			end
+		end
+	end
+end
+
+local function newGeometryFillShader(data, sync, fragLine, meshBand, debug)
 	local geometry = data.geometry
 
-	local shader = lg.newShader(
-		ffi.string(lib.GetImplicitFillShaderCode(
-			data, fragLine, meshBand, debug)))
+	local code = lib.GetGPUXFillShaderCode(
+		data, fragLine, meshBand, debug)
+
+	local shader = lg.newShader(ffi.string(code.code))
 
 	shader:send("constants", {geometry.maxCurves,
 		geometry.listsTextureSize[0], geometry.listsTextureSize[1]})
-	return shader
+
+	return shader, createSendSync(shader, code, sync)
 end
 
-local function newGeometryLineShader(data)
+local function newGeometryLineShader(data, sync)
 	local style = data.color.line.style
 	if style < 1 then
 		return nil
 	end
 
-	local shader = lg.newShader(
-		ffi.string(lib.GetImplicitLineShaderCode(data)))
+	local code = lib.GetGPUXLineShaderCode(data)
+
+	local shader = lg.newShader(ffi.string(code.code))
 
 	shader:send("max_curves", data.geometry.maxCurves)
 
-	return shader
+	return shader, createSendSync(shader, code, sync)
 end
 
 local function newPaintShader(numPaints, numGradients)
@@ -206,6 +242,7 @@ end
 local function newComputeFeedData(path, quality, debug)
 	local lineType, lineQuality = parseQuality(quality)
 	local fragLine = (lineType == "fragment")
+	local syncShader = nil
 
 	-- enables slower mesh-based drawing instead of
 	-- in-shader binary search in lookup tables.
@@ -219,15 +256,15 @@ local function newComputeFeedData(path, quality, debug)
 
 	local fillShader = nil
 	if fragLine or data.color.fill.style > 0 then
-		fillShader = newGeometryFillShader(
-			data, fragLine, meshBand, debug or false)
+		fillShader, syncShader = newGeometryFillShader(
+			data, nil, fragLine, meshBand, debug or false)
 	end
 
 	local lineShader
 	if fragLine then
 		lineShader = fillShader
 	else
-		lineShader = newGeometryLineShader(data)
+		lineShader, syncShader = newGeometryLineShader(data, syncShader)
 	end
 
 	local lineColorSend = feed.newColorSend(
@@ -252,6 +289,7 @@ local function newComputeFeedData(path, quality, debug)
 		data = data,
 		fillShader = fillShader,
 		lineShader = lineShader,
+		syncShader = syncShader,
 		lineType = lineType,
 		quality = quality,
 		lineQuality = lineQuality,
@@ -274,6 +312,9 @@ function ComputeShader:update()
 	local path = self.path
 	local linkdata = self.linkdata
 	local link = linkdata.link
+
+	local sync = linkdata.syncShader
+	if sync ~= nil then sync() end
 
 	local chg1 = lib.FeedBeginUpdate(link)
 

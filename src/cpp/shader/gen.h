@@ -30,7 +30,8 @@ private:
 	void writePaintShader(
 		const TovePaintData &paint,
 		const char *fname,
-		const char *glslStyleDefine);
+		const char *glslStyleDefine,
+		uint32_t &embedded);
 
 public:
 	static void configure(ToveShaderLanguage language, int matrixRows);
@@ -47,8 +48,8 @@ public:
 	void beginFragmentShader();
 	void endFragmentShader();
 
-	void computeLineColor(const TovePaintData &paint);
-	void computeFillColor(const TovePaintData &paint);
+	void computeLineColor(const TovePaintData &paint, uint32_t &embedded);
+	void computeFillColor(const TovePaintData &paint, uint32_t &embedded);
 
 	void define(const std::string &key, const std::string &value);
 	void define(const std::string &key, int value);

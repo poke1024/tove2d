@@ -323,3 +323,25 @@ typedef struct {
 	float angle1;
 	float angle2;
 } ToveCurvature;
+
+typedef struct {
+	const char *code;
+	uint32_t embedded[2];
+} ToveShaderCode;
+
+typedef struct {
+	// the following values are uint32_t by design: these will be unboxed,
+	// will fit into Lua doubles and can act as hash table values in Lua.
+	// uint64_t would not work.
+
+	// http://luajit.org/ext_ffi_semantics.html
+	//	 - Conversions from C types to Lua objects
+	//   - cdata objects as table keys
+	// https://stackoverflow.com/questions/43655668/
+	//   are-all-integer-values-perfectly-represented-as-doubles
+
+	// at 100 fps, version will work for > 1 year without overflowing.
+
+	uint32_t id; // >= 1
+	uint32_t version;
+} ToveSendArgs;

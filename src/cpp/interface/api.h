@@ -12,6 +12,7 @@ EXPORT TovePaintType PaintGetType(TovePaintRef paint);
 EXPORT TovePaintRef ClonePaint(TovePaintRef paint);
 EXPORT TovePaintRef NewEmptyPaint();
 EXPORT TovePaintRef NewShaderPaint(const char* s);
+EXPORT const ToveSendArgs *ShaderNextSendArgs(TovePaintRef shader);
 EXPORT int PaintGetNumColors(TovePaintRef color);
 EXPORT ToveColorStop PaintGetColorStop(TovePaintRef color, int i, float opacity);
 EXPORT TovePaintRef NewColor(float r, float g, float b, float a);
@@ -168,9 +169,10 @@ EXPORT void ReleaseMesh(ToveMeshRef mesh);
 
 EXPORT void ConfigureShaderCode(ToveShaderLanguage language, int matrixRows);
 EXPORT const char *GetPaintShaderCode(int numPaints, int numGradients);
-EXPORT const char *GetImplicitFillShaderCode(
+
+EXPORT ToveShaderCode GetGPUXFillShaderCode(
 	const ToveShaderData *data, bool fragLine, bool meshBand, bool debug);
-EXPORT const char *GetImplicitLineShaderCode(const ToveShaderData *data);
+EXPORT ToveShaderCode GetGPUXLineShaderCode(const ToveShaderData *data);
 
 EXPORT ToveTesselatorRef NewAdaptiveTesselator(float resolution, int recursionLimit);
 EXPORT ToveTesselatorRef NewRigidTesselator(int subdivisions);

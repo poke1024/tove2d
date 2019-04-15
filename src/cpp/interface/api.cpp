@@ -296,6 +296,10 @@ TovePaintRef NewShaderPaint(const char* s) {
 	return paints.publish(tove_make_shared<PaintShader>(s));
 }
 
+const ToveSendArgs *ShaderNextSendArgs(TovePaintRef shader) {
+	return std::static_pointer_cast<PaintShader>(deref(shader))->nextSendArgs();
+}
+
 TovePaintRef NewColor(float r, float g, float b, float a) {
 	return paints.publish(tove_make_shared<Color>(r, g, b, a));
 }

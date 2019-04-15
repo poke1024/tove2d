@@ -420,7 +420,7 @@ std::ostream &RadialGradient::dump(std::ostream &os) {
 
 
 std::string PaintShader::getCode(const char *fname) const {
-	std::string s(code);
+	std::string s(mCode);
 	const std::string gname("COLOR");
 
 	const auto pos = s.find(gname);
