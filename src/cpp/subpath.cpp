@@ -1359,30 +1359,27 @@ void Subpath::invert() {
 	changed(CHANGED_POINTS);
 }
 
-void Subpath::clean(float eps) {
+void Subpath::clean(const float eps) {
 	commit();
+
 	const int n = nsvg.npts;
+	float * const pts = nsvg.pts;
 
-	std::vector<float> cleaned;
-	cleaned.reserve(n * 2);
-
-	int copied = 0;
-	for (int i = 0; i + 4 <= n; i += 3) {
-		const float *pts = &nsvg.pts[i * 2];
-
-		const float dx = pts[0] - pts[6];
-		const float dy = pts[1] - pts[7];
-
-		if (dx * dx + dy * dy > eps) {
-			cleaned.insert(cleaned.end(), pts, pts + 6);
-		}
-		copied = i + 3;
+	SubpathCleaner cleaner;
+	cleaner.init(n);
+	for (int i = 0; i < n; i++) {
+		cleaner.add(pts[i * 2  + 0], pts[i * 2 + 1], 0);
 	}
-	cleaned.insert(cleaned.end(), &nsvg.pts[copied * 2], &nsvg.pts[n * 2]);
+	const int newNPts = cleaner.clean(eps, false);
 
-	if (cleaned.size() < nsvg.npts * 2) {
-		nsvg.npts = cleaned.size() / 2;
-		std::memcpy(nsvg.pts, &cleaned[0], sizeof(float) * cleaned.size());
+	if (newNPts < nsvg.npts) {
+		nsvg.npts = newNPts;
+	
+		const auto &newPts = cleaner.getPoints();
+		for (int i = 0; i < newNPts; i++) {
+			pts[i * 2 + 0] = newPts[i].x;
+			pts[i * 2 + 1] = newPts[i].y;
+		}
 
 		commands.clear();
 		changed(CHANGED_GEOMETRY);
@@ -1632,6 +1629,53 @@ ToveNearest Subpath::nearest(
 		return nearest;
 	} else {
 		return nearest;
+	}
+}
+
+
+bool SubpathCleaner::reduce(float eps, bool addVanishing) {
+	pts[n] = pts[0];
+	indices[n] = indices[0];
+
+	pts[n + 1] = pts[1];
+	indices[n + 1] = indices[1];
+
+	const NonVanishingAreas nv(good.data(), eps);
+	computeFromAreas(pts.data(), n, nv);
+
+	int j = 0;
+	int skip = 0;
+
+	for (int i = 0; i < n; i++) {
+		if (skip > 0) {
+			skip -= 1;
+
+			continue;
+		} else if (!good[i]) {
+			skip = 1;
+
+			if (addVanishing) {
+				vanishing.add(
+					indices[i + 0],
+					indices[i + 1],
+					indices[i + 2]);
+			}
+
+			if (i == n - 1) {
+				continue;
+			}
+		}
+
+		pts[j] = pts[i];
+		indices[j] = indices[i];
+		j++;
+	}
+
+	if (j < n) {
+		n = j;
+		return true;
+	} else {
+		return false;
 	}
 }
 

@@ -82,14 +82,17 @@ public:
 // (clang does a good job of SIMD-ing this)
 
 class NonVanishingAreas {
+	const float eps;
 	uint8_t * const result;
 
 public:
-	inline NonVanishingAreas(uint8_t *result) : result(result) {
+	inline NonVanishingAreas(
+		uint8_t *result, float eps) :
+		result(result), eps(eps) {
 	}
 
 	inline void operator()(int i, float area) const {
-		result[i] = std::abs(area) > 1e-2f;
+		result[i] = std::abs(area) > eps;
 	}
 
 	inline bool done() const {

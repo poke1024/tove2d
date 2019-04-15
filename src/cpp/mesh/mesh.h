@@ -17,6 +17,7 @@
 #include "utils.h"
 #include "area.h"
 #include "../paint.h"
+#include "../subpath.h"
 #include <map>
 #include "../../thirdparty/robin-map/include/tsl/robin_map.h"
 
@@ -120,65 +121,6 @@ public:
 
 	inline const NameRef &getName() const {
 		return mName;
-	}
-};
-
-class SubpathCleaner {
-	int allocated;
-
-	std::vector<vec2> pts;
-	std::vector<uint8_t> good;
-	std::vector<ToveVertexIndex> indices;
-	int n;
-
-	VanishingTriangles vanishing;
-
-	static void computeGood(
-		const vec2 * const v,
-		uint8_t * const a,
-		const int n);
-
-public:
-	inline SubpathCleaner() : n(0), allocated(0) {
-	}
-
-	inline void init(const int maxSize, const int numTotal) {
-		if (maxSize > allocated) {
-			pts.resize(maxSize + 2);
-			indices.resize(maxSize + 2);
-			good.resize(maxSize);
-
-			allocated = maxSize;
-		}
-
-		vanishing.reserve(numTotal);
-		vanishing.clear();
-	}
-
-	inline void clear() {
-		n = 0;
-	}
-
-	inline void add(float x, float y, ToveVertexIndex i) {
-		pts[n] = vec2(x, y);
-		indices[n] = i;
-		n++;
-	}
-
-	bool reduce();
-
-	inline void clean() {
-		while (reduce()) {
-			continue;
-		}
-	}
-
-	void copyToPoly(TPPLPoly &poly) const;
-
-	ClipperLib::Path toClipperPath(IntVertexMap &m, float s) const;
-
-	inline VanishingTriangles &&fetchVanishing() {
-		return std::move(vanishing);
 	}
 };
 

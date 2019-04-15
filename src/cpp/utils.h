@@ -17,6 +17,44 @@
 
 BEGIN_TOVE_NAMESPACE
 
+struct vec2 {
+	float x;
+	float y;
+
+	inline vec2() {
+	}
+
+	inline vec2(float x, float y) : x(x), y(y) {
+	}
+
+	inline float magnitude() const {
+		return std::sqrt(x * x + y * y);
+	}
+
+	inline vec2 normalized() const {
+		const float m = magnitude();
+		return vec2(x / m, y / m);
+	}
+
+	inline float dot(const vec2 &v) const {
+		return x * v.x + y * v.y;
+	}
+
+	inline float angle(const vec2 &v) const {
+		return std::atan2(x * v.y - y * v.x, x * v.x + y * v.y);
+	}
+
+	inline vec2 rotated(float angle) const {
+		const float c = std::cos(angle);
+		const float s = std::sin(angle);
+		return vec2(c * x - s * y, s * x + c * y);
+	}
+
+	inline vec2 operator*(float s) const {
+		return vec2(x * s, y * s);
+	}
+};
+
 inline float clamp(float x, float v0, float v1) {
 	return std::max(std::min(x, v1), v0);
 }

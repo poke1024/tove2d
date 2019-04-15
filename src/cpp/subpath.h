@@ -19,6 +19,7 @@
 #include "nsvg.h"
 #include "utils.h"
 #include "intersect.h"
+#include "mesh/area.h"
 
 BEGIN_TOVE_NAMESPACE
 
@@ -249,6 +250,76 @@ public:
     ToveVec2 getNormal(float globalt) const;
 
     ToveNearest nearest(float x, float y, float dmin, float dmax) const;
+};
+
+class SubpathCleaner {
+	std::vector<vec2> pts;
+	std::vector<uint8_t> good;
+	std::vector<ToveVertexIndex> indices;
+
+	int n;
+	int allocated;
+
+	VanishingTriangles vanishing;
+
+	static void computeGood(
+		const vec2 * const v,
+		uint8_t * const a,
+		const int n);
+
+public:
+	inline SubpathCleaner() : n(0), allocated(0) {
+	}
+
+	inline void init(const int maxSize, const int numTotal = 0) {
+		if (maxSize > allocated) {
+			pts.resize(maxSize + 2);
+			indices.resize(maxSize + 2);
+			good.resize(maxSize);
+
+			allocated = maxSize;
+		}
+
+		if (numTotal > 0) {
+			vanishing.reserve(numTotal);
+		}
+		vanishing.clear();
+	}
+
+	inline void clear() {
+		n = 0;
+	}
+
+	inline int size() const {
+		return n;
+	}
+
+	inline void add(float x, float y, ToveVertexIndex i) {
+		pts[n] = vec2(x, y);
+		indices[n] = i;
+		n++;
+	}
+
+	bool reduce(float eps, bool addVanishing);
+
+	inline int clean(float eps = 1e-2f, bool addVanishing = true) {
+		while (reduce(eps, addVanishing)) {
+			continue;
+		}
+		return n;
+	}
+
+	inline const std::vector<vec2> &getPoints() const {
+		return pts;
+	}
+
+	inline const std::vector<ToveVertexIndex> &getIndices() const {
+		return indices;
+	}
+
+	inline VanishingTriangles &&fetchVanishing() {
+		return std::move(vanishing);
+	}
 };
 
 END_TOVE_NAMESPACE

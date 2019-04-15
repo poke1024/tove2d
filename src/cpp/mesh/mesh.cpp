@@ -48,70 +48,6 @@ inline void triangulationFailed(const std::list<TPPLPoly> &polys) {
 	tove::report::warn("triangulation failed.");
 }
 
-bool SubpathCleaner::reduce() {
-	pts[n] = pts[0];
-	indices[n] = indices[0];
-
-	pts[n + 1] = pts[1];
-	indices[n + 1] = indices[1];
-
-	NonVanishingAreas nv(good.data());
-	computeFromAreas(pts.data(), n, nv);
-
-	int j = 0;
-	int skip = 0;
-
-	for (int i = 0; i < n; i++) {
-		if (skip > 0) {
-			skip -= 1;
-
-			continue;
-		} else if (!good[i]) {
-			skip = 1;
-
-			vanishing.add(
-				indices[i + 0],
-				indices[i + 1],
-				indices[i + 2]);
-
-			if (i == n - 1) {
-				continue;
-			}
-		}
-
-		pts[j] = pts[i];
-		indices[j] = indices[i];
-		j++;
-	}
-
-	if (j < n) {
-		n = j;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-void SubpathCleaner::copyToPoly(TPPLPoly &poly) const {
-	poly.Init(n);
-	for (int i = 0; i < n; i++) {
-		poly[i].x = pts[i].x;
-		poly[i].y = pts[i].y;
-		poly[i].id = indices[i];
-	}
-}
-
-ClipperLib::Path SubpathCleaner::toClipperPath(IntVertexMap &m, float s) const {
-	ClipperLib::Path path;
-	path.reserve(n);
-	for (int i = 0; i < n; i++) {
-		const ClipperLib::IntPoint p(pts[i].x * s, pts[i].y * s);
-		m[p] = indices[i];
-		path.push_back(p);
-	}
-	return path;
-}
-
 AbstractMesh::AbstractMesh(const NameRef &name, uint16_t stride) :
 	mVertices(nullptr),
 	mVertexCount(0),
@@ -487,6 +423,22 @@ void Submesh::triangulateFixedResolutionLine(
 	}
 }
 
+static ClipperLib::Path toClipperPath(SubpathCleaner &c, IntVertexMap &m, float s) {
+	const int n = c.size();
+	const auto &pts = c.getPoints();
+	const auto &indices = c.getIndices();
+
+	ClipperLib::Path path;
+	path.reserve(n);
+	for (int i = 0; i < n; i++) {
+		const ClipperLib::IntPoint p(pts[i].x * s, pts[i].y * s);
+		m[p] = indices[i];
+		path.push_back(p);
+	}
+	return path;
+}
+
+
 void Submesh::triangulateFixedResolutionFill(
 	const int vertexIndex0,
 	const PathRef &path,
@@ -565,8 +517,8 @@ void Submesh::triangulateFixedResolutionFill(
 
 		vertexIndex += n;
 
-		clipperPaths.push_back(mCleaner.toClipperPath(
-			vertexMap, clipperScale));
+		clipperPaths.push_back(toClipperPath(
+			mCleaner, vertexMap, clipperScale));
 	}
 
 	ClipperLib::SimplifyPolygons(
