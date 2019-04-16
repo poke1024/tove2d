@@ -9,6 +9,18 @@
 -- All rights reserved.
 -- *****************************************************************
 
+--- A vector graphics subpath (trajectory), usually lives inside a @{Path}.
+-- @classmod Subpath
+
+--- @{tove.List} of @{Curve}s in this @{Subpath}
+-- @table[readonly] curves
+
+--- @{tove.List} of @{Point}s in this @{Subpath}
+-- @table[readonly] points
+
+--- is subpath closed?
+-- @table[readonly] isClosed
+
 local Curve = {}
 Curve.__index = function (self, key)
 	local i = _attributes[key]
@@ -54,9 +66,6 @@ Points.__index = function (self, i)
 	end
 end
 
-
---- A vector graphics subpath (trajectory). Usually lives inside a @{Path}.
--- @classmod Subpath
 
 local Subpath = {}
 Subpath.__index = function(self, key)
@@ -116,6 +125,12 @@ function Subpath:drawRect(x, y, w, h, rx, ry)
 	return newCommand(self, lib.SubpathDrawRect(
 		self, x, y, w, h or w, rx or 0, ry or 0))
 end
+
+--- Draw a circle.
+-- @tparam number x x coordinate of centre
+-- @tparam number y y coordinate of centre
+-- @tparam number r radius
+-- @treturn Command circle command
 
 function Subpath:drawCircle(x, y, r)
 	return newCommand(self, lib.SubpathDrawEllipse(

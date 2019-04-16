@@ -9,6 +9,16 @@
 -- All rights reserved.
 -- *****************************************************************
 
+--- A vector graphics path, usually lives inside a @{Graphics}.
+-- @classmod Path
+-- @set sort=true
+
+--- @{tove.List} of @{Subpath}s in this @{Path}
+-- @table[readonly] subpaths
+
+--- name of this path
+-- @table[readonly] id
+
 local Subpaths = {}
 Subpaths.__index = function (self, i)
 	if i == "count" then
@@ -17,9 +27,6 @@ Subpaths.__index = function (self, i)
 		return ffi.gc(lib.PathGetSubpath(self.path, i), lib.ReleaseSubpath)
 	end
 end
-
---- A vector graphics path. Usually lives inside a @{Graphics}.
--- @classmod Path
 
 local Path = {}
 Path.__index = function (path, key)
@@ -40,7 +47,6 @@ end
 Path.clone = lib.ClonePath
 
 --- Set line dash offset.
--- Will affect lines drawn with calls to @{stroke}.
 -- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dashoffset">
 -- description of line dash offsets</a>.
 -- @tparam number offset new line dash offset
@@ -51,11 +57,11 @@ Path.setLineDashOffset = lib.PathSetLineDashOffset
 --- Get line width.
 -- @treturn number current line width
 -- @see setLineWidth
+-- @function getLineWidth
 
 Path.getLineWidth = lib.PathGetLineWidth
 
 --- Set line width.
--- Will affect lines drawn with subsequent calls to @{stroke}.
 -- @tparam number width new line width
 -- @function setLineWidth
 -- @see getLineWidth
@@ -63,7 +69,6 @@ Path.getLineWidth = lib.PathGetLineWidth
 Path.setLineWidth = lib.PathSetLineWidth
 
 --- Set miter limit.
--- Will affect lines drawn with calls to @{stroke}.
 -- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-miterlimit">
 -- description of miter limits</a>.
 -- @tparam number miterLimit new miter limit
@@ -74,6 +79,7 @@ Path.setMiterLimit = lib.PathSetMiterLimit
 --- Get miter limit.
 -- @treturn number current miter limit
 -- @see setMiterLimit
+-- @function getMiterLimit
 
 Path.getMiterLimit = lib.PathGetMiterLimit
 
@@ -106,6 +112,7 @@ Path.inside = lib.PathIsInside
 -- @usage
 -- p:refine(2) -- double number of points, same shape
 -- @tparam int k scale number of points by this amount
+-- @function refine
 
 Path.refine = lib.PathRefine
 
@@ -157,27 +164,25 @@ function Path:curveTo(...)
 	lib.SubpathCurveTo(self:beginSubpath(), ...)
 end
 
---- Get current fill color.
--- This is the color used by @{fill}.
--- @treturn Paint current fill color
+--- Get fill color.
+-- @treturn Paint current fill color, or nil if there is no fill
 
 function Path:getFillColor()
 	return Paint._fromRef(lib.PathGetFillColor(self))
 end
 
---- Get current line color.
--- This is the color used by @{stroke}.
--- @treturn Paint current line color
+--- Get line color.
+-- @treturn Paint current line color, or nil if there is no line
 
 function Path:getLineColor()
 	return Paint._fromRef(lib.PathGetLineColor(self))
 end
 
 --- Set fill color.
--- Will affect subsequent calls to @{fill}.
 -- @usage
 -- g:setFillColor(0.8, 0, 0, 0.5)  -- transparent reddish
 -- g:setFillColor("#00ff00")  -- opaque green
+-- g:setFillColor(nil)  -- no fill
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
 -- @tparam[optchain] number b blue
@@ -188,7 +193,6 @@ function Path:setFillColor(r, g, b, a)
 end
 
 --- Set line color.
--- Will affect subsequent calls to @{stroke}.
 -- @see setFillColor
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
@@ -204,6 +208,7 @@ end
 -- @tparam Path a @{Path} at t == 0
 -- @tparam Path b @{Path} at t == 1
 -- @tparam number t interpolation (0 <= t <= 1)
+-- @see Graphics:animate
 
 function Path:animate(a, b, t)
 	lib.PathAnimate(self, a, b, t)

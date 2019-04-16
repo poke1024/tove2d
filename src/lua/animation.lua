@@ -13,9 +13,18 @@ local function _linear(x)
 	return x
 end
 
+--- @module animation
+
+--- A tween.
+-- @type Tween
+-- @set sort=true
 
 local Tween = {}
 Tween.__index = Tween
+
+--- Create new tween.
+-- @tparam Graphics graphics @{Graphics} which will be at frame 0 of the new tween
+-- @treturn Tween new empty tween
 
 tove.newTween = function(graphics)
 	return setmetatable({_graphics0 = graphics, _to = {}, _duration = 0, _morph = false}, Tween)
@@ -26,6 +35,12 @@ tove.newMorph = function(graphics)
 	t._morph = true
 	return t
 end
+
+--- Add new tween step.
+-- @tparam Graphics graphics @{Graphics} which will be at the new step
+-- @tparam number duration duration from current end of tween to step
+-- @tparam[opt] function ease easing function
+-- @treturn Tween the modified tween
 
 function Tween:to(graphics, duration, ease)
 	table.insert(self._to, {graphics = graphics, duration = duration, ease = ease or _linear})
@@ -49,8 +64,16 @@ local function createGraphics(graphics)
 	return graphics
 end
 
+
+--- A flipbook.
+-- @type Flipbook
+-- @set sort=true
+
 local Flipbook = {}
 
+--- Create new flipbook.
+-- @tparam number fps playback rate as frames per second
+-- @tparam Tween tween describes the animation to play
 tove.newFlipbook = function(fps, tween, ...)
 	display = {...}
 	if next(display) == nil then
@@ -120,6 +143,7 @@ Flipbook.__newindex = function(self, key, value)
 	end
 end
 
+--- Draw.
 function Flipbook:draw(...)
 	self._frames[self._i]:draw(...)
 end

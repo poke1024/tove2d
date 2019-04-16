@@ -13,6 +13,7 @@ local _attr = {r = 1, g = 2, b = 3, a = 4, rgba = 0}
 
 --- Colors and gradients used in fills and lines.
 -- @classmod Paint
+-- @set sort=true
 
 local Paint = {}
 Paint.__index = function (self, key)
@@ -136,7 +137,7 @@ local paintTypes = {
 }
 
 --- Query paint type.
--- @treturn string one of the names in @{PaintType}
+-- @treturn string one of the names in @{Paint.PaintType}
 
 function Paint:getType()
 	local t = lib.PaintGetType(self)

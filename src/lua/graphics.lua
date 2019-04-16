@@ -9,11 +9,18 @@
 -- All rights reserved.
 -- *****************************************************************
 
+--- A vector graphics.
+-- @classmod Graphics
+-- @set sort=true
+
 --!! import "core/tesselator.lua" as createTesselator
 
 local function gcpath(p)
 	return p and ffi.gc(p, lib.ReleasePath)
 end
+
+---@{tove.List} of @{Path}s in this @{Graphics}
+-- @table[readonly] paths
 
 local Paths = {}
 Paths.__index = function (self, i)
@@ -28,9 +35,6 @@ Paths.__index = function (self, i)
 		end
 	end
 end
-
---- A vector graphics.
--- @classmod Graphics
 
 local Graphics = {}
 Graphics.__index = Graphics
@@ -47,9 +51,13 @@ local function newUsage()
 end
 
 --- Create a new Graphics.
+-- @usage
+-- local svg = love.filesystem.read("MyGraphics.svg")
+-- g = tove.newGraphics(svg, 200)  -- scale to 200 pixels
 -- @tparam string|{Path,...} data either an SVG string or a table of @{Path}s
 -- @tparam[opt] int|string size the size to scale the @{Graphics} to.
--- Use "auto" (scale below 1024), "copy" (do not scale and use original size)
+-- Use "auto" (default, scale longest side to 1024),
+-- "copy" (do not scale and use original size)
 -- or a number (the number of pixels to scale to).
 -- @treturn Graphics a new Graphics
 tove.newGraphics = function(data, size)
@@ -145,7 +153,7 @@ end
 
 --- Start a fresh @{Path} for drawing.
 -- The previously active @{Path} will get closed but won't
--- be made into loop. Subsequent drawing commands like @{lineTo}
+-- be made into loop. Subsequent drawing commands like @{Graphics:lineTo}
 -- will draw into the newly started @{Path}.
 -- @treturn Path new active @{Path} in this @{Graphics}
 -- @usage
@@ -160,7 +168,7 @@ function Graphics:beginPath()
 end
 
 --- Close the current @{Path}, thereby creating a loop.
--- Subsequent drawing commands like @{lineTo} will automatically
+-- Subsequent drawing commands like @{Graphics:lineTo} will automatically
 -- start a fresh @{Path}.
 -- @function closePath
 -- @usage
@@ -173,7 +181,7 @@ bind("closePath", "GraphicsClosePath")
 
 --- Inside the current @{Path}, start a fresh @{Subpath}.
 -- The previously active @{Subpath} will not be made into a loop.
--- Subsequent drawing commands like @{lineTo} will draw into the
+-- Subsequent drawing commands like @{Graphics:lineTo} will draw into the
 -- new @{Subpath} inside the same @{Path}.
 
 function Graphics:beginSubpath()
@@ -181,7 +189,7 @@ function Graphics:beginSubpath()
 end
 
 --- Inside the current @{Path}, close the current @{Subpath}, thereby creating a loop.
--- Subsequent drawing commands like @{lineTo} will automatically
+-- Subsequent drawing commands like @{Graphics:lineTo} will automatically
 -- start a fresh @{Subpath} inside the same @{Path}. Use this
 -- method if you want to draw holes.
 
@@ -277,6 +285,7 @@ end
 -- @tparam number x x coordinate of centre
 -- @tparam number y y coordinate of centre
 -- @tparam number r radius
+-- @treturn Command circle command
 
 function Graphics:drawCircle(x, y, r)
 	local t = self:beginSubpath()
@@ -295,7 +304,7 @@ function Graphics:drawEllipse(x, y, rx, ry)
 end
 
 --- Set fill color.
--- Will affect subsequent calls to @{fill}.
+-- Will affect subsequent calls to @{Graphics:fill}.
 -- @usage
 -- g:setFillColor(0.8, 0, 0, 0.5)  -- transparent reddish
 -- g:setFillColor("#00ff00")  -- opaque green
@@ -311,7 +320,7 @@ function Graphics:setFillColor(r, g, b, a)
 end
 
 --- Set line dash pattern.
--- Takes a list of dash lengths. Will affect lines drawn with subsequent calls to @{stroke}.
+-- Takes a list of dash lengths. Will affect lines drawn with subsequent calls to @{Graphics:stroke}.
 -- @usage
 -- g:setLineDash(0.5, 5.0, 1.5, 5.0)
 -- @tparam number width1 length of first dash
@@ -326,14 +335,14 @@ function Graphics:setLineDash(...)
 end
 
 --- Set line width.
--- Will affect lines drawn with subsequent calls to @{stroke}.
+-- Will affect lines drawn with subsequent calls to @{Graphics:stroke}.
 -- @tparam number width new line width
 -- @function setLineWidth
 
 bind("setLineWidth", "GraphicsSetLineWidth")
 
 --- Set miter limit.
--- Will affect lines drawn with calls to @{stroke}.
+-- Will affect lines drawn with calls to @{Graphics:stroke}.
 -- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-miterlimit">
 -- description of miter limits</a>.
 -- @tparam number miterLimit new miter limit
@@ -342,7 +351,7 @@ bind("setLineWidth", "GraphicsSetLineWidth")
 bind("setMiterLimit", "GraphicsSetMiterLimit")
 
 --- Set line dash offset.
--- Will affect lines drawn with calls to @{stroke}.
+-- Will affect lines drawn with calls to @{Graphics:stroke}.
 -- See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dashoffset">
 -- description of line dash offsets</a>.
 -- @tparam number offset new line dash offset
@@ -362,7 +371,7 @@ function Graphics:rotate(w, k)
 end
 
 --- Set line color.
--- Will affect subsequent calls to @{stroke}.
+-- Will affect subsequent calls to @{Graphics:stroke}.
 -- @see setFillColor
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
@@ -430,7 +439,7 @@ end
 
 --- Set display mode.
 -- Configures in detail how this @{Graphics} gets rendered to the
--- screen when you call @{draw}. Note that this is a very expensive
+-- screen when you call @{Graphics:draw}. Note that this is a very expensive
 -- operation. You should only call it once for each @{Graphics} and
 -- never in your draw loop.
 -- @tparam string mode either one of "texture", "mesh" or "gpux"
@@ -457,31 +466,47 @@ function Graphics:setDisplay(mode, ...)
 end
 
 --- Get display mode.
--- @treturn string mode the current mode as set with @{setDisplay}.
--- @treturn ... the detailed quality configuration as set with @{setDisplay}.
--- @see setDisplay
--- @see getQuality
+-- @treturn string mode the current mode as set with @{Graphics:setDisplay}.
+-- @treturn ... the detailed quality configuration as set with @{Graphics:setDisplay}.
+-- @see Graphics:setDisplay
+-- @see Graphics:getQuality
 
 function Graphics:getDisplay()
 	return self._display.mode, unpack(self._display.quality)
 end
 
 --- Get display quality.
--- @treturn ... the detailed quality configuration as set with @{setDisplay}.
--- @see setDisplay
--- @see getDisplay
+-- @treturn ... the detailed quality configuration as set with @{Graphics:setDisplay}.
+-- @see Graphics:setDisplay
+-- @see Graphics:getDisplay
 
 function Graphics:getQuality()
 	return unpack(self._display.quality)
 end
 
 --- Get usage.
--- @treturn table a table containing the configured usage for each dimension as key, as set with @{setUsage}.
--- @see setUsage
+-- @treturn table a table containing the configured usage for each dimension as key,
+-- as set with @{Graphics:setUsage}.
+-- @see Graphics:setUsage
 
 function Graphics:getUsage()
 	return self._usage
 end
+
+--- Set resolution.
+-- Determines how much you can scale this @{Graphics} when drawing without it looking bad. Affects the "texture"
+-- and "mesh" display modes. Note that this will not affect the size of the @{Graphics} when drawing with scale 1.
+-- @usage
+-- g:setDisplay("texture")
+-- g:draw(0, 0) -- looks crisp
+-- g:draw(0, 0, 2) -- at scale 2, things get fuzzy
+-- g:setResolution(2)
+-- g:draw(0, 0) -- same size as before
+-- g:draw(0, 0, 2) -- at scale 2, things still look good
+-- g:draw(0, 0, 3) -- now things get fuzzy
+-- @tparam number resolution scale factor up to which @{Graphics} will look crisp when scaled in @{Graphics:draw}
+-- (or through a Transform)
+-- @see Graphics:draw
 
 function Graphics:setResolution(resolution)
 	if resolution ~= self._resolution then
@@ -499,8 +524,8 @@ end
 -- g:setUsage("colors", "stream") -- animate colors on each frame
 -- @tparam string what either one of "points" or "colors"
 -- @tparam string usage usually either one of "static", "dynamic" or "stream" (see <a href="https://love2d.org/wiki/SpriteBatchUsage">love2d docs on mesh usage</a>)
--- @see setDisplay
--- @see getUsage
+-- @see Graphics:setDisplay
+-- @see Graphics:getUsage
 
 function Graphics:setUsage(what, usage)
 	if what.__index == Graphics then
@@ -520,7 +545,7 @@ end
 
 --- Clear internal drawing cache.
 -- Recreates internal drawing objects (e.g. meshes). You shouldn't need this.
--- Please note that this is NOT related to @{cacheKeyFrame}.
+-- Please note that this is NOT related to @{Graphics:cacheKeyFrame}.
 
 function Graphics:clearCache()
 	self._cache = nil
@@ -574,6 +599,8 @@ function Graphics:set(arg, swl)
 end
 
 --- Transform this @{Graphics}.
+-- Use this to transform all points in a @{Graphics} with an affine matrix. Don't use this for
+-- drawing a rotated or scaled version of your @{Graphics}, use @{Graphics:draw} instead. 
 -- Also see <a href="https://love2d.org/wiki/love.math.newTransform">love.math.newTransform</a>.
 -- @usage
 -- g:transform(0, 0, 0, sx, sy)  -- scale by (sx, sy)
@@ -592,7 +619,11 @@ function Graphics:transform(...)
 	self:set(tove.transformed(self, ...))
 end
 
-
+--- Rescale to given size.
+-- @tparam number size target size to scale to
+-- @tparam[opt] bool center center the @{Graphics} so that calling @{Graphics:draw}
+-- will always place it around the given draw position (defaults to true)
+-- @see Graphics:draw
 
 function Graphics:rescale(size, center)
 	local x0, y0, x1, y1 = self:computeAABB()
@@ -622,7 +653,7 @@ end
 
 --- Draw to screen.
 -- The details of how the rendering happens can get configured through
--- @{setDisplay}.
+-- @{Graphics:setDisplay}.
 -- @usage
 -- g:draw(120, 150, 0.1)  -- draw at (120, 150) with some rotation
 -- @tparam number x the x-axis position to draw at
@@ -630,7 +661,9 @@ end
 -- @tparam number r orientation in radians
 -- @tparam number sx scale factor in x
 -- @tparam number sy scale factor in y
--- @see setDisplay
+-- @see Graphics:setDisplay
+-- @see Graphics:setResolution
+-- @see Graphics:rescale
 
 function Graphics:draw(x, y, r, sx, sy)
 	self:_create().draw(x, y, r, sx, sy)
@@ -639,13 +672,13 @@ end
 --- Warm-up shaders.
 -- Instructs TÖVE to compile all shaders involved in drawing this
 -- @{Graphics} with the current display settings. On some platforms,
--- compiling "gpux" shaders can take a long time. @{warmup} will quit
+-- compiling "gpux" shaders can take a long time. @{Graphics:warmup} will quit
 -- after a certain time and allow you to display some progress info.
 -- In these cases you need to call it again until it returns nil.
 -- @treturn number|nil nil if all shaders were compiled, otherwise
 -- a number between 0 and 1 indicating percentage of shaders compiled
 -- so far.
--- @see setDisplay
+-- @see Graphics:setDisplay
 
 function Graphics:warmup()
 	local r = self:_create().warmup()
@@ -703,6 +736,7 @@ end
 -- @tparam Graphics a @{Graphics} at t == 0
 -- @tparam Graphics b @{Graphics} at t == 1
 -- @tparam number t interpolation (0 <= t <= 1)
+-- @see Path:animate
 
 function Graphics:animate(a, b, t)
 	lib.GraphicsAnimate(self._ref, a._ref, b._ref, t or 0)

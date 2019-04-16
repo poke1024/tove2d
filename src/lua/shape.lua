@@ -11,16 +11,25 @@
 
 -- a basic retained API - inspired by EaselJS.
 
+--- @module stage
+
+--- A container for building a retained, stage-like drawing API.
+-- @type Container
+-- @set sort=true
+
 local g = love.graphics
 
 local Container = {}
 Container.__index = Container
 
+--- Create new container.
+-- @treturn Container new empty container
 tove.newContainer = function()
 	return setmetatable({x = 0, y = 0, r = 0, sx = 1, sy = 1,
 		_children = {}}, Container)
 end
 
+--- Draw container and its children.
 function Container:draw()
 	if next(self._children) ~= nil then
 		g.push("transform")
@@ -37,12 +46,23 @@ function Container:draw()
 	end
 end
 
+--- Add child(ren).
+-- @usage
+-- c:addChild(someGraphics)
+-- @tparam Drawable c1 first child to add
+-- @tparam[opt] Drawable... c more children to add
 function Container:addChild(...)
 	for _, child in ipairs({...}) do
 		table.insert(self._children, child)
 	end
 end
 
+--- Add child(ren) at position.
+-- @usage
+-- c:addChildAt(otherContainer, someGraphics, 7)
+-- @tparam Drawable c1 first child to add
+-- @tparam[opt] Drawable... c more children to add
+-- @tparam int index where to add children
 function Container:addChildAt(...)
 	local args = {...}
 	local at = args[#p]
@@ -61,30 +81,57 @@ local function remove(t, x)
 	end
 end
 
+--- Remove child(ren).
+-- @usage
+-- c:removeChild(someGraphics)
+-- @tparam Drawable c1 first child to remove
+-- @tparam[opt] Drawable... c more children to remove
 function Container:removeChild(...)
 	for _, child in ipairs({...}) do
 		remove(self._children, child)
 	end
 end
 
+--- Remove child(ren) at position.
+-- @usage
+-- c:removeChildAt(2, 7)
+-- @tparam int i1 index of first child to remove
+-- @tparam[opt] int... c indices of more children to remove
+
 function Container:removeChildAt(...)
-	for _, i in ipairs({...}) do
+	local j = {...}
+	table.sort(j, function(a, b) return a > b end)
+	for _, i in ipairs(j) do
 		table.remove(self._children, i)
 	end
 end
 
+--- Move child to position.
+-- @tparam Drawable child child to move
+-- @tparam int index index to move the child to
 function Container:setChildIndex(child, index)
-	self:removeChild(child, index)
+	self:removeChild(child)
 	self:addChildAt(child, index)
 end
+
+--- @type Stage
+
+--- Create new stage.
+-- @treturn Container empty stage
 
 tove.newStage = function()
 	return tove.newContainer()
 end
 
 
+--- @type Shape
+
 local Shape = {}
 Shape.__index = Shape
+
+--- Create new shape.
+-- @tparam Graphics graphics for drawing this shape
+-- @treturn Shape new shape
 
 tove.newShape = function(graphics)
 	if graphics == nil then

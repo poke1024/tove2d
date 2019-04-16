@@ -273,3 +273,26 @@ end
 tove.init()
 
 return tove
+
+--- A list of elements, such as e.g. @{Path}s.
+-- @type List
+
+--- Total number of elements in this list. 
+-- @tparam number count number of elements in this list
+-- @usage
+-- graphics.paths.count -- number of paths
+-- graphics.paths[1].subpaths.count -- number of subpaths in path 1
+
+--- Get element at index.
+-- @tparam number index 1-based index of element to retrieve
+-- @return retrieved element
+-- @usage
+-- graphics.paths[1]  -- first path
+-- @function at
+
+--- Get element with name.
+-- @tparam string name name of element to retrieve
+-- @return retrieved element
+-- @usage
+-- graphics.paths["circle"] -- path named "circle"
+-- @function at
