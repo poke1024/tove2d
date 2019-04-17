@@ -13,6 +13,8 @@ local function _linear(x)
 	return x
 end
 
+-- Helpers for animating things.
+
 --- @module animation
 
 --- A tween.
@@ -37,6 +39,8 @@ tove.newMorph = function(graphics)
 end
 
 --- Add new tween step.
+-- @usage
+-- tween = tove.newTween(svg1):to(svg2, 0.3):to(svg3, 0.1)
 -- @tparam Graphics graphics @{Graphics} which will be at the new step
 -- @tparam number duration duration from current end of tween to step
 -- @tparam[opt] function ease easing function
@@ -72,6 +76,8 @@ end
 local Flipbook = {}
 
 --- Create new flipbook.
+-- A flipbook consists of prerendered discrete frames. Performance
+-- will be high, but memory requirements might be high as well.
 -- @tparam number fps playback rate as frames per second
 -- @tparam Tween tween describes the animation to play
 tove.newFlipbook = function(fps, tween, ...)

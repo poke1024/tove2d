@@ -9,11 +9,12 @@
 -- All rights reserved.
 -- *****************************************************************
 
--- a basic retained API - inspired by EaselJS.
+-- A thin API for retained drawing.
+-- Inspired by <a href="EaselJS">https://www.createjs.com/docs/easeljs/modules/EaselJS.html</a>.
 
 --- @module stage
 
---- A container for building a retained, stage-like drawing API.
+--- A container which allows you to draw a couple of things with one draw call.
 -- @type Container
 -- @set sort=true
 
@@ -21,6 +22,21 @@ local g = love.graphics
 
 local Container = {}
 Container.__index = Container
+
+--- x position
+-- @number x
+
+--- y position
+-- @number y
+
+--- rotation in radians
+-- @number r
+
+--- x scale factor
+-- @number sx
+
+--- y scale factor
+-- @number sy
 
 --- Create new container.
 -- @treturn Container new empty container
@@ -30,6 +46,10 @@ tove.newContainer = function()
 end
 
 --- Draw container and its children.
+-- @usage
+-- container.x = 20
+-- container.y = 30
+-- container:draw()
 function Container:draw()
 	if next(self._children) ~= nil then
 		g.push("transform")
@@ -129,6 +149,16 @@ end
 local Shape = {}
 Shape.__index = Shape
 
+---@number x x position
+
+---@number y y position
+
+---@number rotation rotation in radians
+
+---@number sx x scale factor
+
+---@number sy y scale factor
+
 --- Create new shape.
 -- @tparam Graphics graphics for drawing this shape
 -- @treturn Shape new shape
@@ -153,9 +183,20 @@ function Shape:animate(t)
 	end
 end
 
+--- Draw.
+-- @usage
+-- shape = tove.newShape(someGraphics)
+-- shape.x = 20
+-- shape.y = 30
+-- shape.r = 0.1 -- rotation
+-- shape:draw() -- no need to track x, y and r here
+
 function Shape:draw()
 	self.graphics:draw(self.x, self.y, self.r, self.sx, self.sy)
 end
+
+--- Set display mode
+-- Change display mode of underlying @{Graphics}.
 
 function Shape:setDisplay(...)
 	self.graphics:setDisplay(...)

@@ -16,54 +16,54 @@
 -- @classmod Command
 
 --- width
--- @table[readonly] w
+-- @table w
 
 --- height
--- @table[readonly] h
+-- @table h
 
 --- x coordinate of center
 -- @usage
 -- local circle = graphics:drawCircle(0, 0, 10)
 -- circle.cx = 5
--- @table[readonly] cx
+-- @table cx
 
 --- y coordinate of center
--- @table[readonly] cy
+-- @table cy
 
 --- x radius
--- @table[readonly] rx
+-- @table rx
 
 --- y radius
--- @table[readonly] ry
+-- @table ry
 
 --- radius
--- @table[readonly] r
+-- @table r
 
 --- @section Curves
 
 --- x coordinate of curve point P0
--- @table[readonly] x0
+-- @table x0
 
 --- y coordinate of curve point P0
--- @table[readonly] y0
+-- @table y0
 
 --- x coordinate of first control point P1
--- @table[readonly] cp1x
+-- @table cp1x
 
 --- y coordinate of first control point P1
--- @table[readonly] cp1y
+-- @table cp1y
 
 --- x coordinate of second control point P2
--- @table[readonly] cp2x
+-- @table cp2x
 
 --- y coordinate of second control point P2
--- @table[readonly] cp2y
+-- @table cp2y
 
 --- x coordinate of curve point P3
--- @table[readonly] x
+-- @table x
 
 --- y coordinate of curve point P3
--- @table[readonly] y
+-- @table y
 
 local Command = {}
 Command.__index = function(self, key)

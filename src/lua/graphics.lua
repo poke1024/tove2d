@@ -220,6 +220,7 @@ end
 -- Automatically starts a fresh @{Subpath} if necessary. 
 -- @tparam number x new x coordinate
 -- @tparam number y new y coordinate
+-- @treturn Command move command
 
 function Graphics:moveTo(x, y)
 	lib.GraphicsCloseSubpath(self._ref, false)
@@ -233,6 +234,7 @@ end
 -- g:lineTo(5, 30)
 -- @tparam number x x coordinate of line's end position
 -- @tparam number y y coordinate of line's end position
+-- @treturn Command line command
 
 function Graphics:lineTo(x, y)
 	local t = self:beginSubpath()
@@ -250,6 +252,7 @@ end
 -- @tparam number cp2y y coordinate of curve's second control point (P2)
 -- @tparam number x x coordinate of curve's end position (P3)
 -- @tparam number y y coordinate of curve's end position (P3)
+-- @treturn Command curve command
 
 function Graphics:curveTo(...)
 	local t = self:beginSubpath()
@@ -275,6 +278,7 @@ end
 -- @tparam number h height
 -- @tparam number rx horizontal roundness of corners
 -- @tparam number ry vertical roundness of corners
+-- @treturn Command rectangle command
 
 function Graphics:drawRect(x, y, w, h, rx, ry)
 	local t = self:beginSubpath()
@@ -297,6 +301,7 @@ end
 -- @tparam number y y coordinate of centre
 -- @tparam number rx horizontal radius
 -- @tparam number ry vertical radius
+-- @treturn Command ellipse command
 
 function Graphics:drawEllipse(x, y, rx, ry)
 	local t = self:beginSubpath()
@@ -614,6 +619,7 @@ end
 -- @tparam[optchain] number kx skew in x-axis
 -- @tparam[optchain] number ky skew in y-axis
 -- @see Path:transform
+-- @see Subpath:transform
 
 function Graphics:transform(...)
 	self:set(tove.transformed(self, ...))

@@ -85,15 +85,37 @@ Subpath.__newindex = function(self, key, value)
 	end
 end
 
+--- Evaluate position at t.
+-- @tparam number t t at which to evaluate position. 0 < t < 1
+-- will lie in the first curve, 1 < t < 2 will lie in the
+-- second curve, and so on.
+-- @treturn number x position
+-- @treturn number y position
+
 function Subpath:position(t)
 	local v = lib.SubpathGetPosition(self, t)
 	return v.x, v.y
 end
 
+--- Evaluate normal at t.
+-- @tparam number t t at which to evaluate position. 0 < t < 1
+-- will lie in the first curve, 1 < t < 2 will lie in the
+-- second curve, and so on.
+-- @treturn number x component of normal
+-- @treturn number y component of normal
+
 function Subpath:normal(t)
 	local v = lib.SubpathGetNormal(self, t)
 	return v.x, v.y
 end
+
+--- Find nearest point.
+-- @tparam number x x component of point to search against
+-- @tparam number y y component of point to search against
+-- @tparam number[opt] dmax ignore curve points above this distance
+-- @tparam number[opt] dmin return as soon as a distance smaller than this is found
+-- @treturn number t which produces closest distance
+-- @treturn number distance distance at given t
 
 function Subpath:nearest(x, y, dmax, dmin)
 	local n = lib.SubpathNearest(self, x, y, dmin or 1e-4, dmax or 1e50)
@@ -104,8 +126,40 @@ Subpath.insertCurveAt = lib.SubpathInsertCurveAt
 Subpath.removeCurve = lib.SubpathRemoveCurve
 Subpath.mould = lib.SubpathMould
 Subpath.commit = lib.SubpathCommit
+
+--- Move to position (x, y).
+-- @tparam number x new x coordinate
+-- @tparam number y new y coordinate
+-- @treturn Command move command
+-- @function moveTo
+
 Subpath.moveTo = lib.SubpathMoveTo
+
+--- Draw a line to (x, y).
+-- @usage
+-- subpath:moveTo(10, 20)
+-- subpath:lineTo(5, 30)
+-- @tparam number x x coordinate of line's end position
+-- @tparam number y y coordinate of line's end position
+-- @treturn Command line command
+-- @function lineTo
+
 Subpath.lineTo = lib.SubpathLineTo
+
+--- Draw a cubic bezier curve to (x, y).
+-- See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
+-- @usage
+-- subpath:moveTo(10, 20)
+-- subpath:curveTo(7, 5, 10, 3, 50, 30)
+-- @tparam number cp1x x coordinate of curve's first control point (P1)
+-- @tparam number cp1y y coordinate of curve's first control point (P1)
+-- @tparam number cp2x x coordinate of curve's second control point (P2)
+-- @tparam number cp2y y coordinate of curve's second control point (P2)
+-- @tparam number x x coordinate of curve's end position (P3)
+-- @tparam number y y coordinate of curve's end position (P3)
+-- @treturn Command curve command
+-- @function curveTo
+
 Subpath.curveTo = lib.SubpathCurveTo
 
 local handles = {
@@ -117,9 +171,28 @@ function Subpath:move(k, x, y, h)
 	lib.SubpathMove(self, k, x, y, h and handles[h] or lib.TOVE_HANDLE_FREE)
 end
 
+--- Draw an arc.
+-- @tparam number x x coordinate of centre of arc
+-- @tparam number y y coordinate of centre of arc
+-- @tparam number r radius of arc
+-- @tparam number startAngle angle at which to start drawing
+-- @tparam number endAngle angle at which to stop drawing
+-- @tparam bool ccw true if drawing between given angles is counterclockwise
+-- @function arc
+
 function Subpath:arc(x, y, r, a1, a2, ccw)
 	lib.SubpathArc(self, x, y, r, a1, a2, ccw or false)
 end
+
+--- Draw a rectangle.
+-- @tparam number x x coordinate of top left corner
+-- @tparam number y y coordinate of top left corner
+-- @tparam number w width
+-- @tparam number h height
+-- @tparam number rx horizontal roundness of corners
+-- @tparam number ry vertical roundness of corners
+-- @treturn Command rectangle command
+-- @function drawRect
 
 function Subpath:drawRect(x, y, w, h, rx, ry)
 	return newCommand(self, lib.SubpathDrawRect(
@@ -136,6 +209,13 @@ function Subpath:drawCircle(x, y, r)
 	return newCommand(self, lib.SubpathDrawEllipse(
 		self, x, y, r, r))
 end
+
+--- Draw an ellipse.
+-- @tparam number x x coordinate of centre
+-- @tparam number y y coordinate of centre
+-- @tparam number rx horizontal radius
+-- @tparam number ry vertical radius
+-- @treturn Command ellipse command
 
 function Subpath:drawEllipse(x, y, rx, ry)
 	return newCommand(self, lib.SubpathDrawEllipse(
@@ -168,13 +248,35 @@ function Subpath:set(arg)
 	end
 end
 
-function Subpath:transform(t)
-	self:set(tove.transformed(self, t))
+--- Transform this @{Subpath}.
+-- @usage
+-- subpath:transform(0, 0, 0, sx, sy)  -- scale by (sx, sy)
+-- @tparam number|Translation x move by x in x-axis, or a LÖVE <a href="https://love2d.org/wiki/Transform">Transform</a>
+-- @tparam[opt] number y move by y in y-axis
+-- @tparam[optchain] number angle applied rotation in radians
+-- @tparam[optchain] number sy scale factor in x
+-- @tparam[optchain] number sy scale factor in y
+-- @tparam[optchain] number ox x coordinate of origin
+-- @tparam[optchain] number oy y coordinate of origin
+-- @tparam[optchain] number kx skew in x-axis
+-- @tparam[optchain] number ky skew in y-axis
+-- @see Graphics:transform
+-- @see Path:transform
+
+function Subpath:transform(...)
+	self:set(tove.transformed(self, ...))
 end
+
+--- Invert.
+-- Reverses orientation by reversing order of points. You can use this to
+-- create holes in a @{Path}.
 
 function Subpath:invert()
 	lib.SubpathInvert(self)
 end
+
+--- Set points.
+-- @tparam {number,number,...} points x and y coordinates of points to set
 
 function Subpath:setPoints(...)
 	local p = {...}
@@ -185,6 +287,10 @@ function Subpath:setPoints(...)
 	end
 	lib.SubpathSetPoints(self, f, n / 2)
 end
+
+--- Warp.
+-- @tparam function f warp function
+-- @see Graphics:warp
 
 function Subpath:warp(f)
 	local c = lib.SubpathSaveCurvature(self)
@@ -204,18 +310,21 @@ end
 
 ffi.metatype("ToveSubpathRef", Subpath)
 
-tove.newSubpath = function(data)
+--- Create new subpath.
+-- @tparam[opt] {number,number,...} points x and y components of points to use
+-- @treturn Subpath new subpath
+
+tove.newSubpath = function(...)
 	local self = ffi.gc(lib.NewSubpath(), lib.ReleaseSubpath)
-	if data then
-		if data[1] then
-			self:setPoints(unpack(data))
-		else
-			self.isClosed = data.closed
-			self:setPoints(unpack(data.points))
-		end
+	if #{...} > 0 then
+		self:setPoints(...)
 	end
 	return self
 end
+
+--- Clone.
+-- Creates a deep clone.
+-- @treturn Subpath cloned subpath
 
 function Subpath:clone()
 	return lib.CloneSubpath(self)
