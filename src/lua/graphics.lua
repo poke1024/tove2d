@@ -447,10 +447,11 @@ end
 -- screen when you call @{Graphics:draw}. Note that this is a very expensive
 -- operation. You should only call it once for each @{Graphics} and
 -- never in your draw loop.
--- @tparam string mode either one of "texture", "mesh" or "gpux"
--- @tparam[opt] ... args detailed quality configuration for specified mode
--- see @getDisplay
--- see @getQuality
+-- @tparam string mode either one of "texture", "mesh" or "gpux", see @{display}
+-- @tparam[opt] ... args detailed quality configuration for specified mode, see @{display}
+-- @see Graphics:getDisplay
+-- @see Graphics:getQuality
+-- @see display
 
 function Graphics:setDisplay(mode, ...)
 	local quality = {...}

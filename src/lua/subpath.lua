@@ -15,34 +15,8 @@
 --- @{tove.List} of @{Curve}s in this @{Subpath}
 -- @table[readonly] curves
 
---- @{tove.List} of @{Point}s in this @{Subpath}
--- @table[readonly] points
-
 --- is subpath closed?
 -- @table[readonly] isClosed
-
-local Curve = {}
-Curve.__index = function (self, key)
-	local i = _attributes[key]
-	if i == nil then return nil end
-	return lib.SubpathGetCurveValue(
-		self.traj, self.curve, i)
-end
-Curve.__newindex = function (self, key, value)
-	local i = _attributes[key]
-	if i == nil then return nil end
-	return lib.SubpathSetCurveValue(
-		self.traj, self.curve, i, value)
-end
-
-local Curves = {}
-Curves.__index = function (self, curve)
-	if curve == "count" then
-		return lib.SubpathGetNumCurves(self.traj)
-	else
-		return setmetatable({traj = self.traj, curve = curve - 1}, Curve)
-	end
-end
 
 local _pt = {
 	x = 0,
@@ -62,7 +36,54 @@ Points.__index = function (self, i)
 	if i == "count" then
 		return lib.SubpathGetNumPoints(self.traj)
 	else
-		return setmetatable({traj = self.traj, i = i - 1}, Point)
+		return setmetatable({traj = self.traj, i = self.i0 + i - 1}, Point)
+	end
+end
+
+local Curve = {}
+Curve.__index = function (self, key)
+	if key == "p" then
+		return setmetatable({traj = self.traj, i0 = self.curve * 4}, Points)
+	end
+	local i = _attributes[key]
+	if i == nil then return nil end
+	return lib.SubpathGetCurveValue(
+		self.traj, self.curve, i)
+end
+Curve.__newindex = function (self, key, value)
+	local i = _attributes[key]
+	if i == nil then return nil end
+	return lib.SubpathSetCurveValue(
+		self.traj, self.curve, i, value)
+end
+
+function Curve:split(t)
+	lib.SubpathInsertCurveAt(self.traj, self.curve + t)
+end
+
+function Curve:remove()
+	lib.SubpathRemoveCurve(self.traj, self.curve)
+end
+
+function Curve:isLine(dir)
+	return lib.SubpathIsLineAt(self.traj, self.curve, dir or 0)
+end
+
+function Curve:makeFlat(dir)
+	return lib.SubpathMakeFlat(self.traj, self.curve, dir or 0)
+end
+
+function Curve:makeSmooth(a, dir)
+	return lib.SubpathMakeSmooth(self.traj, self.curve, dir or 0, a or 0.5)
+end
+
+
+local Curves = {}
+Curves.__index = function (self, curve)
+	if curve == "count" then
+		return lib.SubpathGetNumCurves(self.traj)
+	else
+		return setmetatable({traj = self.traj, curve = curve - 1}, Curve)
 	end
 end
 
@@ -72,7 +93,7 @@ Subpath.__index = function(self, key)
 	if key == "curves" then
 		return setmetatable({traj = self}, Curves)
 	elseif key == "points" then
-		return setmetatable({traj = self}, Points)
+		return setmetatable({traj = self, i0 = 0}, Points)
 	elseif key == "isClosed" then
 		return lib.SubpathIsClosed(self)
 	else
@@ -124,7 +145,17 @@ end
 
 Subpath.insertCurveAt = lib.SubpathInsertCurveAt
 Subpath.removeCurve = lib.SubpathRemoveCurve
+
+--- Mould curve.
+-- Moves a specific point on the curve to a new location and adapts the surrounding
+-- curve.
+-- @tparam number t t of point on the curve which should be moved, 0 <= t < = number of curves
+-- @tparam number x x coordinate of where to move
+-- @tparam number y y coordinate of where to move
+-- @function mould
+
 Subpath.mould = lib.SubpathMould
+
 Subpath.commit = lib.SubpathCommit
 
 --- Move to position (x, y).
