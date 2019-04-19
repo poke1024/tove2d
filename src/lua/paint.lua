@@ -100,7 +100,7 @@ end
 
 --- Get RGBA components.
 -- If called on a gradient, this will not yield useful results.
--- @tparam[opt] opacity opacity to apply on returned color
+-- @tparam[opt=1] opacity opacity to apply on returned color
 -- @treturn number red
 -- @treturn number green
 -- @treturn number blue
@@ -114,7 +114,7 @@ end
 -- @tparam number r red
 -- @tparam number g green
 -- @tparam number b blue
--- @tparam[opt] number a alpha
+-- @tparam[opt=1] number a alpha
 
 function Paint:set(r, g, b, a)
 	lib.ColorSet(self, r, g, b, a or 1)
@@ -159,12 +159,13 @@ end
 --- Get i-th color stop.
 -- Use this to retrieve gradient's colors.
 -- @tparam int i 1-based index of color
--- @tparam[opt] number opacity to apply on returned color
--- @treturn number offset
+-- @tparam[opt=1] number opacity to apply on returned color
+-- @treturn number offset (between 0 and 1)
 -- @treturn number red
 -- @treturn number green
 -- @treturn number blue
 -- @treturn number alpha
+-- @see Paint:addColorStop
 
 function Paint:getColorStop(i, opacity)
 	local s = lib.PaintGetColorStop(self, i - 1, opacity or 1)
@@ -186,7 +187,8 @@ end
 -- @tparam number r red
 -- @tparam number g green
 -- @tparam number b blue
--- @tparam[opt] number a alpha
+-- @tparam[opt=1] number a alpha
+-- @see Paint:getColorStop
 
 function Paint:addColorStop(offset, r, g, b, a)
 	lib.GradientAddColorStop(self, offset, r, g, b, a or 1)
@@ -252,7 +254,9 @@ local _sent = {}
 tove._sent = _sent
 
 --- Send data to custom shader.
--- see LÖVE's <a href="https://love2d.org/wiki/Shader:send">Shader:send</a>
+-- Also see LÖVE's <a href="https://love2d.org/wiki/Shader:send">Shader:send</a>.
+-- @usage
+-- shader:send("t", love.timer.getTime())
 -- @tparam string k name of uniform
 -- @tparam ... data data to send
 
@@ -260,6 +264,15 @@ function Paint:send(k, ...)
 	local args = lib.ShaderNextSendArgs(self)
 	_sent[args.id][k] = {args.version, {...}}
 end
+
+--- Create new custom shader.
+-- This shader can be used as a paint in fill and line colors. Currently, this is
+-- only supported for "gpux" display mode.
+-- Also see LÖVE's <a href="https://love2d.org/wiki/love.graphics.newShader">newShader</a>.
+-- @tparam string shader source code
+-- @treturn Paint new shader
+-- @see Graphics:setDisplay
+-- @see Graphics:warmup
 
 tove.newShader = function(source)
 	local function releaseShader(self)

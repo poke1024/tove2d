@@ -133,8 +133,8 @@ end
 --- Find nearest point.
 -- @tparam number x x component of point to search against
 -- @tparam number y y component of point to search against
--- @tparam number[opt] dmax ignore curve points above this distance
--- @tparam number[opt] dmin return as soon as a distance smaller than this is found
+-- @tparam number[opt=1e50] dmax ignore curve points above this distance
+-- @tparam number[opt=1e-4] dmin return as soon as a distance smaller than this is found
 -- @treturn number t which produces closest distance
 -- @treturn number distance distance at given t
 

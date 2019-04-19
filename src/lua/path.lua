@@ -93,7 +93,7 @@ Path.getOpacity = lib.PathGetOpacity
 --- Set opacity.
 -- This will apply to the whole path indepentent of fill and line
 -- colors.
--- @tparam number @{Path}'s opacity
+-- @tparam number opacity @{Path}'s opacity (between 0 and 1)
 -- @function setOpacity
 -- @see getOpacity
 
@@ -186,7 +186,7 @@ end
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
 -- @tparam[optchain] number b blue
--- @tparam[optchain] number a alpha
+-- @tparam[optchain=1] number a alpha
 
 function Path:setFillColor(r, g, b, a)
 	lib.PathSetFillColor(self, Paint._wrap(r, g, b, a))
@@ -197,7 +197,7 @@ end
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
 -- @tparam[optchain] number b blue
--- @tparam[optchain] number a alpha
+-- @tparam[optchain=1] number a alpha
 
 function Path:setLineColor(r, g, b, a)
 	lib.PathSetLineColor(self, Paint._wrap(r, g, b, a))
@@ -236,10 +236,15 @@ function Path:rotate(w, k)
 	lib.PathRotate(self, tove.elements[w], k)
 end
 
---- Find nearest @{Subpath}.
+--- Find nearest point.
+-- @tparam number x x component of point to search against
+-- @tparam number y y component of point to search against
+-- @tparam[opt] number max ignore curve points above this distance
+-- @tparam[opt] number min return as soon as a distance smaller than this is found
 -- @treturn number distance to nearest @{Subpath}
 -- @treturn number t parameter describing nearest point on @{Subpath}
 -- @treturn Subpath nearest @{Subpath}
+-- @see Subpath:nearest
 
 function Path:nearest(x, y, max, min)
 	local n = lib.PathGetNumSubpaths(self)
@@ -269,20 +274,22 @@ function Path:set(arg, swl)
 	end
 end
 
+-- @set no_summary=true
 --- Transform this @{Path}.
 -- Also see <a href="https://love2d.org/wiki/love.math.newTransform">love.math.newTransform</a>.
 -- @usage
 -- g:transform(0, 0, 0, sx, sy)  -- scale by (sx, sy)
 -- @tparam number|Translation x move by x in x-axis, or a LÖVE <a href="https://love2d.org/wiki/Transform">Transform</a>
--- @tparam[opt] number y move by y in y-axis
--- @tparam[optchain] number angle applied rotation in radians
--- @tparam[optchain] number sy scale factor in x
--- @tparam[optchain] number sy scale factor in y
--- @tparam[optchain] number ox x coordinate of origin
--- @tparam[optchain] number oy y coordinate of origin
--- @tparam[optchain] number kx skew in x-axis
--- @tparam[optchain] number ky skew in y-axis
+-- @tparam[opt=0] number y move by y in y-axis
+-- @tparam[optchain=0] number angle applied rotation in radians
+-- @tparam[optchain=1] number sy scale factor in x
+-- @tparam[optchain=1] number sy scale factor in y
+-- @tparam[optchain=0] number ox x coordinate of origin
+-- @tparam[optchain=0] number oy y coordinate of origin
+-- @tparam[optchain=0] number kx skew in x-axis
+-- @tparam[optchain=0] number ky skew in y-axis
 -- @see Graphics:transform
+-- @set no_summary=false
 
 function Path:transform(...)
 	self:set(tove.transformed(self, ...))

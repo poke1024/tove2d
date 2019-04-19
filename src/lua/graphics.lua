@@ -55,9 +55,9 @@ end
 -- local svg = love.filesystem.read("MyGraphics.svg")
 -- g = tove.newGraphics(svg, 200)  -- scale to 200 pixels
 -- @tparam string|{Path,...} data either an SVG string or a table of @{Path}s
--- @tparam[opt] int|string size the size to scale the @{Graphics} to.
--- Use "auto" (default, scale longest side to 1024),
--- "copy" (do not scale and use original size)
+-- @tparam[opt="auto"] int|string size the size to scale the @{Graphics} to.
+-- Use `"auto"` (scale longest side to 1024),
+-- `"copy"` (do not scale and use original size)
 -- or a number (the number of pixels to scale to).
 -- @treturn Graphics a new Graphics
 tove.newGraphics = function(data, size)
@@ -207,7 +207,7 @@ end
 
 --- Add a @{Path}.
 -- The new @{Path} will be appended after other existing @{Path}s.
--- @tparam Path @{Path} to append
+-- @tparam Path path @{Path} to append
 -- @function addPath
 
 bind("addPath", "GraphicsAddPath")
@@ -316,7 +316,7 @@ end
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
 -- @tparam[optchain] number b blue
--- @tparam[optchain] number a alpha
+-- @tparam[optchain=0] number a alpha
 
 function Graphics:setFillColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
@@ -328,8 +328,7 @@ end
 -- Takes a list of dash lengths. Will affect lines drawn with subsequent calls to @{Graphics:stroke}.
 -- @usage
 -- g:setLineDash(0.5, 5.0, 1.5, 5.0)
--- @tparam number width1 length of first dash
--- @tparam number widthN length of last dash
+-- @tparam number... widths lengths of dashes
 
 function Graphics:setLineDash(...)
 	local dashes = {...}
@@ -381,7 +380,7 @@ end
 -- @tparam number|string|Paint|nil r red
 -- @tparam[optchain] number g green
 -- @tparam[optchain] number b blue
--- @tparam[optchain] number a alpha
+-- @tparam[optchain=0] number a alpha
 
 function Graphics:setLineColor(r, g, b, a)
 	local color = Paint._wrap(r, g, b, a)
@@ -409,9 +408,9 @@ bind("fill", "GraphicsFill")
 bind("stroke", "GraphicsStroke")
 
 --- Compute bounding box.
--- Note that "low" precision will not correctly compute certain line boundaries (miters),
--- however it will be exact for fills and much faster than "high".
--- @tparam[opt] string prec precision of bounding box: "high" (default) or "low" (faster)
+-- `"low"` precision will not correctly compute certain line boundaries (miters),
+-- however it will be exact for fills and much faster than `"high"`.
+-- @tparam[opt="high"] string prec precision of bounding box: `"high"` (i.e. exact)  or `"low"` (faster)
 -- @treturn number x0 (left-most x)
 -- @treturn number y0 (top-most y)
 -- @treturn number x1 (right-most x)
@@ -423,7 +422,7 @@ function Graphics:computeAABB(prec)
 end
 
 --- Get width.
--- @tparam[opt] string prec precision: "high" (default) or "low" (faster)
+-- @tparam[opt="high"] string prec precision: `"high"` (i.e. exact) or `"low"` (faster)
 -- @treturn number width of contents in this @{Graphics}
 -- @see computeAABB
 
@@ -433,7 +432,7 @@ function Graphics:getWidth(prec)
 end
 
 --- Get height.
--- @tparam[opt] string prec precision: "high" (default) or "low" (faster)
+-- @tparam[opt="high"] string prec precision: `"high"` (i.e. exact)  or `"low"` (faster)
 -- @treturn number height of contents in this @{Graphics}
 -- @see computeAABB
 
@@ -447,7 +446,7 @@ end
 -- screen when you call @{Graphics:draw}. Note that this is a very expensive
 -- operation. You should only call it once for each @{Graphics} and
 -- never in your draw loop.
--- @tparam string mode either one of "texture", "mesh" or "gpux", see @{display}
+-- @tparam string mode either one of `"texture"`, `"mesh"` or `"gpux"`, see @{display}
 -- @tparam[opt] ... args detailed quality configuration for specified mode, see @{display}
 -- @see Graphics:getDisplay
 -- @see Graphics:getQuality
@@ -604,6 +603,7 @@ function Graphics:set(arg, swl)
 	end
 end
 
+--  @set no_summary=true
 --- Transform this @{Graphics}.
 -- Use this to transform all points in a @{Graphics} with an affine matrix. Don't use this for
 -- drawing a rotated or scaled version of your @{Graphics}, use @{Graphics:draw} instead. 
@@ -611,16 +611,17 @@ end
 -- @usage
 -- g:transform(0, 0, 0, sx, sy)  -- scale by (sx, sy)
 -- @tparam number|Translation x move by x in x-axis, or a LÖVE <a href="https://love2d.org/wiki/Transform">Transform</a>
--- @tparam[opt] number y move by y in y-axis
--- @tparam[optchain] number angle applied rotation in radians
--- @tparam[optchain] number sy scale factor in x
--- @tparam[optchain] number sy scale factor in y
--- @tparam[optchain] number ox x coordinate of origin
--- @tparam[optchain] number oy y coordinate of origin
--- @tparam[optchain] number kx skew in x-axis
--- @tparam[optchain] number ky skew in y-axis
+-- @tparam[opt=0] number y move by y in y-axis
+-- @tparam[optchain=0] number angle applied rotation in radians
+-- @tparam[optchain=1] number sy scale factor in x
+-- @tparam[optchain=1] number sy scale factor in y
+-- @tparam[optchain=0] number ox x coordinate of origin
+-- @tparam[optchain=0] number oy y coordinate of origin
+-- @tparam[optchain=0] number kx skew in x-axis
+-- @tparam[optchain=0] number ky skew in y-axis
 -- @see Path:transform
 -- @see Subpath:transform
+--  @set no_summary=false
 
 function Graphics:transform(...)
 	self:set(tove.transformed(self, ...))
@@ -665,9 +666,9 @@ end
 -- g:draw(120, 150, 0.1)  -- draw at (120, 150) with some rotation
 -- @tparam number x the x-axis position to draw at
 -- @tparam number y the y-axis position to draw at
--- @tparam number r orientation in radians
--- @tparam number sx scale factor in x
--- @tparam number sy scale factor in y
+-- @tparam[opt=0] number r orientation in radians
+-- @tparam[opt=1] number sx scale factor in x
+-- @tparam[opt=1] number sy scale factor in y
 -- @see Graphics:setDisplay
 -- @see Graphics:setResolution
 -- @see Graphics:rescale
@@ -679,7 +680,7 @@ end
 --- Warm-up shaders.
 -- Instructs TÖVE to compile all shaders involved in drawing this
 -- @{Graphics} with the current display settings. On some platforms,
--- compiling "gpux" shaders can take a long time. @{Graphics:warmup} will quit
+-- compiling `gpux` shaders can take a long time. @{Graphics:warmup} will quit
 -- after a certain time and allow you to display some progress info.
 -- In these cases you need to call it again until it returns nil.
 -- @treturn number|nil nil if all shaders were compiled, otherwise
@@ -693,14 +694,16 @@ function Graphics:warmup()
 	return r
 end
 
+--  @set no_summary=true
 --- Rasterize as bitmap.
 -- @tparam number|string width desired width in pixels, or "default" to use @{Graphics} internal size
 -- @tparam number height desired height in pixels
--- @tparam[opt] number tx x-translation of content
--- @tparam[optchain] number ty y-translation of content
--- @tparam[optchain] number scale scale factor of content
--- @tparam[optchain] nil settings internal quality settings, not yet public
+-- @tparam[opt=0] number tx x-translation of content
+-- @tparam[optchain=0] number ty y-translation of content
+-- @tparam[optchain=1] number scale scale factor of content
+-- @tparam[optchain=nil] nil settings internal quality settings, not yet public
 -- @treturn ImageData the rasterized image.
+--  @set no_summary=false
 
 function Graphics:rasterize(width, height, tx, ty, scale, settings)
 	if width == "default" then
@@ -785,7 +788,7 @@ end
 -- Removes duplicate or collinear points which can cause problems
 -- with various algorithms (e.g. triangulation) in TÖVE. If you
 -- have messy vector input, this can be a good first step after loading.
--- @tparam[opt] number eps triangle area at which triangles get collapsed
+-- @tparam[opt=1e-2] number eps triangle area at which triangles get collapsed
 
 function Graphics:clean(eps)
 	lib.GraphicsClean(self._ref, eps or 1e-2)

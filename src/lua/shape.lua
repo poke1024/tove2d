@@ -190,13 +190,17 @@ end
 -- shape.y = 30
 -- shape.r = 0.1 -- rotation
 -- shape:draw() -- no need to track x, y and r here
+-- @see Graphics:draw
 
 function Shape:draw()
 	self.graphics:draw(self.x, self.y, self.r, self.sx, self.sy)
 end
 
---- Set display mode
+--- Set display mode.
 -- Change display mode of underlying @{Graphics}.
+-- @tparam string mode display moede
+-- @tparam[opt] ... args additional args
+-- @see Graphics:setDisplay
 
 function Shape:setDisplay(...)
 	self.graphics:setDisplay(...)

@@ -1,9 +1,11 @@
 --- @module display
+-- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
 
 --- Render using a texture.
 -- @usage
 -- graphics:setDisplay("texture")
 -- @table texture
+-- @tparam string mode `"texture"`
 -- @see Graphics:draw
 -- @see Graphics:setDisplay
 -- @see Graphics:setResolution
@@ -23,7 +25,7 @@
 -- graphics:setDisplay("mesh", "adaptive", 1024) -- target a size of 1024
 -- graphics:setDisplay("mesh", tove.newAdaptiveTesselator(1024)) -- same as above
 -- @table mesh
--- @tparam string mode "mesh"
+-- @tparam string mode `"mesh"`
 -- @tparam[opt] Tesselator|string|number tesselator tesselator to use or name of tesselator type or target size
 -- @tparam[optchain] ... args configuration of tesselator
 -- @see Graphics:draw
@@ -31,18 +33,24 @@
 -- @see Graphics:setResolution
 -- @see Graphics:setUsage
 
---- Render on the GPU.
--- "gpux" means "gpu exclusive": this mode will calculate all curve geometry on the fly
+--- Render exclusively on the GPU.
+-- `"gpux"` means "gpu exclusive": this mode will implicitly render all curve geometry on the fly
 -- on the GPU. This has considerable resolution until it breaks down, however it can also be
--- quite expensive in terms of performance. It is quite experimental as well: TÖVE is - to
--- my best knowledge - the first library capable of rendering complex cubic bezier shapes
--- inside GLSL shaders without doing some kind of tesselation.
+-- quite expensive in terms of performance (note also that it needs one GL context change per path).
+-- It is quite experimental as well: TÖVE is - to the best of my knowledge - the first library
+-- capable of rendering complex cubic bezier shapes inside GLSL shaders without doing some kind
+-- of tesselation. The only other existing implementation with this kind of approach seems to be
+-- <a href="https://www.khronos.org/registry/OpenGL/extensions/NV/NV_path_rendering.txt">NVidia™'s GPU Accelerated Path Rendering</a>.
 -- @usage
 -- graphics:setDisplay("gpux")
+-- graphics:setDisplay("gpux", "vertex")  -- use vertex shader for line drawing
 -- @table gpux
--- @tparam string mode "gpux"
--- @tparam[opt] string lineRenderer line shader: "fragment" or "vertex"
--- @tparam[optchain] number lineQuality line quality
+-- @tparam string mode `"gpux"`
+-- @tparam[opt="fragment"] string lineRenderer line shader (`"fragment"` or `"vertex"`). use `"fragment"`
+-- for lines that need to have round edges, use `"vertex"` for lines that need to have miters.
+-- You can use demos/editor to get an idea of the differences of this setting for various geometries.
+-- @tparam[optchain=1] number lineQuality line quality (between 0 and 1). Higher numbers are
+-- slower (`"fragment"` lines) or generate more geometry (`"vertex"` lines).
 -- @see Graphics:draw
 -- @see Graphics:setDisplay
 
@@ -68,3 +76,4 @@
 -- @function tove.newRigidTesselator
 -- @tparam int subdivisions number of recursive subdivisions; 3 means 2^3=8 points for each bezier curve,
 -- 4 indicates 2^4=16 points, and so on.
+
