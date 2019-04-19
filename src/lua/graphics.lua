@@ -241,7 +241,7 @@ function Graphics:lineTo(x, y)
 	return newCommand(t, lib.SubpathLineTo(t, x, y))
 end
 
---- Draw a cubic bezier curve to (x, y).
+--- Draw a cubic Bézier curve to (x, y).
 -- See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
 -- @usage
 -- g:moveTo(10, 20)

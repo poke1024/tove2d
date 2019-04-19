@@ -9,14 +9,16 @@
 -- All rights reserved.
 -- *****************************************************************
 
---- A vector graphics subpath (trajectory), usually lives inside a @{Path}.
+--- A vector graphics subpath (sometimes called trajectory), usually lives inside a @{Path}.
 -- @classmod Subpath
 
 --- @{tove.List} of @{Curve}s in this @{Subpath}
 -- @table[readonly] curves
 
---- is subpath closed?
+--- is this subpath closed?
 -- @table[readonly] isClosed
+
+--
 
 local _pt = {
 	x = 0,

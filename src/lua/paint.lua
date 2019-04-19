@@ -266,11 +266,19 @@ function Paint:send(k, ...)
 end
 
 --- Create new custom shader.
--- This shader can be used as a paint in fill and line colors. Currently, this is
--- only supported for "gpux" display mode.
+-- This shader can be used as a paint in fill and line colors. Your code needs to contain
+-- a function called `COLOR` that takes a `vec2` position and returns a `vec4` color.
+-- Currently, custom shaders are only supported for the `gpux` display mode.
 -- Also see LÖVE's <a href="https://love2d.org/wiki/love.graphics.newShader">newShader</a>.
--- @tparam string shader source code
+-- @tparam string source shader source code
 -- @treturn Paint new shader
+-- @usage
+-- fillShader = tove.newShader([[
+--	  uniform float time; 
+--	  vec4 COLOR(vec2 pos) {
+--        return vec4(1, 0, sin(t), 1);
+--	   }
+-- ]])
 -- @see Graphics:setDisplay
 -- @see Graphics:warmup
 

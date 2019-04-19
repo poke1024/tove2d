@@ -1,7 +1,7 @@
 --- @module display
--- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
 
 --- Render using a texture.
+-- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
 -- @usage
 -- graphics:setDisplay("texture")
 -- @table texture
@@ -13,6 +13,7 @@
 --- Render using a mesh.
 -- If no tesselator is specified, a default tesselator will be chosen based on the configured
 -- usage of the @{Graphics}.
+-- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
 -- @usage
 -- graphics:setDisplay("mesh") -- default configuration (based on configured usage)
 --
@@ -41,6 +42,7 @@
 -- capable of rendering complex cubic bezier shapes inside GLSL shaders without doing some kind
 -- of tesselation. The only other existing implementation with this kind of approach seems to be
 -- <a href="https://www.khronos.org/registry/OpenGL/extensions/NV/NV_path_rendering.txt">NVidia™'s GPU Accelerated Path Rendering</a>.
+-- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
 -- @usage
 -- graphics:setDisplay("gpux")
 -- graphics:setDisplay("gpux", "vertex")  -- use vertex shader for line drawing

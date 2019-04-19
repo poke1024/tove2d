@@ -16,6 +16,13 @@
 -- @classmod Command
 
 --- width
+-- @usage
+-- 
+-- local graphics = tove.newGraphics()
+-- graphics:setFillColor(1, 1, 1)
+-- local rect = graphics:drawRect(0, 0, 10, 10)
+-- graphics:fill()
+-- rect.w = 20 -- change/animate width
 -- @table w
 
 --- height
@@ -24,19 +31,25 @@
 --- x coordinate of center
 -- @usage
 -- local circle = graphics:drawCircle(0, 0, 10)
--- circle.cx = 5
+-- circle.cx = 5 -- change/animate x position
 -- @table cx
 
 --- y coordinate of center
 -- @table cy
 
 --- x radius
+-- @usage
+-- local circle = graphics:drawCircle(0, 0, 10)
+-- circle.rx = 5 -- change/animate x radius
 -- @table rx
 
 --- y radius
 -- @table ry
 
 --- radius
+-- @usage
+-- local circle = graphics:drawCircle(0, 0, 10)
+-- circle.r = 5 -- change/animate radius
 -- @table r
 
 --- @section Curves
