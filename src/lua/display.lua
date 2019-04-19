@@ -43,6 +43,8 @@
 -- of tesselation. The only other existing implementation with this kind of approach seems to be
 -- <a href="https://www.khronos.org/registry/OpenGL/extensions/NV/NV_path_rendering.txt">NVidia™'s GPU Accelerated Path Rendering</a>.
 -- Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
+-- Please note that on some systems (e.g. macOS) computing `gpux` shaders can take a very long
+-- time (e.g. 20s for one single SVG).
 -- @usage
 -- graphics:setDisplay("gpux")
 -- graphics:setDisplay("gpux", "vertex")  -- use vertex shader for line drawing
@@ -63,7 +65,8 @@
 --- Create an adaptive tesselator.
 -- Use this for high quality static graphics content that does not animate its shape in realtime.
 -- Adaptive Tesselators create meshes that give more subdivision (i.e. points and triangles) to areas where 
--- higher detail is needed, whereas other areas might get less subdivision. The number of vertices produced by
+-- higher detail is needed (curvy areas), whereas other areas (straight lines) might get less subdivision
+-- and need less points. The number of vertices produced by
 -- Adaptive Tesselators depends on the specific geometry. They are not suited for shape animation, as each shape
 -- change would result in a different number of vertices and triangles.
 -- @function tove.newAdaptiveTesselator

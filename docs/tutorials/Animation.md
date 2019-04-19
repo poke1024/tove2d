@@ -1,8 +1,8 @@
 # Animating Things
-TÖVE is designed for animating stuff. Its focus is not on static vector graphics rendering, but on animated vector graphics for games.
+TÖVE is designed for allowing animating and changing shapes and colors at runtime without getting inefficient.
 
 ## Animating with the Stage API
-Many animations can be achieved by moving, rotating and scaling certain fixed parts of a graphics. TÖVE offers the retained `Stage` API for simplifying these kind of animations.
+Many animations can be achieved by moving, rotating and scaling certain fixed parts of a graphics. TÖVE offers the retained `Stage` API for simplifying these kind of animations (also see the <a href="https://poke1024.github.io/tove2d-api/modules/stage.html">Stage API documentation</a>).
 
 At the core is the `Shape` object. Each `Shape` holds a `Graphics` you can access. Each `Shape` knows about its own position, rotation and scale. You can change these at any time and  they will stay this way across frames until you change them again. So if you have objects on the screen and only want to move some of them, `Shape` might simplify your code.
 
@@ -30,11 +30,11 @@ end
 ```
 
 ## Flipbooks and Animations
-Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this.
+Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this. Also see <a href="https://poke1024.github.io/tove2d-api/modules/animation.html">TÖVE's API documentation on animation function</a>.
 
 First, there are flipbooks. These are prerendered distinct frames. Think of a sprite atlas being played back.
 
-Seconds, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames).
+Second, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames)[^1].
 
 The "blob" demo has code for both animation styles.
 
@@ -87,7 +87,7 @@ tween = tove.newTween(svg1):to(svg2, 1):to(svg1, 1)
 
 ### A Technical Note
 
-If you're using animations with a mesh renderer, TÖVE will use a fixed resolution flattening and try to precalculate all triangulations. That means  that the quality will be lower than for adaptive meshes, but things should be fast.
+If you're using animations with the `"mesh"` display mode, TÖVE will use a fixed resolution flattening and try to precalculate all triangulations. That means that the quality will be lower than for adaptive meshes, but things should be fast.
 
 ## Procedural Animation Features
 Sometimes you want even more flexibility for some kind of procedural animation:
@@ -108,7 +108,7 @@ Without doing this, TÖVE will not be able to animate your objects efficiently a
 
 Please note that TÖVE does not efficiently support animations that add or delete points.
 
-You can also choose to use "dynamic" instead of "stream" if your shapes change frequently, but not on every frame (also see https://love2d.org/wiki/SpriteBatchUsage).
+You can also choose to use `"dynamic"` instead of `"stream"` if your shapes change frequently, but not on every frame (also see <a href="https://love2d.org/wiki/SpriteBatchUsage">LÖVE's docs on `SpriteBatchUsage`</a>).
 
 ## Animating colors
 Animating colors is easy. Here are two examples:
@@ -154,18 +154,8 @@ function love.draw()
 	myColor.r = math.abs(math.sin(love.timer.getTime()))
 ```
 
-### A note on dependencies
-
-TÖVE internally assumes that each object only has exactly one owner. For example, a color can only belong to one path; you cannot assign the same color to two paths, and then change it for both paths.
-
-As soon as you assign the same color to two paths, TÖVE will internally clone one of the colors.
-
-So what will happen in the case above is that only one path (the one with the uncloned color) would change its color.
-
-The same holds true for trajectories and paths, and paths and graphics. Keep that in mind when working with many different objects.
-
 ## Animating shapes with Commands
-Most drawing calls come return a command, that allows you to animate what you have just drawn.
+Most drawing calls come return a command, that allows you to animate what you have just drawn. Also see the <a href="https://poke1024.github.io/tove2d-api/classes/Command.html">API documentation on Commands</a>.
 
 An example:
 
@@ -187,7 +177,7 @@ This has the same effect as if you'd recreated the whole graphics with the modif
 The attribute names are `x` and `y` for `moveTo` and `lineTo`. For `curveTo` you also have `cp1x`, `cp1y`, `cp2x`, `cp2y`. You can read and write those properties.
 
 ##  Directly Accessing Paths and Curves
-Using  Command  is what you want to animate one path most of the time. Sometimes though want to have a broader access to your curve data. For example you might want to morph whole parts of a path. TÖVE let's you do this.
+Using  Command  is what you want to animate one path most of the time. Sometimes though want to have a broader access to your curve data. For example you might want to morph whole parts of a path. TÖVE let's you do this. Also see the <a href="https://poke1024.github.io/tove2d-api/classes/Curve.html">Curve API documentation</a>.
 
 Let's first talk about how TÖVE stores your curves and how it names things:
 
@@ -213,11 +203,11 @@ function love.draw()
 end
 ```
 
-If you don't want to access curves, but the underlying points of all the subpath's curves as one continuous array, you can do it like this:
+If you want to access a curve's underlying points by index, you can do it like this:
 
 ```
- myGraphics.paths[1].subpaths[2].points[3].x
- myGraphics.paths[1].subpaths[2].points[3].y
+ myGraphics.paths[1].subpaths[2].curves[1].p[2].x
+ myGraphics.paths[1].subpaths[2].curves[3].p[2].y
 ```
 
 To find out how many paths, subpaths, curves or points you have, you can use the `count` attribute, e.g.:
@@ -228,20 +218,4 @@ myDrawing.paths[1].subpaths.count -- number of subpaths in path 1
 myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in path 1
 ``` 
 
-## Mesh Animation Caveats
-If you're using the `mesh` renderer for animation, there are two specific things that can cause problems:
-
-* Clean, oriented curves. Usually, things should just work. If not, here are some hints.
-
-TÖVE's automatically deals with obvious cases of point duplication (also during animation). Furthermore in dynamic points mesh mode, the default is to ignore orientation (i.e. no holes), which means your curve can be oriented in the wrong way and you will still see it.
-
-There might be situations where you want to clean or reorient your curves. TÖVE offers two functions. Note that cleaning will get you into problems when animating paths that need to have exactly the same point layout.
-
-```
-myGraphics:clean()
-myGraphics:setOrientation("ccw")
-```
-
-* Triangulations.  TÖVE's animation system has a dynamic triangulation monitor that check whether it's current triangulation is still good or needs updating (which will usually happen due to sub shapes changing from convex to concave forms or vice versa). TÖVE also caches triangulations and tries to reuse them. Still, with procedural animation and complete freedom, you might end up in situations where many retriangulations happen, which is expensive on the CPU.
-
-You can disable automatic retriangulation by calling `myDrawing:setUsage("triangles", "static")`  after calling `myDrawing:setUsage("points", "dynamic")` (as the latter automatically always sets `triangles` to `dynamic`). This means TÖVE will stick with one triangulation (which can result in visual errors).  If you do this, be sure to use `graphics:cache()` to pick one good triangulation at the beginning that you define as suitable for all animation frames.
+[^1]: if this is not the case, TÖVE is able to morph shapes (see demos/morph).

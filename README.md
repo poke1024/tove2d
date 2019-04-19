@@ -20,14 +20,11 @@ You can use WebGL, but then you lose vector graphics. There have been attempts t
 ## Getting Started
 Releases are available for macOS, Linux and Windows: https://github.com/poke1024/tove2d/releases.
 
-Look at the demos. The most essential stuff is described here:
+Some tutorials and general information on TÖVE are found in
+<a href="https://poke1024.github.io/tove2d/">TÖVE's documentation</a>.
 
-* [Getting Started](docs/tutorials/Getting_Started.md)
-* [The Demos](docs/tutorials/Demos.md)
-* [Choosing Renderers](docs/tutorials/Renderers.md)
-* [Animating Things](docs/tutorials/Animation.md)
-
-There are also [the beginnings of a documentation](https://poke1024.github.io/tove2d/).
+Be sure to check out <a href="https://poke1024.github.io/tove2d-api/">TÖVE's API documentation</a>,
+which gives you detailed information on classes and functions.
 
 Note: on Windows, in order to run the demos, you need to call `setup.bat` once (this
 will fix the links to the lib and asset folders, so you can run e.g. `love demos/blob`).
