@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_Tween">Class Tween </a></li>
+<li><a href="#Class_Flipbook">Class Flipbook </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>animation</strong></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>animation</code></h1>
+<p>
+
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Class_Tween">Class Tween </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newTween">tove.newTween (graphics)</a></td>
+	<td class="summary">Create new tween.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Tween:to">Tween:to (graphics, duration[, ease])</a></td>
+	<td class="summary">Add new tween step.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Flipbook">Class Flipbook </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newFlipbook">tove.newFlipbook (fps, tween)</a></td>
+	<td class="summary">Create new flipbook.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flipbook:draw">Flipbook:draw (...)</a></td>
+	<td class="summary">Draw.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_Tween"></a>Class Tween </h2>
+
+          <div class="section-description">
+          A tween.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "tove.newTween"></a>
+    <strong>tove.newTween (graphics)</strong>
+    </dt>
+    <dd>
+    Create new tween.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">graphics</span>
+            <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+         <a href="../classes/Graphics.html#">Graphics</a> which will be at frame 0 of the new tween
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/animation.html#Tween">Tween</a></span>
+        new empty tween
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Tween:to"></a>
+    <strong>Tween:to (graphics, duration[, ease])</strong>
+    </dt>
+    <dd>
+    Add new tween step.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">graphics</span>
+            <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+         <a href="../classes/Graphics.html#">Graphics</a> which will be at the new step
+        </li>
+        <li><span class="parameter">duration</span>
+            <span class="types"><span class="type">number</span></span>
+         duration from current end of tween to step
+        </li>
+        <li><span class="parameter">ease</span>
+            <span class="types"><span class="type">function</span></span>
+         easing function
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/animation.html#Tween">Tween</a></span>
+        the modified tween
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">tween = tove.newTween(svg1):to(svg2, <span class="number">0.3</span>):to(svg3, <span class="number">0.1</span>)</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Flipbook"></a>Class Flipbook </h2>
+
+          <div class="section-description">
+          A flipbook.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "tove.newFlipbook"></a>
+    <strong>tove.newFlipbook (fps, tween)</strong>
+    </dt>
+    <dd>
+    Create new flipbook.
+ A flipbook consists of prerendered discrete frames. Performance
+ will be high, but memory requirements might be high as well.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fps</span>
+            <span class="types"><span class="type">number</span></span>
+         playback rate as frames per second
+        </li>
+        <li><span class="parameter">tween</span>
+            <span class="types"><a class="type" href="../modules/animation.html#Tween">Tween</a></span>
+         describes the animation to play
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flipbook:draw"></a>
+    <strong>Flipbook:draw (...)</strong>
+    </dt>
+    <dd>
+    Draw.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -48,32 +48,23 @@
 	<ul class="current">
 	  
           
+            <li class="toctree-l1">
+		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+	    </li>
+          
             <li class="toctree-l1 current">
 		
     <a class="current" href="./">Features</a>
     <ul class="subnav">
             
+    <li class="toctree-l2"><a href="#scope">Scope</a></li>
+    
+
+    <li class="toctree-l2"><a href="#renderers">Renderers</a></li>
+    
+
     </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../graphics/">Graphics</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../collections/">Collections</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../colors/">Colors</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../tesselators/">Tesselators</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -113,7 +104,10 @@
           <div role="main">
             <div class="section">
               
-                <p>Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games.</p>
+                <h1 id="scope">Scope</h1>
+<p>TÖVE is a simplified vector graphics library for games aimed at realtime scaling and animation.</p>
+<p>Even though TÖVE knows some tricks and even supports dithering, do not expect it to have the feature set or the rendering quality comparable of a full fledged print quality library such as <a href="https://www.cairographics.org/">Cairo</a> or <a href="https://skia.org/">Skia</a>.</p>
+<h1 id="renderers">Renderers</h1>
 <p>Here's what you can expect from TÖVE's different renderers:</p>
 <table>
 <thead>
@@ -251,7 +245,7 @@ Also note the number of OpenGL drawing calls/context switches:</p>
 <p>if used as static mesh, i.e. building it once and not animating its shape.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
-<p>if used as animated mesh, i.e. when calling <code>setUsage</code> on "points" with "dynamic".&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>if used as animated mesh, i.e. when calling <code>setUsage</code> on "points" with "dynamic" or "stream".&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 <li id="fn:3">
 <p>for some shapes, by using the <code>fragment</code> option for line rendering.&#160;<a class="footnote-backref" href="#fnref:3" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
@@ -268,7 +262,7 @@ Also note the number of OpenGL drawing calls/context switches:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../graphics/" class="btn btn-neutral float-right" title="Graphics">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../release-notes/" class="btn btn-neutral float-right" title="Release Notes">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
     </div>
@@ -296,7 +290,7 @@ Also note the number of OpenGL drawing calls/context switches:</p>
       
       
       
-        <span style="margin-left: 15px"><a href="../graphics/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../release-notes/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

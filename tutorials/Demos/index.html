@@ -50,27 +50,12 @@
           
             <li class="toctree-l1">
 		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
     <a class="" href="../../features/">Features</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../graphics/">Graphics</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../collections/">Collections</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../colors/">Colors</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../tesselators/">Tesselators</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -131,19 +116,18 @@ love .
 </code></pre>
 
 <p>On Windows, the symbolic links don't work :-( So you need to unzip the <code>lib</code> into each demo folder. Also you need to copy the <code>demos/assets</code> folder inside the respective demo folder. Basically: replace the symlinks with the real stuff.</p>
-<h2 id="miniedit-demo">MiniEdit Demo</h2>
-<p>TÖVE comes with a mini editor that lets you explore all of TÖVE's features (different renderers and settings) interactively. You can drag and drop SVGs into the editor. It also has a demo mode that lets you benchmark performance:</p>
-<p><img alt="" src="../images/demos/miniedit.png" />
-<img alt="" src="../images/demos/miniedit2.png" /></p>
-<h2 id="zoom-demo">Zoom Demo</h2>
-<p>Scaling bitmaps produces blurriness or pixelation, scaling meshes produces straight crisp lines, while TÖVE's unique shader-based <code>curves</code> renderer will render crisp curves at many reasonable scales:</p>
-<p><img alt="" src="../images/demos/zoom.png" /></p>
+<h2 id="warp-demo">Warp Demo</h2>
+<p>A demo allowing you to change shape and character of curves on any SVG using a brush-like interface. Best of all, you can define various frames in this way and then animate between them using a mesh rendering:</p>
+<p><img alt="" src="../images/demos/warp.png" /></p>
 <h2 id="renderers-demo">Renderers Demo</h2>
-<p>Interactively zoom TÖVE's three renderers to inspect the quality:</p>
+<p>Interactively zoom TÖVE's three renderers to inspect the quality of each variant. Note that startup takes time due to the compilation of the <code>gpux</code> shaders:</p>
 <p><img alt="" src="../images/demos/renderers.png" /></p>
 <h2 id="tesselation-demo">Tesselation Demo</h2>
 <p>The <code>mesh</code> renderer's quality setting produces meshes of different detail and triangle count from the same SVG:</p>
 <p><img alt="" src="../images/demos/tess.png" /></p>
+<h2 id="zoom-demo">Zoom Demo</h2>
+<p>Scaling bitmaps produces blurriness or pixelation, scaling meshes produces straight crisp lines, while TÖVE's unique shader-based <code>gpux</code> renderer will render crisp curves at many reasonable scales:</p>
+<p><img alt="" src="../images/demos/zoom.png" /></p>
 <h2 id="blob-demo">Blob Demo</h2>
 <p>Animate between two SVGs using different renderers and qualities:</p>
 <p><img alt="" src="../images/demos/blob.png" /></p>
@@ -152,14 +136,22 @@ love .
 <p>Procedurally animate geometry and colors (here: a linear gradient) through different renderers:</p>
 <p><img alt="" src="../images/demos/hearts.png" /></p>
 <p>The numbers displayed are times spent inside <code>love.graphics.draw</code> (might not be representative as more work might happen later in the  swap of the GL context).</p>
-<p>The <code>mesh</code> and <code>curves</code> renderers update existing GPU data structures like meshes and shader textures without recreating them, which allows for higher frame rates.</p>
-<p>This demo also illustrates why the <code>flatmesh</code> renderer is called as it's called: you see that it's not able to handle gradients very well.</p>
+<p>The <code>mesh</code> and <code>gpux</code> renderers update existing GPU data structures like meshes and shader textures without recreating them, which allows for higher frame rates.</p>
+<p>This demo illustrates two internal variants of the <code>mesh</code> renderer: one uses flat meshes (if no gradients are
+exist), the other uses shaders for gradient renderers. <code>mesh</code> automatically chooses the right internal variant.</p>
 <h2 id="fill-rule-demo">Fill Rule Demo</h2>
 <p>TÖVE offers support for holes and fill rules for all of its renderers:</p>
 <p><img alt="" src="../images/demos/fillrule.png" /></p>
 <h2 id="clip-path-demo">Clip Path Demo</h2>
-<p>For non-animated rendering, TÖVE is able to render complex clip paths in texture and mesh modes:</p>
+<p>For non-animated rendering, TÖVE is able to render rather complex clip paths in texture and mesh modes. In this SVG by Chris Hildenbrand, there are about 200 wildly nested clip paths:</p>
 <p><img alt="" src="../images/demos/clippath.png" /></p>
+<h2 id="retro-rasterization-demo">Retro Rasterization Demo</h2>
+<p>For non-animated rasterization, TÖVE supports various dithering modes for rendering gradients with limited palettes:</p>
+<p><img alt="" src="../images/demos/retro.png" /></p>
+<h2 id="miniedit-demo">MiniEdit Demo</h2>
+<p>TÖVE comes with a mini editor that lets you explore all of TÖVE's features (different renderers and settings) interactively. You can drag and drop any SVG into the editor. It also has a demo mode that lets you benchmark performance:</p>
+<p><img alt="" src="../images/demos/miniedit.png" />
+<img alt="" src="../images/demos/miniedit2.png" /></p>
               
             </div>
           </div>

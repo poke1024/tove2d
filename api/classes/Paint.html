@@ -1,0 +1,609 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><strong>Paint</strong></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>Paint</code></h1>
+<p>Colors and gradients used in fills and lines.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newLinearGradient">tove.newLinearGradient (x0, y0, x1, y1)</a></td>
+	<td class="summary">Create a linear gradient.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tove.newRadialGradient">tove.newRadialGradient (cx, cy, fx, fy, r)</a></td>
+	<td class="summary">Create a radial gradient.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tove.newShader">tove.newShader (source)</a></td>
+	<td class="summary">Create new custom shader.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Paint.PaintType">Paint.PaintType</a></td>
+	<td class="summary">types of paint</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newColor">tove.newColor</a></td>
+	<td class="summary">Create a new color.</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Paint:addColorStop">Paint:addColorStop (offset, r, g, b[, a=1])</a></td>
+	<td class="summary">Add new color stop.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:clone">Paint:clone ()</a></td>
+	<td class="summary">Clone.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:get">Paint:get ([opacity=1])</a></td>
+	<td class="summary">Get RGBA components.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:getColorStop">Paint:getColorStop (i[, opacity=1])</a></td>
+	<td class="summary">Get i-th color stop.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:getNumColors">Paint:getNumColors ()</a></td>
+	<td class="summary">Get number of colors.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:getType">Paint:getType ()</a></td>
+	<td class="summary">Query paint type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:send">Paint:send (k, data)</a></td>
+	<td class="summary">Send data to custom shader.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Paint:set">Paint:set (r, g, b[, a=1])</a></td>
+	<td class="summary">Set to RGBA.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "tove.newLinearGradient"></a>
+    <strong>tove.newLinearGradient (x0, y0, x1, y1)</strong>
+    </dt>
+    <dd>
+    Create a linear gradient.
+ Initially the gradient will not contain any colors.
+ Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/linearGradient">SVG documentation by Mozilla</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x0</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of start point of gradient
+        </li>
+        <li><span class="parameter">y0</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of start point of gradient
+        </li>
+        <li><span class="parameter">x1</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of end point of gradient
+        </li>
+        <li><span class="parameter">y1</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of end point of gradient
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Paint.html#Paint:addColorStop">addColorStop</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tove.newRadialGradient"></a>
+    <strong>tove.newRadialGradient (cx, cy, fx, fy, r)</strong>
+    </dt>
+    <dd>
+    Create a radial gradient.
+ Initially the gradient will not contain any colors.
+ Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/radialGradient">SVG documentation by Mozilla</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cx</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of the end circle
+        </li>
+        <li><span class="parameter">cy</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of the end circle
+        </li>
+        <li><span class="parameter">fx</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of the start circle
+        </li>
+        <li><span class="parameter">fy</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of the start circle
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         radius of end circle
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Paint.html#Paint:addColorStop">addColorStop</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tove.newShader"></a>
+    <strong>tove.newShader (source)</strong>
+    </dt>
+    <dd>
+    Create new custom shader.
+ This shader can be used as a paint in fill and line colors. Your code needs to contain
+ a function called <code>COLOR</code> that takes a <code>vec2</code> position and returns a <code>vec4</code> color.
+ Currently, custom shaders are only supported for the <code>gpux</code> display mode.
+ Also see LÖVE's <a href="https://love2d.org/wiki/love.graphics.newShader">newShader</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">source</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         shader source code
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Paint.html#">Paint</a></span>
+        new shader
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:warmup">Graphics:warmup</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">fillShader = tove.newShader(<span class="string">[[
+  uniform float time;
+  vec4 COLOR(vec2 pos) {
+       return vec4(1, 0, sin(t), 1);
+   }
+]]</span>)</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Paint.PaintType"></a>
+    <strong>Paint.PaintType</strong>
+    </dt>
+    <dd>
+    types of paint
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">none</span>
+         empty paint (transparent)
+        </li>
+        <li><span class="parameter">solid</span>
+         solid RGBA color
+        </li>
+        <li><span class="parameter">linear</span>
+         linear gradient
+        </li>
+        <li><span class="parameter">radial</span>
+         radial gradient
+        </li>
+        <li><span class="parameter">shader</span>
+         custom shader
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "tove.newColor"></a>
+    <strong>tove.newColor</strong>
+    </dt>
+    <dd>
+    Create a new color.
+
+
+    <ul>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+        </li>
+        <li><span class="parameter">a</span>
+            <span class="types"><span class="type">number</span></span>
+         alpha
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Paint:addColorStop"></a>
+    <strong>Paint:addColorStop (offset, r, g, b[, a=1])</strong>
+    </dt>
+    <dd>
+    Add new color stop.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">offset</span>
+            <span class="types"><span class="type">number</span></span>
+         where to add this new color (0 &lt;= offset &lt;= 1)
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+        </li>
+        <li><span class="parameter">a</span>
+            <span class="types"><span class="type">number</span></span>
+         alpha
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Paint.html#Paint:getColorStop">Paint:getColorStop</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Paint:clone"></a>
+    <strong>Paint:clone ()</strong>
+    </dt>
+    <dd>
+    Clone.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Paint cloned <a href="../classes/Paint.html#">Paint</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Paint:get"></a>
+    <strong>Paint:get ([opacity=1])</strong>
+    </dt>
+    <dd>
+    Get RGBA components.
+ If called on a gradient, this will not yield useful results.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opacity</span>
+            <span class="types"><span class="type">opacity</span></span>
+         to apply on returned color
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        red</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        green</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        blue</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        alpha</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Paint:getColorStop"></a>
+    <strong>Paint:getColorStop (i[, opacity=1])</strong>
+    </dt>
+    <dd>
+    Get i-th color stop.
+ Use this to retrieve gradient's colors.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         1-based index of color
+        </li>
+        <li><span class="parameter">opacity</span>
+            <span class="types"><span class="type">number</span></span>
+         to apply on returned color
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        offset (between 0 and 1)</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        red</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        green</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        blue</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        alpha</li>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Paint.html#Paint:addColorStop">Paint:addColorStop</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Paint:getNumColors"></a>
+    <strong>Paint:getNumColors ()</strong>
+    </dt>
+    <dd>
+    Get number of colors.
+ Interesting for gradients only.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        number of colors in this paint.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Paint:getType"></a>
+    <strong>Paint:getType ()</strong>
+    </dt>
+    <dd>
+    Query paint type.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+        one of the names in <a href="../classes/Paint.html#Paint.PaintType">Paint.PaintType</a>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Paint:send"></a>
+    <strong>Paint:send (k, data)</strong>
+    </dt>
+    <dd>
+    Send data to custom shader.
+ Also see LÖVE's <a href="https://love2d.org/wiki/Shader:send">Shader:send</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">k</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         name of uniform
+        </li>
+        <li><span class="parameter">data</span>
+            <span class="types"><span class="type">...</span></span>
+         data to send
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">shader:send(<span class="string">"t"</span>, love.timer.getTime())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Paint:set"></a>
+    <strong>Paint:set (r, g, b[, a=1])</strong>
+    </dt>
+    <dd>
+    Set to RGBA.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+        </li>
+        <li><span class="parameter">a</span>
+            <span class="types"><span class="type">number</span></span>
+         alpha
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

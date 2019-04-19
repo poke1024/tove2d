@@ -1,0 +1,1758 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><strong>Graphics</strong></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>Graphics</code></h1>
+<p>A vector graphics.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newGraphics">tove.newGraphics (data[, size="auto"])</a></td>
+	<td class="summary">Create a new Graphics.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Graphics.paths">Graphics.paths</a></td>
+	<td class="summary"><a href="../modules/tove.html#List">tove.List</a> of <a href="../classes/Path.html#">Path</a>s in this <a href="../classes/Graphics.html#">Graphics</a></td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:addPath">Graphics:addPath (path)</a></td>
+	<td class="summary">Add a <a href="../classes/Path.html#">Path</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:animate">Graphics:animate (a, b, t)</a></td>
+	<td class="summary">Animate between two <a href="../classes/Graphics.html#">Graphics</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:arc">Graphics:arc (x, y, r, startAngle, endAngle, ccw)</a></td>
+	<td class="summary">Draw an arc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:beginPath">Graphics:beginPath ()</a></td>
+	<td class="summary">Start a fresh <a href="../classes/Path.html#">Path</a> for drawing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:beginSubpath">Graphics:beginSubpath ()</a></td>
+	<td class="summary">Inside the current <a href="../classes/Path.html#">Path</a>, start a fresh <a href="../classes/Subpath.html#">Subpath</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:cacheKeyFrame">Graphics:cacheKeyFrame ()</a></td>
+	<td class="summary">Cache the current shape as key frame.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:clean">Graphics:clean ([eps=1e-2])</a></td>
+	<td class="summary">Clean paths.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:clear">Graphics:clear ()</a></td>
+	<td class="summary">Remove all <a href="../classes/Path.html#">Path</a>s.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:clearCache">Graphics:clearCache ()</a></td>
+	<td class="summary">Clear internal drawing cache.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:clone">Graphics:clone ()</a></td>
+	<td class="summary">Create a deep copy.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:closePath">Graphics:closePath ()</a></td>
+	<td class="summary">Close the current <a href="../classes/Path.html#">Path</a>, thereby creating a loop.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:closeSubpath">Graphics:closeSubpath ()</a></td>
+	<td class="summary">Inside the current <a href="../classes/Path.html#">Path</a>, close the current <a href="../classes/Subpath.html#">Subpath</a>, thereby creating a loop.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:computeAABB">Graphics:computeAABB ([prec="high"])</a></td>
+	<td class="summary">Compute bounding box.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:curveTo">Graphics:curveTo (cp1x, cp1y, cp2x, cp2y, x, y)</a></td>
+	<td class="summary">Draw a cubic Bézier curve to (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:draw">Graphics:draw (x, y[, r=0[, sx=1[, sy=1]]])</a></td>
+	<td class="summary">Draw to screen.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:drawCircle">Graphics:drawCircle (x, y, r)</a></td>
+	<td class="summary">Draw a circle.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:drawEllipse">Graphics:drawEllipse (x, y, rx, ry)</a></td>
+	<td class="summary">Draw an ellipse.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:drawRect">Graphics:drawRect (x, y, w, h, rx, ry)</a></td>
+	<td class="summary">Draw a rectangle.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:fill">Graphics:fill ()</a></td>
+	<td class="summary">Add fill to shape.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getCurrentPath">Graphics:getCurrentPath ()</a></td>
+	<td class="summary">Get the current <a href="../classes/Path.html#">Path</a> for drawing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getDisplay">Graphics:getDisplay ()</a></td>
+	<td class="summary">Get display mode.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getHeight">Graphics:getHeight ([prec="high"])</a></td>
+	<td class="summary">Get height.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getNumTriangles">Graphics:getNumTriangles ()</a></td>
+	<td class="summary">Get number of triangles.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getQuality">Graphics:getQuality ()</a></td>
+	<td class="summary">Get display quality.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getUsage">Graphics:getUsage ()</a></td>
+	<td class="summary">Get usage.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:getWidth">Graphics:getWidth ([prec="high"])</a></td>
+	<td class="summary">Get width.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:hit">Graphics:hit (x, y)</a></td>
+	<td class="summary">Check if inside.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:lineTo">Graphics:lineTo (x, y)</a></td>
+	<td class="summary">Draw a line to (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:moveTo">Graphics:moveTo (x, y)</a></td>
+	<td class="summary">Move to position (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:rescale">Graphics:rescale (size[, center])</a></td>
+	<td class="summary">Rescale to given size.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:rotate">Graphics:rotate (w, k)</a></td>
+	<td class="summary">Rotate elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setCacheSize">Graphics:setCacheSize (size)</a></td>
+	<td class="summary">Set internal key frame cache size.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setDisplay">Graphics:setDisplay (mode[, args])</a></td>
+	<td class="summary">Set display mode.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setFillColor">Graphics:setFillColor (r[, g[, b[, a=0]]])</a></td>
+	<td class="summary">Set fill color.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setLineColor">Graphics:setLineColor (r[, g[, b[, a=0]]])</a></td>
+	<td class="summary">Set line color.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setLineDash">Graphics:setLineDash (widths)</a></td>
+	<td class="summary">Set line dash pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setLineDashOffset">Graphics:setLineDashOffset (offset)</a></td>
+	<td class="summary">Set line dash offset.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setLineWidth">Graphics:setLineWidth (width)</a></td>
+	<td class="summary">Set line width.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setMiterLimit">Graphics:setMiterLimit (miterLimit)</a></td>
+	<td class="summary">Set miter limit.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setMonochrome">Graphics:setMonochrome (r, g, b)</a></td>
+	<td class="summary">Set all colors to one.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setName">Graphics:setName (name)</a></td>
+	<td class="summary">Set name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setOrientation">Graphics:setOrientation (orientation)</a></td>
+	<td class="summary">Set orientation of all <a href="../classes/Subpath.html#">Subpath</a>s.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setResolution">Graphics:setResolution (resolution)</a></td>
+	<td class="summary">Set resolution.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:setUsage">Graphics:setUsage (what, usage)</a></td>
+	<td class="summary">Set usage.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:stroke">Graphics:stroke ()</a></td>
+	<td class="summary">Add stroke to shape.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:warmup">Graphics:warmup ()</a></td>
+	<td class="summary">Warm-up shaders.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Graphics:warp">Graphics:warp (f)</a></td>
+	<td class="summary">Warp points.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "tove.newGraphics"></a>
+    <strong>tove.newGraphics (data[, size="auto"])</strong>
+    </dt>
+    <dd>
+    Create a new Graphics.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <a class="type" href="../classes/Path.html#">{Path,...}</a></span>
+         either an SVG string or a table of <a href="../classes/Path.html#">Path</a>s
+        </li>
+        <li><span class="parameter">size</span>
+            <span class="types"><span class="type">int</span> or <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         the size to scale the <a href="../classes/Graphics.html#">Graphics</a> to.
+ Use <code>&quot;auto&quot;</code> (scale longest side to 1024),
+ <code>&quot;copy&quot;</code> (do not scale and use original size)
+ or a number (the number of pixels to scale to).
+         (<em>default</em> "auto")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+        a new Graphics
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> svg = love.filesystem.read(<span class="string">"MyGraphics.svg"</span>)
+g = tove.newGraphics(svg, <span class="number">200</span>)  <span class="comment">-- scale to 200 pixels</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Graphics.paths"></a>
+    <strong>Graphics.paths</strong>
+    </dt>
+    <dd>
+    <a href="../modules/tove.html#List">tove.List</a> of <a href="../classes/Path.html#">Path</a>s in this <a href="../classes/Graphics.html#">Graphics</a>
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Graphics:addPath"></a>
+    <strong>Graphics:addPath (path)</strong>
+    </dt>
+    <dd>
+    Add a <a href="../classes/Path.html#">Path</a>.
+ The new <a href="../classes/Path.html#">Path</a> will be appended after other existing <a href="../classes/Path.html#">Path</a>s.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="../classes/Path.html#">Path</a></span>
+         <a href="../classes/Path.html#">Path</a> to append
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:animate"></a>
+    <strong>Graphics:animate (a, b, t)</strong>
+    </dt>
+    <dd>
+    Animate between two <a href="../classes/Graphics.html#">Graphics</a>.
+ Makes this <a href="../classes/Graphics.html#">Graphics</a> to an interpolated inbetween.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+            <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+         <a href="../classes/Graphics.html#">Graphics</a> at t == 0
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+         <a href="../classes/Graphics.html#">Graphics</a> at t == 1
+        </li>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">number</span></span>
+         interpolation (0 &lt;= t &lt;= 1)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Path.html#Path:animate">Path:animate</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:arc"></a>
+    <strong>Graphics:arc (x, y, r, startAngle, endAngle, ccw)</strong>
+    </dt>
+    <dd>
+    Draw an arc.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre of arc
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre of arc
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         radius of arc
+        </li>
+        <li><span class="parameter">startAngle</span>
+            <span class="types"><span class="type">number</span></span>
+         angle at which to start drawing
+        </li>
+        <li><span class="parameter">endAngle</span>
+            <span class="types"><span class="type">number</span></span>
+         angle at which to stop drawing
+        </li>
+        <li><span class="parameter">ccw</span>
+            <span class="types"><span class="type">bool</span></span>
+         true if drawing between given angles is counterclockwise
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:beginPath"></a>
+    <strong>Graphics:beginPath ()</strong>
+    </dt>
+    <dd>
+    Start a fresh <a href="../classes/Path.html#">Path</a> for drawing.
+ The previously active <a href="../classes/Path.html#">Path</a> will get closed but won't
+ be made into loop. Subsequent drawing commands like <a href="../classes/Graphics.html#Graphics:lineTo">Graphics:lineTo</a>
+ will draw into the newly started <a href="../classes/Path.html#">Path</a>.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Path.html#">Path</a></span>
+        new active <a href="../classes/Path.html#">Path</a> in this <a href="../classes/Graphics.html#">Graphics</a>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:moveTo(<span class="number">10</span>, <span class="number">10</span>)
+g:lineTo(<span class="number">20</span>, <span class="number">15</span>)
+g:lineTo(<span class="number">5</span>, <span class="number">0</span>)
+g:beginPath()  <span class="comment">-- do not connect lines above into a loop
+</span>g:moveTo(<span class="number">50</span>, <span class="number">50</span>)
+g:lineTo(<span class="number">60</span>, <span class="number">55</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:beginSubpath"></a>
+    <strong>Graphics:beginSubpath ()</strong>
+    </dt>
+    <dd>
+    Inside the current <a href="../classes/Path.html#">Path</a>, start a fresh <a href="../classes/Subpath.html#">Subpath</a>.
+ The previously active <a href="../classes/Subpath.html#">Subpath</a> will not be made into a loop.
+ Subsequent drawing commands like <a href="../classes/Graphics.html#Graphics:lineTo">Graphics:lineTo</a> will draw into the
+ new <a href="../classes/Subpath.html#">Subpath</a> inside the same <a href="../classes/Path.html#">Path</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:cacheKeyFrame"></a>
+    <strong>Graphics:cacheKeyFrame ()</strong>
+    </dt>
+    <dd>
+    Cache the current shape as key frame.
+ In "mesh" display mode, indicate to TÖVE that the current shape of this
+ <a href="../classes/Graphics.html#">Graphics</a> will recur in your animations as key frame. This allows TÖVE
+ to precompute a triangulation for the current shape and reuse that later
+ on. It also tells TÖVE to never evict this specific triangulation from
+ its internal cache.
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setCacheSize">setCacheSize</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">setKeyFrame1(g)
+g:cacheKeyFrame()
+setKeyFrame2(g)
+g:cacheKeyFrame()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:clean"></a>
+    <strong>Graphics:clean ([eps=1e-2])</strong>
+    </dt>
+    <dd>
+    Clean paths.
+ Removes duplicate or collinear points which can cause problems
+ with various algorithms (e.g. triangulation) in TÖVE. If you
+ have messy vector input, this can be a good first step after loading.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">eps</span>
+            <span class="types"><span class="type">number</span></span>
+         triangle area at which triangles get collapsed
+         (<em>default</em> 1e-2)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:clear"></a>
+    <strong>Graphics:clear ()</strong>
+    </dt>
+    <dd>
+    Remove all <a href="../classes/Path.html#">Path</a>s.
+ Effectively empties this <a href="../classes/Graphics.html#">Graphics</a> of all drawable content.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:clearCache"></a>
+    <strong>Graphics:clearCache ()</strong>
+    </dt>
+    <dd>
+    Clear internal drawing cache.
+ Recreates internal drawing objects (e.g. meshes). You shouldn't need this.
+ Please note that this is NOT related to <a href="../classes/Graphics.html#Graphics:cacheKeyFrame">Graphics:cacheKeyFrame</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:clone"></a>
+    <strong>Graphics:clone ()</strong>
+    </dt>
+    <dd>
+    Create a deep copy.
+ This cloned copy will include new copies of all <a href="../classes/Path.html#">Path</a>s.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Graphics.html#">Graphics</a></span>
+        cloned <a href="../classes/Graphics.html#">Graphics</a>.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:closePath"></a>
+    <strong>Graphics:closePath ()</strong>
+    </dt>
+    <dd>
+    Close the current <a href="../classes/Path.html#">Path</a>, thereby creating a loop.
+ Subsequent drawing commands like <a href="../classes/Graphics.html#Graphics:lineTo">Graphics:lineTo</a> will automatically
+ start a fresh <a href="../classes/Path.html#">Path</a>.
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:moveTo(<span class="number">10</span>, <span class="number">10</span>)
+g:lineTo(<span class="number">20</span>, <span class="number">15</span>)
+g:lineTo(<span class="number">5</span>, <span class="number">0</span>)
+g:closePath() <span class="comment">-- connect lines above into a loop</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:closeSubpath"></a>
+    <strong>Graphics:closeSubpath ()</strong>
+    </dt>
+    <dd>
+    Inside the current <a href="../classes/Path.html#">Path</a>, close the current <a href="../classes/Subpath.html#">Subpath</a>, thereby creating a loop.
+ Subsequent drawing commands like <a href="../classes/Graphics.html#Graphics:lineTo">Graphics:lineTo</a> will automatically
+ start a fresh <a href="../classes/Subpath.html#">Subpath</a> inside the same <a href="../classes/Path.html#">Path</a>. Use this
+ method if you want to draw holes.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:computeAABB"></a>
+    <strong>Graphics:computeAABB ([prec="high"])</strong>
+    </dt>
+    <dd>
+    Compute bounding box.
+ <code>&quot;low&quot;</code> precision will not correctly compute certain line boundaries (miters),
+ however it will be exact for fills and much faster than <code>&quot;high&quot;</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">prec</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         precision of bounding box: <code>&quot;high&quot;</code> (i.e. exact)  or <code>&quot;low&quot;</code> (faster)
+         (<em>default</em> "high")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        x0 (left-most x)</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        y0 (top-most y)</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        x1 (right-most x)</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        y1 (bottom-most y)</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:curveTo"></a>
+    <strong>Graphics:curveTo (cp1x, cp1y, cp2x, cp2y, x, y)</strong>
+    </dt>
+    <dd>
+    Draw a cubic Bézier curve to (x, y).
+ See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cp1x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's first control point (P1)
+        </li>
+        <li><span class="parameter">cp1y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's first control point (P1)
+        </li>
+        <li><span class="parameter">cp2x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's second control point (P2)
+        </li>
+        <li><span class="parameter">cp2y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's second control point (P2)
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's end position (P3)
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's end position (P3)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        curve command
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:moveTo(<span class="number">10</span>, <span class="number">20</span>)
+g:curveTo(<span class="number">7</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">3</span>, <span class="number">50</span>, <span class="number">30</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:draw"></a>
+    <strong>Graphics:draw (x, y[, r=0[, sx=1[, sy=1]]])</strong>
+    </dt>
+    <dd>
+    Draw to screen.
+ The details of how the rendering happens can get configured through
+ <a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         the x-axis position to draw at
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         the y-axis position to draw at
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         orientation in radians
+         (<em>default</em> 0)
+        </li>
+        <li><span class="parameter">sx</span>
+            <span class="types"><span class="type">number</span></span>
+         scale factor in x
+         (<em>default</em> 1)
+        </li>
+        <li><span class="parameter">sy</span>
+            <span class="types"><span class="type">number</span></span>
+         scale factor in y
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setResolution">Graphics:setResolution</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:rescale">Graphics:rescale</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:draw(<span class="number">120</span>, <span class="number">150</span>, <span class="number">0.1</span>)  <span class="comment">-- draw at (120, 150) with some rotation</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:drawCircle"></a>
+    <strong>Graphics:drawCircle (x, y, r)</strong>
+    </dt>
+    <dd>
+    Draw a circle.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         radius
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        circle command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:drawEllipse"></a>
+    <strong>Graphics:drawEllipse (x, y, rx, ry)</strong>
+    </dt>
+    <dd>
+    Draw an ellipse.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre
+        </li>
+        <li><span class="parameter">rx</span>
+            <span class="types"><span class="type">number</span></span>
+         horizontal radius
+        </li>
+        <li><span class="parameter">ry</span>
+            <span class="types"><span class="type">number</span></span>
+         vertical radius
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        ellipse command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:drawRect"></a>
+    <strong>Graphics:drawRect (x, y, w, h, rx, ry)</strong>
+    </dt>
+    <dd>
+    Draw a rectangle.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of top left corner
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of top left corner
+        </li>
+        <li><span class="parameter">w</span>
+            <span class="types"><span class="type">number</span></span>
+         width
+        </li>
+        <li><span class="parameter">h</span>
+            <span class="types"><span class="type">number</span></span>
+         height
+        </li>
+        <li><span class="parameter">rx</span>
+            <span class="types"><span class="type">number</span></span>
+         horizontal roundness of corners
+        </li>
+        <li><span class="parameter">ry</span>
+            <span class="types"><span class="type">number</span></span>
+         vertical roundness of corners
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        rectangle command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:fill"></a>
+    <strong>Graphics:fill ()</strong>
+    </dt>
+    <dd>
+    Add fill to shape.
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setFillColor">setFillColor</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:moveTo(<span class="number">10</span>, <span class="number">20</span>)
+g:curveTo(<span class="number">7</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">3</span>, <span class="number">50</span>, <span class="number">30</span>)
+g:fill()</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:getCurrentPath"></a>
+    <strong>Graphics:getCurrentPath ()</strong>
+    </dt>
+    <dd>
+    Get the current <a href="../classes/Path.html#">Path</a> for drawing.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Path.html#">Path</a></span>
+        the currently active <a href="../classes/Path.html#">Path</a> that gets drawn into.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getDisplay"></a>
+    <strong>Graphics:getDisplay ()</strong>
+    </dt>
+    <dd>
+    Get display mode.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+        mode the current mode as set with <a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a>.</li>
+        <li>
+           <span class="types"><span class="type">...</span></span>
+        the detailed quality configuration as set with <a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a>.</li>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:getQuality">Graphics:getQuality</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getHeight"></a>
+    <strong>Graphics:getHeight ([prec="high"])</strong>
+    </dt>
+    <dd>
+    Get height.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">prec</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         precision: <code>&quot;high&quot;</code> (i.e. exact)  or <code>&quot;low&quot;</code> (faster)
+         (<em>default</em> "high")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        height of contents in this <a href="../classes/Graphics.html#">Graphics</a>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:computeAABB">computeAABB</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getNumTriangles"></a>
+    <strong>Graphics:getNumTriangles ()</strong>
+    </dt>
+    <dd>
+    Get number of triangles.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        number of triangles involved in drawing this <a href="../classes/Graphics.html#">Graphics</a>.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getQuality"></a>
+    <strong>Graphics:getQuality ()</strong>
+    </dt>
+    <dd>
+    Get display quality.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">...</span></span>
+        the detailed quality configuration as set with <a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a>.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:getDisplay">Graphics:getDisplay</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getUsage"></a>
+    <strong>Graphics:getUsage ()</strong>
+    </dt>
+    <dd>
+    Get usage.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+        a table containing the configured usage for each dimension as key,
+ as set with <a href="../classes/Graphics.html#Graphics:setUsage">Graphics:setUsage</a>.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setUsage">Graphics:setUsage</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:getWidth"></a>
+    <strong>Graphics:getWidth ([prec="high"])</strong>
+    </dt>
+    <dd>
+    Get width.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">prec</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         precision: <code>&quot;high&quot;</code> (i.e. exact) or <code>&quot;low&quot;</code> (faster)
+         (<em>default</em> "high")
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        width of contents in this <a href="../classes/Graphics.html#">Graphics</a>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:computeAABB">computeAABB</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:hit"></a>
+    <strong>Graphics:hit (x, y)</strong>
+    </dt>
+    <dd>
+    Check if inside.
+ Returns true if the given point is inside any of the <a href="../classes/Graphics.html#">Graphics</a>'s <a href="../classes/Path.html#">Path</a>s.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of tested point
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of tested point
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:lineTo"></a>
+    <strong>Graphics:lineTo (x, y)</strong>
+    </dt>
+    <dd>
+    Draw a line to (x, y).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of line's end position
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of line's end position
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        line command
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:moveTo(<span class="number">10</span>, <span class="number">20</span>)
+g:lineTo(<span class="number">5</span>, <span class="number">30</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:moveTo"></a>
+    <strong>Graphics:moveTo (x, y)</strong>
+    </dt>
+    <dd>
+    Move to position (x, y).
+ Automatically starts a fresh <a href="../classes/Subpath.html#">Subpath</a> if necessary.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         new x coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         new y coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        move command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:rescale"></a>
+    <strong>Graphics:rescale (size[, center])</strong>
+    </dt>
+    <dd>
+    Rescale to given size.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">size</span>
+            <span class="types"><span class="type">number</span></span>
+         target size to scale to
+        </li>
+        <li><span class="parameter">center</span>
+            <span class="types"><span class="type">bool</span></span>
+         center the <a href="../classes/Graphics.html#">Graphics</a> so that calling <a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a>
+ will always place it around the given draw position (defaults to true)
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:rotate"></a>
+    <strong>Graphics:rotate (w, k)</strong>
+    </dt>
+    <dd>
+    Rotate elements.
+ Will recusively left rotate elements in this <a href="../classes/Graphics.html#">Graphics</a> such that items
+ found at index k will get moved to index 0.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">w</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         what to rotate: either "path", "subpath", "point" or "curve"
+        </li>
+        <li><span class="parameter">k</span>
+            <span class="types"><span class="type">int</span></span>
+         how much to rotate
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Path.html#Path:rotate">Path:rotate</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setCacheSize"></a>
+    <strong>Graphics:setCacheSize (size)</strong>
+    </dt>
+    <dd>
+    Set internal key frame cache size.
+ Tell TÖVE how many triangulations to cache in "mesh" mode. This number
+ should be high enough to allow TÖVE to never cache all necessary
+ triangulations during an animation cycle. Obviously, this number
+ depends on the shape and kind of your animation. Note that a
+ high number will not automatically improve performance, as cache
+ entries need to be checked and evaluated on each frame.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">size</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:cacheKeyFrame">cacheKeyFrame</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setDisplay"></a>
+    <strong>Graphics:setDisplay (mode[, args])</strong>
+    </dt>
+    <dd>
+    Set display mode.
+ Configures in detail how this <a href="../classes/Graphics.html#">Graphics</a> gets rendered to the
+ screen when you call <a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a>. Note that this is a very expensive
+ operation. You should only call it once for each <a href="../classes/Graphics.html#">Graphics</a> and
+ never in your draw loop.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         either one of <code>&quot;texture&quot;</code>, <code>&quot;mesh&quot;</code> or <code>&quot;gpux&quot;</code>, see <a href="../modules/display.html#">display</a>
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><span class="type">...</span></span>
+         detailed quality configuration for specified mode, see <a href="../modules/display.html#">display</a>
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:getDisplay">Graphics:getDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:getQuality">Graphics:getQuality</a></li>
+         <li><a href="../modules/display.html#">display</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setFillColor"></a>
+    <strong>Graphics:setFillColor (r[, g[, b[, a=0]]])</strong>
+    </dt>
+    <dd>
+    Set fill color.
+ Will affect subsequent calls to <a href="../classes/Graphics.html#Graphics:fill">Graphics:fill</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span>, <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a>, <a class="type" href="../classes/Paint.html#">Paint</a> or <span class="type">nil</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">a</span>
+            <span class="types"><span class="type">number</span></span>
+         alpha
+         (<em>default</em> 0)
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:setFillColor(<span class="number">0.8</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.5</span>)  <span class="comment">-- transparent reddish
+</span>g:setFillColor(<span class="string">"#00ff00"</span>)  <span class="comment">-- opaque green</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:setLineColor"></a>
+    <strong>Graphics:setLineColor (r[, g[, b[, a=0]]])</strong>
+    </dt>
+    <dd>
+    Set line color.
+ Will affect subsequent calls to <a href="../classes/Graphics.html#Graphics:stroke">Graphics:stroke</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span>, <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a>, <a class="type" href="../classes/Paint.html#">Paint</a> or <span class="type">nil</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">a</span>
+            <span class="types"><span class="type">number</span></span>
+         alpha
+         (<em>default</em> 0)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setFillColor">setFillColor</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setLineDash"></a>
+    <strong>Graphics:setLineDash (widths)</strong>
+    </dt>
+    <dd>
+    Set line dash pattern.
+ Takes a list of dash lengths. Will affect lines drawn with subsequent calls to <a href="../classes/Graphics.html#Graphics:stroke">Graphics:stroke</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">widths</span>
+            <span class="types"><span class="type">number...</span></span>
+         lengths of dashes
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:setLineDash(<span class="number">0.5</span>, <span class="number">5.0</span>, <span class="number">1.5</span>, <span class="number">5.0</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:setLineDashOffset"></a>
+    <strong>Graphics:setLineDashOffset (offset)</strong>
+    </dt>
+    <dd>
+    Set line dash offset.
+ Will affect lines drawn with calls to <a href="../classes/Graphics.html#Graphics:stroke">Graphics:stroke</a>.
+ See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dashoffset">
+ description of line dash offsets</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">offset</span>
+            <span class="types"><span class="type">number</span></span>
+         new line dash offset
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setLineWidth"></a>
+    <strong>Graphics:setLineWidth (width)</strong>
+    </dt>
+    <dd>
+    Set line width.
+ Will affect lines drawn with subsequent calls to <a href="../classes/Graphics.html#Graphics:stroke">Graphics:stroke</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">width</span>
+            <span class="types"><span class="type">number</span></span>
+         new line width
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setMiterLimit"></a>
+    <strong>Graphics:setMiterLimit (miterLimit)</strong>
+    </dt>
+    <dd>
+    Set miter limit.
+ Will affect lines drawn with calls to <a href="../classes/Graphics.html#Graphics:stroke">Graphics:stroke</a>.
+ See Mozilla for a good <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-miterlimit">
+ description of miter limits</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">miterLimit</span>
+            <span class="types"><span class="type">number</span></span>
+         new miter limit
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setMonochrome"></a>
+    <strong>Graphics:setMonochrome (r, g, b)</strong>
+    </dt>
+    <dd>
+    Set all colors to one.
+ Will change all fills and line colors to the given color,
+ making the <a href="../classes/Graphics.html#">Graphics</a> appear monochrome.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         red
+        </li>
+        <li><span class="parameter">g</span>
+            <span class="types"><span class="type">number</span></span>
+         green
+        </li>
+        <li><span class="parameter">b</span>
+            <span class="types"><span class="type">number</span></span>
+         blue
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setName"></a>
+    <strong>Graphics:setName (name)</strong>
+    </dt>
+    <dd>
+    Set name.
+ That name will show up in error messages concering this <a href="../classes/Graphics.html#">Graphics</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         new name of this <a href="../classes/Graphics.html#">Graphics</a>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setOrientation"></a>
+    <strong>Graphics:setOrientation (orientation)</strong>
+    </dt>
+    <dd>
+    Set orientation of all <a href="../classes/Subpath.html#">Subpath</a>s.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">orientation</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         "cw" for clockwise, "ccw" for counterclockwise
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:setResolution"></a>
+    <strong>Graphics:setResolution (resolution)</strong>
+    </dt>
+    <dd>
+    Set resolution.
+ Determines how much you can scale this <a href="../classes/Graphics.html#">Graphics</a> when drawing without it looking bad. Affects the "texture"
+ and "mesh" display modes. Note that this will not affect the size of the <a href="../classes/Graphics.html#">Graphics</a> when drawing with scale 1.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">resolution</span>
+            <span class="types"><span class="type">number</span></span>
+         scale factor up to which <a href="../classes/Graphics.html#">Graphics</a> will look crisp when scaled in <a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a>
+ (or through a Transform)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:setDisplay(<span class="string">"texture"</span>)
+g:draw(<span class="number">0</span>, <span class="number">0</span>) <span class="comment">-- looks crisp
+</span>g:draw(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2</span>) <span class="comment">-- at scale 2, things get fuzzy
+</span>g:setResolution(<span class="number">2</span>)
+g:draw(<span class="number">0</span>, <span class="number">0</span>) <span class="comment">-- same size as before
+</span>g:draw(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2</span>) <span class="comment">-- at scale 2, things still look good
+</span>g:draw(<span class="number">0</span>, <span class="number">0</span>, <span class="number">3</span>) <span class="comment">-- now things get fuzzy</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:setUsage"></a>
+    <strong>Graphics:setUsage (what, usage)</strong>
+    </dt>
+    <dd>
+    Set usage.
+ Indicates which elements of the <a href="../classes/Graphics.html#">Graphics</a> you want to change (i.e. animate) at runtime.
+ Currently, this method only has an effect for display mode "mesh".
+ Hint: to force meshes to not use shaders, use g:setUsage("shaders", "avoid").
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">what</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         either one of "points" or "colors"
+        </li>
+        <li><span class="parameter">usage</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         usually either one of "static", "dynamic" or "stream" (see <a href="https://love2d.org/wiki/SpriteBatchUsage">love2d docs on mesh usage</a>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:getUsage">Graphics:getUsage</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">g:setUsage(<span class="string">"points"</span>, <span class="string">"stream"</span>) <span class="comment">-- animate points on each frame
+</span>g:setUsage(<span class="string">"colors"</span>, <span class="string">"stream"</span>) <span class="comment">-- animate colors on each frame</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Graphics:stroke"></a>
+    <strong>Graphics:stroke ()</strong>
+    </dt>
+    <dd>
+    Add stroke to shape.
+ g:moveTo(10, 20)
+ g:curveTo(7, 5, 10, 3, 50, 30)
+ g:stroke()
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setLineColor">setLineColor</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:warmup"></a>
+    <strong>Graphics:warmup ()</strong>
+    </dt>
+    <dd>
+    Warm-up shaders.
+ Instructs TÖVE to compile all shaders involved in drawing this
+ <a href="../classes/Graphics.html#">Graphics</a> with the current display settings. On some platforms,
+ compiling <code>gpux</code> shaders can take a long time. <a href="../classes/Graphics.html#Graphics:warmup">Graphics:warmup</a> will quit
+ after a certain time and allow you to display some progress info.
+ In these cases you need to call it again until it returns nil.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span> or <span class="type">nil</span></span>
+         nil if all shaders were compiled, otherwise
+ a number between 0 and 1 indicating percentage of shaders compiled
+ so far.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Graphics:warp"></a>
+    <strong>Graphics:warp (f)</strong>
+    </dt>
+    <dd>
+    Warp points.
+ Allows you to change the shape of a vector graphics in a way
+ that animates well.
+ The specified function applies a space mapping: it gets
+ called for specific positions and returns new ones.
+ TÖVE will call the function for non-control-points only
+ and decide where to put control points itself based on
+ an estimation of previous curve form. The curvature argument
+ lets you estimate and change how curvy the shape is at a
+ given (non-control) point.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         takes (x, y, curvature) and returns the same
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Path.html#Path:warp">Path:warp</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

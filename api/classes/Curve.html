@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><strong>Curve</strong></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>Curve</code></h1>
+<p>A cubic Bézier curve.</p>
+<p> For details on Bézier curves, see <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.</p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Curve.x0">Curve.x0</a></td>
+	<td class="summary">x coordinate of curve point P0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.y0">Curve.y0</a></td>
+	<td class="summary">y coordinate of curve point P0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.cp1x">Curve.cp1x</a></td>
+	<td class="summary">x coordinate of first control point P1</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.cp1y">Curve.cp1y</a></td>
+	<td class="summary">y coordinate of first control point P1</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.cp2x">Curve.cp2x</a></td>
+	<td class="summary">x coordinate of second control point P2</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.cp2y">Curve.cp2y</a></td>
+	<td class="summary">y coordinate of second control point P2</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.x">Curve.x</a></td>
+	<td class="summary">x coordinate of curve point P3</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.y">Curve.y</a></td>
+	<td class="summary">y coordinate of curve point P3</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve.p">Curve.p</a></td>
+	<td class="summary">table of curve points.</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Curve:remove">Curve:remove ()</a></td>
+	<td class="summary">Remove curve from subpath.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Curve:split">Curve:split (t)</a></td>
+	<td class="summary">Split curve into two curves.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Curve.x0"></a>
+    <strong>Curve.x0</strong>
+    </dt>
+    <dd>
+    x coordinate of curve point P0
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.y0"></a>
+    <strong>Curve.y0</strong>
+    </dt>
+    <dd>
+    y coordinate of curve point P0
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.cp1x"></a>
+    <strong>Curve.cp1x</strong>
+    </dt>
+    <dd>
+    x coordinate of first control point P1
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics.paths[<span class="number">1</span>].subpaths[<span class="number">1</span>].curves[<span class="number">1</span>].cp1x = <span class="number">10</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Curve.cp1y"></a>
+    <strong>Curve.cp1y</strong>
+    </dt>
+    <dd>
+    y coordinate of first control point P1
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="global">print</span>(graphics.paths[<span class="number">1</span>].subpaths[<span class="number">1</span>].curves[<span class="number">1</span>].cp1y)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Curve.cp2x"></a>
+    <strong>Curve.cp2x</strong>
+    </dt>
+    <dd>
+    x coordinate of second control point P2
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.cp2y"></a>
+    <strong>Curve.cp2y</strong>
+    </dt>
+    <dd>
+    y coordinate of second control point P2
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.x"></a>
+    <strong>Curve.x</strong>
+    </dt>
+    <dd>
+    x coordinate of curve point P3
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.y"></a>
+    <strong>Curve.y</strong>
+    </dt>
+    <dd>
+    y coordinate of curve point P3
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve.p"></a>
+    <strong>Curve.p</strong>
+    </dt>
+    <dd>
+    table of curve points.
+ Use this to access points in a curve by index.
+ Note that for consistency with Lua, the indices here
+ are one-based, even though traditional Bézier terminology
+ is 0-based. So keep in mind that
+ P0 = <code>p[1]</code>, P1 = <code>p[2]</code>, P2 = <code>p[3]</code>, P3 = <code>p[4]</code>.
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="global">print</span>(graphics.paths[<span class="number">1</span>].subpaths[<span class="number">1</span>].curves[<span class="number">1</span>].p[<span class="number">1</span>].x) <span class="comment">-- get P0.x
+</span>graphics.paths[<span class="number">1</span>].subpaths[<span class="number">1</span>].curves[<span class="number">1</span>].p[<span class="number">4</span>].y = <span class="number">7</span> <span class="comment">-- set P3.y</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Curve:remove"></a>
+    <strong>Curve:remove ()</strong>
+    </dt>
+    <dd>
+    Remove curve from subpath.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Curve:split"></a>
+    <strong>Curve:split (t)</strong>
+    </dt>
+    <dd>
+    Split curve into two curves.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">number</span></span>
+         location of split, 0 &lt;= t &lt;= 1
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

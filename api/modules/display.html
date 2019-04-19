@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Class_Tesselator">Class Tesselator </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><strong>display</strong></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>display</code></h1>
+<p>
+
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#texture">texture</a></td>
+	<td class="summary">Render using a texture.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mesh">mesh</a></td>
+	<td class="summary">Render using a mesh.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#gpux">gpux</a></td>
+	<td class="summary">Render exclusively on the GPU.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Tesselator">Class Tesselator </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newAdaptiveTesselator">tove.newAdaptiveTesselator (resolution[, recursionLimit])</a></td>
+	<td class="summary">Create an adaptive tesselator.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tove.newRigidTesselator">tove.newRigidTesselator (subdivisions)</a></td>
+	<td class="summary">Create a rigid tesselator.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "texture"></a>
+    <strong>texture</strong>
+    </dt>
+    <dd>
+    Render using a texture.
+ Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         <code>&quot;texture&quot;</code>
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setResolution">Graphics:setResolution</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics:setDisplay(<span class="string">"texture"</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "mesh"></a>
+    <strong>mesh</strong>
+    </dt>
+    <dd>
+    Render using a mesh.
+ If no tesselator is specified, a default tesselator will be chosen based on the configured
+ usage of the <a href="../classes/Graphics.html#">Graphics</a>.
+ Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         <code>&quot;mesh&quot;</code>
+        </li>
+        <li><span class="parameter">tesselator</span>
+            <span class="types"><a class="type" href="../modules/display.html#Tesselator">Tesselator</a>, <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <span class="type">number</span></span>
+         tesselator to use or name of tesselator type or target size
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><span class="type"> ...</span></span>
+         configuration of tesselator
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setResolution">Graphics:setResolution</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setUsage">Graphics:setUsage</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics:setDisplay(<span class="string">"mesh"</span>) <span class="comment">-- default configuration (based on configured usage)
+</span>
+graphics:setDisplay(<span class="string">"mesh"</span>, <span class="number">1024</span>) <span class="comment">-- make it look good at a size of 1024 pixels
+</span><span class="comment">-- will choose tesselation settings based on configured usage
+</span>
+graphics:setDisplay(<span class="string">"mesh"</span>, <span class="string">"rigid"</span>, <span class="number">4</span>) <span class="comment">-- 4 subdivision levels (=2^4 points per curve)
+</span>graphics:setDisplay(<span class="string">"mesh"</span>, tove.newRigidTesselator(<span class="number">4</span>)) <span class="comment">-- same as above
+</span>
+graphics:setDisplay(<span class="string">"mesh"</span>, <span class="string">"adaptive"</span>, <span class="number">1024</span>) <span class="comment">-- target a size of 1024
+</span>graphics:setDisplay(<span class="string">"mesh"</span>, tove.newAdaptiveTesselator(<span class="number">1024</span>)) <span class="comment">-- same as above</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "gpux"></a>
+    <strong>gpux</strong>
+    </dt>
+    <dd>
+    Render exclusively on the GPU.
+ <code>&quot;gpux&quot;</code> means "gpu exclusive": this mode will implicitly render all curve geometry on the fly
+ on the GPU. This has considerable resolution until it breaks down, however it can also be
+ quite expensive in terms of performance (note also that it needs one GL context change per path).
+ It is quite experimental as well: TÖVE is - to the best of my knowledge - the first library
+ capable of rendering complex cubic bezier shapes inside GLSL shaders without doing some kind
+ of tesselation. The only other existing implementation with this kind of approach seems to be
+ <a href="https://www.khronos.org/registry/OpenGL/extensions/NV/NV_path_rendering.txt">NVidia™'s GPU Accelerated Path Rendering</a>.
+ Also see the <a href="https://poke1024.github.io/tove2d/features/">TÖVE Feature Matrix</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         <code>&quot;gpux&quot;</code>
+        </li>
+        <li><span class="parameter">lineRenderer</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         line shader (<code>&quot;fragment&quot;</code> or <code>&quot;vertex&quot;</code>). use <code>&quot;fragment&quot;</code>
+ for lines that need to have round edges, use <code>&quot;vertex&quot;</code> for lines that need to have miters.
+ You can use demos/editor to get an idea of the differences of this setting for various geometries.
+         (<em>default</em> "fragment")
+        </li>
+        <li><span class="parameter">lineQuality</span>
+            <span class="types"><span class="type"> number</span></span>
+         line quality (between 0 and 1). Higher numbers are
+ slower (<code>&quot;fragment&quot;</code> lines) or generate more geometry (<code>&quot;vertex&quot;</code> lines).
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/Graphics.html#Graphics:draw">Graphics:draw</a></li>
+         <li><a href="../classes/Graphics.html#Graphics:setDisplay">Graphics:setDisplay</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics:setDisplay(<span class="string">"gpux"</span>)
+graphics:setDisplay(<span class="string">"gpux"</span>, <span class="string">"vertex"</span>)  <span class="comment">-- use vertex shader for line drawing</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class_Tesselator"></a>Class Tesselator </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "tove.newAdaptiveTesselator"></a>
+    <strong>tove.newAdaptiveTesselator (resolution[, recursionLimit])</strong>
+    </dt>
+    <dd>
+    Create an adaptive tesselator.
+ Use this for high quality static graphics content that does not animate its shape in realtime.
+ Adaptive Tesselators create meshes that give more subdivision (i.e. points and triangles) to areas where
+ higher detail is needed, whereas other areas might get less subdivision. The number of vertices produced by
+ Adaptive Tesselators depends on the specific geometry. They are not suited for shape animation, as each shape
+ change would result in a different number of vertices and triangles.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">resolution</span>
+            <span class="types"><span class="type">number</span></span>
+         resolution at which the mesh should look good
+        </li>
+        <li><span class="parameter">recursionLimit</span>
+            <span class="types"><span class="type">int</span></span>
+         maximum number of recursions during subdivision
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "tove.newRigidTesselator"></a>
+    <strong>tove.newRigidTesselator (subdivisions)</strong>
+    </dt>
+    <dd>
+    Create a rigid tesselator.
+ Use this to obtain low or medium quality meshes that can distort and animate their shapes in realtime.
+ Rigid tesselators subdivide geometry using fixed steps and thus produce a fixed number of vertices. As an
+ effect, all areasy of the geometry receive the same level of detail and subdivision. They are suited for
+ shape animation, as the vertex count stays constant and underlying meshes can be updated efficiently.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">subdivisions</span>
+            <span class="types"><span class="type">int</span></span>
+         number of recursive subdivisions; 3 means 2^3=8 points for each bezier curve,
+ 4 indicates 2^4=16 points, and so on.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

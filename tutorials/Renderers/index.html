@@ -50,27 +50,12 @@
           
             <li class="toctree-l1">
 		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
     <a class="" href="../../features/">Features</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../graphics/">Graphics</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../collections/">Collections</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../colors/">Colors</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../tesselators/">Tesselators</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -139,12 +124,12 @@ end
 <p>Here are some hints:</p>
 <p><code>texture</code> gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using <code>Graphics:setResolution</code> (this won't affect the display size, but you'll see that a resolution of <code>2</code> will allow you to scale the image by a factor of 2 without seeing pixelation).</p>
 <p><code>mesh</code> is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a LÖVE Mesh, which is efficient to draw, scale and animate.</p>
-<p><code>shader</code> can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).</p>
+<p><code>gpux</code> can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).</p>
 <h2 id="setting-the-mesh-renderer-quality">Setting the mesh renderer quality</h2>
-<p>The quality setting in <code>Graphics:setDisplay</code>  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are <code>static</code> or <code>dynamic</code> (see the section on Animating Things).</p>
+<p>The quality setting in <code>Graphics:setDisplay</code>  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are <code>static</code>, <code>dynamic</code> or <code>stream</code> (see the section on Animating Things).</p>
 <ul>
 <li>If your points are <code>static</code> (default), the quality is a number between 0 and 1, where 1 is the highest suggested quality (though you can go above 1). The renderer will produce an adaptive mesh tessellation, where some curves get many points and others (e.g. straight lines) few. Values below 0.1 trigger a special low quality tier that tries to produce a minimum of triangles.</li>
-<li>If your points are <code>dynamic</code> (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.</li>
+<li>If your points are <code>dynamic</code> or <code>stream</code> (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.</li>
 <li>In addition, you can always force fixed subdivision by specifying <code>tove.fixed(n)</code> as quality: each curve will then be segmented into exactly 2^n parts. Use this if you don't want adaptive subdivision for static point meshes.</li>
 </ul>
 <p>The second factor to mention here is the value set via <code>Graphics:setResolution</code>. TÖVE internally scales meshes before applying the quality settings. That means that setting a higher resolution will yield a higher quality with the same quality number. Imagine rendering the same image at a higher resolution and then scaling it down again for display. This is the effect you get by calling <code>setResolution</code> on meshes.</p>

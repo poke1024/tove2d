@@ -1,0 +1,390 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#"> </a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><strong>Command</strong></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>Command</code></h1>
+<p>Represents a graphics primitive, for example a circle or a curve.</p>
+<p> Commands allow reading and writing properties of primitives after
+ they have been created. Only certain properties are available for
+ each type of primitive. For example, a circle knows cx, cy and r.</p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Command.w">Command.w</a></td>
+	<td class="summary">width</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.h">Command.h</a></td>
+	<td class="summary">height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cx">Command.cx</a></td>
+	<td class="summary">x coordinate of center</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cy">Command.cy</a></td>
+	<td class="summary">y coordinate of center</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.rx">Command.rx</a></td>
+	<td class="summary">x radius</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.ry">Command.ry</a></td>
+	<td class="summary">y radius</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.r">Command.r</a></td>
+	<td class="summary">radius</td>
+	</tr>
+</table>
+<h2><a href="#"> </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Command.x0">Command.x0</a></td>
+	<td class="summary">x coordinate of curve point P0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.y0">Command.y0</a></td>
+	<td class="summary">y coordinate of curve point P0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cp1x">Command.cp1x</a></td>
+	<td class="summary">x coordinate of first control point P1</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cp1y">Command.cp1y</a></td>
+	<td class="summary">y coordinate of first control point P1</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cp2x">Command.cp2x</a></td>
+	<td class="summary">x coordinate of second control point P2</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.cp2y">Command.cp2y</a></td>
+	<td class="summary">y coordinate of second control point P2</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.x">Command.x</a></td>
+	<td class="summary">x coordinate of curve point P3</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Command.y">Command.y</a></td>
+	<td class="summary">y coordinate of curve point P3</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Command.w"></a>
+    <strong>Command.w</strong>
+    </dt>
+    <dd>
+    width
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> graphics = tove.newGraphics()
+graphics:setFillColor(<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)
+<span class="keyword">local</span> rect = graphics:drawRect(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>)
+graphics:fill()
+rect.w = <span class="number">20</span> <span class="comment">-- change/animate width</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Command.h"></a>
+    <strong>Command.h</strong>
+    </dt>
+    <dd>
+    height
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.cx"></a>
+    <strong>Command.cx</strong>
+    </dt>
+    <dd>
+    x coordinate of center
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> circle = graphics:drawCircle(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>)
+circle.cx = <span class="number">5</span> <span class="comment">-- change/animate x position</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Command.cy"></a>
+    <strong>Command.cy</strong>
+    </dt>
+    <dd>
+    y coordinate of center
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.rx"></a>
+    <strong>Command.rx</strong>
+    </dt>
+    <dd>
+    x radius
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> circle = graphics:drawCircle(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>)
+circle.rx = <span class="number">5</span> <span class="comment">-- change/animate x radius</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Command.ry"></a>
+    <strong>Command.ry</strong>
+    </dt>
+    <dd>
+    y radius
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.r"></a>
+    <strong>Command.r</strong>
+    </dt>
+    <dd>
+    radius
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> circle = graphics:drawCircle(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>)
+circle.r = <span class="number">5</span> <span class="comment">-- change/animate radius</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name=""></a> </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Command.x0"></a>
+    <strong>Command.x0</strong>
+    </dt>
+    <dd>
+    x coordinate of curve point P0
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.y0"></a>
+    <strong>Command.y0</strong>
+    </dt>
+    <dd>
+    y coordinate of curve point P0
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.cp1x"></a>
+    <strong>Command.cp1x</strong>
+    </dt>
+    <dd>
+    x coordinate of first control point P1
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.cp1y"></a>
+    <strong>Command.cp1y</strong>
+    </dt>
+    <dd>
+    y coordinate of first control point P1
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.cp2x"></a>
+    <strong>Command.cp2x</strong>
+    </dt>
+    <dd>
+    x coordinate of second control point P2
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.cp2y"></a>
+    <strong>Command.cp2y</strong>
+    </dt>
+    <dd>
+    y coordinate of second control point P2
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.x"></a>
+    <strong>Command.x</strong>
+    </dt>
+    <dd>
+    x coordinate of curve point P3
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Command.y"></a>
+    <strong>Command.y</strong>
+    </dt>
+    <dd>
+    y coordinate of curve point P3
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

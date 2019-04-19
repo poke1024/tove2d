@@ -50,27 +50,12 @@
           
             <li class="toctree-l1">
 		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
     <a class="" href="../../features/">Features</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../graphics/">Graphics</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../collections/">Collections</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../colors/">Colors</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../tesselators/">Tesselators</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -178,12 +163,13 @@ tween = tove.newTween(svg1):to(svg2, 1)
 </ul>
 <p>TÖVE can do this. Take a look at the "hearts" demo to see working code. Here are some hints:</p>
 <p>The first step to animate colors or points is to tell your <code>Graphics</code> instance about it: call <code>Graphics:setUsage</code> to animate <code>points</code> (the shape of your drawing) or <code>colors</code> (the fill or stroke color of your drawing) or both. </p>
-<pre><code>myDrawing:setUsage(&quot;points&quot;, &quot;dynamic&quot;) -- animate points
-myDrawing:setUsage(&quot;colors&quot;, &quot;dynamic&quot;) -- animate colors
+<pre><code>myDrawing:setUsage(&quot;points&quot;, &quot;stream&quot;) -- animate points
+myDrawing:setUsage(&quot;colors&quot;, &quot;stream&quot;) -- animate colors
 </code></pre>
 
 <p>Without doing this, TÖVE will not be able to animate your objects efficiently and things will be slow.</p>
 <p>Please note that TÖVE does not efficiently support animations that add or delete points.</p>
+<p>You can also choose to use "dynamic" instead of "stream" if your shapes change frequently, but not on every frame (also see https://love2d.org/wiki/SpriteBatchUsage).</p>
 <h2 id="animating-colors">Animating colors</h2>
 <p>Animating colors is easy. Here are two examples:</p>
 <h3 id="animating-by-re-setting-the-color">Animating by re-setting the color</h3>
