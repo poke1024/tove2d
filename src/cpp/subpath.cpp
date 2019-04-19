@@ -1103,6 +1103,7 @@ void Subpath::setCommandValue(int commandIndex, int what, float value) {
 				case 101: command.ellipse.cy = value; break;
 				case 102: command.ellipse.rx = value; break;
 				case 103: command.ellipse.ry = value; break;
+				case 104: command.ellipse.rx = value; command.ellipse.ry = value; break;
 			}
 			command.dirty = true;
 			dirty |= DIRTY_COMMANDS;
