@@ -50,12 +50,63 @@
           
             <li class="toctree-l1">
 		
-    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+    <span class="caption-text">Overview</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Getting_Started/">Getting Started</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Demos/">The Demos</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../features/">Features</a>
+                </li>
+    </ul>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="../../features/">Features</a>
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Renderers/">Choosing Renderers</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Animating Things</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#animating-things">Animating Things</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#animating-with-the-stage-api">Animating with the Stage API</a></li>
+        
+            <li><a class="toctree-l4" href="#flipbooks-and-animations">Flipbooks and Animations</a></li>
+        
+            <li><a class="toctree-l4" href="#procedural-animation-features">Procedural Animation Features</a></li>
+        
+            <li><a class="toctree-l4" href="#animating-colors">Animating colors</a></li>
+        
+            <li><a class="toctree-l4" href="#animating-shapes-with-commands">Animating shapes with Commands</a></li>
+        
+            <li><a class="toctree-l4" href="#directly-accessing-paths-and-curves">Directly Accessing Paths and Curves</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -84,6 +135,10 @@
     <li><a href="../..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Tutorials &raquo;</li>
+        
+      
     
     <li>Animating Things</li>
     <li class="wy-breadcrumbs-aside">
@@ -96,9 +151,9 @@
             <div class="section">
               
                 <h1 id="animating-things">Animating Things</h1>
-<p>TÖVE is designed for animating stuff. Its focus is not on static vector graphics rendering, but on animated vector graphics for games.</p>
+<p>TÖVE is designed for allowing animating and changing shapes and colors at runtime without getting inefficient.</p>
 <h2 id="animating-with-the-stage-api">Animating with the Stage API</h2>
-<p>Many animations can be achieved by moving, rotating and scaling certain fixed parts of a graphics. TÖVE offers the retained <code>Stage</code> API for simplifying these kind of animations.</p>
+<p>Many animations can be achieved by moving, rotating and scaling certain fixed parts of a graphics. TÖVE offers the retained <code>Stage</code> API for simplifying these kind of animations (also see the <a href="https://poke1024.github.io/tove2d-api/modules/stage.html">Stage API documentation</a>).</p>
 <p>At the core is the <code>Shape</code> object. Each <code>Shape</code> holds a <code>Graphics</code> you can access. Each <code>Shape</code> knows about its own position, rotation and scale. You can change these at any time and  they will stay this way across frames until you change them again. So if you have objects on the screen and only want to move some of them, <code>Shape</code> might simplify your code.</p>
 <p>For drawing, <code>Shapes</code> need to added to a <code>Stage</code>. Here's an example:</p>
 <pre><code>local stage = tove.newStage()
@@ -122,9 +177,9 @@ end
 </code></pre>
 
 <h2 id="flipbooks-and-animations">Flipbooks and Animations</h2>
-<p>Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this.</p>
+<p>Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this. Also see <a href="https://poke1024.github.io/tove2d-api/modules/animation.html">TÖVE's API documentation on animation function</a>.</p>
 <p>First, there are flipbooks. These are prerendered distinct frames. Think of a sprite atlas being played back.</p>
-<p>Seconds, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames).</p>
+<p>Second, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>.</p>
 <p>The "blob" demo has code for both animation styles.</p>
 <h3 id="tweens">Tweens</h3>
 <p>For both flipbooks and animations, the first thing to do is to create a tween that gathers all the keyframes and durations, much like a timeline in an animation program.</p>
@@ -154,7 +209,7 @@ tween = tove.newTween(svg1):to(svg2, 1)
 </code></pre>
 
 <h3 id="a-technical-note">A Technical Note</h3>
-<p>If you're using animations with a mesh renderer, TÖVE will use a fixed resolution flattening and try to precalculate all triangulations. That means  that the quality will be lower than for adaptive meshes, but things should be fast.</p>
+<p>If you're using animations with the <code>"mesh"</code> display mode, TÖVE will use a fixed resolution flattening and try to precalculate all triangulations. That means that the quality will be lower than for adaptive meshes, but things should be fast.</p>
 <h2 id="procedural-animation-features">Procedural Animation Features</h2>
 <p>Sometimes you want even more flexibility for some kind of procedural animation:</p>
 <ul>
@@ -169,7 +224,7 @@ myDrawing:setUsage(&quot;colors&quot;, &quot;stream&quot;) -- animate colors
 
 <p>Without doing this, TÖVE will not be able to animate your objects efficiently and things will be slow.</p>
 <p>Please note that TÖVE does not efficiently support animations that add or delete points.</p>
-<p>You can also choose to use "dynamic" instead of "stream" if your shapes change frequently, but not on every frame (also see https://love2d.org/wiki/SpriteBatchUsage).</p>
+<p>You can also choose to use <code>"dynamic"</code> instead of <code>"stream"</code> if your shapes change frequently, but not on every frame (also see <a href="https://love2d.org/wiki/SpriteBatchUsage">LÖVE's docs on <code>SpriteBatchUsage</code></a>).</p>
 <h2 id="animating-colors">Animating colors</h2>
 <p>Animating colors is easy. Here are two examples:</p>
 <h3 id="animating-by-re-setting-the-color">Animating by re-setting the color</h3>
@@ -202,13 +257,8 @@ function love.draw()
     myColor.r = math.abs(math.sin(love.timer.getTime()))
 </code></pre>
 
-<h3 id="a-note-on-dependencies">A note on dependencies</h3>
-<p>TÖVE internally assumes that each object only has exactly one owner. For example, a color can only belong to one path; you cannot assign the same color to two paths, and then change it for both paths.</p>
-<p>As soon as you assign the same color to two paths, TÖVE will internally clone one of the colors.</p>
-<p>So what will happen in the case above is that only one path (the one with the uncloned color) would change its color.</p>
-<p>The same holds true for trajectories and paths, and paths and graphics. Keep that in mind when working with many different objects.</p>
 <h2 id="animating-shapes-with-commands">Animating shapes with Commands</h2>
-<p>Most drawing calls come return a command, that allows you to animate what you have just drawn.</p>
+<p>Most drawing calls come return a command, that allows you to animate what you have just drawn. Also see the <a href="https://poke1024.github.io/tove2d-api/classes/Command.html">API documentation on Commands</a>.</p>
 <p>An example:</p>
 <pre><code>local shape = tove.newGraphics()
 shape.moveTo(10, 10)
@@ -223,7 +273,7 @@ shape.moveTo(-50, 200)
 <p>This has the same effect as if you'd recreated the whole graphics with the modified <code>lineTo</code>,  but it's much faster - using mutable commands, TÖVE will animate stuff very efficiently (for example, for the mesh renderer, this boils down to a <code>Mesh:setVertices</code> call in LÖVE).</p>
 <p>The attribute names are <code>x</code> and <code>y</code> for <code>moveTo</code> and <code>lineTo</code>. For <code>curveTo</code> you also have <code>cp1x</code>, <code>cp1y</code>, <code>cp2x</code>, <code>cp2y</code>. You can read and write those properties.</p>
 <h2 id="directly-accessing-paths-and-curves">Directly Accessing Paths and Curves</h2>
-<p>Using  Command  is what you want to animate one path most of the time. Sometimes though want to have a broader access to your curve data. For example you might want to morph whole parts of a path. TÖVE let's you do this.</p>
+<p>Using  Command  is what you want to animate one path most of the time. Sometimes though want to have a broader access to your curve data. For example you might want to morph whole parts of a path. TÖVE let's you do this. Also see the <a href="https://poke1024.github.io/tove2d-api/classes/Curve.html">Curve API documentation</a>.</p>
 <p>Let's first talk about how TÖVE stores your curves and how it names things:</p>
 <ul>
 <li>A <code>Graphics</code> is a collection of <code>Path</code>s</li>
@@ -243,9 +293,9 @@ shape.moveTo(-50, 200)
 end
 </code></pre>
 
-<p>If you don't want to access curves, but the underlying points of all the subpath's curves as one continuous array, you can do it like this:</p>
-<pre><code> myGraphics.paths[1].subpaths[2].points[3].x
- myGraphics.paths[1].subpaths[2].points[3].y
+<p>If you want to access a curve's underlying points by index, you can do it like this:</p>
+<pre><code> myGraphics.paths[1].subpaths[2].curves[1].p[2].x
+ myGraphics.paths[1].subpaths[2].curves[3].p[2].y
 </code></pre>
 
 <p>To find out how many paths, subpaths, curves or points you have, you can use the <code>count</code> attribute, e.g.:</p>
@@ -254,25 +304,27 @@ myDrawing.paths[1].subpaths.count -- number of subpaths in path 1
 myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in path 1
 </code></pre>
 
-<h2 id="mesh-animation-caveats">Mesh Animation Caveats</h2>
-<p>If you're using the <code>mesh</code> renderer for animation, there are two specific things that can cause problems:</p>
-<ul>
-<li>Clean, oriented curves. Usually, things should just work. If not, here are some hints.</li>
-</ul>
-<p>TÖVE's automatically deals with obvious cases of point duplication (also during animation). Furthermore in dynamic points mesh mode, the default is to ignore orientation (i.e. no holes), which means your curve can be oriented in the wrong way and you will still see it.</p>
-<p>There might be situations where you want to clean or reorient your curves. TÖVE offers two functions. Note that cleaning will get you into problems when animating paths that need to have exactly the same point layout.</p>
-<pre><code>myGraphics:clean()
-myGraphics:setOrientation(&quot;ccw&quot;)
-</code></pre>
-
-<ul>
-<li>Triangulations.  TÖVE's animation system has a dynamic triangulation monitor that check whether it's current triangulation is still good or needs updating (which will usually happen due to sub shapes changing from convex to concave forms or vice versa). TÖVE also caches triangulations and tries to reuse them. Still, with procedural animation and complete freedom, you might end up in situations where many retriangulations happen, which is expensive on the CPU.</li>
-</ul>
-<p>You can disable automatic retriangulation by calling <code>myDrawing:setUsage("triangles", "static")</code>  after calling <code>myDrawing:setUsage("points", "dynamic")</code> (as the latter automatically always sets <code>triangles</code> to <code>dynamic</code>). This means TÖVE will stick with one triangulation (which can result in visual errors).  If you do this, be sure to use <code>graphics:cache()</code> to pick one good triangulation at the beginning that you define as suitable for all animation frames.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>if this is not the case, TÖVE is able to morph shapes (see demos/morph).&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
               
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../release-notes/" class="btn btn-neutral float-right" title="Release Notes">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Renderers/" class="btn btn-neutral" title="Choosing Renderers"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -296,6 +348,10 @@ myGraphics:setOrientation(&quot;ccw&quot;)
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
+        <span><a href="../Renderers/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../../release-notes/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

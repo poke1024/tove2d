@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Setting Renderers - TÖVE</title>
+  <title>Choosing Renderers - TÖVE</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
@@ -17,7 +17,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Setting Renderers";
+    var mkdocs_page_name = "Choosing Renderers";
     var mkdocs_page_input_path = "tutorials/Renderers.md";
     var mkdocs_page_url = null;
   </script>
@@ -50,12 +50,59 @@
           
             <li class="toctree-l1">
 		
-    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+    <span class="caption-text">Overview</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Getting_Started/">Getting Started</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Demos/">The Demos</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../features/">Features</a>
+                </li>
+    </ul>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="../../features/">Features</a>
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Choosing Renderers</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#setting-renderers">Setting Renderers</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#the-renderers">The renderers</a></li>
+        
+            <li><a class="toctree-l4" href="#which-renderer-is-right-for-me">Which renderer is right for me?</a></li>
+        
+            <li><a class="toctree-l4" href="#setting-the-mesh-renderer-quality">Setting the mesh renderer quality</a></li>
+        
+            <li><a class="toctree-l4" href="#the-mesh-renderer-and-gradients">The mesh renderer and gradients</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Animation/">Animating Things</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -84,8 +131,12 @@
     <li><a href="../..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Tutorials &raquo;</li>
+        
+      
     
-    <li>Setting Renderers</li>
+    <li>Choosing Renderers</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -96,15 +147,15 @@
             <div class="section">
               
                 <h1 id="setting-renderers">Setting Renderers</h1>
-<p>This section should give you some idea of why there are three different renderers in TÖVE, what they do, and when you want to change things.</p>
+<p>This section should give you some idea of why there are three different renderers in TÖVE, what they do, and when you want to change things. This extends on the information given in the <a href="https://poke1024.github.io/tove2d-api/modules/display.html">API documentation on display modes</a>.</p>
 <h2 id="the-renderers">The renderers</h2>
-<p>TÖVE provides three renderers to bring vector graphics to the screen: <code>texture</code>, <code>mesh</code> and <code>shader</code>:</p>
+<p>TÖVE provides three renderers to bring vector graphics to the screen: <code>texture</code>, <code>mesh</code> and <code>gpux</code>:</p>
 <ul>
 <li><code>texture</code> is the default renderer. It gives high quality and high performance for static images that don't need animation or scaling. Internally, this is NanoSVG rendering to a texture.</li>
-<li><code>mesh</code> uses a triangle mesh to produce a tessellated version of the graphics, which is then drawn using a LÖVE Mesh. Scaling will not produce pixelation, but crisp straight edges. Using this renderer,  curves and colors can be animated efficiently.</li>
-<li><code>shader</code> is a purely shader-based renderer that gives high quality at different resolutions. It's a very complex shader and highly experimental. It allows for efficient animation of curves and colors.</li>
+<li><code>mesh</code> uses a triangle mesh to produce a tessellated version of the graphics, which is then drawn using a <a href="https://love2d.org/wiki/Mesh">LÖVE Mesh</a>. Scaling will not produce pixelation, but crisp straight edges. Using this renderer,  curves and colors can be animated efficiently.</li>
+<li><code>gpux</code> is a purely shader-based renderer that gives high quality at different resolutions. It's a very complex shader and quite experimental (it's not been done before AFAIK). It allows for efficient animation of curves and colors.</li>
 </ul>
-<p>You can tell TÖVE which renderer to use by calling <code>Graphics:setDisplay(mode, quality)</code> on your <code>Graphics</code> instance, e.g. <code>myDrawing:setDisplay("mesh")</code>. The next call to <code>Graphics:draw()</code> will then honor that setting. The optional <code>quality</code> parameter is a render-dependent number that allows you to configure the level of detail for some renderers.</p>
+<p>You can tell TÖVE which renderer to use by calling <code>Graphics:setDisplay(mode, quality...)</code> on your <code>Graphics</code> instance, e.g. <code>myDrawing:setDisplay("mesh")</code>. The next call to <code>Graphics:draw()</code> will then honor that setting. The optional <code>quality</code> parameter is a render-dependent number that allows you to configure the level of detail for some renderers.</p>
 <p>Let's try this out. With the curved triangle from the Getting Started section, let's set a mesh renderer before drawing:</p>
 <pre><code> myDrawing:setDisplay(&quot;mesh&quot;)
 
@@ -122,23 +173,37 @@ end
 <p>One of the strengths of TÖVE is that choosing the display renderer is independent of building your geometry and colors.</p>
 <h2 id="which-renderer-is-right-for-me">Which renderer is right for me?</h2>
 <p>Here are some hints:</p>
-<p><code>texture</code> gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using <code>Graphics:setResolution</code> (this won't affect the display size, but you'll see that a resolution of <code>2</code> will allow you to scale the image by a factor of 2 without seeing pixelation).</p>
-<p><code>mesh</code> is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a LÖVE Mesh, which is efficient to draw, scale and animate.</p>
-<p><code>gpux</code> can give excellent results in terms of quality and performance in some situations. Then again, it can be very expensive in terms of shader performance and it has some issues with numerical stability (computing cubic roots in a shader using 16 bit floating point numbers is not only potty but indeed has its limits).</p>
+<p><code>texture</code> gives great quality, but is slow for re-rendering and scaling via transforms will produce pixelation, unless you re-render for a higher resolution. You can tell TÖVE at which resolution to render internally by using <a href="https://poke1024.github.io/tove2d-api/classes/Graphics.html#Graphics:setResolution"><code>Graphics:setResolution</code></a> (this won't affect the display size, but you'll see that a resolution of <code>2</code> will allow you to scale the image by a factor of 2 without seeing pixelation).</p>
+<p><code>mesh</code> is the best all-round solution if you need to dynamically scale your graphics. Once you determine a detail level that matches your requirements (in terms of scaling and zoom), you're basically dealing with a <a href="https://love2d.org/wiki/Mesh">LÖVE Mesh</a>, which is efficient to draw, scale and animate.</p>
+<p><code>gpux</code> can give excellent results in terms of quality and performance in some situations. Then again, it can be  expensive in terms of shader performance and there can be issues with numerical stability <sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>.</p>
 <h2 id="setting-the-mesh-renderer-quality">Setting the mesh renderer quality</h2>
-<p>The quality setting in <code>Graphics:setDisplay</code>  lets you change the level of the detail the mesh renderer tessellates its mesh. There are two meanings of this values, depending on whether your points are <code>static</code>, <code>dynamic</code> or <code>stream</code> (see the section on Animating Things).</p>
-<ul>
-<li>If your points are <code>static</code> (default), the quality is a number between 0 and 1, where 1 is the highest suggested quality (though you can go above 1). The renderer will produce an adaptive mesh tessellation, where some curves get many points and others (e.g. straight lines) few. Values below 0.1 trigger a special low quality tier that tries to produce a minimum of triangles.</li>
-<li>If your points are <code>dynamic</code> or <code>stream</code> (for animation), the quality is also a number between 0 and 1, but 0 now corresponds to 0 fixed subdivisions per curve, whereas 1 corresponds to a fixed subdivision of 16 segments per curve. In short: your quality is no longer adaptive.</li>
-<li>In addition, you can always force fixed subdivision by specifying <code>tove.fixed(n)</code> as quality: each curve will then be segmented into exactly 2^n parts. Use this if you don't want adaptive subdivision for static point meshes.</li>
-</ul>
-<p>The second factor to mention here is the value set via <code>Graphics:setResolution</code>. TÖVE internally scales meshes before applying the quality settings. That means that setting a higher resolution will yield a higher quality with the same quality number. Imagine rendering the same image at a higher resolution and then scaling it down again for display. This is the effect you get by calling <code>setResolution</code> on meshes.</p>
+<p>If you're using the <code>"mesh"</code> display mode, the quality setting in <a href="https://poke1024.github.io/tove2d-api/classes/Graphics.html#Graphics:setDisplay"><code>Graphics:setDisplay</code></a> lets you change the level of the detail the mesh renderer tessellates its mesh. In most cases, you should specify a tesselation using <code>"adaptive"</code> or <code>"rigid"</code>. For example <code>Graphics:setDisplay("mesh", "adaptive", 1024)</code> will render a mesh that should look good
+when drawn at a size of 1024 pixels.</p>
+<p>TÖVE allows a second option, where you only specify a single number, e.g. <code>Graphics:setDisplay("mesh", 1024)</code>. In that case, TÖVE will look at the mesh's usage (see <a href="https://poke1024.github.io/tove2d-api/classes/Graphics.html#Graphics:setUsage">Graphics:setUsage</a>) and come up with a suitable tesselator. If your usage is <code>static</code>, TÖVE will create a <code>"adaptive"</code> tesselator, if your usage is <code>dynamic</code> or <code>stream</code>, the tesselator will be <code>"rigid"</code>.</p>
+<p>The second factor to mention here is <a href="https://poke1024.github.io/tove2d-api/classes/Graphics.html#Graphics:setResolution"><code>Graphics:setResolution</code></a>. If you specified a quality of <code>1024</code>, but also set a resolution of <code>2</code>, you will in fact get a quality that's good for 2048 pixels.</p>
 <h2 id="the-mesh-renderer-and-gradients">The mesh renderer and gradients</h2>
 <p>The mesh renderer automatically detects if you are using gradients or not. If not, it internally uses a flat mesh of vertices and colors. If you use gradients, it will use a shader implementation for the coloring.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>computing cubic roots in a shader using 16 bit floating point numbers might not only seem potty but indeed has some limits.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
               
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Animation/" class="btn btn-neutral float-right" title="Animating Things">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../../features/" class="btn btn-neutral" title="Features"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -162,6 +227,10 @@ end
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
+        <span><a href="../../features/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Animation/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
