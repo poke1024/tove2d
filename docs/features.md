@@ -1,4 +1,10 @@
-Do not expect TÖVE to produce print quality vector renderings. This is neither Cairo nor Skia, but a simplified vector graphics library for games.
+# Scope
+
+TÖVE is a simplified vector graphics library for games aimed at realtime scaling and animation.
+
+Even though TÖVE knows some tricks and even supports dithering, do not expect it to have the feature set or the rendering quality comparable of a full fledged print quality library such as <a href="https://www.cairographics.org/">Cairo</a> or <a href="https://skia.org/">Skia</a>.
+
+# Renderers
 
 Here's what you can expect from TÖVE's different renderers:
 

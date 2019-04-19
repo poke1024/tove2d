@@ -1,0 +1,807 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><strong>Subpath</strong></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+  <li><a href="../modules/tove.html">tove</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>Subpath</code></h1>
+<p>A vector graphics subpath (trajectory), usually lives inside a <a href="../classes/Path.html#">Path</a>.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#tove.newSubpath">tove.newSubpath ([points])</a></td>
+	<td class="summary">Create new subpath.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Subpath.curves">Subpath.curves</a></td>
+	<td class="summary"><a href="../modules/tove.html#List">tove.List</a> of <a href="../classes/Curve.html#">Curve</a>s in this <a href="../classes/Subpath.html#">Subpath</a></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath.isClosed">Subpath.isClosed</a></td>
+	<td class="summary">is this subpath closed?</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:arc">Subpath:arc (x, y, r, startAngle, endAngle, ccw)</a></td>
+	<td class="summary">Draw an arc.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:clone">Subpath:clone ()</a></td>
+	<td class="summary">Clone.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:curveTo">Subpath:curveTo (cp1x, cp1y, cp2x, cp2y, x, y)</a></td>
+	<td class="summary">Draw a cubic bezier curve to (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:drawCircle">Subpath:drawCircle (x, y, r)</a></td>
+	<td class="summary">Draw a circle.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:drawEllipse">Subpath:drawEllipse (x, y, rx, ry)</a></td>
+	<td class="summary">Draw an ellipse.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:drawRect">Subpath:drawRect (x, y, w, h, rx, ry)</a></td>
+	<td class="summary">Draw a rectangle.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:invert">Subpath:invert ()</a></td>
+	<td class="summary">Invert.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:lineTo">Subpath:lineTo (x, y)</a></td>
+	<td class="summary">Draw a line to (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:mould">Subpath:mould (t, x, y)</a></td>
+	<td class="summary">Mould curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:moveTo">Subpath:moveTo (x, y)</a></td>
+	<td class="summary">Move to position (x, y).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:nearest">Subpath:nearest (x, y, dmax, dmin)</a></td>
+	<td class="summary">Find nearest point.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:normal">Subpath:normal (t)</a></td>
+	<td class="summary">Evaluate normal at t.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:position">Subpath:position (t)</a></td>
+	<td class="summary">Evaluate position at t.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:setPoints">Subpath:setPoints (points)</a></td>
+	<td class="summary">Set points.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:transform">Subpath:transform (x[, y[, angle[, sy[, sy[, ox[, oy[, kx[, ky]]]]]]]])</a></td>
+	<td class="summary">Transform this <a href="../classes/Subpath.html#">Subpath</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Subpath:warp">Subpath:warp (f)</a></td>
+	<td class="summary">Warp.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "tove.newSubpath"></a>
+    <strong>tove.newSubpath ([points])</strong>
+    </dt>
+    <dd>
+    Create new subpath.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">points</span>
+            <span class="types"><span class="type"> {number,number,...}</span></span>
+         x and y components of points to use
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Subpath.html#">Subpath</a></span>
+        new subpath
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Subpath.curves"></a>
+    <strong>Subpath.curves</strong>
+    </dt>
+    <dd>
+    <a href="../modules/tove.html#List">tove.List</a> of <a href="../classes/Curve.html#">Curve</a>s in this <a href="../classes/Subpath.html#">Subpath</a>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath.isClosed"></a>
+    <strong>Subpath.isClosed</strong>
+    </dt>
+    <dd>
+    is this subpath closed?
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Subpath:arc"></a>
+    <strong>Subpath:arc (x, y, r, startAngle, endAngle, ccw)</strong>
+    </dt>
+    <dd>
+    Draw an arc.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre of arc
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre of arc
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         radius of arc
+        </li>
+        <li><span class="parameter">startAngle</span>
+            <span class="types"><span class="type">number</span></span>
+         angle at which to start drawing
+        </li>
+        <li><span class="parameter">endAngle</span>
+            <span class="types"><span class="type">number</span></span>
+         angle at which to stop drawing
+        </li>
+        <li><span class="parameter">ccw</span>
+            <span class="types"><span class="type">bool</span></span>
+         true if drawing between given angles is counterclockwise
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:clone"></a>
+    <strong>Subpath:clone ()</strong>
+    </dt>
+    <dd>
+    Clone.
+ Creates a deep clone.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Subpath.html#">Subpath</a></span>
+        cloned subpath
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:curveTo"></a>
+    <strong>Subpath:curveTo (cp1x, cp1y, cp2x, cp2y, x, y)</strong>
+    </dt>
+    <dd>
+    Draw a cubic bezier curve to (x, y).
+ See <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve">Bézier curves on Wikipedia</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cp1x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's first control point (P1)
+        </li>
+        <li><span class="parameter">cp1y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's first control point (P1)
+        </li>
+        <li><span class="parameter">cp2x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's second control point (P2)
+        </li>
+        <li><span class="parameter">cp2y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's second control point (P2)
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of curve's end position (P3)
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of curve's end position (P3)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        curve command
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">subpath:moveTo(<span class="number">10</span>, <span class="number">20</span>)
+subpath:curveTo(<span class="number">7</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">3</span>, <span class="number">50</span>, <span class="number">30</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Subpath:drawCircle"></a>
+    <strong>Subpath:drawCircle (x, y, r)</strong>
+    </dt>
+    <dd>
+    Draw a circle.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre
+        </li>
+        <li><span class="parameter">r</span>
+            <span class="types"><span class="type">number</span></span>
+         radius
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        circle command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:drawEllipse"></a>
+    <strong>Subpath:drawEllipse (x, y, rx, ry)</strong>
+    </dt>
+    <dd>
+    Draw an ellipse.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of centre
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of centre
+        </li>
+        <li><span class="parameter">rx</span>
+            <span class="types"><span class="type">number</span></span>
+         horizontal radius
+        </li>
+        <li><span class="parameter">ry</span>
+            <span class="types"><span class="type">number</span></span>
+         vertical radius
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        ellipse command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:drawRect"></a>
+    <strong>Subpath:drawRect (x, y, w, h, rx, ry)</strong>
+    </dt>
+    <dd>
+    Draw a rectangle.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of top left corner
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of top left corner
+        </li>
+        <li><span class="parameter">w</span>
+            <span class="types"><span class="type">number</span></span>
+         width
+        </li>
+        <li><span class="parameter">h</span>
+            <span class="types"><span class="type">number</span></span>
+         height
+        </li>
+        <li><span class="parameter">rx</span>
+            <span class="types"><span class="type">number</span></span>
+         horizontal roundness of corners
+        </li>
+        <li><span class="parameter">ry</span>
+            <span class="types"><span class="type">number</span></span>
+         vertical roundness of corners
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        rectangle command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:invert"></a>
+    <strong>Subpath:invert ()</strong>
+    </dt>
+    <dd>
+    Invert.
+ Reverses orientation by reversing order of points. You can use this to
+ create holes in a <a href="../classes/Path.html#">Path</a>.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:lineTo"></a>
+    <strong>Subpath:lineTo (x, y)</strong>
+    </dt>
+    <dd>
+    Draw a line to (x, y).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of line's end position
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of line's end position
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        line command
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">subpath:moveTo(<span class="number">10</span>, <span class="number">20</span>)
+subpath:lineTo(<span class="number">5</span>, <span class="number">30</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Subpath:mould"></a>
+    <strong>Subpath:mould (t, x, y)</strong>
+    </dt>
+    <dd>
+    Mould curve.
+ Moves a specific point on the curve to a new location and adapts the surrounding
+ curve.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">number</span></span>
+         t of point on the curve which should be moved, 0 &lt;= t &lt; = number of curves
+        </li>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of where to move
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of where to move
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:moveTo"></a>
+    <strong>Subpath:moveTo (x, y)</strong>
+    </dt>
+    <dd>
+    Move to position (x, y).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         new x coordinate
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         new y coordinate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../classes/Command.html#">Command</a></span>
+        move command
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:nearest"></a>
+    <strong>Subpath:nearest (x, y, dmax, dmin)</strong>
+    </dt>
+    <dd>
+    Find nearest point.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         x component of point to search against
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         y component of point to search against
+        </li>
+        <li><span class="parameter">dmax</span>
+            <span class="types"><span class="type">number[opt=1e50]</span></span>
+         ignore curve points above this distance
+        </li>
+        <li><span class="parameter">dmin</span>
+            <span class="types"><span class="type">number[opt=1e-4]</span></span>
+         return as soon as a distance smaller than this is found
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        t which produces closest distance</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        distance distance at given t</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:normal"></a>
+    <strong>Subpath:normal (t)</strong>
+    </dt>
+    <dd>
+    Evaluate normal at t.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">number</span></span>
+         t at which to evaluate position. 0 &lt; t &lt; 1
+ will lie in the first curve, 1 &lt; t &lt; 2 will lie in the
+ second curve, and so on.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        x component of normal</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        y component of normal</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:position"></a>
+    <strong>Subpath:position (t)</strong>
+    </dt>
+    <dd>
+    Evaluate position at t.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><span class="type">number</span></span>
+         t at which to evaluate position. 0 &lt; t &lt; 1
+ will lie in the first curve, 1 &lt; t &lt; 2 will lie in the
+ second curve, and so on.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        x position</li>
+        <li>
+           <span class="types"><span class="type">number</span></span>
+        y position</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:setPoints"></a>
+    <strong>Subpath:setPoints (points)</strong>
+    </dt>
+    <dd>
+    Set points.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">points</span>
+            <span class="types"><span class="type">{number,number,...}</span></span>
+         x and y coordinates of points to set
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Subpath:transform"></a>
+    <strong>Subpath:transform (x[, y[, angle[, sy[, sy[, ox[, oy[, kx[, ky]]]]]]]])</strong>
+    </dt>
+    <dd>
+    Transform this <a href="../classes/Subpath.html#">Subpath</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span> or <span class="type">Translation</span></span>
+         move by x in x-axis, or a LÖVE <a href="https://love2d.org/wiki/Transform">Transform</a>
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         move by y in y-axis
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">angle</span>
+            <span class="types"><span class="type">number</span></span>
+         applied rotation in radians
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">sy</span>
+            <span class="types"><span class="type">number</span></span>
+         scale factor in y
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">sy</span>
+            <span class="types"><span class="type">number</span></span>
+         scale factor in y
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">ox</span>
+            <span class="types"><span class="type">number</span></span>
+         x coordinate of origin
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">oy</span>
+            <span class="types"><span class="type">number</span></span>
+         y coordinate of origin
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">kx</span>
+            <span class="types"><span class="type">number</span></span>
+         skew in x-axis
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">ky</span>
+            <span class="types"><span class="type">number</span></span>
+         skew in y-axis
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">subpath:transform(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, sx, sy)  <span class="comment">-- scale by (sx, sy)</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Subpath:warp"></a>
+    <strong>Subpath:warp (f)</strong>
+    </dt>
+    <dd>
+    Warp.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         warp function
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/Graphics.html#Graphics:warp">Graphics:warp</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

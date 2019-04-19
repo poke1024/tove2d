@@ -2,12 +2,19 @@
 Animated vector graphics for [LÖVE](https://love2d.org/).
 
 ## Description
-TÖVE is a vector drawing canvas for LÖVE, think HTML5's `<canvas>` or  OpenFL's `Graphics`. Which you can animate. Efficiently.
+TÖVE is a vector drawing canvas for LÖVE, think HTML5's <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API">`<canvas>`</a> or  OpenFL's <a href="https://api.openfl.org/openfl/display/Graphics.html">`Graphics`</a>. Which you can animate. Efficiently.
+
+## Background
+There have been various libraries for drawing vector graphics out there, but few of them are built for drawing or even animating complex scenes and most of them stopped at the most basic features.
+
+As an example, take the HTML5 `<canvas>` tag: it's great in terms of quality, yet it's slow for animation or games, as it doesn't know how to keep its graphics data retained on the GPU: indeed, it will do a full redraw of the whole scene on each frame.
+
+You can use WebGL, but then you lose vector graphics. There have been attempts to fix this by implementing vector graphics on top of WebGL, such as <a href="https://github.com/bigtimebuddy/pixi-svg">PIXI SVG</a> and the <a href="https://threejs.org/docs/#examples/loaders/SVGLoader">ThreeJS SVG Loader</a>. TÖVE is exactly like these, only more comprehensive. And for LÖVE.
 
 ## Features
 * brings crisp vector graphics and SVGs to LÖVE
 * offers a substantial subset of SVG
-* built for realtime animation
+* built for realtime scaling and animation
 * details: https://poke1024.github.io/tove2d/features
 
 ## Getting Started

@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>tove</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Class_List">Class List </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/animation.html">animation</a></li>
+  <li><a href="../modules/display.html">display</a></li>
+  <li><strong>tove</strong></li>
+  <li><a href="../modules/stage.html">stage</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/Command.html">Command</a></li>
+  <li><a href="../classes/Curve.html">Curve</a></li>
+  <li><a href="../classes/Graphics.html">Graphics</a></li>
+  <li><a href="../classes/Paint.html">Paint</a></li>
+  <li><a href="../classes/Path.html">Path</a></li>
+  <li><a href="../classes/Subpath.html">Subpath</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>tove</code></h1>
+<p>
+
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#LineJoin">LineJoin</a></td>
+	<td class="summary">The visual approach with which lines are joined.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#FillRule">FillRule</a></td>
+	<td class="summary">The rule by which solidness in paths is defined.</td>
+	</tr>
+</table>
+<h2><a href="#Class_List">Class List </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#List.count">List.count</a></td>
+	<td class="summary">Total number of elements in this list.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:at">List:at (index)</a></td>
+	<td class="summary">Get element at index.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#List:at">List:at (name)</a></td>
+	<td class="summary">Get element with name.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "LineJoin"></a>
+    <strong>LineJoin</strong>
+    </dt>
+    <dd>
+    The visual approach with which lines are joined.
+ Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linejoin">Mozilla SVG documentation</a>.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">miter</span>
+         Mitered (sharp) line joins
+        </li>
+        <li><span class="parameter">round</span>
+         Round line joins
+        </li>
+        <li><span class="parameter">bevel</span>
+         Bevel (flat) line joins
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "FillRule"></a>
+    <strong>FillRule</strong>
+    </dt>
+    <dd>
+    The rule by which solidness in paths is defined.
+ Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule">Mozilla SVG documentation</a>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">nonzero</span>
+         Non-zero number of path crossings defines insideness
+        </li>
+        <li><span class="parameter">evenodd</span>
+         Odd number of path crossings defines insideness
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_List"></a>Class List </h2>
+
+          <div class="section-description">
+          A list of elements, such as e.g.  <a href="../classes/Path.html#">Path</a>s.
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "List.count"></a>
+    <strong>List.count</strong>
+    </dt>
+    <dd>
+    Total number of elements in this list.
+
+
+    <ul>
+        <li><span class="parameter">count</span>
+            <span class="types"><span class="type">number</span></span>
+         number of elements in this list
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics.paths.count <span class="comment">-- number of paths
+</span>graphics.paths[<span class="number">1</span>].subpaths.count <span class="comment">-- number of subpaths in path 1
+</span>graphics.paths[<span class="number">1</span>].subpaths[<span class="number">1</span>].curves.count <span class="comment">-- number of curves in subpath 1 in path 1</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:at"></a>
+    <strong>List:at (index)</strong>
+    </dt>
+    <dd>
+    Get element at index.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">index</span>
+            <span class="types"><span class="type">number</span></span>
+         1-based index of element to retrieve
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        retrieved element
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics.paths[<span class="number">1</span>]  <span class="comment">-- retrieve first path</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "List:at"></a>
+    <strong>List:at (name)</strong>
+    </dt>
+    <dd>
+    Get element with name.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         name of element to retrieve
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        retrieved element
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">graphics.paths[<span class="string">"circle"</span>] <span class="comment">-- retrieve the path named "circle"</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2019-04-19 11:25:52 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
