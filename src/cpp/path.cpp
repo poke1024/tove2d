@@ -521,6 +521,14 @@ ToveLineJoin Path::getLineJoin() const {
 		static_cast<NSVGlineJoin>(nsvg.strokeLineJoin));
 }
 
+void Path::setLineCap(ToveLineCap cap) {
+	NSVGlineCap nsvgCap = nsvg::nsvgLineCap(cap);
+	if (nsvgCap != nsvg.strokeLineCap) {
+		nsvg.strokeLineCap = nsvgCap;
+		geometryChanged();
+	}
+}
+
 void Path::setLineJoin(ToveLineJoin join) {
 	NSVGlineJoin nsvgJoin = nsvg::nsvgLineJoin(join);
 	if (nsvgJoin != nsvg.strokeLineJoin) {
@@ -666,6 +674,7 @@ void Path::animate(const PathRef &a, const PathRef &b, float t, int pathIndex) {
 
 	setLineWidth(a->getLineWidth() * s + b->getLineWidth() * t);
 	setLineJoin(t < 0.5f ? a->getLineJoin() : b->getLineJoin());
+	setLineCap(t < 0.5f ? a->getLineCap() : b->getLineCap());
 	setMiterLimit(a->getMiterLimit() * s + b->getMiterLimit() * t);
 	animateLineDash(a, b, t, pathIndex);
 

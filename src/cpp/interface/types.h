@@ -67,6 +67,12 @@ typedef enum {
 } ToveLineJoin;
 
 typedef enum {
+	TOVE_LINECAP_BUTT,
+	TOVE_LINECAP_ROUND,
+	TOVE_LINECAP_SQUARE
+} ToveLineCap;
+
+typedef enum {
 	TOVE_ORIENTATION_CW = 0,
 	TOVE_ORIENTATION_CCW = 1
 } ToveOrientation;

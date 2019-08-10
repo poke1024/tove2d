@@ -599,6 +599,30 @@ ToveLineJoin toveLineJoin(NSVGlineJoin join) {
 	}
 	return TOVE_LINEJOIN_MITER;
 }
+
+NSVGlineCap nsvgLineCap(ToveLineCap cap) {
+	switch (cap) {
+		case TOVE_LINECAP_BUTT:
+			return NSVG_CAP_BUTT;
+		case TOVE_LINECAP_ROUND:
+			return NSVG_CAP_ROUND;
+		case TOVE_LINECAP_SQUARE:
+			return NSVG_CAP_SQUARE;
+	}
+	return NSVG_CAP_BUTT;
+}
+
+ToveLineCap toveLineCap(NSVGlineCap cap) {
+	switch (cap) {
+		case NSVG_CAP_BUTT:
+			return TOVE_LINECAP_BUTT;
+		case NSVG_CAP_ROUND:
+			return TOVE_LINECAP_ROUND;
+		case NSVG_CAP_SQUARE:
+			return TOVE_LINECAP_SQUARE;
+	}
+	return TOVE_LINECAP_BUTT;
+}
 } // namespace nsvg
 
 END_TOVE_NAMESPACE
