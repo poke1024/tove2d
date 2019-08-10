@@ -521,18 +521,23 @@ ToveLineJoin Path::getLineJoin() const {
 		static_cast<NSVGlineJoin>(nsvg.strokeLineJoin));
 }
 
-void Path::setLineCap(ToveLineCap cap) {
-	NSVGlineCap nsvgCap = nsvg::nsvgLineCap(cap);
-	if (nsvgCap != nsvg.strokeLineCap) {
-		nsvg.strokeLineCap = nsvgCap;
-		geometryChanged();
-	}
-}
-
 void Path::setLineJoin(ToveLineJoin join) {
 	NSVGlineJoin nsvgJoin = nsvg::nsvgLineJoin(join);
 	if (nsvgJoin != nsvg.strokeLineJoin) {
 		nsvg.strokeLineJoin = nsvgJoin;
+		geometryChanged();
+	}
+}
+
+ToveLineCap Path::getLineCap() const {
+	return nsvg::toveLineCap(
+		static_cast<NSVGlineCap>(nsvg.strokeLineCap));
+}
+
+void Path::setLineCap(ToveLineCap cap) {
+	NSVGlineCap nsvgCap = nsvg::nsvgLineCap(cap);
+	if (nsvgCap != nsvg.strokeLineCap) {
+		nsvg.strokeLineCap = nsvgCap;
 		geometryChanged();
 	}
 }

@@ -311,6 +311,22 @@ function Path:setLineJoin(join)
 	lib.PathSetLineJoin(self, tove.lineJoins[join])
 end
 
+--- Get line cap.
+-- @treturn string one of the names in @{tove.LineCap}
+-- @see setLineCap
+
+function Path:getLineCap()
+	return findEnum(tove.lineCaps, lib.PathGetLineCap(self))
+end
+
+--- Set line cap.
+-- @tparam string join one of the names in @{tove.LineCap}
+-- @see getLineCap
+
+function Path:setLineCap(cap)
+	lib.PathSetLineCap(self, tove.lineCaps[cap])
+end
+
 --- Get fill rule.
 -- @treturn string one of the names in @{tove.FillRule}
 -- @see setFillRule
