@@ -136,6 +136,9 @@ public:
 	ToveLineJoin getLineJoin() const;
 	void setLineJoin(ToveLineJoin join);
 
+	ToveLineCap getLineCap() const;
+	void setLineCap(ToveLineCap cap);
+
 	inline float getMiterLimit() const {
 		return nsvg.miterLimit;
 	}

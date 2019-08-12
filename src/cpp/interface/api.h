@@ -99,6 +99,8 @@ EXPORT void PathSet(TovePathRef path, TovePathRef source,
 	bool scaleLineWidth, float a, float b, float c, float d, float e, float f);
 EXPORT ToveLineJoin PathGetLineJoin(TovePathRef path);
 EXPORT void PathSetLineJoin(TovePathRef path, ToveLineJoin join);
+EXPORT ToveLineCap PathGetLineCap(TovePathRef path);
+EXPORT void PathSetLineCap(TovePathRef path, ToveLineCap cap);
 EXPORT const char *PathGetId(TovePathRef path);
 EXPORT void PathRefine(TovePathRef path, int factor);
 EXPORT void PathRotate(TovePathRef path, ToveElementType what, int k);

@@ -913,6 +913,14 @@ void GraphicsSetLineJoin(ToveGraphicsRef graphics, ToveLineJoin join) {
 	deref(graphics)->setLineJoin(join);
 }
 
+ToveLineCap GraphicsGetLineCap(ToveGraphicsRef graphics) {
+	return deref(graphics)->getLineCap();
+}
+
+void GraphicsSetLineCap(ToveGraphicsRef graphics, ToveLineCap cap) {
+	deref(graphics)->setLineCap(cap);
+}
+
 bool GraphicsMorphify(const ToveGraphicsRef *graphics, int n) {
 	std::vector<GraphicsRef> g;
 	g.reserve(n);

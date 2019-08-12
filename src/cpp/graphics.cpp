@@ -354,6 +354,15 @@ void Graphics::setLineJoin(ToveLineJoin join) {
 	strokeLineJoin = nsvg::nsvgLineJoin(join);
 }
 
+ToveLineCap Graphics::getLineCap() const {
+	return nsvg::toveLineCap(
+		static_cast<NSVGlineCap>(strokeLineCap));
+}
+
+void Graphics::setLineCap(ToveLineCap cap) {
+	strokeLineCap = nsvg::nsvgLineCap(cap);
+}
+
 bool Graphics::areColorsSolid() {
 	return getPaintIndices()->getNumGradients() == 0;
 }

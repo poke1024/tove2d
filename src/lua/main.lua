@@ -213,6 +213,19 @@ tove.init = function(path)
 		bevel = lib.TOVE_LINEJOIN_BEVEL
 	}
 
+	--- The shape used to draw the end points of lines.
+	-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linecap">Mozilla SVG documentation</a>.
+	-- @table LineCap
+	-- @field butt Butt line caps
+	-- @field round Round line caps
+	-- @field square Square line caps
+
+	tove.lineCaps = {
+		butt = lib.TOVE_LINECAP_BUTT,
+		round = lib.TOVE_LINECAP_ROUND,
+		square = lib.TOVE_LINECAP_SQUARE
+	}
+
 	--- The rule by which solidness in paths is defined.
 	-- Also see <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill-rule">Mozilla SVG documentation</a>
 	-- @table FillRule
