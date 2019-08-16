@@ -13,7 +13,6 @@
 
 --!! include "license.lua"
 
-local basepath = (...) .. "/"
 local ffi = require 'ffi'
 
 ffi.cdef [[
@@ -30,7 +29,11 @@ tove.init = function(path)
 		["Linux"] = "libTove.so"
 	}
 
-	local lib = ffi.load(basepath .. libName[love.system.getOS()])
+	-- we expect tove2d's lib to live inside a folder called "tove" in the game's main
+	-- source folder. should fix https://github.com/poke1024/tove2d/issues/21
+
+	libPath = love.filesystem.getSource() .. "/tove/" .. libName[love.system.getOS()]
+	local lib = ffi.load(libPath)
 	tove.lib = lib
 	tove.getVersion = function()
 		return ffi.string(lib.GetVersion())
