@@ -13,6 +13,21 @@ AddOption(
 	help='build static library',
 	default=False)
 
+AddOption(
+	'--arch',
+	dest='arch',
+	type='string',
+	nargs=1,
+	action='store',
+	help='CPU architecture to use (e.g. sandybridge, haswell)',
+	default=None)
+
+AddOption(
+	'--f16c',
+	action='store_true',
+	help='assume hardware support for 16-bit floating point numbers',
+	default=False)
+
 sources = [
 	"src/cpp/version.cpp",
 	"src/cpp/interface/api.cpp",
@@ -38,31 +53,54 @@ sources = [
 
 if env["PLATFORM"] == 'win32':
 	env["CCFLAGS"] = ' /EHsc /std:c++17 '
+
 	if not GetOption('tovedebug'):
-		env["CCFLAGS"] += ' /Oi /Ot /Oy /Ob2 /GF /Gy /fp:fast /arch:AVX '
-		
-		# enabling /O2 (or /Og above) will crash demos/retro for some reason.
-		# env["CCFLAGS"] += ' /O2 /fp:fast '
-		
+		env["CCFLAGS"] += ' /Oi /Ot /Oy /Ob2 /GF /Gy /fp:fast '
+		# enabling /O2 (or /Og) will crash demos/retro for some reason.
+
+
+		# concering CPU architectures and AVX:
+
+		# by default, we do not specify a value for /arch - even though in theory, /arch:AVX should be
+		# fine for processors not older than 2011 (https://en.wikipedia.org/wiki/Advanced_Vector_Extensions),
+		# in practice setting AVX causes issues (see https://github.com/poke1024/tove2d/issues/24).
+		# for /arch:AVX2, we even need Haswell architectures.
+
+		# the main benefit for enabling AVX2 would probably be src/thirdparty/nanosvg/tove/svgrast.cpp,
+		# where various dithering operations are optimizable for SIMD (AVX can then be seen in asm code).
+
+		arch = GetOption('arch')
+		if arch == 'sandybridge':
+			env["CCFLAGS"] += ' /arch:AVX '
+		elif arch == 'haswell':
+			env["CCFLAGS"] += ' /arch:AVX2 '
+		elif arch is not None:
+			raise RuntimeError("please specify sandybridge or haswell for arch")
+
+
 		env["LINKFLAGS"] = ' /OPT:REF '
 	else:
 		env["CCFLAGS"] += ' /DEBUG:FULL '
 		env["LINKFLAGS"] = ' /DEBUG:FULL '
 
 else:
-	# might want to trigger these with additional options:
-	# -march=haswell
 	# -Wreorder -Wunused-variable
 
 	CCFLAGS = ' -std=c++17 -fvisibility=hidden -funsafe-math-optimizations '
+
+	if GetOption('arch'):
+		CCFLAGS += ' -march=%s ' % GetOption('arch')
 
 	if GetOption('tovedebug'):
 		CCFLAGS += '-g '
 	else:
 		CCFLAGS += '-O3 '
 
-	if env["PLATFORM"] == 'posix':
+	if env["PLATFORM"] == 'posix' and GetOption('f16c'):
 		CCFLAGS += ' -mf16c '
+
+	if GetOption('f16c'):
+		CCFLAGS += ' -DTOVE_F16C=1 '
 
 	env["CCFLAGS"] = CCFLAGS
 

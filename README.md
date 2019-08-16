@@ -31,7 +31,7 @@ will fix the links to the lib and asset folders, so you can run e.g. `love demos
 
 ## Building TÖVE Yourself
 
-On Linux and macOS:
+### On Linux and macOS
 
 ```
 git clone --recurse-submodules https://github.com/poke1024/tove2d
@@ -40,15 +40,30 @@ scons
 love demos/hearts
 ```
 
-On Windows:
+### On Windows
 
 ```
+# in git bash:
 git clone --recurse-submodules https://github.com/poke1024/tove2d
 cd tove2d
+
+# in regular cmd shell:
+cd path/to/tove2d
 setup.bat /C
 ```
 
 Take a look inside `setup.bat` to learn more about installing a compiler environment.
+
+### Experimental
+
+Use `scons --arch=sandybridge` or `scons --arch=haswell` to compile for a custom CPU architecture. On Windows, this enables AVX extensions,
+which mainly speeds up the rasterizer dithering code.
+
+On POSIX, in addition, you can enable hardware intrinsics for 16-bit floating point operations by using `scons --f16c`. These intrinsics
+might give small performance benefits in the `gpux` mode.
+
+Since enabling custom options causes crashes on some CPUs (https://github.com/poke1024/tove2d/issues/24), I strongly recommend sticking to
+the defaults, as they ensure that your binary will run on many CPUs.
 
 ## Roadmap
 
