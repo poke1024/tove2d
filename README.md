@@ -77,7 +77,7 @@ Details and the licenses of the included third party code are found in the [LICE
 ## Credits
 TÖVE owes a lot to Mikko Mononen's excellent NanoSVG. Not only does TÖVE call NanoSVG in various places, it has also inherited some of its code.
 
-TÖVE's API was inspired by [EaselJS](https://www.createjs.com/easeljs) and [PlotDevice](https://plotdevice.io/PlotDevice).
+TÖVE's API was inspired by [EaselJS](https://www.createjs.com/easeljs) and [PlotDevice](https://plotdevice.io).
 
 The graphics you see in the tutorials and demos are by [Mike Mac](https://mikemac2d.itch.io), [Kenney](https://kenney.nl/) and [Chris Hildenbrand](https://2dgameartguru.com/). The font in the demos is "amatic" by Vernon Adams. 
 
