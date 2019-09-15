@@ -197,6 +197,16 @@ public:
 		return nsvg.fill.type > 0;
 	}
 
+	inline bool hasNormalFillStrokeOrder() const {
+		int order[NSVG_PAINTORDER_COUNT];
+		for (int i = 0; i < NSVG_PAINTORDER_COUNT; i++) {
+			int p = (int)nsvg.paintOrder[i];
+			assert(p >= 0 && p < NSVG_PAINTORDER_COUNT);
+			order[p] = i;
+		}
+		return order[NSVG_PAINTORDER_FILL] < order[NSVG_PAINTORDER_STROKE];
+	}
+
 #ifdef NSVG_CLIP_PATHS
 	const std::vector<TOVEclipPathIndex> &getClipIndices() {
 		return clipIndices;

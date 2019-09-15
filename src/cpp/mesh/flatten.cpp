@@ -417,10 +417,12 @@ void AbstractAdaptiveFlattener::flatten(
 		ClipperPaths stroke;
 		ClipperLib::ClosedPathsFromPolyTree(tesselation.stroke, stroke);
 
-		ClipperLib::Clipper clipper;
-		clipper.AddPaths(tesselation.fill, ClipperLib::ptSubject, true);
-		clipper.AddPaths(stroke, ClipperLib::ptClip, true);
-		clipper.Execute(ClipperLib::ctDifference, tesselation.fill);
+		if (path->hasNormalFillStrokeOrder()) {
+			ClipperLib::Clipper clipper;
+			clipper.AddPaths(tesselation.fill, ClipperLib::ptSubject, true);
+			clipper.AddPaths(stroke, ClipperLib::ptClip, true);
+			clipper.Execute(ClipperLib::ctDifference, tesselation.fill);
+		}
 	}
 }
 

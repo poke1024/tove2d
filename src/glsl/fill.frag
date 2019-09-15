@@ -396,6 +396,10 @@ vec4 do_color(vec2 textureUV) {
 	int shift = 0;
 	int z = 0;
 
+#if PAINT_ORDER < 0
+	vec2 blockPos0 = blockPos;
+#endif
+
 	while (curveIds.x < SENTINEL_STROKES) {
 		float curveId = (curveIds.x + 0.5) / NUM_CURVES;
 
@@ -403,7 +407,7 @@ vec4 do_color(vec2 textureUV) {
 		vec4 by = Texel(curves, vec2(1.0 / CURVE_DATA_SIZE, curveId));
 		vec4 bounds = Texel(curves, vec2(2.0 / CURVE_DATA_SIZE, curveId));
 
-#if LINE_STYLE > 0
+#if LINE_STYLE > 0 && PAINT_ORDER > 0
 		vec2 off = clamp(position, bounds.xy, bounds.zw) - position;
 
 		if (abs(dot(off, axis1)) < LINE_OFFSET) {
@@ -437,7 +441,7 @@ vec4 do_color(vec2 textureUV) {
 #endif
 
 
-#if LINE_STYLE > 0
+#if LINE_STYLE > 0 && PAINT_ORDER > 0
 		}
 #endif
 
@@ -454,8 +458,24 @@ vec4 do_color(vec2 textureUV) {
 		}
 	}
 
+#if PAINT_ORDER < 0
+	if (isInside(z)) {
+		return computeFillColor(position);
+	}
+#endif
+
 #if LINE_STYLE > 0
+
+#if PAINT_ORDER < 0
+	// reset to start of path information.
+	blockPos = blockPos0;
+	curveIds = Texel(lists, blockPos) * C_ID_SCALE;
+	shift = 0;
+
+	if (true) {
+#else
 	if (curveIds.x >= SENTINEL_STROKES && curveIds.x < SENTINEL_END) {
+
 		if (++shift < 4) {
 			curveIds.xyzw = curveIds.yzwx;
 		} else {
@@ -463,6 +483,8 @@ vec4 do_color(vec2 textureUV) {
 			curveIds = Texel(lists, blockPos) * C_ID_SCALE;
 			shift = 0;
 		}
+#endif
+
 		while (curveIds.x < SENTINEL_END) {
 			float curveId = (curveIds.x + 0.5) / NUM_CURVES;
 
@@ -498,7 +520,7 @@ vec4 do_color(vec2 textureUV) {
 	}
 #endif
 
-#if FILL_STYLE > 0
+#if FILL_STYLE > 0 && PAINT_ORDER > 0
 	if (isInside(z)) {
 		return computeFillColor(position);
 	} else {

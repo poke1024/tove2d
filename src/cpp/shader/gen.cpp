@@ -287,7 +287,10 @@ vec4 do_color(vec2 _1) {
 }
 
 ToveShaderCode GetGPUXFillShaderCode(
-	const ToveShaderData *data, bool fragLine, bool meshBand, bool debug) {
+	const ToveShaderData *data,
+	bool fragLine,
+	bool meshBand,
+	bool debug) {
 	
 	tove::ShaderWriter w;
 	ToveShaderCode code;
@@ -327,6 +330,12 @@ vec4 do_vertex(vec4 vertex_pos) {
 		w << "#define LUT_BANDS 1\n";
 	} else {
 		w << "#define MESH_BANDS 1\n";
+	}
+
+	if (data->hasNormalFillStrokeOrder) {
+		w << "#define PAINT_ORDER 1\n";
+	} else {
+		w << "#define PAINT_ORDER -1\n";
 	}
 
 	if (debug) {

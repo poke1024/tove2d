@@ -130,6 +130,9 @@ void Path::set(const NSVGshape *shape) {
 	nsvg.strokeLineCap = shape->strokeLineCap;
 	nsvg.miterLimit = shape->miterLimit;
 	nsvg.fillRule = shape->fillRule;
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT; i++) {
+		nsvg.paintOrder[i] = shape->paintOrder[i];
+	}
 	nsvg.flags = shape->flags;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = shape->bounds[i];
@@ -172,6 +175,9 @@ Path::Path() :
 	nsvg.strokeLineCap = NSVG_CAP_BUTT;
 	nsvg.miterLimit = 4;
 	nsvg.fillRule = NSVG_FILLRULE_NONZERO;
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT; i++) {
+		nsvg.paintOrder[i] = (NSVGpaintOrder)i;
+	}
 	nsvg.flags = NSVG_FLAGS_VISIBLE;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = 0.0f;
@@ -218,6 +224,9 @@ Path::Path(const Path *path) :
 	nsvg.strokeLineCap = path->nsvg.strokeLineCap;
 	nsvg.miterLimit = path->nsvg.miterLimit;
 	nsvg.fillRule = path->nsvg.fillRule;
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT; i++) {
+		nsvg.paintOrder[i] = path->nsvg.paintOrder[i];
+	}
 	nsvg.flags = path->nsvg.flags;
 	for (int i = 0; i < 4; i++) {
 		nsvg.bounds[i] = path->nsvg.bounds[i];
@@ -684,6 +693,10 @@ void Path::animate(const PathRef &a, const PathRef &b, float t, int pathIndex) {
 	animateLineDash(a, b, t, pathIndex);
 
 	setOpacity(a->getOpacity() * s + b->getOpacity() * t);
+
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT; i++) {
+		nsvg.paintOrder[i] = t < 0.5f ? a->nsvg.paintOrder[i] : b->nsvg.paintOrder[i];
+	}
 }
 
 PathRef Path::clone() const {

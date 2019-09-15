@@ -313,6 +313,7 @@ typedef struct {
 typedef struct {
 	ToveShaderLineFillColorData color;
 	ToveShaderGeometryData geometry;
+	bool hasNormalFillStrokeOrder;
 } ToveShaderData;
 
 typedef struct {

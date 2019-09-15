@@ -29,6 +29,8 @@ public:
 		lineColor(path, data.color.line, 1),
 		fillColor(path, data.color.fill, 1),
 		geometry(path, data.geometry, data.color.line, enableFragmentShaderStrokes) {
+
+		data.hasNormalFillStrokeOrder = path->hasNormalFillStrokeOrder();
 	}
 
 	virtual ToveChangeFlags beginUpdate() {

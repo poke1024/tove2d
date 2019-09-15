@@ -183,20 +183,40 @@ ToveMeshUpdateFlags AdaptiveTesselator::pathToMesh(
 	flattener->flatten(path, t);
 	// ClosedPathsFromPolyTree
 
-	if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
-		clip(graphics, path, t.fill);
-		const int index0 = fill->getVertexCount();
- 		fill->submesh(pathIndex, 0)->addClipperPaths(
-			t.fill, flattener->getClipperScale());
-		fill->setFillColor(path, paint, index0, fill->getVertexCount() - index0);
-	}
+	int subMeshIndex = 0;
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT && subMeshIndex < 2; i++) {
+		switch (shape->paintOrder[i]) {
+			case NSVG_PAINTORDER_FILL: {
+				if (!t.fill.empty() && shape->fill.type != NSVG_PAINT_NONE) {
 
-	if (t.stroke.ChildCount() > 0 &&
-		shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
-		const int index0 = line->getVertexCount();
-		ClipperPaths holes;
-		renderStrokes(path, &t.stroke, holes, line->submesh(pathIndex, 1));
-		line->setLineColor(path, paint, index0, line->getVertexCount() - index0);
+					clip(graphics, path, t.fill);
+
+					const int index0 = fill->getVertexCount();
+					fill->submesh(pathIndex, subMeshIndex)->addClipperPaths(
+						t.fill, flattener->getClipperScale());
+					fill->setFillColor(path, paint, index0, fill->getVertexCount() - index0);
+				}
+
+				subMeshIndex += 1;
+			} break;
+			
+			case NSVG_PAINTORDER_STROKE: {
+				if (t.stroke.ChildCount() > 0 &&
+					shape->stroke.type != NSVG_PAINT_NONE && shape->strokeWidth > 0.0) {
+
+					const int index0 = line->getVertexCount();
+					ClipperPaths holes;
+					renderStrokes(path, &t.stroke, holes, line->submesh(pathIndex, subMeshIndex));
+					line->setLineColor(path, paint, index0, line->getVertexCount() - index0);
+				}
+
+				subMeshIndex += 1;
+			} break;
+
+			default: {
+				// ignore
+			} break;
+		}
 	}
 
 	fillIndex = fill->getVertexCount();
@@ -263,8 +283,26 @@ ToveMeshUpdateFlags RigidTesselator::pathToMesh(
 	int index = 0;
 	int lineBase = 0;
 
-	Submesh *fillSubmesh = fill->submesh(pathIndex, 0);
-	Submesh *lineSubmesh = line->submesh(pathIndex, 1);
+	Submesh *fillSubmesh = nullptr;
+	Submesh *lineSubmesh = nullptr;
+
+	int subMeshIndex = 0;
+	for (int i = 0; i < NSVG_PAINTORDER_COUNT && subMeshIndex < 2; i++) {
+		switch (shape->paintOrder[i]) {
+			case NSVG_PAINTORDER_FILL: {
+				fillSubmesh = fill->submesh(pathIndex, subMeshIndex++);
+			} break;
+			case NSVG_PAINTORDER_STROKE: {
+				lineSubmesh = line->submesh(pathIndex, subMeshIndex++);
+			} break;
+			default: {
+			} break;
+		}
+	}
+
+	if (!lineSubmesh || !fillSubmesh) {
+		return _update;
+	}
 
 	ToveMeshUpdateFlags update = _update;
 	bool trianglesChanged = false;
