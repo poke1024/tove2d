@@ -295,7 +295,8 @@ local function newComputeFeedData(path, quality, debug)
 		lineQuality = lineQuality,
 		geometryFeed = geometryFeed,
 		lineColorSend = lineColorSend,
-		fillColorSend = fillColorSend
+		fillColorSend = fillColorSend,
+		paintOrder = lib.PathHasNormalFillStrokeOrder(path)
 	}
 	setLineQuality(linkData, lineQuality)
 	return linkData
@@ -346,8 +347,13 @@ end
 function ComputeShader:draw(...)
 	local linkdata = self.linkdata
 	local feed = linkdata.geometryFeed
-	feed.drawFill(...)
-	feed.drawLine(...)
+	if linkdata.paintOrder then
+		feed.drawFill(...)
+		feed.drawLine(...)
+	else
+		feed.drawLine(...)
+		feed.drawFill(...)
+	end
 end
 
 function ComputeShader:warmup(...)

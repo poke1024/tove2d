@@ -431,6 +431,10 @@ void PathRotate(TovePathRef path, ToveElementType what, int k) {
 	deref(path)->rotate(what, k);
 }
 
+bool PathHasNormalFillStrokeOrder(TovePathRef path) {
+	return deref(path)->hasNormalFillStrokeOrder();
+}
+
 int PathGetNumCurves(TovePathRef path) {
 	return deref(path)->getNumCurves();
 }

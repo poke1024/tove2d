@@ -104,6 +104,7 @@ EXPORT void PathSetLineCap(TovePathRef path, ToveLineCap cap);
 EXPORT const char *PathGetId(TovePathRef path);
 EXPORT void PathRefine(TovePathRef path, int factor);
 EXPORT void PathRotate(TovePathRef path, ToveElementType what, int k);
+EXPORT bool PathHasNormalFillStrokeOrder(TovePathRef path);
 EXPORT void ReleasePath(TovePathRef path);
 
 EXPORT ToveGraphicsRef NewGraphics(const char *svg, const char* units, float dpi);
