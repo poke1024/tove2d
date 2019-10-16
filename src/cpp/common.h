@@ -61,11 +61,11 @@ inline void store_gpu_float(float &p, float x) {
 	p = x;
 }
 
-#if defined(__clang__)
+#if defined(__clang__) && defined(__F16C__)
 inline void store_gpu_float(uint16_t &p, float x) {
 	*reinterpret_cast<__fp16*>(&p) = x;
 }
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && defined(__F16C__)
 #include <x86intrin.h>
 inline void store_gpu_float(uint16_t &p, float x) {
 	p = _cvtss_sh(x, 0);
