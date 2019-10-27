@@ -26,7 +26,7 @@ tove.init = function(path)
 
 	local dynamicLibraryPathResolver = function()
 
-		local getSystemPathSeperator = function()
+		local getSystemPathSeparator = function()
 			if love.system.getOS() == "Windows" then
 				return "\\"
 			else
@@ -41,7 +41,7 @@ tove.init = function(path)
 		}
 
 		local envPath = os.getenv("TOVE_DYNAMIC_LIB_PREFIX")
-		local fileSep = getSystemPathSeperator()
+		local fileSep = getSystemPathSeparator()
 
 		if envPath == nil then
 			-- We expect tove2d's lib to live inside a folder called "tove" in the game's main
