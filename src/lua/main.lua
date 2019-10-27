@@ -26,12 +26,12 @@ tove.init = function(path)
 
 	local dynamicLibraryPathResolver = function()
 
-		local isNixStylePath = function(path)
-			if path == nil then
-				return path -- fail: invalid argument
+		local getSystemPathSeperator = function()
+			if love.system.getOS() == "Windows" then
+				return "\\"
+			else
+				return "/"
 			end
-			return path:match(".*/.*") ~= nil
-				-- Main assumption here is that Windows paths don't contain "/"
 		end
 
 		local libName = {
@@ -41,27 +41,18 @@ tove.init = function(path)
 		}
 
 		local envPath = os.getenv("TOVE_DYNAMIC_LIB_PREFIX")
+		local fileSep = getSystemPathSeperator()
 
 		if envPath == nil then
 			-- We expect tove2d's lib to live inside a folder called "tove" in the game's main
 			-- source folder. Should fix https://github.com/poke1024/tove2d/issues/21
-
 			local projectPrefix = love.filesystem.getSource()
 
-			if isNixStylePath(projectPrefix) then
-				return projectPrefix .. "/tove/" .. libName[love.system.getOS()]
-			else
-				return projectPrefix .. "\\tove\\" .. libName[love.system.getOS()]
-			end
+			return projectPrefix .. fileSep .. "tove".. fileSep .. libName[love.system.getOS()]
 		else
 			-- Unless a environmental variable is defined and contains
 			-- the absolute path up to, but not including, the dynamic library file
-
-			if isNixStylePath(envPath) then
-				return envPath .. "/" .. libName[love.system.getOS()]
-			else
-				return envPath .. "\\" .. libName[love.system.getOS()]
-			end
+			return envPath .. fileSep .. libName[love.system.getOS()]
 		end
 	end
 
