@@ -23,16 +23,40 @@ ffi.cdef [[
 local tove = {}
 
 tove.init = function(path)
-	local libName = {
-		["OS X"] = "libTove.dylib",
-		["Windows"] = "libTove.dll",
-		["Linux"] = "libTove.so"
-	}
 
-	-- we expect tove2d's lib to live inside a folder called "tove" in the game's main
-	-- source folder. should fix https://github.com/poke1024/tove2d/issues/21
+	local dynamicLibraryPathResolver = function()
 
-	libPath = love.filesystem.getSource() .. "/tove/" .. libName[love.system.getOS()]
+		local getSystemPathSeparator = function()
+			if love.system.getOS() == "Windows" then
+				return "\\"
+			else
+				return "/"
+			end
+		end
+
+		local libName = {
+			["OS X"] = "libTove.dylib",
+			["Windows"] = "libTove.dll",
+			["Linux"] = "libTove.so"
+		}
+
+		local envPath = os.getenv("TOVE_DYNAMIC_LIB_PREFIX")
+		local fileSep = getSystemPathSeparator()
+
+		if envPath == nil then
+			-- We expect tove2d's lib to live inside a folder called "tove" in the game's main
+			-- source folder. Should fix https://github.com/poke1024/tove2d/issues/21
+			local projectPrefix = love.filesystem.getSource()
+
+			return projectPrefix .. fileSep .. "tove".. fileSep .. libName[love.system.getOS()]
+		else
+			-- Unless a environmental variable is defined and contains
+			-- the absolute path up to, but not including, the dynamic library file
+			return envPath .. fileSep .. libName[love.system.getOS()]
+		end
+	end
+
+	libPath = dynamicLibraryPathResolver()
 	local lib = ffi.load(libPath)
 	tove.lib = lib
 	tove.getVersion = function()
@@ -63,7 +87,7 @@ tove.init = function(path)
 		tove.getReportLevel = function()
 			return reportLevel
 		end
-	
+
 		local report = function(s, l)
 			l = tonumber(l)
 			if l >= reportLevel then
@@ -272,7 +296,7 @@ tove.init = function(path)
 	tove._str = function(name)
 		return ffi.string(lib.NameCStr(name))
 	end
-	
+
 	--!! import "paint.lua" as Paint
 	--!! import "command.lua" as newCommand
 	--!! import "subpath.lua" as Subpath
@@ -293,7 +317,7 @@ return tove
 --- A list of elements, such as e.g. @{Path}s.
 -- @type List
 
---- Total number of elements in this list. 
+--- Total number of elements in this list.
 -- @tparam number count number of elements in this list
 -- @usage
 -- graphics.paths.count -- number of paths
