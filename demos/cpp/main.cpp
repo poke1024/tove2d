@@ -49,7 +49,7 @@ int main() {
     static const int frameCount = 8;
 
     for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-        const float t = static_cast<float>(frameIndex) / frameCount;
+        const float t = static_cast<float>(frameIndex) / (frameCount - 1);
 
         target.animate(svg1, svg2, t);
 
