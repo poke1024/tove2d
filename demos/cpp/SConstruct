@@ -1,8 +1,7 @@
-libtove = File('../../tove/libtove.a')
-
 Program("cpp", ['main.cpp'], 
 	CPPPATH = [
 		'../../src/thirdparty/fp16/include',
 		'../../src/thirdparty/nanosvg/example',
 		'../../src/cpp/'], 
-	LIBS = [libtove])
+	LIBS = ["tove"],
+	LIBPATH = ["../../tove"])
