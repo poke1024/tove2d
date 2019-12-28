@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Moho 12.4 build 22203 -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Frame_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280px" height="720px">
+<linearGradient id="6131A9E2-CA9E-49F0-9B44-3AD4FEE82BAF_0" x1="65.08%" y1="76.70%" x2="7.98%" y2="41.45%">
+<stop offset="0.00%" style="stop-color:rgb(220,215,176);stop-opacity:1.00" />
+<stop offset="80.00%" style="stop-color:rgb(184,89,167);stop-opacity:1.00" />
+<stop offset="100.00%" style="stop-color:rgb(57,66,154);stop-opacity:1.00" />
+</linearGradient>
+<path fill="url(#6131A9E2-CA9E-49F0-9B44-3AD4FEE82BAF_0)" fill-rule="evenodd" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M 487.836 351.316 C 490.906 312.703 545.857 387.302 583.305 377.404 C 623.800 366.701 618.917 287.266 658.425 301.178 C 712.010 320.046 630.842 413.063 574.402 419.539 C 531.546 424.457 483.200 409.643 487.836 351.316 M 749.045 321.028 C 683.912 250.563 639.338 271.445 542.736 188.564 C 508.245 158.972 407.385 204.877 438.081 321.005 C 459.406 401.683 442.008 458.941 505.727 493.760 C 606.354 548.747 843.850 423.595 749.045 321.028 Z"/>
+</svg>
