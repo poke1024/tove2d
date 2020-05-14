@@ -82,7 +82,8 @@ tove.newGraphics = function(data, size)
 		for _, p in ipairs(data.paths) do
 			graphics:addPath(tove.newPath(p))
 		end
-		graphics:setDisplay(unpack(data.display))
+		mode, quality = unpack(data.display)
+		graphics:setDisplay(mode, unpack(quality))
 		for k, v in pairs(data.usage) do
 			graphics:setUsage(k, v)
 		end

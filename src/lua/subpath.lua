@@ -347,10 +347,13 @@ ffi.metatype("ToveSubpathRef", Subpath)
 -- @tparam[opt] {number,number,...} points x and y components of points to use
 -- @treturn Subpath new subpath
 
-tove.newSubpath = function(...)
+tove.newSubpath = function(t)
 	local self = ffi.gc(lib.NewSubpath(), lib.ReleaseSubpath)
-	if #{...} > 0 then
-		self:setPoints(...)
+	if t.points ~= nil then
+		self:setPoints(unpack(t.points))
+		self.isClosed = t.closed
+	elseif #t > 0 then
+		self:setPoints(unpack(t))
 	end
 	return self
 end
