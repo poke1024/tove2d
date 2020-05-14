@@ -1,6 +1,10 @@
 -- TÖVE Editor.
 -- (C) 2018 Bernhard Liebl, MIT license.
 
+-- always write and load lua code in the C locale.
+-- very important for consistent save file format.
+os.setlocale("C")
+
 local Object = require "object"
 
 local newTransformWidget = require "tools/transform"
