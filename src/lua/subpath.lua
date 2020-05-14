@@ -349,10 +349,10 @@ ffi.metatype("ToveSubpathRef", Subpath)
 
 tove.newSubpath = function(t)
 	local self = ffi.gc(lib.NewSubpath(), lib.ReleaseSubpath)
-	if t.points ~= nil then
+	if type(t) == "table" and t.points ~= nil then
 		self:setPoints(unpack(t.points))
 		self.isClosed = t.closed
-	elseif #t > 0 then
+	elseif type(t) == "table" and #t > 0 then
 		self:setPoints(unpack(t))
 	end
 	return self
