@@ -7,13 +7,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   
+  
   <link rel="shortcut icon" href="../../img/favicon.ico">
   <title>Animating Things - TÖVE</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
-  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
   
   <script>
     // Current page data
@@ -24,7 +25,7 @@
   
   <script src="../../js/jquery-2.1.1.min.js" defer></script>
   <script src="../../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
 </head>
@@ -35,6 +36,7 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
         <a href="../.." class="icon icon-home"> TÖVE</a>
         <div role="search">
@@ -45,78 +47,64 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">Overview</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../Getting_Started/">Getting Started</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../Demos/">The Demos</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../../features/">Features</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">Tutorials</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../Renderers/">Choosing Renderers</a>
-                </li>
-                <li class=" current">
-                    
-    <a class="current" href="./">Animating Things</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#animating-things">Animating Things</a></li>
-    
+                <p class="caption"><span class="caption-text">Overview</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../Getting_Started/">Getting Started</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../Demos/">The Demos</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../../features/">Features</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../Renderers/">Choosing Renderers</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Animating Things</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#animating-with-the-stage-api">Animating with the Stage API</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#flipbooks-and-animations">Flipbooks and Animations</a>
         <ul>
-        
-            <li><a class="toctree-l4" href="#animating-with-the-stage-api">Animating with the Stage API</a></li>
-        
-            <li><a class="toctree-l4" href="#flipbooks-and-animations">Flipbooks and Animations</a></li>
-        
-            <li><a class="toctree-l4" href="#procedural-animation-features">Procedural Animation Features</a></li>
-        
-            <li><a class="toctree-l4" href="#animating-colors">Animating colors</a></li>
-        
-            <li><a class="toctree-l4" href="#animating-shapes-with-commands">Animating shapes with Commands</a></li>
-        
-            <li><a class="toctree-l4" href="#directly-accessing-paths-and-curves">Directly Accessing Paths and Curves</a></li>
-        
+    <li class="toctree-l3"><a class="reference internal" href="#tweens">Tweens</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#flipbooks">Flipbooks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#animations">Animations</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#looping">Looping</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#a-technical-note">A Technical Note</a>
+    </li>
         </ul>
-    
-
-    </ul>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../../release-notes/">Release Notes</a>
-	    </li>
-          
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#procedural-animation-features">Procedural Animation Features</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#animating-colors">Animating colors</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#animating-by-re-setting-the-color">Animating by re-setting the color</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#animating-by-changing-the-color">Animating by changing the color</a>
+    </li>
         </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#animating-shapes-with-commands">Animating shapes with Commands</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#directly-accessing-paths-and-curves">Directly Accessing Paths and Curves</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://poke1024.github.io/tove2d-api/">API Documentation</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../../release-notes/">Release Notes</a>
+                    </li>
+                </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -145,6 +133,7 @@
       
     </li>
   </ul>
+  
   <hr/>
 </div>
           <div role="main">
@@ -179,7 +168,7 @@ end
 <h2 id="flipbooks-and-animations">Flipbooks and Animations</h2>
 <p>Let's say you have a couple of SVGs that you want to play back like some sort of sprite sheet. TÖVE has two kinds of API to support you with this. Also see <a href="https://poke1024.github.io/tove2d-api/modules/animation.html">TÖVE's API documentation on animation function</a>.</p>
 <p>First, there are flipbooks. These are prerendered distinct frames. Think of a sprite atlas being played back.</p>
-<p>Second, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>.</p>
+<p>Second, there are animations. These are interpolated in real time, i.e. they are not prerendered. Note that for these, TÖVE expects all frames to have exactly the same path layout (same number of trajectories and points across all frames)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
 <p>The "blob" demo has code for both animation styles.</p>
 <h3 id="tweens">Tweens</h3>
 <p>For both flipbooks and animations, the first thing to do is to create a tween that gathers all the keyframes and durations, much like a timeline in an animation program.</p>
@@ -308,7 +297,7 @@ myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in 
 <hr />
 <ol>
 <li id="fn:1">
-<p>if this is not the case, TÖVE is able to morph shapes (see demos/morph).&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>if this is not the case, TÖVE is able to morph shapes (see demos/morph).&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -334,7 +323,7 @@ myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in 
     
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
       
         </div>
@@ -344,7 +333,7 @@ myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in 
 
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
@@ -358,6 +347,11 @@ myDrawing.paths[1].subpaths[1].points.count -- number of points in subpath 1 in 
     <script>var base_url = '../..';</script>
     <script src="../../js/theme.js" defer></script>
       <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>
