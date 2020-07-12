@@ -49,6 +49,19 @@ TÖVE allows a second option, where you only specify a single number, e.g. `Grap
 
 The second factor to mention here is <a href="https://poke1024.github.io/tove2d-api/classes/Graphics.html#Graphics:setResolution">`Graphics:setResolution`</a>. If you specified a quality of `1024`, but also set a resolution of `2`, you will in fact get a quality that's good for 2048 pixels.
 
+## Mesh renderer quality and MSAA
+
+By default the mesh renderer looks rather pixelated. You can fix this by increasing the MSAA settings of your window like this (see <a href="https://love2d.org/wiki/Config_Files">Love2D docs on config files</a>):
+
+```
+function love.conf(t)
+	t.window.msaa = 2
+end
+```
+
+Thanks to pdesaulniers for <a href="https://github.com/poke1024/tove2d/issues/31">reporting this</a>.
+
+
 ## The mesh renderer and gradients
 The mesh renderer automatically detects if you are using gradients or not. If not, it internally uses a flat mesh of vertices and colors. If you use gradients, it will use a shader implementation for the coloring.
 
