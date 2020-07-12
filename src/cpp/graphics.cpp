@@ -402,6 +402,27 @@ void Graphics::addPath(const PathRef &path) {
 	newPath = true;
 }
 
+void Graphics::removePath(const PathRef &path) {
+	const auto it = std::find(
+		paths.begin(), paths.end(), path);
+	if (it == paths.end()) {
+		return; // Path not in Graphics.
+	}
+
+	if (it == paths.begin()) {
+		nsvg.shapes = path->nsvg.next;
+	} else {
+		const PathRef prev = *(it - 1);
+		prev->nsvg.next = path->nsvg.next;
+	}
+
+	paths.erase(it);
+
+	path->removeObserver(this);
+
+	changed(CHANGED_GEOMETRY | CHANGED_COLORS);
+}
+
 PathRef Graphics::getPathByName(const char *name) const {
     for (const PathRef &p : paths) {
         if (strcmp(p->getName(), name) == 0) {

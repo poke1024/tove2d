@@ -128,6 +128,13 @@ function Path:addSubpath(t)
 	lib.PathAddSubpath(self, t)
 end
 
+--- Remove a @{Subpath}.
+-- @tparam Subpath t @{Subpath} to be removed from Path
+
+function Path:removeSubpath(t)
+	lib.PathRemoveSubpath(self, t)
+end
+
 --- Move to position (x, y).
 -- Automatically starts a fresh @{Subpath} if necessary. 
 -- @tparam number x new x coordinate

@@ -213,6 +213,12 @@ end
 
 bind("addPath", "GraphicsAddPath")
 
+--- Remove a @{Path}.
+-- @tparam Path path @{Path} to removed
+-- @function removePath
+
+bind("removePath", "GraphicsRemovePath")
+
 function Graphics:fetchChanges(flags)
 	return lib.GraphicsFetchChanges(self._ref, flags)
 end

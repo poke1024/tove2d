@@ -369,6 +369,27 @@ void Path::addSubpath(const SubpathRef &t) {
 	_append(t);
 }
 
+void Path::removeSubpath(const SubpathRef &t) {
+	const auto it = std::find(
+		subpaths.begin(), subpaths.end(), t);
+	if (it == subpaths.end()) {
+		return; // Subpath not in Path.
+	}
+
+	if (it == subpaths.begin()) {
+		nsvg.paths = t->nsvg.next;
+	} else {
+		const SubpathRef prev = *(it - 1);
+		prev->nsvg.next = t->nsvg.next;
+	}
+
+	subpaths.erase(it);
+
+	t->removeObserver(this);
+
+	changed(CHANGED_GEOMETRY);
+}
+
 void Path::setName(const char *name) {
 	this->name = name;
 }

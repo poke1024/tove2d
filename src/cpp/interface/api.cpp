@@ -371,6 +371,10 @@ void PathAddSubpath(TovePathRef path, ToveSubpathRef traj) {
 	deref(path)->addSubpath(deref(traj));
 }
 
+void PathRemoveSubpath(TovePathRef path, ToveSubpathRef traj) {
+	deref(path)->removeSubpath(deref(traj));
+}
+
 void PathSetFillColor(TovePathRef path, TovePaintRef color) {
 	deref(path)->setFillColor(deref(color));
 }
@@ -767,6 +771,10 @@ TovePathRef GraphicsGetCurrentPath(ToveGraphicsRef shape) {
 
 void GraphicsAddPath(ToveGraphicsRef shape, TovePathRef path) {
 	deref(shape)->addPath(deref(path));
+}
+
+void GraphicsRemovePath(ToveGraphicsRef shape, TovePathRef path) {
+	deref(shape)->removePath(deref(path));
 }
 
 int GraphicsGetNumPaths(ToveGraphicsRef shape) {

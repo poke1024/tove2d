@@ -214,6 +214,7 @@ public:
 	}
 
 	void addPath(const PathRef &path);
+	void removePath(const PathRef &path);
 
 	inline int getNumPaths() const {
 		return paths.size();
