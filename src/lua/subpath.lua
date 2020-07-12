@@ -370,6 +370,9 @@ function Subpath:serialize()
 	local n = lib.SubpathGetNumPoints(self)
 	local p = lib.SubpathGetPointsPtr(self)
 	local q = {}
+	if self.isClosed then
+		n = n - 1
+	end
 	for i = 1, n * 2 do
 		q[i] = p[i - 1]
 	end
