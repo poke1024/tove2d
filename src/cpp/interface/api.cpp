@@ -830,7 +830,7 @@ void GraphicsStroke(ToveGraphicsRef shape) {
 	deref(shape)->stroke();
 }
 
-ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact) {
+void GraphicsGetBounds(ToveGraphicsRef shape, bool exact, ToveBounds *bounds) {
 	const float *computed;
 
 	if (exact) {
@@ -839,12 +839,10 @@ ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact) {
 		computed  = deref(shape)->getBounds();
 	}
 
-	ToveBounds bounds;
-	bounds.x0 = computed[0];
-	bounds.y0 = computed[1];
-	bounds.x1 = computed[2];
-	bounds.y1 = computed[3];
-	return bounds;
+	bounds->x0 = computed[0];
+	bounds->y0 = computed[1];
+	bounds->x1 = computed[2];
+	bounds->y1 = computed[3];
 }
 
 void GraphicsSet(
