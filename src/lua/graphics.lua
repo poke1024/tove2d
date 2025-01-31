@@ -424,7 +424,8 @@ bind("stroke", "GraphicsStroke")
 -- @treturn number y1 (bottom-most y)
 
 function Graphics:computeAABB(prec)
-	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
+	local bounds = ffi.new("ToveBounds")
+	lib.GraphicsGetBounds(self._ref, prec == "high", bounds)
 	return bounds.x0, bounds.y0, bounds.x1, bounds.y1
 end
 
@@ -434,7 +435,8 @@ end
 -- @see computeAABB
 
 function Graphics:getWidth(prec)
-	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
+	local bounds = ffi.new("ToveBounds")
+	lib.GraphicsGetBounds(self._ref, prec == "high", bounds)
 	return bounds.x1 - bounds.x0
 end
 
@@ -444,7 +446,8 @@ end
 -- @see computeAABB
 
 function Graphics:getHeight(prec)
-	local bounds = lib.GraphicsGetBounds(self._ref, prec == "high")
+	local bounds = ffi.new("ToveBounds")
+	lib.GraphicsGetBounds(self._ref, prec == "high", bounds)
 	return bounds.y1 - bounds.y0
 end
 

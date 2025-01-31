@@ -130,7 +130,7 @@ EXPORT void GraphicsSetLineDash(ToveGraphicsRef shape, const float *dashes, int 
 EXPORT void GraphicsSetLineDashOffset(ToveGraphicsRef shape, float offset);
 EXPORT void GraphicsFill(ToveGraphicsRef shape);
 EXPORT void GraphicsStroke(ToveGraphicsRef shape);
-EXPORT ToveBounds GraphicsGetBounds(ToveGraphicsRef shape, bool exact);
+EXPORT void GraphicsGetBounds(ToveGraphicsRef shape, bool exact, ToveBounds *bounds);
 EXPORT void GraphicsSet(ToveGraphicsRef graphics, ToveGraphicsRef source,
 	bool scaleLineWidth, float a, float b, float c, float d, float e, float f);
 EXPORT void GraphicsRasterize(ToveGraphicsRef shape, uint8_t *pixels,
